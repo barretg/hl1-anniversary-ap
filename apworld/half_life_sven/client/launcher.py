@@ -24,7 +24,7 @@ from NetUtils import ClientStatus
 
 from .bridge import Bridge, find_store_dir
 
-GAME_NAME = "half_life_sven"
+GAME_NAME = "Half-Life (Sven Co-op)"
 POLL_INTERVAL = 0.2
 
 # Where to look for the game when the user has not told us. Sven Co-op is a Steam

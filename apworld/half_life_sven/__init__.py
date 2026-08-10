@@ -37,7 +37,7 @@ from .locations import location_name_groups, location_name_to_id
 from .options import HalfLifeSvenOptions
 from .regions import create_regions
 
-GAME_NAME = "half_life_sven"
+GAME_NAME = "Half-Life (Sven Co-op)"
 
 
 def launch_client(*args: str) -> None:

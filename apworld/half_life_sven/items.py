@@ -43,7 +43,7 @@ EVENT_ITEMS = (MISSION_COMPLETE, VICTORY)
 
 
 class HalfLifeSvenItem(Item):
-    game = "half_life_sven"
+    game = "Half-Life (Sven Co-op)"
 
 
 def create_item(world: "HalfLifeSvenWorld", name: str) -> HalfLifeSvenItem:

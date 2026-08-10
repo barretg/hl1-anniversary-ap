@@ -28,4 +28,4 @@ location_name_groups["Kills"] = {
 
 
 class HalfLifeSvenLocation(Location):
-    game = "half_life_sven"
+    game = "Half-Life (Sven Co-op)"
