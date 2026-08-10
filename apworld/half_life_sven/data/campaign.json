@@ -1,0 +1,2727 @@
+{
+ "chapters": [
+  {
+   "key": "black_mesa_inbound",
+   "name": "Black Mesa Inbound",
+   "maps": [
+    "hl_c00"
+   ],
+   "index": 0,
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "anomalous_materials",
+   "name": "Anomalous Materials",
+   "maps": [
+    "hl_c01_a1",
+    "hl_c01_a2"
+   ],
+   "index": 1,
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "unforeseen_consequences",
+   "name": "Unforeseen Consequences",
+   "maps": [
+    "hl_c02_a1",
+    "hl_c02_a2"
+   ],
+   "index": 2,
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "office_complex",
+   "name": "Office Complex",
+   "maps": [
+    "hl_c03"
+   ],
+   "index": 3,
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "weve_got_hostiles",
+   "name": "We've Got Hostiles",
+   "maps": [
+    "hl_c04"
+   ],
+   "index": 4,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "blast_pit",
+   "name": "Blast Pit",
+   "maps": [
+    "hl_c05_a1",
+    "hl_c05_a2",
+    "hl_c05_a3"
+   ],
+   "index": 5,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "power_up",
+   "name": "Power Up",
+   "maps": [
+    "hl_c06"
+   ],
+   "index": 6,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "on_a_rail",
+   "name": "On A Rail",
+   "maps": [
+    "hl_c07_a1",
+    "hl_c07_a2"
+   ],
+   "index": 7,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "apprehension",
+   "name": "Apprehension",
+   "maps": [
+    "hl_c08_a1",
+    "hl_c08_a2"
+   ],
+   "index": 8,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "residue_processing",
+   "name": "Residue Processing",
+   "maps": [
+    "hl_c09"
+   ],
+   "index": 9,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "questionable_ethics",
+   "name": "Questionable Ethics",
+   "maps": [
+    "hl_c10"
+   ],
+   "index": 10,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "surface_tension",
+   "name": "Surface Tension",
+   "maps": [
+    "hl_c11_a1",
+    "hl_c11_a2",
+    "hl_c11_a3",
+    "hl_c11_a4",
+    "hl_c11_a5"
+   ],
+   "index": 11,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "forget_about_freeman",
+   "name": "Forget About Freeman",
+   "maps": [
+    "hl_c12"
+   ],
+   "index": 12,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ]
+   }
+  },
+  {
+   "key": "lambda_core",
+   "name": "Lambda Core",
+   "maps": [
+    "hl_c13_a1",
+    "hl_c13_a2",
+    "hl_c13_a3",
+    "hl_c13_a4"
+   ],
+   "index": 13,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ]
+   }
+  },
+  {
+   "key": "xen",
+   "name": "Xen",
+   "maps": [
+    "hl_c14"
+   ],
+   "index": 14,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "longjump",
+     "suit"
+    ]
+   }
+  },
+  {
+   "key": "gonarchs_lair",
+   "name": "Gonarch's Lair",
+   "maps": [
+    "hl_c15"
+   ],
+   "index": 15,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "longjump",
+     "suit"
+    ]
+   }
+  },
+  {
+   "key": "interloper",
+   "name": "Interloper",
+   "maps": [
+    "hl_c16_a1",
+    "hl_c16_a2",
+    "hl_c16_a3",
+    "hl_c16_a4"
+   ],
+   "index": 16,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "longjump",
+     "suit"
+    ]
+   }
+  },
+  {
+   "key": "nihilanth",
+   "name": "Nihilanth",
+   "maps": [
+    "hl_c17",
+    "hl_c18"
+   ],
+   "index": 17,
+   "is_goal": true,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "longjump",
+     "suit"
+    ]
+   }
+  }
+ ],
+ "items": [
+  {
+   "id": 7710000,
+   "name": "Black Mesa Inbound Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "black_mesa_inbound"
+  },
+  {
+   "id": 7710001,
+   "name": "Anomalous Materials Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "anomalous_materials"
+  },
+  {
+   "id": 7710002,
+   "name": "Unforeseen Consequences Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "unforeseen_consequences"
+  },
+  {
+   "id": 7710003,
+   "name": "Office Complex Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "office_complex"
+  },
+  {
+   "id": 7710004,
+   "name": "We've Got Hostiles Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "weve_got_hostiles"
+  },
+  {
+   "id": 7710005,
+   "name": "Blast Pit Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "blast_pit"
+  },
+  {
+   "id": 7710006,
+   "name": "Power Up Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "power_up"
+  },
+  {
+   "id": 7710007,
+   "name": "On A Rail Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "on_a_rail"
+  },
+  {
+   "id": 7710008,
+   "name": "Apprehension Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "apprehension"
+  },
+  {
+   "id": 7710009,
+   "name": "Residue Processing Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "residue_processing"
+  },
+  {
+   "id": 7710010,
+   "name": "Questionable Ethics Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "questionable_ethics"
+  },
+  {
+   "id": 7710011,
+   "name": "Surface Tension Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "surface_tension"
+  },
+  {
+   "id": 7710012,
+   "name": "Forget About Freeman Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "forget_about_freeman"
+  },
+  {
+   "id": 7710013,
+   "name": "Lambda Core Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "lambda_core"
+  },
+  {
+   "id": 7710014,
+   "name": "Xen Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "xen"
+  },
+  {
+   "id": 7710015,
+   "name": "Gonarch's Lair Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "gonarchs_lair"
+  },
+  {
+   "id": 7710016,
+   "name": "Interloper Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "interloper"
+  },
+  {
+   "id": 7710017,
+   "name": "Glock",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_glock",
+    "weapon_9mmhandgun"
+   ]
+  },
+  {
+   "id": 7710018,
+   "name": ".357 Magnum",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_357"
+   ]
+  },
+  {
+   "id": 7710019,
+   "name": "MP5",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_9mmAR",
+    "weapon_m16"
+   ]
+  },
+  {
+   "id": 7710020,
+   "name": "Shotgun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_shotgun"
+   ]
+  },
+  {
+   "id": 7710021,
+   "name": "Crossbow",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_crossbow"
+   ]
+  },
+  {
+   "id": 7710022,
+   "name": "RPG",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_rpg"
+   ]
+  },
+  {
+   "id": 7710023,
+   "name": "Tau Cannon",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_gauss"
+   ]
+  },
+  {
+   "id": 7710024,
+   "name": "Gluon Gun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_egon"
+   ]
+  },
+  {
+   "id": 7710025,
+   "name": "Hivehand",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_hornetgun"
+   ]
+  },
+  {
+   "id": 7710026,
+   "name": "Satchel Charge",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_satchel"
+   ]
+  },
+  {
+   "id": 7710027,
+   "name": "Tripmine",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_tripmine"
+   ]
+  },
+  {
+   "id": 7710028,
+   "name": "Snarks",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_snark"
+   ]
+  },
+  {
+   "id": 7710029,
+   "name": "Hand Grenade",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_handgrenade"
+   ]
+  },
+  {
+   "id": 7710030,
+   "name": "HEV Suit",
+   "classification": "progression",
+   "group": "optional",
+   "classnames": [
+    "item_suit"
+   ]
+  },
+  {
+   "id": 7710031,
+   "name": "Long Jump Module",
+   "classification": "progression",
+   "group": "optional",
+   "classnames": [
+    "item_longjump"
+   ]
+  },
+  {
+   "id": 7710032,
+   "name": "Ammo Cache",
+   "classification": "filler",
+   "group": "filler",
+   "classnames": [
+    "ammo_generic"
+   ],
+   "weight": 40
+  },
+  {
+   "id": 7710033,
+   "name": "Medkit",
+   "classification": "filler",
+   "group": "filler",
+   "classnames": [
+    "item_healthkit"
+   ],
+   "weight": 25
+  },
+  {
+   "id": 7710034,
+   "name": "Armor Battery",
+   "classification": "filler",
+   "group": "filler",
+   "classnames": [
+    "item_battery"
+   ],
+   "weight": 25
+  },
+  {
+   "id": 7710035,
+   "name": "Health Charge",
+   "classification": "filler",
+   "group": "filler",
+   "classnames": [
+    "item_healthkit"
+   ],
+   "weight": 10
+  }
+ ],
+ "locations": [
+  {
+   "id": 7720000,
+   "name": "Anomalous Materials - HEV Suit (Part 1)",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c01_a1",
+    "classnames": [
+     "item_suit"
+    ]
+   }
+  },
+  {
+   "id": 7720001,
+   "name": "Anomalous Materials - Part 2 Reached",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c01_a2"
+   }
+  },
+  {
+   "id": 7720002,
+   "name": "Unforeseen Consequences - Glock (Part 1)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c02_a1",
+    "classnames": [
+     "weapon_9mmhandgun"
+    ]
+   }
+  },
+  {
+   "id": 7720003,
+   "name": "Unforeseen Consequences - Crowbar (Part 1)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c02_a1",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
+   "id": 7720004,
+   "name": "Unforeseen Consequences - Medkit (Part 1)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c02_a1",
+    "classnames": [
+     "weapon_medkit"
+    ]
+   }
+  },
+  {
+   "id": 7720005,
+   "name": "Unforeseen Consequences - Part 2 Reached",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c02_a2"
+   }
+  },
+  {
+   "id": 7720006,
+   "name": "Unforeseen Consequences - Glock (Part 2)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c02_a2",
+    "classnames": [
+     "weapon_glock"
+    ]
+   }
+  },
+  {
+   "id": 7720007,
+   "name": "Unforeseen Consequences - Hand Grenade (Part 2)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c02_a2",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720008,
+   "name": "Office Complex - Hand Grenade",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c03",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720009,
+   "name": "Office Complex - Shotgun",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c03",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720010,
+   "name": "Office Complex - Mini Turret Slain",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c03",
+    "classname": "monster_miniturret"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720011,
+   "name": "We've Got Hostiles - MP5",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c04",
+    "classnames": [
+     "weapon_9mmAR"
+    ]
+   }
+  },
+  {
+   "id": 7720012,
+   "name": "We've Got Hostiles - MP5 #2",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c04",
+    "classnames": [
+     "weapon_m16"
+    ]
+   }
+  },
+  {
+   "id": 7720013,
+   "name": "We've Got Hostiles - Shotgun",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c04",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720014,
+   "name": "We've Got Hostiles - Osprey Slain",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c04",
+    "classname": "monster_osprey"
+   },
+   "requires": "heavy"
+  },
+  {
+   "id": 7720015,
+   "name": "We've Got Hostiles - Sentry Turret Slain",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c04",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720016,
+   "name": "Blast Pit - Crowbar (Part 1)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a1",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
+   "id": 7720017,
+   "name": "Blast Pit - Hand Grenade (Part 1)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a1",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720018,
+   "name": "Blast Pit - Part 2 Reached",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c05_a2"
+   }
+  },
+  {
+   "id": 7720019,
+   "name": "Blast Pit - Hand Grenade (Part 2)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a2",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720020,
+   "name": "Blast Pit - Tentacle Slain (Part 2)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c05_a2",
+    "classname": "monster_tentacle"
+   }
+  },
+  {
+   "id": 7720021,
+   "name": "Blast Pit - Part 3 Reached",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c05_a3"
+   }
+  },
+  {
+   "id": 7720022,
+   "name": "Blast Pit - .357 Magnum (Part 3)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a3",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720023,
+   "name": "Power Up - .357 Magnum",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c06",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720024,
+   "name": "Power Up - Hand Grenade",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c06",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720025,
+   "name": "Power Up - Shotgun",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c06",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720026,
+   "name": "Power Up - Gargantua Slain",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c06",
+    "classname": "monster_gargantua"
+   },
+   "requires": "explosives"
+  },
+  {
+   "id": 7720027,
+   "name": "Power Up - Sentry Turret Slain",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c06",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720028,
+   "name": "On A Rail - .357 Magnum (Part 1)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720029,
+   "name": "On A Rail - MP5 (Part 1)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_9mmAR"
+    ]
+   }
+  },
+  {
+   "id": 7720030,
+   "name": "On A Rail - Hand Grenade (Part 1)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720031,
+   "name": "On A Rail - Satchel Charge (Part 1)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720032,
+   "name": "On A Rail - Tripmine (Part 1)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720033,
+   "name": "On A Rail - Sentry Turret Slain (Part 1)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c07_a1",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720034,
+   "name": "On A Rail - Part 2 Reached",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c07_a2"
+   }
+  },
+  {
+   "id": 7720035,
+   "name": "On A Rail - MP5 (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a2",
+    "classnames": [
+     "weapon_9mmAR"
+    ]
+   }
+  },
+  {
+   "id": 7720036,
+   "name": "On A Rail - Hand Grenade (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a2",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720037,
+   "name": "On A Rail - Satchel Charge (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a2",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720038,
+   "name": "On A Rail - Tripmine (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c07_a2",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720039,
+   "name": "On A Rail - Sentry Turret Slain (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c07_a2",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720040,
+   "name": "Apprehension - Crossbow (Part 1)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c08_a1",
+    "classnames": [
+     "weapon_crossbow"
+    ]
+   }
+  },
+  {
+   "id": 7720041,
+   "name": "Apprehension - Satchel Charge (Part 1)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c08_a1",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720042,
+   "name": "Apprehension - Shotgun (Part 1)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c08_a1",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720043,
+   "name": "Apprehension - Tripmine (Part 1)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c08_a1",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720044,
+   "name": "Apprehension - Ichthyosaur Slain (Part 1)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c08_a1",
+    "classname": "monster_ichthyosaur"
+   },
+   "requires": "underwater"
+  },
+  {
+   "id": 7720045,
+   "name": "Apprehension - Part 2 Reached",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c08_a2"
+   }
+  },
+  {
+   "id": 7720046,
+   "name": "Apprehension - Crowbar (Part 2)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c08_a2",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
+   "id": 7720047,
+   "name": "Apprehension - Satchel Charge (Part 2)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c08_a2",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720048,
+   "name": "Apprehension - Assassin Slain (Part 2)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c08_a2",
+    "classname": "monster_human_assassin"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720049,
+   "name": "Apprehension - Ichthyosaur Slain (Part 2)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c08_a2",
+    "classname": "monster_ichthyosaur"
+   },
+   "requires": "underwater"
+  },
+  {
+   "id": 7720050,
+   "name": "Residue Processing - .357 Magnum",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c09",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720051,
+   "name": "Residue Processing - Satchel Charge",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c09",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720052,
+   "name": "Questionable Ethics - Crossbow",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c10",
+    "classnames": [
+     "weapon_crossbow"
+    ]
+   }
+  },
+  {
+   "id": 7720053,
+   "name": "Questionable Ethics - Tau Cannon",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c10",
+    "classnames": [
+     "weapon_gauss"
+    ]
+   }
+  },
+  {
+   "id": 7720054,
+   "name": "Questionable Ethics - Snarks",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c10",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720055,
+   "name": "Questionable Ethics - Tripmine",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c10",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720056,
+   "name": "Questionable Ethics - Alien Grunt Slain",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c10",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720057,
+   "name": "Questionable Ethics - Sentry Turret Slain",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c10",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720058,
+   "name": "Surface Tension - Snarks (Part 1)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a1",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720059,
+   "name": "Surface Tension - Apache Slain (Part 1)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a1",
+    "classname": "monster_apache"
+   },
+   "requires": "heavy"
+  },
+  {
+   "id": 7720060,
+   "name": "Surface Tension - Ichthyosaur Slain (Part 1)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a1",
+    "classname": "monster_ichthyosaur"
+   },
+   "requires": "underwater"
+  },
+  {
+   "id": 7720061,
+   "name": "Surface Tension - Tentacle Slain (Part 1)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a1",
+    "classname": "monster_tentacle"
+   }
+  },
+  {
+   "id": 7720062,
+   "name": "Surface Tension - Part 2 Reached",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c11_a2"
+   }
+  },
+  {
+   "id": 7720063,
+   "name": "Surface Tension - RPG (Part 2)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a2",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720064,
+   "name": "Surface Tension - Shotgun (Part 2)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a2",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720065,
+   "name": "Surface Tension - Apache Slain (Part 2)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a2",
+    "classname": "monster_apache"
+   },
+   "requires": "heavy"
+  },
+  {
+   "id": 7720066,
+   "name": "Surface Tension - Sentry Turret Slain (Part 2)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a2",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720067,
+   "name": "Surface Tension - Part 3 Reached",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c11_a3"
+   }
+  },
+  {
+   "id": 7720068,
+   "name": "Surface Tension - Hivehand (Part 3)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a3",
+    "classnames": [
+     "weapon_hornetgun"
+    ]
+   }
+  },
+  {
+   "id": 7720069,
+   "name": "Surface Tension - Tripmine (Part 3)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a3",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720070,
+   "name": "Surface Tension - Part 4 Reached",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c11_a4"
+   }
+  },
+  {
+   "id": 7720071,
+   "name": "Surface Tension - MP5 (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_9mmAR"
+    ]
+   }
+  },
+  {
+   "id": 7720072,
+   "name": "Surface Tension - Glock (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_9mmhandgun"
+    ]
+   }
+  },
+  {
+   "id": 7720073,
+   "name": "Surface Tension - Hand Grenade (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720074,
+   "name": "Surface Tension - RPG (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720075,
+   "name": "Surface Tension - Satchel Charge (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720076,
+   "name": "Surface Tension - Shotgun (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720077,
+   "name": "Surface Tension - Tripmine (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a4",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720078,
+   "name": "Surface Tension - Alien Grunt Slain (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a4",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720079,
+   "name": "Surface Tension - Osprey Slain (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a4",
+    "classname": "monster_osprey"
+   },
+   "requires": "heavy"
+  },
+  {
+   "id": 7720080,
+   "name": "Surface Tension - Sentry Turret Slain (Part 4)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a4",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c11_a4",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720081,
+   "name": "Surface Tension - Part 5 Reached",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c11_a5"
+   }
+  },
+  {
+   "id": 7720082,
+   "name": "Surface Tension - Shotgun (Part 5)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a5",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a5",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720083,
+   "name": "Surface Tension - Snarks (Part 5)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a5",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a5",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720084,
+   "name": "Forget About Freeman - Hand Grenade",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c12",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720085,
+   "name": "Forget About Freeman - RPG",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c12",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720086,
+   "name": "Forget About Freeman - Snarks",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c12",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720087,
+   "name": "Forget About Freeman - Alien Grunt Slain",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c12",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720088,
+   "name": "Forget About Freeman - Ichthyosaur Slain",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c12",
+    "classname": "monster_ichthyosaur"
+   },
+   "requires": "underwater"
+  },
+  {
+   "id": 7720089,
+   "name": "Forget About Freeman - Sentry Turret Slain",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c12",
+    "classname": "monster_sentry"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720090,
+   "name": "Forget About Freeman - Ceiling Turret Slain",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c12",
+    "classname": "monster_turret"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720091,
+   "name": "Lambda Core - Gluon Gun (Part 1)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a1",
+    "classnames": [
+     "weapon_egon"
+    ]
+   }
+  },
+  {
+   "id": 7720092,
+   "name": "Lambda Core - Hand Grenade (Part 1)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a1",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720093,
+   "name": "Lambda Core - Alien Grunt Slain (Part 1)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c13_a1",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720094,
+   "name": "Lambda Core - Assassin Slain (Part 1)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c13_a1",
+    "classname": "monster_human_assassin"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720095,
+   "name": "Lambda Core - Part 2 Reached",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c13_a2"
+   }
+  },
+  {
+   "id": 7720096,
+   "name": "Lambda Core - Alien Grunt Slain (Part 2)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c13_a2",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720097,
+   "name": "Lambda Core - Part 3 Reached",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c13_a3"
+   }
+  },
+  {
+   "id": 7720098,
+   "name": "Lambda Core - Hand Grenade (Part 3)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a3",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720099,
+   "name": "Lambda Core - Satchel Charge (Part 3)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a3",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720100,
+   "name": "Lambda Core - Alien Grunt Slain (Part 3)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a3",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c13_a3",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720101,
+   "name": "Lambda Core - Part 4 Reached",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c13_a4"
+   }
+  },
+  {
+   "id": 7720102,
+   "name": "Lambda Core - Long Jump Module (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "item_longjump"
+    ]
+   }
+  },
+  {
+   "id": 7720103,
+   "name": "Lambda Core - Gluon Gun (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_egon"
+    ]
+   }
+  },
+  {
+   "id": 7720104,
+   "name": "Lambda Core - Tau Cannon (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_gauss"
+    ]
+   }
+  },
+  {
+   "id": 7720105,
+   "name": "Lambda Core - Hand Grenade (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720106,
+   "name": "Lambda Core - Hivehand (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_hornetgun"
+    ]
+   }
+  },
+  {
+   "id": 7720107,
+   "name": "Lambda Core - RPG (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720108,
+   "name": "Lambda Core - Satchel Charge (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720109,
+   "name": "Lambda Core - Shotgun (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720110,
+   "name": "Lambda Core - Tripmine (Part 4)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720111,
+   "name": "Gonarch's Lair - Gonarch Slain",
+   "chapter": "gonarchs_lair",
+   "map": "hl_c15",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c15",
+    "classname": "monster_bigmomma"
+   },
+   "requires": "heavy"
+  },
+  {
+   "id": 7720112,
+   "name": "Interloper - Alien Controller Slain (Part 1)",
+   "chapter": "interloper",
+   "map": "hl_c16_a1",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c16_a1",
+    "classname": "monster_alien_controller"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720113,
+   "name": "Interloper - Part 2 Reached",
+   "chapter": "interloper",
+   "map": "hl_c16_a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c16_a2"
+   }
+  },
+  {
+   "id": 7720114,
+   "name": "Interloper - Hand Grenade (Part 2)",
+   "chapter": "interloper",
+   "map": "hl_c16_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a2",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720115,
+   "name": "Interloper - Snarks (Part 2)",
+   "chapter": "interloper",
+   "map": "hl_c16_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a2",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720116,
+   "name": "Interloper - Alien Grunt Slain (Part 2)",
+   "chapter": "interloper",
+   "map": "hl_c16_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c16_a2",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720117,
+   "name": "Interloper - Gargantua Slain (Part 2)",
+   "chapter": "interloper",
+   "map": "hl_c16_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c16_a2",
+    "classname": "monster_gargantua"
+   },
+   "requires": "explosives"
+  },
+  {
+   "id": 7720118,
+   "name": "Interloper - Tentacle Slain (Part 2)",
+   "chapter": "interloper",
+   "map": "hl_c16_a2",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c16_a2",
+    "classname": "monster_tentacle"
+   }
+  },
+  {
+   "id": 7720119,
+   "name": "Interloper - Part 3 Reached",
+   "chapter": "interloper",
+   "map": "hl_c16_a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c16_a3"
+   }
+  },
+  {
+   "id": 7720120,
+   "name": "Interloper - Hand Grenade (Part 3)",
+   "chapter": "interloper",
+   "map": "hl_c16_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a3",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720121,
+   "name": "Interloper - Satchel Charge (Part 3)",
+   "chapter": "interloper",
+   "map": "hl_c16_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a3",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720122,
+   "name": "Interloper - Tripmine (Part 3)",
+   "chapter": "interloper",
+   "map": "hl_c16_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a3",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720123,
+   "name": "Interloper - Alien Controller Slain (Part 3)",
+   "chapter": "interloper",
+   "map": "hl_c16_a3",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c16_a3",
+    "classname": "monster_alien_controller"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720124,
+   "name": "Interloper - Part 4 Reached",
+   "chapter": "interloper",
+   "map": "hl_c16_a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c16_a4"
+   }
+  },
+  {
+   "id": 7720125,
+   "name": "Nihilanth - Satchel Charge (Part 1)",
+   "chapter": "nihilanth",
+   "map": "hl_c17",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c17",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720126,
+   "name": "Nihilanth - Alien Controller Slain (Part 1)",
+   "chapter": "nihilanth",
+   "map": "hl_c17",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c17",
+    "classname": "monster_alien_controller"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720127,
+   "name": "Nihilanth - Ichthyosaur Slain (Part 1)",
+   "chapter": "nihilanth",
+   "map": "hl_c17",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c17",
+    "classname": "monster_ichthyosaur"
+   },
+   "requires": "underwater"
+  },
+  {
+   "id": 7720128,
+   "name": "Nihilanth - Nihilanth Slain (Part 1)",
+   "chapter": "nihilanth",
+   "map": "hl_c17",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c17",
+    "classname": "monster_nihilanth"
+   },
+   "requires": "heavy"
+  },
+  {
+   "id": 7720129,
+   "name": "Nihilanth - Part 2 Reached",
+   "chapter": "nihilanth",
+   "map": "hl_c18",
+   "trigger": {
+    "type": "map_reached",
+    "map": "hl_c18"
+   }
+  },
+  {
+   "id": 7720130,
+   "name": "Nihilanth - Alien Controller Slain (Part 2)",
+   "chapter": "nihilanth",
+   "map": "hl_c18",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c18",
+    "classname": "monster_alien_controller"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720131,
+   "name": "Nihilanth - Alien Grunt Slain (Part 2)",
+   "chapter": "nihilanth",
+   "map": "hl_c18",
+   "trigger": {
+    "type": "kill",
+    "map": "hl_c18",
+    "classname": "monster_alien_grunt"
+   },
+   "requires": "ranged"
+  },
+  {
+   "id": 7720132,
+   "name": "Anomalous Materials - 8 Kills (Part 1)",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a1",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c01_a1",
+    "count": 8
+   }
+  },
+  {
+   "id": 7720133,
+   "name": "Anomalous Materials - 16 Kills (Part 1)",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a1",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c01_a1",
+    "count": 16
+   }
+  },
+  {
+   "id": 7720134,
+   "name": "Anomalous Materials - 24 Kills (Part 1)",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a1",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c01_a1",
+    "count": 24
+   }
+  },
+  {
+   "id": 7720135,
+   "name": "Anomalous Materials - 6 Kills (Part 2)",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a2",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c01_a2",
+    "count": 6
+   }
+  },
+  {
+   "id": 7720136,
+   "name": "Unforeseen Consequences - 5 Kills (Part 1)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c02_a1",
+    "count": 5
+   }
+  },
+  {
+   "id": 7720137,
+   "name": "Unforeseen Consequences - Battery (Part 2)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c02_a2",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720138,
+   "name": "Office Complex - Battery",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c03",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720139,
+   "name": "Blast Pit - Battery (Part 1)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a1",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720140,
+   "name": "Blast Pit - Health Kit (Part 1)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a1",
+    "classnames": [
+     "item_healthkit"
+    ]
+   }
+  },
+  {
+   "id": 7720141,
+   "name": "Blast Pit - Health Kit (Part 2)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a2",
+    "classnames": [
+     "item_healthkit"
+    ]
+   }
+  },
+  {
+   "id": 7720142,
+   "name": "Blast Pit - Health Kit (Part 3)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a3",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c05_a3",
+    "classnames": [
+     "item_healthkit"
+    ]
+   }
+  },
+  {
+   "id": 7720143,
+   "name": "Residue Processing - 6 Kills",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c09",
+    "count": 6
+   }
+  },
+  {
+   "id": 7720144,
+   "name": "Residue Processing - 13 Kills",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c09",
+    "count": 13
+   }
+  },
+  {
+   "id": 7720145,
+   "name": "Surface Tension - 6 Kills (Part 3)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a3",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c11_a3",
+    "count": 6
+   }
+  },
+  {
+   "id": 7720146,
+   "name": "Surface Tension - Battery (Part 5)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a5",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c11_a5",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720147,
+   "name": "Lambda Core - Battery (Part 2)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a2",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720148,
+   "name": "Lambda Core - Health Kit (Part 2)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a2",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c13_a2",
+    "classnames": [
+     "item_healthkit"
+    ]
+   }
+  },
+  {
+   "id": 7720149,
+   "name": "Xen - Battery",
+   "chapter": "xen",
+   "map": "hl_c14",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c14",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720150,
+   "name": "Xen - Health Kit",
+   "chapter": "xen",
+   "map": "hl_c14",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c14",
+    "classnames": [
+     "item_healthkit"
+    ]
+   }
+  },
+  {
+   "id": 7720151,
+   "name": "Gonarch's Lair - Battery",
+   "chapter": "gonarchs_lair",
+   "map": "hl_c15",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c15",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720152,
+   "name": "Interloper - Battery (Part 1)",
+   "chapter": "interloper",
+   "map": "hl_c16_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a1",
+    "classnames": [
+     "item_battery"
+    ]
+   }
+  },
+  {
+   "id": 7720153,
+   "name": "Interloper - Health Kit (Part 1)",
+   "chapter": "interloper",
+   "map": "hl_c16_a1",
+   "trigger": {
+    "type": "pickup",
+    "map": "hl_c16_a1",
+    "classnames": [
+     "item_healthkit"
+    ]
+   }
+  },
+  {
+   "id": 7720154,
+   "name": "Interloper - 6 Kills (Part 1)",
+   "chapter": "interloper",
+   "map": "hl_c16_a1",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c16_a1",
+    "count": 6
+   }
+  },
+  {
+   "id": 7720155,
+   "name": "Nihilanth - 7 Kills (Part 2)",
+   "chapter": "nihilanth",
+   "map": "hl_c18",
+   "trigger": {
+    "type": "kill_count",
+    "map": "hl_c18",
+    "count": 7
+   }
+  },
+  {
+   "id": 7720156,
+   "name": "Black Mesa Inbound - Complete",
+   "chapter": "black_mesa_inbound",
+   "map": "hl_c00",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "black_mesa_inbound",
+    "map": "hl_c00"
+   }
+  },
+  {
+   "id": 7720157,
+   "name": "Anomalous Materials - Complete",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "anomalous_materials",
+    "map": "hl_c01_a2"
+   }
+  },
+  {
+   "id": 7720158,
+   "name": "Unforeseen Consequences - Complete",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "unforeseen_consequences",
+    "map": "hl_c02_a2"
+   }
+  },
+  {
+   "id": 7720159,
+   "name": "Office Complex - Complete",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "office_complex",
+    "map": "hl_c03"
+   }
+  },
+  {
+   "id": 7720160,
+   "name": "We've Got Hostiles - Complete",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "weve_got_hostiles",
+    "map": "hl_c04"
+   }
+  },
+  {
+   "id": 7720161,
+   "name": "Blast Pit - Complete",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "blast_pit",
+    "map": "hl_c05_a3"
+   }
+  },
+  {
+   "id": 7720162,
+   "name": "Power Up - Complete",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "power_up",
+    "map": "hl_c06"
+   }
+  },
+  {
+   "id": 7720163,
+   "name": "On A Rail - Complete",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "on_a_rail",
+    "map": "hl_c07_a2"
+   }
+  },
+  {
+   "id": 7720164,
+   "name": "Apprehension - Complete",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "apprehension",
+    "map": "hl_c08_a2"
+   }
+  },
+  {
+   "id": 7720165,
+   "name": "Residue Processing - Complete",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "residue_processing",
+    "map": "hl_c09"
+   }
+  },
+  {
+   "id": 7720166,
+   "name": "Questionable Ethics - Complete",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "questionable_ethics",
+    "map": "hl_c10"
+   }
+  },
+  {
+   "id": 7720167,
+   "name": "Surface Tension - Complete",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a5",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "surface_tension",
+    "map": "hl_c11_a5"
+   }
+  },
+  {
+   "id": 7720168,
+   "name": "Forget About Freeman - Complete",
+   "chapter": "forget_about_freeman",
+   "map": "hl_c12",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "forget_about_freeman",
+    "map": "hl_c12"
+   }
+  },
+  {
+   "id": 7720169,
+   "name": "Lambda Core - Complete",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "lambda_core",
+    "map": "hl_c13_a4"
+   }
+  },
+  {
+   "id": 7720170,
+   "name": "Xen - Complete",
+   "chapter": "xen",
+   "map": "hl_c14",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "xen",
+    "map": "hl_c14"
+   }
+  },
+  {
+   "id": 7720171,
+   "name": "Gonarch's Lair - Complete",
+   "chapter": "gonarchs_lair",
+   "map": "hl_c15",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "gonarchs_lair",
+    "map": "hl_c15"
+   }
+  },
+  {
+   "id": 7720172,
+   "name": "Interloper - Complete",
+   "chapter": "interloper",
+   "map": "hl_c16_a4",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "interloper",
+    "map": "hl_c16_a4"
+   }
+  },
+  {
+   "id": 7720173,
+   "name": "Nihilanth - Complete",
+   "chapter": "nihilanth",
+   "map": "hl_c18",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "nihilanth",
+    "map": "hl_c18"
+   }
+  }
+ ],
+ "requirement_groups": {
+  "ranged": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Shotgun",
+   "Crossbow",
+   "RPG",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Hivehand",
+   "Snarks"
+  ],
+  "heavy": [
+   "RPG",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Crossbow",
+   ".357 Magnum",
+   "Shotgun",
+   "MP5"
+  ],
+  "explosives": [
+   "RPG",
+   "Hand Grenade",
+   "Satchel Charge",
+   "Tripmine"
+  ],
+  "underwater": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Crossbow",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Hivehand"
+  ]
+ },
+ "starting_weapons": [
+  "weapon_crowbar",
+  "weapon_medkit"
+ ]
+}

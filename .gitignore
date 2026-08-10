@@ -1,3 +1,6 @@
 *__pycache__
 *out
 .claude
+.pytest_cache/
+build/
+*.pyc

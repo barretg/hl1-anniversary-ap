@@ -1,0 +1,98 @@
+"""Access rules.
+
+Two kinds of gate exist:
+
+* **Mission unlocks** -- entering a mission needs its unlock item, except for the
+  goal mission, which opens once `missions_required` other missions are done.
+* **Weapon gates** -- expressed as "any one of this group of weapons". They are
+  attached either to a mission entrance (everything in the mission inherits it)
+  or to an individual location, which is how a check that sits past the point
+  where a weapon becomes necessary carries that requirement.
+
+The groups themselves live in `tools/campaign_layout.py` and are baked into
+`data/campaign.json`; this module only turns them into callables.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable
+
+from BaseClasses import CollectionState
+
+from .data import MISSION_COMPLETE, REQUIREMENT_GROUPS
+from .options import LogicDifficulty
+
+if TYPE_CHECKING:
+    from . import HalfLifeSvenWorld
+
+# Gate keys used by `gates["always"]` in the campaign data.
+EQUIPMENT_GATES = {"longjump": "Long Jump Module", "suit": "HEV Suit"}
+
+
+def group_items(world: "HalfLifeSvenWorld", group: str) -> list[str]:
+    """The items satisfying a requirement group that are actually in this pool."""
+    return [name for name in REQUIREMENT_GROUPS[group] if name in world.available_item_names]
+
+
+def any_of(world: "HalfLifeSvenWorld", groups: list[str]) -> Callable[[CollectionState], bool] | None:
+    """Require at least one item from each named group."""
+    requirements = [group_items(world, group) for group in groups]
+    requirements = [names for names in requirements if names]
+    if not requirements:
+        return None
+    player = world.player
+
+    def rule(state: CollectionState) -> bool:
+        return all(state.has_any(names, player) for names in requirements)
+
+    return rule
+
+
+def chapter_entry_rule(
+    world: "HalfLifeSvenWorld", chapter: dict
+) -> Callable[[CollectionState], bool] | None:
+    """Rule for the Hub -> first map of a mission entrance."""
+    player = world.player
+    conditions: list[Callable[[CollectionState], bool]] = []
+
+    gates = chapter["gates"]
+    if world.options.logic_difficulty.value == LogicDifficulty.option_strict:
+        strict = any_of(world, gates.get("strict", []))
+        if strict is not None:
+            conditions.append(strict)
+
+    for key in gates.get("always", []):
+        item_name = EQUIPMENT_GATES[key]
+        if item_name in world.available_item_names:
+            conditions.append(lambda state, name=item_name: state.has(name, player))
+
+    if chapter["is_goal"]:
+        required = world.options.missions_required.value
+        conditions.append(
+            lambda state: state.has(MISSION_COMPLETE, player, required)
+        )
+    else:
+        unlock = world.unlock_item_for_chapter[chapter["key"]]
+        conditions.append(lambda state, name=unlock: state.has(name, player))
+
+    if not conditions:
+        return None
+    if len(conditions) == 1:
+        return conditions[0]
+
+    def rule(state: CollectionState) -> bool:
+        return all(condition(state) for condition in conditions)
+
+    return rule
+
+
+def location_rule(
+    world: "HalfLifeSvenWorld", entry: dict
+) -> Callable[[CollectionState], bool] | None:
+    """Extra requirement on a single location, e.g. a boss that needs real damage."""
+    requirement = entry.get("requires")
+    if not requirement:
+        return None
+    if world.options.logic_difficulty.value != LogicDifficulty.option_strict:
+        return None  # loose logic drops soft weapon gates
+    return any_of(world, [requirement])
