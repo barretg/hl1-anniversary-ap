@@ -6,7 +6,7 @@ portal map is the hub, every mission is locked behind a received item, and every
 weapon but the crowbar has to be found in the multiworld.
 
 Player-facing docs: [setup guide](apworld/half_life_sven/docs/setup_en.md) ·
-[game page](<apworld/half_life_sven/docs/en_half_life_sven.md>)
+[game page](<apworld/half_life_sven/docs/en_Half-Life (Sven Co-op).md>)
 
 ## Why Sven Co-op rather than vanilla Half-Life
 
