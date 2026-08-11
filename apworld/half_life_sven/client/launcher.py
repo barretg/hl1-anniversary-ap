@@ -207,6 +207,8 @@ class HalfLifeSvenContext(CommonContext):
         # compares it against its own and pauses checks if they disagree.
         self.data_version = str(self.campaign.get("data_version", ""))
 
+        # Missions this seed left out entirely. No unlock item exists for them.
+        self.excluded_chapters: set[str] = set()
         self.unlocked_chapters: set[str] = set()
         self.unlocked_items: set[str] = set()
         self.completed_missions: set[str] = set()
@@ -354,6 +356,7 @@ class HalfLifeSvenContext(CommonContext):
                 "missions_required", self.missions_required
             )
             self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
+            self.excluded_chapters = set(slot_data.get("excluded_chapters", ()))
             self.death_link_enabled = bool(slot_data.get("death_link", False))
             self.death_link_amnesty = int(
                 slot_data.get("death_link_amnesty", self.death_link_amnesty)
@@ -480,7 +483,9 @@ class HalfLifeSvenContext(CommonContext):
 
     def print_missions(self) -> None:
         for chapter in self.campaign["chapters"]:
-            if chapter["is_goal"]:
+            if chapter["key"] in self.excluded_chapters:
+                status = "not in this seed"
+            elif chapter["is_goal"]:
                 status = "OPEN" if self.goal_open else (
                     f"sealed ({len(self.completed_missions)}/{self.missions_required})"
                 )
@@ -587,6 +592,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
                 goal_open=ctx.goal_open,
                 death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
+        excluded=sorted(ctx.excluded_chapters),
                 data_version=ctx.data_version,
                 force=True,
             )
@@ -608,6 +614,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
+        excluded=sorted(ctx.excluded_chapters),
         data_version=ctx.data_version,
     )
 

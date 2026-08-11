@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, PerGameCommonOptions, Range, StartInventoryPool, Toggle
+from Options import (
+    Choice,
+    DeathLink,
+    DefaultOnToggle,
+    PerGameCommonOptions,
+    Range,
+    StartInventoryPool,
+    Toggle,
+)
 
 from .data import UNLOCKABLE_CHAPTERS
 
@@ -36,6 +44,21 @@ class LogicDifficulty(Choice):
     option_strict = 0
     option_loose = 1
     default = 0
+
+
+class IncludeBlackMesaInbound(DefaultOnToggle):
+    """Include mission 0, Black Mesa Inbound, in the seed.
+
+    The tram ride: no weapons, no enemies, two checks. Turn it off and the mission,
+    its unlock item and its checks are left out of the seed entirely, and it stops
+    counting toward Missions Required.
+
+    Note that the campaign portal has no console for mission 0 — Valve's hub room
+    starts at Anomalous Materials. When it is included, `!warp 0` in Sven Co-op
+    chat is the only way to travel there.
+    """
+
+    display_name = "Include Black Mesa Inbound"
 
 
 class ShuffleHevSuit(Toggle):
@@ -91,6 +114,7 @@ class TrapPercentage(Range):
 class HalfLifeSvenOptions(PerGameCommonOptions):
     missions_required: MissionsRequired
     logic_difficulty: LogicDifficulty
+    include_black_mesa_inbound: IncludeBlackMesaInbound
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
     trap_percentage: TrapPercentage

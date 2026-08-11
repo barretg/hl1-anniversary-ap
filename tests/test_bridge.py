@@ -88,6 +88,15 @@ def test_snapshot_contents(bridge: Bridge) -> None:
     assert "now=" in text
 
 
+def test_snapshot_carries_excluded_missions(bridge: Bridge) -> None:
+    """"Not in this seed" has to be distinguishable from "locked"."""
+    snapshot(bridge)
+    assert "excluded=\n" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, excluded=["black_mesa_inbound"]) is True
+    assert "excluded=black_mesa_inbound" in bridge.in_path.read_text(encoding="utf-8")
+
+
 def test_snapshot_carries_the_deathlink_amnesty(bridge: Bridge) -> None:
     """The plugin counts the allowance down, so it has to be told what it is."""
     snapshot(bridge)

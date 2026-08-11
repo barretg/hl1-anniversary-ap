@@ -73,7 +73,10 @@ unlock, or tells you it is locked. The stock portal's "two players standing on
 the same console" requirement no longer applies, so this works solo.
 
 There is no console for Black Mesa Inbound — the portal map does not have one.
-Use `!warp 0`.
+`!warp 0` is the only way to reach mission 0. If you would rather not have a
+mission that can only be reached by typing a command, set
+`include_black_mesa_inbound: false` in your YAML and it is left out of the seed
+entirely, along with its checks and its unlock item.
 
 Chat commands (press `Y` in game, not the console):
 

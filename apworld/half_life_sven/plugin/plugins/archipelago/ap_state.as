@@ -66,6 +66,9 @@ class APLocation
 class APState
 {
 	dictionary unlockedChapters;  // chapter key -> true
+	// Missions the seed left out. Not the same as locked: no item will ever
+	// unlock these, so the list says so instead of implying a key exists.
+	dictionary excludedChapters;
 	dictionary unlockedItems;     // AP item name -> true
 	bool goalOpen = false;
 	bool connected = false;
@@ -78,6 +81,11 @@ class APState
 	bool ChapterUnlocked( const string& in szKey ) const
 	{
 		return unlockedChapters.exists( szKey );
+	}
+
+	bool ChapterExcluded( const string& in szKey ) const
+	{
+		return excludedChapters.exists( szKey );
 	}
 
 	bool ItemUnlocked( const string& in szItem ) const

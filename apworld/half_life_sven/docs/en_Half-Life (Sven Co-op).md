@@ -25,6 +25,10 @@ somebody, somewhere, sends you the Shotgun.
 The final mission is not unlocked by an item at all. Nihilanth opens once you
 have completed a configurable number of other missions.
 
+Mission 0, Black Mesa Inbound, has no console in the campaign portal — `!warp 0`
+in Sven Co-op chat is the only way to travel there. It can be dropped from the
+seed with `include_black_mesa_inbound: false`.
+
 ## What items and locations get shuffled?
 
 **Items** — 17 mission unlocks, 13 weapons (Glock, .357, MP5, shotgun, crossbow,

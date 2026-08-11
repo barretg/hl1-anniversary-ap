@@ -119,6 +119,37 @@ class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
         self.assertTrue(self.can_reach_entrance("Enter Xen", state))
 
 
+class TestBlackMesaInboundExcluded(StartingMissionMixin, HalfLifeSvenTestBase):
+    options = {"include_black_mesa_inbound": False}
+
+    def test_its_unlock_is_not_in_the_pool(self) -> None:
+        pool = {item.name for item in self.multiworld.itempool if item.player == self.player}
+        precollected = {
+            item.name for item in self.multiworld.precollected_items[self.player]
+        }
+        unlock = unlock_item_for_chapter["black_mesa_inbound"]
+
+        self.assertNotIn(unlock, pool)
+        self.assertNotIn(unlock, precollected)
+
+    def test_its_locations_do_not_exist(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        for name in names:
+            self.assertFalse(name.startswith("Black Mesa Inbound"), name)
+
+    def test_missions_required_drops_by_one(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(
+            world.options.missions_required.value, len(UNLOCKABLE_CHAPTERS) - 1
+        )
+
+    def test_the_goal_is_still_reachable(self) -> None:
+        state = self.multiworld.get_all_state(False)
+        self.assertTrue(self.multiworld.completion_condition[self.player](state))
+
+
 class TestLooseLogic(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"logic_difficulty": "loose"}
 

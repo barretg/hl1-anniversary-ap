@@ -104,6 +104,7 @@ void SendAck( int iSeq )
 *
 * Recognised keys:
 *   chapters=<key>,<key>,...      missions whose unlock item we hold
+*   excluded=<key>,<key>,...      missions this seed left out entirely
 *   items=<name>;<name>;...       AP item names we hold (weapons, equipment)
 *   goal_open=0|1                 enough missions done to enter the goal mission
 *   death_link=0|1
@@ -137,6 +138,7 @@ void BridgePoll()
 	array<string>@ inputLines = szInput.Split( "\n" );
 
 	dictionary chapters;
+	dictionary excluded;
 	dictionary items;
 	bool bGoalOpen = false;
 	bool bConnected = false;
@@ -167,6 +169,16 @@ void BridgePoll()
 				string szChapter = APTrim( keys[i] );
 				if( szChapter.Length() > 0 )
 					chapters[ szChapter ] = true;
+			}
+		}
+		else if( szKey == "excluded" )
+		{
+			array<string>@ keys = szValue.Split( "," );
+			for( uint i = 0; i < keys.length(); ++i )
+			{
+				string szChapter = APTrim( keys[i] );
+				if( szChapter.Length() > 0 )
+					excluded[ szChapter ] = true;
 			}
 		}
 		else if( szKey == "items" )
@@ -212,6 +224,7 @@ void BridgePoll()
 	bool bWasConnected = g_State.connected;
 
 	g_State.unlockedChapters = chapters;
+	g_State.excludedChapters = excluded;
 	g_State.unlockedItems = items;
 	g_State.goalOpen = bGoalOpen;
 	g_State.connected = bConnected;

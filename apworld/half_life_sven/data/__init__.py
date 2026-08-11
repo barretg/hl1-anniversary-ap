@@ -41,6 +41,11 @@ UNLOCKABLE_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if not c["is_go
 
 CHAPTERS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in CHAPTERS}
 
+# Mission 0, Black Mesa Inbound: the tram ride. It has no console in the campaign
+# portal, so `!warp 0` is the only way in, and it is the one mission a YAML can
+# drop from the seed entirely.
+INTRO_CHAPTER: str = CHAPTERS[0]["key"]
+
 # Items that only enter the pool when the matching YAML toggle is on.
 OPTIONAL_ITEM_NAMES = {"HEV Suit": "shuffle_hev_suit", "Long Jump Module": "shuffle_longjump"}
 

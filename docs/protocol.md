@@ -95,14 +95,19 @@ goal_open=0
 death_link=1
 death_link_amnesty=4
 chapters=blast_pit,office_complex
+excluded=black_mesa_inbound
 items=RPG;Shotgun
 now=1786000000
 event=4|ITEM|Ammo Cache|1786000000
 event=5|DEATHLINK|PlayerTwo~a gargantua|1786000001
 ```
 
-`chapters` is comma separated; `items` is semicolon separated because item names
-may legitimately contain commas.
+`chapters` and `excluded` are comma separated; `items` is semicolon separated
+because item names may legitimately contain commas.
+
+`excluded` is the missions the seed left out. It is not the same as "locked": no
+item will ever unlock them, so the game reports "not in this seed" rather than
+leaving the player waiting for a key that does not exist.
 
 `now` is the client's wall clock at write time. Event freshness is judged by
 comparing an event's timestamp against `now` from the same snapshot, so the two

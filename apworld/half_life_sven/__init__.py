@@ -18,15 +18,15 @@ from worlds.LauncherComponents import Component, Type, components, launch_subpro
 from .client.settings import SETTINGS_KEY
 
 from .data import (
+    CHAPTERS,
     GOAL_CHAPTER,
+    INTRO_CHAPTER,
     OPTIONAL_ITEM_NAMES,
     STARTING_WEAPONS,
-    UNLOCKABLE_CHAPTERS,
     VICTORY,
 )
 from .items import (
     HalfLifeSvenItem,
-    chapter_unlock_items,
     create_item,
     filler_items,
     filler_weights,
@@ -115,33 +115,50 @@ class HalfLifeSvenWorld(World):
         # against it so a rule never asks for an item nobody will ever receive.
         self.available_item_names: set[str] = set()
         self.starting_chapter: str = ""
+        # Missions left out of this seed: no regions, no checks, no unlock item,
+        # and they do not count toward `missions_required`.
+        self.excluded_chapters: set[str] = set()
 
     # -- generation ------------------------------------------------------
 
     def generate_early(self) -> None:
+        if not self.options.include_black_mesa_inbound:
+            self.excluded_chapters.add(INTRO_CHAPTER)
+
         self.available_item_names = set(weapon_items)
         for name in optional_items:
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
                 self.available_item_names.add(name)
-        self.available_item_names.update(chapter_unlock_items)
+        self.available_item_names.update(
+            unlock_item_for_chapter[chapter["key"]]
+            for chapter in self.included_chapters
+            if chapter["key"] in unlock_item_for_chapter
+        )
 
         # Exactly one mission is playable from the word go, and it has to be one
         # that a player with nothing but a crowbar can actually walk into. Picking
         # a gated mission (anything from We've Got Hostiles on, under strict logic)
         # leaves sphere one empty and fill has nowhere to put its first item.
-        startable = [
-            chapter for chapter in UNLOCKABLE_CHAPTERS
-            if chapter_is_startable(self, chapter)
+        candidates = [
+            chapter for chapter in self.included_chapters
+            if not chapter["is_goal"] and chapter_is_startable(self, chapter)
         ]
-        starting = self.random.choice(startable or UNLOCKABLE_CHAPTERS)
+        fallback = [c for c in self.included_chapters if not c["is_goal"]]
+        starting = self.random.choice(candidates or fallback)
         self.starting_chapter = starting["key"]
         self.multiworld.push_precollected(
             self.create_item(unlock_item_for_chapter[self.starting_chapter])
         )
 
-        # `missions_required` cannot exceed the number of unlockable missions.
-        if self.options.missions_required.value > len(UNLOCKABLE_CHAPTERS):
-            self.options.missions_required.value = len(UNLOCKABLE_CHAPTERS)
+        # `missions_required` cannot exceed the number of missions in the seed.
+        unlockable = len([c for c in self.included_chapters if not c["is_goal"]])
+        if self.options.missions_required.value > unlockable:
+            self.options.missions_required.value = unlockable
+
+    @property
+    def included_chapters(self) -> list[dict[str, Any]]:
+        """Every mission this seed actually contains, goal mission included."""
+        return [c for c in CHAPTERS if c["key"] not in self.excluded_chapters]
 
     def create_regions(self) -> None:
         create_regions(self)
@@ -188,6 +205,10 @@ class HalfLifeSvenWorld(World):
             "missions_required": self.options.missions_required.value,
             "goal_chapter": GOAL_CHAPTER["key"],
             "starting_chapter": self.starting_chapter,
+            # Missions that are not in this seed. The client tells the plugin, so
+            # the in-game list says "not in this seed" rather than showing a
+            # mission that stays locked forever with no explanation.
+            "excluded_chapters": sorted(self.excluded_chapters),
             "starting_weapons": STARTING_WEAPONS,
             "death_link": bool(self.options.death_link),
             "death_link_amnesty": self.options.death_link_amnesty.value,

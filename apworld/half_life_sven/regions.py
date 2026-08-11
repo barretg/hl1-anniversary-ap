@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .data import CHAPTERS, MISSION_COMPLETE, VICTORY
+from .data import MISSION_COMPLETE, VICTORY
 from .locations import HalfLifeSvenLocation, locations_by_map
 from .rules import chapter_entry_rule, location_rule
 
@@ -34,7 +34,11 @@ def create_regions(world: "HalfLifeSvenWorld") -> None:
     multiworld.regions += [menu, hub]
     menu.connect(hub)
 
-    for chapter in CHAPTERS:
+    # An excluded mission gets no regions at all, so its checks never enter the
+    # datapackage-backed location pool for this slot. Leaving them in place with
+    # no way to unlock the mission would make them permanently unreachable, which
+    # `accessibility: full` correctly refuses to generate.
+    for chapter in world.included_chapters:
         previous: Region | None = None
         for map_name in chapter["maps"]:
             region = Region(map_name, player, multiworld)

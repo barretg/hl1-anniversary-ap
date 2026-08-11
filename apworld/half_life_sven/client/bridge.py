@@ -178,6 +178,7 @@ class Bridge:
         items: list[str],
         goal_open: bool,
         death_link: bool,
+        excluded: list[str] | None = None,
         death_link_amnesty: int = 0,
         data_version: str = "",
         force: bool = False,
@@ -202,6 +203,10 @@ class Bridge:
             # the remaining allowance at the moment of the death.
             f"death_link_amnesty={max(0, int(death_link_amnesty))}",
             "chapters=" + ",".join(sorted(chapters)),
+            # Missions the seed left out. Distinct from "locked": no item will
+            # ever unlock these, and the game should say so rather than leaving
+            # the player waiting for a key that does not exist.
+            "excluded=" + ",".join(sorted(excluded or ())),
             "items=" + ";".join(sorted(items)),
         ]
         body = "\n".join(lines)

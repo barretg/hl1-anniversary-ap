@@ -43,7 +43,9 @@ void ShowStatus( CBasePlayer@ pPlayer )
 		APChapter@ pChapter = g_Chapters[i];
 		string szStatus;
 
-		if( pChapter.isGoal )
+		if( g_State.ChapterExcluded( pChapter.key ) )
+			szStatus = "not in this seed";
+		else if( pChapter.isGoal )
 			szStatus = g_State.goalOpen ? "OPEN" : "sealed (finish more missions)";
 		else
 			szStatus = g_State.ChapterUnlocked( pChapter.key ) ? "unlocked" : "locked";
@@ -53,7 +55,8 @@ void ShowStatus( CBasePlayer@ pPlayer )
 	}
 
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
-		"Type !warp <number> to travel to an unlocked mission.\n" );
+		"Type !warp <number> to travel to an unlocked mission.\n"
+		"Mission 0 has no console in the portal room; !warp 0 is the only way there.\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"[AP] Mission list printed to your console (~).\n" );
 }
@@ -67,6 +70,13 @@ void WarpToChapter( CBasePlayer@ pPlayer, int iIndex )
 	}
 
 	APChapter@ pChapter = g_Chapters[iIndex];
+
+	if( g_State.ChapterExcluded( pChapter.key ) )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] " + pChapter.name + " is not part of this seed.\n" );
+		return;
+	}
 
 	if( !ChapterPlayable( pChapter ) )
 	{
