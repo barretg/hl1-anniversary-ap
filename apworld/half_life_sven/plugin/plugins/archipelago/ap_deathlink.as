@@ -63,8 +63,11 @@ HookReturnCode PlayerKilled( CBasePlayer@ pPlayer, CBaseEntity@ pAttacker, int i
 	string szName = string( pPlayer.pev.netname );
 	string szCause = DeathCause( pAttacker );
 
-	if( g_State.deathLink && g_State.connected )
-		BridgeSend( "DEATH|" + szName + "|" + szCause );
+	// Reported unconditionally. Whether it becomes a DeathLink is the client's
+	// call, and the client is the only thing that actually knows -- gating here
+	// on our cached copy of its flags means any staleness silently swallows
+	// deaths, with nothing in either log to say why.
+	BridgeSend( "DEATH|" + szName + "|" + szCause );
 
 	WipeLobby( pPlayer, szName + " died (" + szCause + ") and took everyone along." );
 

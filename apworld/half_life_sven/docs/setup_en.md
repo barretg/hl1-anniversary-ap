@@ -10,25 +10,25 @@
 ## Install
 
 1. Put `half_life_sven.apworld` in your Archipelago `custom_worlds` folder.
-2. Install the AngelScript plugin into Sven Co-op:
+2. Open the Archipelago Launcher and start **Half-Life (Sven Co-op) Client**.
+3. The first time it runs, a folder picker asks for your Sven Co-op folder (the
+   one containing `svencoop`). It remembers the answer, so it only asks once.
+4. Type `/install` in the client. That copies the AngelScript plugin into your
+   game and registers it in `svencoop/default_plugins.txt`.
 
-   ```
-   python tools/install_plugin.py --game "C:/Program Files (x86)/Steam/steamapps/common/Sven Co-op"
-   ```
+`/uninstall` removes it again. Your live bridge files are left alone.
 
-   That copies `scripts/plugins/archipelago/` and `scripts/plugins/store/archipelago/`
-   into your Sven Co-op install and adds this block to `svencoop/default_plugins.txt`:
+If you would rather do it by hand, the plugin tree is inside the apworld at
+`half_life_sven/plugin/plugins/`, which mirrors `svencoop/scripts/`. Copy it
+across and add this block to `svencoop/default_plugins.txt` yourself:
 
-   ```
-   "plugin"
-   {
-       "name" "Archipelago"
-       "script" "archipelago/ap_main"
-   }
-   ```
-
-   To do it by hand, copy the contents of the repo's `angelscript/scripts/` over
-   `svencoop/scripts/` and add that block yourself.
+```
+"plugin"
+{
+    "name" "Archipelago"
+    "script" "archipelago/ap_main"
+}
+```
 
 ## Play
 
@@ -37,30 +37,45 @@
    `-sp_campaign_portal`. This is the Sven Co-op campaign portal, and it is your
    hub. Plugins only run on servers, so joining someone else's server means
    *their* machine needs the plugin and the client.
-3. Open the Archipelago Launcher and start **Half-Life (Sven Co-op) Client**.
-   Connect it to the room.
-4. If the client cannot find your game, point it at the install:
-
-   ```
-   /gamedir F:/SteamLibrary/steamapps/common/Sven Co-op
-   ```
-
-   The client says `Bridging through ...` once it is happy.
+3. Connect the client to the room.
 
 You should see `[AP] Connected to the multiworld.` in the game chat.
+
+## Client commands
+
+| Command | Effect |
+| --- | --- |
+| `/install` | install the plugin into the selected game folder |
+| `/uninstall` | remove the plugin, leaving your bridge files |
+| `/gamedir` | reopen the folder picker to change installs |
+| `/gamedir <path>` | set the folder directly, without the picker |
+| `/where` | show the game folder, bridge path and plugin status |
+| `/commands` | list the chat commands you type inside the game |
+| `/missions` | show mission unlock status |
+| `/deathlink` | toggle DeathLink |
 
 ## Playing the randomizer
 
 You start with the crowbar, the medkit, and **one random mission unlock**.
 
-- Type `!ap` in chat to list every mission and its status (printed to your
-  console, press `~`).
-- Type `!warp <number>` to travel to an unlocked mission.
-- Type `!hub` to return to the campaign portal.
+Walk up to a chapter's console in the portal room and press either button. The
+plugin rewires the consoles: one press travels to that mission if you have its
+unlock, or tells you it is locked. The stock portal's "two players standing on
+the same console" requirement no longer applies, so this works solo.
 
-The portal map's physical consoles work too, but they need two players standing
-on a console at once — `!warp` is there so a solo run does not need a second
-person.
+There is no console for Black Mesa Inbound — the portal map does not have one.
+Use `!warp 0`.
+
+Chat commands (press `Y` in game, not the console):
+
+| Command | Effect |
+| --- | --- |
+| `!help` | list these commands |
+| `!ap` | list every mission and its status, printed to your console (`~`) |
+| `!warp <number>` | travel to an unlocked mission |
+| `!hub` | return to the campaign portal |
+
+The client also prints this list when it connects.
 
 Finishing a mission sends you back to the hub automatically and sends its
 completion check. Trying to enter a locked mission is refused.

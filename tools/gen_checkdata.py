@@ -19,10 +19,12 @@ from campaign_layout import CLASSNAME_TO_ITEM, STARTING_WEAPONS
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CAMPAIGN_PATH = REPO_ROOT / "apworld" / "half_life_sven" / "data" / "campaign.json"
-# Plugins may only read and write under scripts/plugins/store/, so the data file
-# has to live there rather than next to the .as sources.
+# The plugin tree is bundled inside the world package so a zipped .apworld can
+# install itself. Plugins may only read and write under scripts/plugins/store/,
+# so the data file sits there rather than next to the .as sources.
 OUT_PATH = (
-    REPO_ROOT / "angelscript" / "scripts" / "plugins" / "store" / "archipelago" / "checkdata.txt"
+    REPO_ROOT / "apworld" / "half_life_sven" / "plugin"
+    / "plugins" / "store" / "archipelago" / "checkdata.txt"
 )
 
 FORMAT_VERSION = 1

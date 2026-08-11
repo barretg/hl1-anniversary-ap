@@ -18,7 +18,8 @@ sys.path.insert(0, str(REPO / "tools"))
 
 CAMPAIGN_PATH = REPO / "apworld" / "half_life_sven" / "data" / "campaign.json"
 CHECKDATA_PATH = (
-    REPO / "angelscript" / "scripts" / "plugins" / "store" / "archipelago" / "checkdata.txt"
+    REPO / "apworld" / "half_life_sven" / "plugin"
+    / "plugins" / "store" / "archipelago" / "checkdata.txt"
 )
 
 

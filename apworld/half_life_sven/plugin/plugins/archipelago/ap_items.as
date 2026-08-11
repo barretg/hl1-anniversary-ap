@@ -14,8 +14,10 @@
 bool ClassnameAllowed( const string& in szClassname )
 {
 	for( uint i = 0; i < g_StartingWeapons.length(); ++i )
+	{
 		if( g_StartingWeapons[i] == szClassname )
 			return true;
+	}
 
 	string szItem;
 	if( !g_LockedClassnames.get( szClassname, szItem ) )
@@ -34,11 +36,23 @@ array<string> AllowedClassnames()
 	{
 		string szItem;
 		if( g_LockedClassnames.get( keys[i], szItem ) && g_State.ItemUnlocked( szItem ) )
+		{
 			allowed.insertLast( keys[i] );
+		}
 	}
 
 	return allowed;
 }
+
+// Handing this out with GiveNamedItem fires the suit's pickup sequence, which
+// wipes the inventory we are in the middle of rebuilding. So the suit is never
+// granted here: it is kept or taken instead, and the player earns it by walking
+// over the pickup in Anomalous Materials once the item has arrived.
+const string SUIT_CLASSNAME = "item_suit";
+
+// Long enough for the suit's pickup sequence to have done its inventory wipe
+// before we put the weapons back.
+const float SUIT_PICKUP_RESTORE_DELAY = 1.5f;
 
 /*
 * Rebuild a player's inventory to exactly what the multiworld has granted.
@@ -52,14 +66,26 @@ void ApplyLoadout( CBasePlayer@ pPlayer )
 	if( pPlayer is null || !pPlayer.IsConnected() )
 		return;
 
-	bool bSuitAllowed = ClassnameAllowed( "item_suit" );
+	// Never strip on incomplete data. If checkdata.txt has not loaded we do not
+	// know what is allowed, and taking everything away and granting nothing back
+	// would leave the player with no crowbar and no explanation.
+	if( !CheckDataLoaded() )
+	{
+		APLog( "loadout skipped: checkdata.txt is not loaded" );
+		return;
+	}
+
+	// Only the strip half applies to the suit. Passing false here is what makes
+	// a respawn keep a suit the player already has.
+	bool bSuitAllowed = ClassnameAllowed( SUIT_CLASSNAME );
 	pPlayer.RemoveAllItems( !bSuitAllowed, false );
 
 	array<string> allowed = AllowedClassnames();
 	for( uint i = 0; i < allowed.length(); ++i )
 	{
-		// The suit and long jump module are items, not weapons; giving them
-		// when they are not owned is exactly what we are preventing.
+		if( allowed[i] == SUIT_CLASSNAME )
+			continue;
+
 		pPlayer.GiveNamedItem( allowed[i] );
 	}
 }
@@ -89,16 +115,19 @@ void SweepIllegalWeapons()
 	{
 		CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( iClient );
 		if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
+		{
 			continue;
+		}
 
-		for( int iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
+		// m_rgpPlayerItems takes a size_t; using int here warns on every build.
+		for( size_t iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
 		{
 			CBasePlayerItem@ pItem = pPlayer.m_rgpPlayerItems( iSlot );
 
 			while( pItem !is null )
 			{
 				// Grab the next link first: removing an item unlinks it.
-				CBasePlayerItem@ pNext = cast<CBasePlayerItem@>( pItem.m_pNext.GetEntity() );
+				CBasePlayerItem@ pNext = cast<CBasePlayerItem@>( pItem.m_hNextItem.GetEntity() );
 
 				if( !ClassnameAllowed( pItem.GetClassname() ) )
 				{
@@ -124,13 +153,15 @@ void GrantFillerItem( const string& in szItemName )
 		if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
 			continue;
 
+		// TakeHealth/TakeArmor add when given a positive amount; they are the
+		// API's grant path despite the names.
 		if( szItemName == "Medkit" || szItemName == "Health Charge" )
 		{
-			pPlayer.GiveHealth( 25.0f, DMG_GENERIC );
+			pPlayer.TakeHealth( 25.0f, DMG_GENERIC );
 		}
 		else if( szItemName == "Armor Battery" )
 		{
-			pPlayer.pev.armorvalue = Math.min( pPlayer.pev.armorvalue + 20.0f, MAX_NORMAL_BATTERY );
+			pPlayer.TakeArmor( 20.0f, DMG_GENERIC, 100 );
 		}
 		else if( szItemName == "Ammo Cache" )
 		{
@@ -147,13 +178,14 @@ void GrantFillerItem( const string& in szItemName )
 */
 void GiveAmmoForHeldWeapons( CBasePlayer@ pPlayer )
 {
-	for( int iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
+	for( size_t iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
 	{
 		CBasePlayerItem@ pItem = pPlayer.m_rgpPlayerItems( iSlot );
 
 		while( pItem !is null )
 		{
-			CBasePlayerWeapon@ pWeapon = cast<CBasePlayerWeapon@>( pItem );
+			// GetWeaponPtr is the API's own accessor; a raw cast is not reliable.
+			CBasePlayerWeapon@ pWeapon = pItem.GetWeaponPtr();
 			if( pWeapon !is null )
 			{
 				string szAmmo = pWeapon.pszAmmo1();
@@ -162,7 +194,7 @@ void GiveAmmoForHeldWeapons( CBasePlayer@ pPlayer )
 					                  szAmmo, pWeapon.iMaxAmmo1() );
 			}
 
-			@pItem = cast<CBasePlayerItem@>( pItem.m_pNext.GetEntity() );
+			@pItem = cast<CBasePlayerItem@>( pItem.m_hNextItem.GetEntity() );
 		}
 	}
 }
@@ -186,7 +218,15 @@ HookReturnCode PickupCanCollect( CBaseEntity@ pPickup, CBaseEntity@ pOther, bool
 	RegisterPickupCheck( szClassname );
 
 	if( ClassnameAllowed( szClassname ) )
+	{
+		// Collecting the suit runs a sequence that empties the inventory, so
+		// hand the unlocked weapons back once it has finished with them.
+		if( szClassname == SUIT_CLASSNAME )
+			g_Scheduler.SetTimeout( "ApplyLoadoutDeferred", SUIT_PICKUP_RESTORE_DELAY,
+			                        EHandle( pPlayer ) );
+
 		return HOOK_CONTINUE;
+	}
 
 	bResult = false;
 	g_PlayerFuncs.ClientPrint(

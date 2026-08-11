@@ -9,7 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "apworld" / "half_life_sven"))
 
-from client.bridge import Bridge, find_store_dir  # noqa: E402
+from client.bridge import Bridge, find_store_dir, is_game_dir  # noqa: E402
 
 
 @pytest.fixture
@@ -82,6 +82,33 @@ def test_snapshot_contents(bridge: Bridge) -> None:
     assert "now=" in text
 
 
+def test_snapshot_carries_a_session_id(bridge: Bridge) -> None:
+    snapshot(bridge)
+    assert f"session={bridge.session}" in bridge.in_path.read_text(encoding="utf-8")
+
+
+def test_sessions_differ_between_client_runs(tmp_path: Path) -> None:
+    """The plugin keys its event high-water mark on this."""
+    assert Bridge(tmp_path).session != Bridge(tmp_path).session
+
+
+def test_equal_length_changes_are_still_written(bridge: Bridge) -> None:
+    """A flag flip does not change the snapshot's length.
+
+    The plugin used to compare file size and would freeze on a stale snapshot,
+    so this asserts the two states are genuinely distinguishable by content.
+    """
+    snapshot(bridge, connected=True)
+    first = bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, connected=False) is True
+    second = bridge.in_path.read_text(encoding="utf-8")
+
+    assert "connected=1" in first
+    assert "connected=0" in second
+    assert first != second
+
+
 def test_pending_event_survives_until_acknowledged(bridge: Bridge) -> None:
     event = bridge.queue_event("ITEM", "Ammo Cache")
     snapshot(bridge)
@@ -143,3 +170,33 @@ def test_find_store_dir_accepts_root_or_svencoop(tmp_path: Path, suffix: str) ->
 
     assert result.parts[-4:] == ("scripts", "plugins", "store", "archipelago")
     assert "svencoop" in result.parts
+
+
+def make_install(root: Path) -> Path:
+    maps = root / "svencoop" / "maps"
+    maps.mkdir(parents=True)
+    (maps / "hl_c00.bsp").write_bytes(b"")
+    return root
+
+
+def test_is_game_dir_accepts_install_root(tmp_path: Path) -> None:
+    assert is_game_dir(make_install(tmp_path))
+
+
+def test_is_game_dir_accepts_the_svencoop_folder(tmp_path: Path) -> None:
+    assert is_game_dir(make_install(tmp_path) / "svencoop")
+
+
+def test_is_game_dir_rejects_an_empty_lookalike(tmp_path: Path) -> None:
+    """A folder named right but without the campaign maps is not an install."""
+    (tmp_path / "svencoop").mkdir()
+    assert not is_game_dir(tmp_path)
+
+
+@pytest.mark.parametrize("value", ["", None])
+def test_is_game_dir_rejects_empty_input(value) -> None:
+    assert not is_game_dir(value)
+
+
+def test_is_game_dir_rejects_unrelated_folder(tmp_path: Path) -> None:
+    assert not is_game_dir(tmp_path)

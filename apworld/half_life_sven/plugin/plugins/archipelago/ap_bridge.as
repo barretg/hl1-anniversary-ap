@@ -14,9 +14,15 @@
 * it, write back `ACK <seq>`, and the client drops it from the next snapshot.
 */
 
-// ap_in.txt is rewritten by the client, not appended to, so tracking its size is
-// enough to know whether anything changed since the last poll.
-uint g_uiLastInputSize = 0;
+// The last snapshot text we parsed, so a poll that finds no change can bail out
+// without reparsing. Compared in full rather than by size: `connected=1` and
+// `connected=0` are the same length, and a size check would silently freeze the
+// plugin on a stale snapshot forever.
+string g_szLastInput;
+
+// The client stamps each session with an id. When it changes, the client has
+// restarted and its event sequence numbers have restarted with it.
+string g_szSession;
 
 // The client's wall-clock time when it last wrote the snapshot. Event freshness
 // is judged against this, so the two sides never have to agree on a clock.
@@ -76,15 +82,23 @@ void BridgePoll()
 	if( pFile is null || !pFile.IsOpen() )
 		return;
 
-	uint uiSize = pFile.GetSize();
-	// Cheap early-out: an unchanged snapshot is the common case, several times
-	// a second, and reparsing it would be pure waste.
-	if( uiSize == g_uiLastInputSize )
+	// Read the whole file first, then decide whether it is worth parsing. The
+	// snapshot is a couple of hundred bytes, so this is cheaper than being
+	// clever and cannot go stale the way a size comparison can.
+	string szInput;
+	while( !pFile.EOFReached() )
 	{
-		pFile.Close();
-		return;
+		string szRaw;
+		pFile.ReadLine( szRaw );
+		szInput += szRaw + "\n";
 	}
-	g_uiLastInputSize = uiSize;
+	pFile.Close();
+
+	if( szInput == g_szLastInput )
+		return;
+	g_szLastInput = szInput;
+
+	array<string>@ inputLines = szInput.Split( "\n" );
 
 	dictionary chapters;
 	dictionary items;
@@ -93,11 +107,11 @@ void BridgePoll()
 	bool bDeathLink = false;
 	array<string> events;
 
-	while( !pFile.EOFReached() )
+	string szSession;
+
+	for( uint iLine = 0; iLine < inputLines.length(); ++iLine )
 	{
-		string szRaw;
-		pFile.ReadLine( szRaw );
-		string szLine = APTrim( szRaw );
+		string szLine = APTrim( inputLines[iLine] );
 		if( szLine.Length() == 0 || szLine.SubString( 0, 1 ) == "#" )
 			continue;
 
@@ -132,6 +146,8 @@ void BridgePoll()
 		}
 		else if( szKey == "now" )
 			g_flSnapshotNow = atof( szValue );
+		else if( szKey == "session" )
+			szSession = szValue;
 		else if( szKey == "goal_open" )
 			bGoalOpen = szValue == "1";
 		else if( szKey == "connected" )
@@ -142,7 +158,15 @@ void BridgePoll()
 			events.insertLast( szValue );
 	}
 
-	pFile.Close();
+	// A restarted client numbers its events from 1 again. Without this, every
+	// new event would look like one we had already applied and be ACKed away.
+	if( szSession != g_szSession )
+	{
+		if( g_szSession.Length() > 0 )
+			APLog( "client session changed; resetting event sequence" );
+		g_szSession = szSession;
+		g_State.lastEventSeq = 0;
+	}
 
 	bool bWasConnected = g_State.connected;
 
@@ -153,7 +177,10 @@ void BridgePoll()
 	g_State.deathLink = bDeathLink;
 
 	if( bConnected && !bWasConnected )
-		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, "[AP] Connected to the multiworld.\n" );
+		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
+			"[AP] Connected to the multiworld. Type !help for commands.\n" );
+	else if( !bConnected && bWasConnected )
+		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, "[AP] Lost the multiworld connection.\n" );
 
 	// Applying the snapshot may have unlocked a weapon, so refresh loadouts
 	// before handling events (an incoming DeathLink should not race a grant).

@@ -16,8 +16,13 @@ server and an item reaches the player in well under a second.
 
 ## Design rules
 
-**The client is the source of truth.** The plugin holds no state that matters
-across a map change. On every map load it re-reads `checkdata.txt` and waits for
+**The client is the source of truth.** That cuts both ways: the plugin must not
+make decisions by consulting its cached copy of a client-owned flag. `DEATH` is
+reported on every death and the client decides whether it becomes a DeathLink,
+because gating in the plugin means a stale snapshot silently swallows deaths with
+nothing in either log to explain it.
+
+The plugin holds no state that matters across a map change. On every map load it re-reads `checkdata.txt` and waits for
 the next snapshot. A plugin reload, a map change, or a server restart therefore
 costs nothing.
 
@@ -44,15 +49,27 @@ If the file shrinks, the client treats it as a new game session and rewinds.
 | `CHECK\|<location id>` | a location was collected |
 | `COMPLETE\|<chapter key>` | a mission was finished |
 | `GOAL\|<chapter key>` | Nihilanth is dead; client sends `StatusUpdate: CLIENT_GOAL` |
-| `DEATH\|<player>\|<cause>` | outgoing DeathLink |
+| `DEATH\|<player>\|<cause>` | a player died; sent unconditionally |
 | `ACK\|<seq>` | event consumed; client may drop it |
 
 ## `ap_in.txt` — client to game
 
 A full snapshot, written to a temp file and renamed so the plugin never reads a
-half-written one. The plugin early-outs on unchanged file size.
+half-written one. The plugin reads it whole every poll and early-outs if the text
+is byte-identical to what it last parsed.
+
+It compares content, never length. `connected=1` and `connected=0` are the same
+size, as are the other flags, so a size check would let the plugin freeze on a
+stale snapshot indefinitely with no symptom other than things quietly not
+happening.
+
+`session` identifies one run of the client. The client's event sequence restarts
+at 1 each launch, so when the session changes the plugin resets its
+high-water mark; otherwise every event from a restarted client would look
+already-applied and be ACKed away without running.
 
 ```
+session=9f3c1ab2
 connected=1
 goal_open=0
 death_link=1

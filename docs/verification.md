@@ -58,10 +58,17 @@ weapons via its `.cfg`, and you should spawn there with only the crowbar.
 
 ### 4. Mission gating and completion
 
+- Press a console button in the portal room, solo. It should warp with no second
+  player and no "Access Denied" clip. Pressing a locked mission's console should
+  print the lock message instead.
 - `!warp` into an unlocked mission, `!warp` into a locked one (must be refused).
 - Play a multi-part mission to its end. The transition out of the mission's last
   map should send the completion check and return you to the hub rather than
   continuing to the next chapter.
+- Run `restart` mid-mission. Nothing should be sent and nothing should change
+  level; a restart re-enters the same map and is not a transition.
+- Type `!hub` from the middle of a mission. You should go back to the hub with
+  **no** completion check, since you did not leave from the mission's last map.
 - The `MapChange` hook's ability to *cancel* a transition by returning
   `HOOK_HANDLED` is the second unverified assumption. If cancellation does not
   work, you will land in the next chapter and be bounced back to the hub a few

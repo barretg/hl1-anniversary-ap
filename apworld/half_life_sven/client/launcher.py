@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-from pathlib import Path
 
 import Utils
 from CommonClient import (
@@ -22,28 +21,121 @@ from CommonClient import (
 )
 from NetUtils import ClientStatus
 
-from .bridge import Bridge, find_store_dir
+from .. import plugin
+from . import settings
+from .bridge import Bridge, find_store_dir, is_game_dir
 
 GAME_NAME = "Half-Life (Sven Co-op)"
 POLL_INTERVAL = 0.2
 
-# Where to look for the game when the user has not told us. Sven Co-op is a Steam
-# title, so the library could be on any drive; these are only a first guess and
-# `/gamedir` overrides them.
+# Key under which the chosen install path is remembered between sessions, so the
+# folder picker only ever appears once.
+STORE_KEY = "game_dir"
+
+# Printed on connect, because these are typed in the game's chat rather than
+# here and are easy to forget between sessions.
+IN_GAME_COMMANDS = (
+    ("!ap", "list every mission and its unlock status"),
+    ("!warp <number>", "travel to an unlocked mission"),
+    ("!hub", "return to the campaign portal"),
+    ("!help", "show these commands in game"),
+)
+
+# Only a first guess for where Steam put the game. Sven Co-op is commonly on a
+# secondary library drive, in which case the picker takes over.
 DEFAULT_GAME_DIRS = [
     r"C:\Program Files (x86)\Steam\steamapps\common\Sven Co-op",
     r"C:\Program Files\Steam\steamapps\common\Sven Co-op",
 ]
 
 
+def browse_for_game_dir() -> str:
+    """Ask for the Sven Co-op folder with a native directory picker.
+
+    Runs its own withdrawn Tk root and tears it down again, so it does not
+    interfere with the Kivy client window. Returns "" if cancelled or if tk is
+    unavailable (a headless or stripped install), in which case `/gamedir <path>`
+    is still available.
+    """
+    try:
+        import tkinter
+        from tkinter import filedialog
+    except ImportError:
+        logger.warning("No tkinter available; set the path with /gamedir <path>.")
+        return ""
+
+    try:
+        root = tkinter.Tk()
+        root.withdraw()
+        try:
+            chosen = filedialog.askdirectory(
+                title="Select your Sven Co-op folder (the one containing 'svencoop')",
+                mustexist=True,
+            )
+        finally:
+            root.destroy()
+    except Exception as exc:  # tk raises bare TclError on a broken display
+        logger.warning(f"Could not open the folder picker ({exc}); use /gamedir <path>.")
+        return ""
+
+    return chosen or ""
+
+
 class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
     def _cmd_gamedir(self, path: str = "") -> bool:
-        """Set the Sven Co-op install directory (the folder containing svencoop)."""
-        if not path:
-            logger.info(f"Game directory: {self.ctx.game_dir or '(not set)'}")
-            logger.info(f"Bridge directory: {self.ctx.bridge.dir if self.ctx.bridge else '(none)'}")
+        """Change the Sven Co-op folder. With no argument, opens a folder picker."""
+        if path:
+            self.ctx.set_game_dir(path)
+        else:
+            self.ctx.prompt_for_game_dir()
+        return True
+
+    def _cmd_where(self) -> bool:
+        """Show the current Sven Co-op folder, bridge path and plugin status."""
+        logger.info(f"Game directory: {self.ctx.game_dir or '(not set)'}")
+        logger.info(f"Bridge directory: {self.ctx.bridge.dir if self.ctx.bridge else '(none)'}")
+        if self.ctx.game_dir:
+            state = "installed" if plugin.is_installed(self.ctx.game_dir) else "not installed"
+            logger.info(f"Plugin: {state}")
+        return True
+
+    def _cmd_install(self) -> bool:
+        """Install the Sven Co-op plugin into the selected game folder."""
+        if not self.ctx.game_dir:
+            logger.error("No game folder set. Run /gamedir first.")
             return True
-        self.ctx.set_game_dir(path)
+        try:
+            written, registered = plugin.install(self.ctx.game_dir)
+        except (OSError, ValueError) as exc:
+            logger.error(f"Install failed: {exc}")
+            return True
+
+        logger.info(f"Installed {written} files into {self.ctx.game_dir}.")
+        logger.info(
+            "Registered the plugin in default_plugins.txt (backup written alongside it)."
+            if registered
+            else "Plugin was already registered in default_plugins.txt."
+        )
+        logger.info("Restart the map or the server for the plugin to load.")
+        return True
+
+    def _cmd_uninstall(self) -> bool:
+        """Remove the Sven Co-op plugin. Leaves your bridge files alone."""
+        if not self.ctx.game_dir:
+            logger.error("No game folder set. Run /gamedir first.")
+            return True
+        try:
+            removed, deregistered = plugin.uninstall(self.ctx.game_dir)
+        except (OSError, ValueError) as exc:
+            logger.error(f"Uninstall failed: {exc}")
+            return True
+
+        logger.info(f"Removed {removed} plugin files.")
+        logger.info(
+            "Deregistered the plugin from default_plugins.txt."
+            if deregistered
+            else "Plugin was not registered in default_plugins.txt."
+        )
         return True
 
     def _cmd_deathlink(self) -> bool:
@@ -60,16 +152,26 @@ class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
         self.ctx.print_missions()
         return True
 
+    def _cmd_commands(self) -> bool:
+        """List the chat commands you type inside Sven Co-op."""
+        self.ctx.print_in_game_commands()
+        return True
+
 
 class HalfLifeSvenContext(CommonContext):
     game = GAME_NAME
     command_processor = HalfLifeSvenCommandProcessor
     items_handling = 0b111  # everything, including our own placements
 
-    def __init__(self, server_address: str | None, password: str | None) -> None:
+    def __init__(
+        self, server_address: str | None, password: str | None, game_dir: str = ""
+    ) -> None:
         super().__init__(server_address, password)
         self.game_dir: str = ""
         self.bridge: Bridge | None = None
+        # An explicit --gamedir wins over everything and must not trigger the
+        # picker, so it is applied before resolution rather than after.
+        self._forced_game_dir = game_dir
 
         self.campaign = load_campaign()
         self.chapter_by_unlock_item = {
@@ -92,30 +194,97 @@ class HalfLifeSvenContext(CommonContext):
         self.death_link_enabled = False
         self.goal_sent = False
 
-        self.set_game_dir(os.environ.get("SVENCOOP_DIR", "") or self._guess_game_dir())
+        self.resolve_game_dir()
 
     # -- setup -----------------------------------------------------------
+
+    def resolve_game_dir(self) -> None:
+        """Find the install without asking, or fall back to the folder picker.
+
+        Order: the remembered choice, then SVENCOOP_DIR, then the usual Steam
+        locations. Only if all three miss does the user get prompted, and the
+        answer is remembered so it never asks twice.
+        """
+        for source, candidate in (
+            ("--gamedir", self._forced_game_dir),
+            ("saved", self.load_saved_game_dir()),
+            ("SVENCOOP_DIR", os.environ.get("SVENCOOP_DIR", "")),
+            ("default install path", self._guess_game_dir()),
+        ):
+            if is_game_dir(candidate):
+                logger.info(f"Found Sven Co-op via {source}.")
+                self.set_game_dir(candidate)
+                return
+
+        logger.info("Sven Co-op not found automatically. Please pick the folder.")
+        self.prompt_for_game_dir()
+
+    def prompt_for_game_dir(self) -> None:
+        """Open the folder picker and apply the result."""
+        chosen = browse_for_game_dir()
+        if not chosen:
+            logger.warning(
+                "No folder selected. Use /gamedir to try again, "
+                "or /gamedir <path> to type it directly."
+            )
+            return
+        self.set_game_dir(chosen)
 
     @staticmethod
     def _guess_game_dir() -> str:
         for candidate in DEFAULT_GAME_DIRS:
-            if Path(candidate, "svencoop").is_dir():
+            if is_game_dir(candidate):
                 return candidate
         return ""
 
-    def set_game_dir(self, path: str) -> None:
-        self.game_dir = path
-        if not path:
+    @staticmethod
+    def load_saved_game_dir() -> str:
+        return settings.get(STORE_KEY, "") or ""
+
+    @staticmethod
+    def save_game_dir(path: str) -> None:
+        """Remember the install, and say so loudly if it could not be saved.
+
+        A failure here means being asked for the folder on every launch, which is
+        exactly the kind of thing that goes unnoticed if it is only logged at
+        debug level.
+        """
+        try:
+            settings.set_value(STORE_KEY, path)
+        except OSError as exc:
             logger.warning(
-                "Sven Co-op directory not found. Set it with /gamedir <path to Sven Co-op>."
+                f"Could not save your game folder to {settings.settings_path()}: {exc}. "
+                f"You will be asked for it again next launch."
             )
+            return
+
+        if settings.get(STORE_KEY, "") != path:
+            logger.warning("Your game folder did not save correctly.")
+
+    def set_game_dir(self, path: str) -> None:
+        """Point the bridge at an install, rejecting anything that is not one."""
+        if not path:
+            self.game_dir = ""
             self.bridge = None
             return
+
+        if not is_game_dir(path):
+            logger.error(
+                f"{path} does not look like a Sven Co-op install "
+                f"(no svencoop/maps/hl_c00.bsp). Pick the folder that contains 'svencoop'."
+            )
+            return
+
+        self.game_dir = path
         store = find_store_dir(path)
         store.mkdir(parents=True, exist_ok=True)
         self.bridge = Bridge(store)
         self.bridge.clear_log()
+        self.save_game_dir(path)
         logger.info(f"Bridging through {store}")
+
+        if not plugin.is_installed(path):
+            logger.warning("The Sven Co-op plugin is not installed here. Run /install.")
 
     # -- Archipelago -----------------------------------------------------
 
@@ -147,6 +316,7 @@ class HalfLifeSvenContext(CommonContext):
                 f"Connected. {self.missions_required} missions needed to open the "
                 f"final mission."
             )
+            self.print_in_game_commands()
 
         elif cmd == "ReceivedItems":
             for item in args["items"]:
@@ -191,6 +361,14 @@ class HalfLifeSvenContext(CommonContext):
     @property
     def goal_open(self) -> bool:
         return len(self.completed_missions - {self.goal_chapter}) >= self.missions_required
+
+    @staticmethod
+    def print_in_game_commands() -> None:
+        """Remind the player what to type in the game, not here."""
+        logger.info("In-game chat commands (press Y in Sven Co-op):")
+        for command, description in IN_GAME_COMMANDS:
+            logger.info(f"  {command:16} {description}")
+        logger.info("Or walk up to a mission console in the hub and press its button.")
 
     def print_missions(self) -> None:
         for chapter in self.campaign["chapters"]:
@@ -282,9 +460,7 @@ async def game_watcher(ctx: HalfLifeSvenContext) -> None:
 
 
 async def main(args) -> None:
-    ctx = HalfLifeSvenContext(args.connect, args.password)
-    if args.gamedir:
-        ctx.set_game_dir(args.gamedir)
+    ctx = HalfLifeSvenContext(args.connect, args.password, args.gamedir)
 
     ctx.server_task = asyncio.create_task(server_loop(ctx), name="ServerLoop")
     if gui_enabled:

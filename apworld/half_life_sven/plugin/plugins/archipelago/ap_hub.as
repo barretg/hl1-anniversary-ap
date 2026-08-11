@@ -12,6 +12,21 @@
 *     Chat commands (`!ap`, `!warp`) do the same job for a solo run.
 */
 
+/*
+* Printed to chat rather than console, since a player who needs the command list
+* is unlikely to think to open the console to find it.
+*/
+void ShowHelp( CBasePlayer@ pPlayer )
+{
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] Commands:\n"
+		"  !ap            list missions and what is unlocked\n"
+		"  !warp <number> travel to an unlocked mission\n"
+		"  !hub           return to the campaign portal\n"
+		"  !help          this list\n"
+		"You can also press a mission console's button in the hub.\n" );
+}
+
 void ShowStatus( CBasePlayer@ pPlayer )
 {
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
@@ -88,6 +103,12 @@ void ChangeLevel( const string& in szMap )
 */
 HookReturnCode MapChange( const string& in szNextMap )
 {
+	// `restart` and friends re-enter the map we are already on. That is not a
+	// transition, and treating it as one both credited the mission and left us
+	// fighting the engine over a changelevel it was already performing.
+	if( szNextMap.Length() == 0 || szNextMap == g_szCurrentMap )
+		return HOOK_CONTINUE;
+
 	APChapter@ pNext = ChapterForMap( szNextMap );
 
 	if( g_CurrentChapter !is null && g_CurrentChapter.HasMap( szNextMap ) )
@@ -95,9 +116,11 @@ HookReturnCode MapChange( const string& in szNextMap )
 
 	if( g_CurrentChapter !is null )
 	{
-		// The campaign's own changelevel at the end of a mission points at the
-		// next chapter; that transition *is* the completion signal.
-		CompleteChapter( g_CurrentChapter );
+		// A mission is only finished if we are leaving from its *last* map. The
+		// campaign's own changelevel there is the completion signal; walking out
+		// of the middle with !hub is not.
+		if( g_szCurrentMap == g_CurrentChapter.LastMap() )
+			CompleteChapter( g_CurrentChapter );
 
 		if( szNextMap != HUB_MAP )
 		{
@@ -118,6 +141,98 @@ HookReturnCode MapChange( const string& in szNextMap )
 	return HOOK_CONTINUE;
 }
 
+/*
+* Rewiring the portal consoles.
+*
+* The stock portal needs exactly two players standing inside one console's
+* game_zone_player before it will open, which makes a solo run impossible and a
+* duo run fiddly. Rather than override the map script, we watch for the button
+* press ourselves and run the same warp `!warp` would.
+*
+* The console entities are named regularly -- `hl_ch<N>but1` / `hl_ch<N>but2`,
+* with `hl_ch<N>change` pointing at `hl_c<NN>` -- and portal N lines up exactly
+* with our chapter index N (hl_ch3 -> hl_c03 -> Office Complex). So the button's
+* targetname alone identifies the mission; nothing has to be read out of the map.
+*
+* Note the portal map has no console for chapter 0 (Black Mesa Inbound); reach it
+* with `!warp 0`.
+*/
+
+// Half-Life's use range is 64 units from the gun position; be a little generous.
+const float PORTAL_USE_RANGE = 96.0f;
+
+// One press should mean one warp, not one per think while +use is held.
+const float PORTAL_USE_COOLDOWN = 2.0f;
+
+dictionary g_flLastPortalUse;
+
+/* Chapter index behind a console button's targetname, or -1 if it is not one. */
+int PortalChapterIndex( const string& in szName )
+{
+	if( szName.Length() < 6 || szName.SubString( 0, 5 ) != "hl_ch" )
+		return -1;
+
+	int iBut = szName.Find( "but" );
+	if( iBut <= 5 )
+		return -1;
+
+	int iIndex = atoi( szName.SubString( 5, iBut - 5 ) );
+	if( iIndex < 0 || uint( iIndex ) >= g_Chapters.length() )
+		return -1;
+
+	// Guard against the naming assumption quietly drifting: portal N must point
+	// at the mission whose first map is hl_c<NN>.
+	string szExpected = "hl_c" + ( iIndex < 10 ? "0" : "" ) + iIndex;
+	if( g_Chapters[iIndex].FirstMap().SubString( 0, szExpected.Length() ) != szExpected )
+	{
+		APLog( "portal " + iIndex + " does not match chapter " + g_Chapters[iIndex].key );
+		return -1;
+	}
+
+	return iIndex;
+}
+
+/*
+* PlayerUse tells us who pressed but not what they pressed, so trace where they
+* are looking. This fires whether or not the button itself accepts the press,
+* which is the point -- the stock two-player lock never gets a say.
+*/
+HookReturnCode PlayerUse( CBasePlayer@ pPlayer, uint& out uiFlags )
+{
+	uiFlags = 0;
+
+	if( pPlayer is null || g_szCurrentMap != HUB_MAP )
+		return HOOK_CONTINUE;
+
+	Math.MakeVectors( pPlayer.pev.v_angle );
+	Vector vecStart = pPlayer.GetGunPosition();
+	Vector vecEnd = vecStart + g_Engine.v_forward * PORTAL_USE_RANGE;
+
+	TraceResult tr;
+	g_Utility.TraceLine( vecStart, vecEnd, dont_ignore_monsters, pPlayer.edict(), tr );
+
+	if( tr.pHit is null )
+		return HOOK_CONTINUE;
+
+	CBaseEntity@ pHit = g_EntityFuncs.Instance( tr.pHit );
+	if( pHit is null )
+		return HOOK_CONTINUE;
+
+	int iIndex = PortalChapterIndex( pHit.GetTargetname() );
+	if( iIndex < 0 )
+		return HOOK_CONTINUE;
+
+	string szKey = "" + pPlayer.entindex();
+	float flLast = 0.0f;
+	g_flLastPortalUse.get( szKey, flLast );
+	if( g_Engine.time - flLast < PORTAL_USE_COOLDOWN )
+		return HOOK_CONTINUE;
+	g_flLastPortalUse[ szKey ] = g_Engine.time;
+
+	WarpToChapter( pPlayer, iIndex );
+	return HOOK_CONTINUE;
+}
+
 /* Chat commands. `!ap` lists missions, `!warp <n>` travels, `!hub` goes back. */
 HookReturnCode ClientSay( SayParameters@ pParams )
 {
@@ -128,6 +243,13 @@ HookReturnCode ClientSay( SayParameters@ pParams )
 		return HOOK_CONTINUE;
 
 	string szCommand = pArguments[0];
+
+	if( szCommand == "!help" )
+	{
+		pParams.ShouldHide = true;
+		ShowHelp( pPlayer );
+		return HOOK_HANDLED;
+	}
 
 	if( szCommand == "!ap" )
 	{

@@ -24,12 +24,13 @@ at [GoldSRC-Archipelago/halflife-archipelago](https://github.com/GoldSRC-Archipe
 apworld/half_life_sven/     the Archipelago world
   data/campaign.json        generated: chapters, items, locations, logic groups
   client/                   the AP client and the file bridge
+  plugin/                   the Sven Co-op server plugin, plus its installer
+    plugins/                mirrors svencoop/scripts/
+      archipelago/          ap_main, ap_bridge, ap_items, ap_locations, ap_hub, ap_deathlink
+      store/archipelago/checkdata.txt   generated
   docs/                     setup guide and game page
-angelscript/scripts/        the Sven Co-op server plugin, mirroring svencoop/scripts/
-  plugins/archipelago/      ap_main, ap_bridge, ap_items, ap_locations, ap_hub, ap_deathlink
-  plugins/store/archipelago/checkdata.txt   generated
-tools/                      generators, packaging, installer
-tests/                      bridge protocol and data consistency tests
+tools/                      generators, packaging, installer CLI
+tests/                      bridge, data consistency and install tests
 docs/protocol.md            the file bridge between client and plugin
 examples/                   a starter YAML
 ```
@@ -73,7 +74,8 @@ python tools/gen_checkdata.py
 # package, and optionally drop straight into an Archipelago install
 python tools/build_apworld.py --install "<Archipelago>/custom_worlds"
 
-# install the plugin into Sven Co-op
+# install the plugin into Sven Co-op, without going through the Launcher
+# (same code path as the client's /install)
 python tools/install_plugin.py --game "<Sven Co-op>"
 ```
 

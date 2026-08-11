@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -60,6 +61,10 @@ class Bridge:
         self._seq = 0
         self._pending: dict[int, PendingEvent] = {}
         self._last_snapshot = ""
+        # Identifies this run of the client. Our event sequence restarts from 1
+        # on every launch, so the plugin needs to know when that has happened or
+        # it would mistake fresh events for ones it had already applied.
+        self.session = uuid.uuid4().hex[:8]
 
     # -- game -> client --------------------------------------------------
 
@@ -136,6 +141,7 @@ class Bridge:
         """
         lines = [
             "# Written by the Half-Life (Sven Co-op) Archipelago client.",
+            f"session={self.session}",
             f"connected={1 if connected else 0}",
             f"goal_open={1 if goal_open else 0}",
             f"death_link={1 if death_link else 0}",
@@ -176,3 +182,23 @@ def find_store_dir(game_dir: str | os.PathLike[str]) -> Path:
     if (root / "svencoop").is_dir():
         root = root / "svencoop"
     return root / "scripts" / "plugins" / "store" / "archipelago"
+
+
+def is_game_dir(path: str | os.PathLike[str]) -> bool:
+    """Does this look like a Sven Co-op installation?
+
+    Checked against the campaign maps rather than just the folder name, so
+    pointing at an empty `Sven Co-op` folder is rejected rather than silently
+    producing a bridge nothing will ever read.
+    """
+    if not path:
+        return False
+    try:
+        root = Path(path)
+    except (TypeError, ValueError):
+        return False
+    if root.name.lower() == "svencoop":
+        candidates = [root]
+    else:
+        candidates = [root / "svencoop", root]
+    return any((c / "maps" / "hl_c00.bsp").is_file() for c in candidates)

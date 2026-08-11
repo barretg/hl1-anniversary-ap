@@ -139,6 +139,15 @@ string APTrim( const string& in szValue )
 	return szValue.SubString( uiStart, uiEnd - uiStart );
 }
 
+/*
+* Did checkdata.txt load? Anything that strips or gates has to check this first:
+* empty tables mean "we do not know", not "nothing is allowed".
+*/
+bool CheckDataLoaded()
+{
+	return g_Chapters.length() > 0 && g_StartingWeapons.length() > 0;
+}
+
 APChapter@ ChapterByKey( const string& in szKey )
 {
 	for( uint i = 0; i < g_Chapters.length(); ++i )
