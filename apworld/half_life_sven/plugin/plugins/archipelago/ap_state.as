@@ -140,6 +140,29 @@ string APTrim( const string& in szValue )
 }
 
 /*
+* Strip the bridge's field separators out of free text.
+*
+* Player names and chat messages are the only values in the protocol that a
+* person controls, so they are the only ones that can desync the parser.
+*/
+string APSanitise( const string& in szValue )
+{
+	string szOut;
+
+	for( uint i = 0; i < szValue.Length(); ++i )
+	{
+		string szChar = szValue.SubString( i, 1 );
+		if( szChar == "|" )
+			szChar = "/";
+		else if( szChar == "\n" || szChar == "\r" )
+			szChar = " ";
+		szOut += szChar;
+	}
+
+	return szOut;
+}
+
+/*
 * Did checkdata.txt load? Anything that strips or gates has to check this first:
 * empty tables mean "we do not know", not "nothing is allowed".
 */

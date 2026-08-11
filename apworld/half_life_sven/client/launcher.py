@@ -152,6 +152,12 @@ class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
         self.ctx.print_missions()
         return True
 
+    def _cmd_chat(self) -> bool:
+        """Toggle relaying chat between Sven Co-op and the multiworld."""
+        self.ctx.chat_relay = not self.ctx.chat_relay
+        logger.info(f"Chat relay {'enabled' if self.ctx.chat_relay else 'disabled'}.")
+        return True
+
     def _cmd_commands(self) -> bool:
         """List the chat commands you type inside Sven Co-op."""
         self.ctx.print_in_game_commands()
@@ -193,6 +199,7 @@ class HalfLifeSvenContext(CommonContext):
         )
         self.death_link_enabled = False
         self.goal_sent = False
+        self.chat_relay = True
 
         self.resolve_game_dir()
 
@@ -322,6 +329,9 @@ class HalfLifeSvenContext(CommonContext):
             for item in args["items"]:
                 self.apply_item(item.item)
 
+        elif cmd == "PrintJSON":
+            self.relay_to_game(args)
+
         elif cmd == "Bounced":
             tags = args.get("tags", [])
             if "DeathLink" in tags and self.death_link_enabled and self.bridge:
@@ -331,6 +341,25 @@ class HalfLifeSvenContext(CommonContext):
                 # The plugin splits the event line on '|', so the two fields are
                 # joined with '~' instead.
                 self.bridge.queue_event("DEATHLINK", f"{source}~{cause}")
+
+    def relay_to_game(self, args: dict) -> None:
+        """Show multiworld chat in the game.
+
+        Only actual chat, not the item/hint firehose, which would bury the
+        `[AP]` check messages the player needs to see. Our own messages are
+        skipped because Sven Co-op has already shown them locally.
+        """
+        if not self.chat_relay or self.bridge is None:
+            return
+        if args.get("type") != "Chat":
+            return
+        if args.get("slot") == self.slot:
+            return
+
+        text = "".join(part.get("text", "") for part in args.get("data", []))
+        text = text.replace("|", "/").replace("\n", " ").strip()
+        if text:
+            self.bridge.queue_event("CHAT", f"[AP] {text}")
 
     def apply_item(self, item_id: int) -> None:
         entry = self.item_by_id.get(item_id)
@@ -430,6 +459,12 @@ async def game_watcher(ctx: HalfLifeSvenContext) -> None:
                     player = event.args[0] if event.args else "Freeman"
                     cause = event.args[1] if len(event.args) > 1 else "an unknown fate"
                     await ctx.send_death(f"{player} died to {cause}.")
+            elif event.kind == "CHAT":
+                if ctx.chat_relay and ctx.server and not ctx.server.socket.closed:
+                    player = event.args[0] if event.args else "?"
+                    text = event.args[1] if len(event.args) > 1 else ""
+                    if text:
+                        await ctx.send_msgs([{"cmd": "Say", "text": f"[{player}] {text}"}])
             elif event.kind == "HELLO":
                 logger.info(f"Game is on {event.arg}.")
                 ctx.bridge.write_snapshot(

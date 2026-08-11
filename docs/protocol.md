@@ -50,6 +50,7 @@ If the file shrinks, the client treats it as a new game session and rewinds.
 | `COMPLETE\|<chapter key>` | a mission was finished |
 | `GOAL\|<chapter key>` | Nihilanth is dead; client sends `StatusUpdate: CLIENT_GOAL` |
 | `DEATH\|<player>\|<cause>` | a player died; sent unconditionally |
+| `CHAT\|<player>\|<message>` | in-game chat, for relaying to multiworld chat |
 | `ACK\|<seq>` | event consumed; client may drop it |
 
 ## `ap_in.txt` — client to game
@@ -96,6 +97,11 @@ load is correctly recognised as stale rather than killing you on arrival.
 | --- | --- |
 | `ITEM` | filler item name |
 | `DEATHLINK` | `<source>~<cause>` |
+| `CHAT` | a line of multiworld chat to print in game |
+
+Player names and chat text are the only operator-controlled values in the
+protocol, so both sides strip `|` and newlines out of them before they are
+written. Everything else is generated and cannot desync the parser.
 
 The DeathLink payload joins its two fields with `~` because the plugin splits the
 event line on `|`.

@@ -276,5 +276,36 @@ HookReturnCode ClientSay( SayParameters@ pParams )
 		return HOOK_HANDLED;
 	}
 
+	RelayChat( pPlayer, pArguments );
 	return HOOK_CONTINUE;
+}
+
+/*
+* Forward ordinary chat to the multiworld.
+*
+* Sent unconditionally: whether it reaches the server is the client's decision,
+* and it is the only side that knows whether it is connected.
+*/
+void RelayChat( CBasePlayer@ pPlayer, const CCommand@ pArguments )
+{
+	string szMessage;
+
+	for( uint i = 0; i < pArguments.ArgC(); ++i )
+	{
+		if( i > 0 )
+			szMessage += " ";
+		szMessage += pArguments[i];
+	}
+
+	szMessage = APTrim( szMessage );
+	if( szMessage.Length() == 0 )
+		return;
+
+	// A message beginning with '!' is a command we did not recognise; relaying
+	// it would put typos and other plugins' commands into multiworld chat.
+	if( szMessage.SubString( 0, 1 ) == "!" )
+		return;
+
+	BridgeSend( "CHAT|" + APSanitise( string( pPlayer.pev.netname ) )
+	            + "|" + APSanitise( szMessage ) );
 }
