@@ -84,8 +84,14 @@ class IncludeBlackMesaInbound(DefaultOnToggle):
 class ShuffleHevSuit(Toggle):
     """Shuffle the HEV suit into the item pool.
 
-    While you do not have it you keep the suit's HUD but lose armour pickups, and
-    the Xen missions expect it because the long jump module runs off suit power.
+    What the item controls is armour: until it arrives, armour is held at zero
+    from every source — the campaign's own loadout, batteries, charge panels and
+    filler grants alike. You keep the suit itself throughout, because in GoldSrc
+    it is the suit that draws the weapon HUD and a player without one cannot
+    change weapons at all.
+
+    The Xen missions expect it either way, because the long jump module runs off
+    suit power.
     """
 
     display_name = "Shuffle HEV Suit"

@@ -312,6 +312,10 @@ HookReturnCode PlayerUse( CBasePlayer@ pPlayer, uint& out uiFlags )
 	if( g_szCurrentMap != HUB_MAP )
 	{
 		RegisterChargerCheck( pHit );
+		// Held down, so this fires every tick of an HEV charge: the armour it
+		// pours in is taken back as fast as the charger supplies it, rather than
+		// climbing for a second and then dropping to zero.
+		EnforceArmour( pPlayer );
 		return HOOK_CONTINUE;
 	}
 

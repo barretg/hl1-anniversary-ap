@@ -102,6 +102,12 @@ the first time someone presses use on it, even an empty one. That is 107 of the
 173 locations; `chargesanity: false` in your YAML removes them all for a much
 shorter run.
 
+**The HEV suit is armour, not the suit.** With `shuffle_hev_suit: true` you keep
+the suit and its HUD from the start — you would not be able to switch weapons
+without it — but your armour is held at zero until the HEV Suit item arrives.
+Batteries, wall chargers and Armor Battery filler all do nothing until then, and
+the game says so in chat when the item lands.
+
 **Nihilanth is not unlocked by an item.** It opens once you have completed
 `missions_required` missions (set in your YAML; the default is all 17 others).
 

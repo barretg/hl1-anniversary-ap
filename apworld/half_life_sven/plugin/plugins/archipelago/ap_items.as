@@ -46,8 +46,14 @@ array<string> AllowedClassnames()
 
 // Handing this out with GiveNamedItem fires the suit's pickup sequence, which
 // wipes the inventory we are in the middle of rebuilding. So the suit is never
-// granted here: it is kept or taken instead, and the player earns it by walking
-// over the pickup in Anomalous Materials once the item has arrived.
+// granted here; the player earns it by walking over the pickup in Anomalous
+// Materials once the item has arrived.
+//
+// It is never taken away either, and that is deliberate. In GoldSrc the suit bit
+// is what un-hides the weapon HUD, and the client's weapon-selection input is
+// disabled behind the same flag -- so a player without the suit cannot switch
+// weapons at all, which made an unsuited run close to unplayable. What the HEV
+// Suit *item* controls is armour: see EnforceArmour.
 const string SUIT_CLASSNAME = "item_suit";
 
 // Long enough for the suit's pickup sequence to have done its inventory wipe
@@ -112,8 +118,8 @@ void StripDisallowed( CBasePlayer@ pPlayer )
 * Ammo is never touched. Ammo pickups stay useful, and finding a stash before
 * the gun is a normal part of a run rather than a loss.
 *
-* `bFull` covers the things that cannot be detected on the player and so must
-* not run on a repeating timer: the suit and the long jump module.
+* `bFull` covers the long jump module, which cannot be detected on the player and
+* so must not be re-granted on a repeating timer.
 */
 void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 {
@@ -129,13 +135,8 @@ void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 		return;
 	}
 
-	// Removing the suit is all-or-nothing in the API, so it is the one case that
-	// still costs a full wipe. It only happens when the suit is shuffled and not
-	// yet received, and the grant loop below puts the weapons straight back.
-	if( bFull && !ClassnameAllowed( SUIT_CLASSNAME ) )
-		pPlayer.RemoveAllItems( true, false );
-	else
-		StripDisallowed( pPlayer );
+	StripDisallowed( pPlayer );
+	EnforceArmour( pPlayer );
 
 	array<string> allowed = AllowedClassnames();
 	for( uint i = 0; i < allowed.length(); ++i )
@@ -157,6 +158,32 @@ void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 		if( !HasItem( pPlayer, szClassname ) )
 			pPlayer.GiveNamedItem( szClassname );
 	}
+}
+
+/*
+* Armour is what the HEV Suit item actually grants.
+*
+* The suit itself is never removed -- without it there is no weapon HUD and no
+* way to change weapons -- so the item has to mean something else, and armour is
+* the honest answer: the HUD is the suit's interface, the armour is its function.
+* Until the item arrives, armour is held at zero no matter where it came from:
+* the campaign's own spawn loadout, a battery, a charge panel, or a filler grant.
+*
+* Applied from three places, in descending order of how quickly the player would
+* otherwise see a number that is about to vanish: while they hold use on a
+* charger, on spawn, and on the one-second sweep as the catch-all.
+*/
+void EnforceArmour( CBasePlayer@ pPlayer )
+{
+	if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
+		return;
+
+	// Not gated in this seed, or already earned.
+	if( ClassnameAllowed( SUIT_CLASSNAME ) )
+		return;
+
+	if( pPlayer.pev.armorvalue > 0.0f )
+		pPlayer.pev.armorvalue = 0.0f;
 }
 
 void ApplyLoadoutToAll( bool bFull = true )
@@ -211,7 +238,10 @@ void GrantFillerItem( const string& in szItemName )
 		}
 		else if( szItemName == "Armor Battery" )
 		{
-			pPlayer.TakeArmor( 20.0f, DMG_GENERIC, 100 );
+			// Nothing to put it in yet. Granting it anyway would show a number
+			// that the next sweep takes straight back off again.
+			if( ClassnameAllowed( SUIT_CLASSNAME ) )
+				pPlayer.TakeArmor( 20.0f, DMG_GENERIC, 100 );
 		}
 		else if( szItemName == "Ammo Cache" )
 		{

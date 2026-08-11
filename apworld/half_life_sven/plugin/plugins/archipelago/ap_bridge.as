@@ -237,6 +237,14 @@ void BridgePoll()
 	else if( !bConnected && bWasConnected )
 		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, "[AP] Lost the multiworld connection.\n" );
 
+	// The one item whose arrival is otherwise invisible: the suit is never taken
+	// away, so nothing on screen changes except that armour starts working.
+	int iSuitNow = ClassnameAllowed( SUIT_CLASSNAME ) ? 1 : 0;
+	if( iSuitNow == 1 && g_iSuitOwned == 0 )
+		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
+			"[AP] HEV suit power restored. Armour works from here on.\n" );
+	g_iSuitOwned = iSuitNow;
+
 	// Applying the snapshot may have unlocked a weapon, so refresh loadouts
 	// before handling events (an incoming DeathLink should not race a grant).
 	ApplyLoadoutToAll();

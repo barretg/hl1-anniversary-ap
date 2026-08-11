@@ -70,6 +70,11 @@ immediately if you are already alive, your loadout is rebuilt to match what you
 own. Filler is applied on the spot: health, armour, or a top-up of ammo for
 whatever you are currently carrying.
 
+The HEV suit is the exception worth knowing about. You always wear it, because in
+GoldSrc the suit is what draws the weapon HUD and without it you cannot change
+weapons at all. What the item grants is armour: until it arrives your armour is
+held at zero, and batteries, wall chargers and armour filler all do nothing.
+
 ## What is the goal?
 
 Kill Nihilanth. Its mission only opens once you have completed enough of the

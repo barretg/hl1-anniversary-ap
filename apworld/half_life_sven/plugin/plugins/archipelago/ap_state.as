@@ -148,6 +148,10 @@ bool g_bMissionActive = false;
 // from it, not finishing it.
 bool g_bSelfChange = false;
 
+// Tri-state, because the suit is announced on the transition and a map load must
+// not re-announce it: -1 unknown, 0 not owned, 1 owned.
+int g_iSuitOwned = -1;
+
 // Set to g_Engine.time + a short window while a lobby wipe is in progress, so
 // the deaths we cause are neither reported nor able to re-trigger the wipe.
 float g_flDeathLinkImmuneUntil = 0.0f;

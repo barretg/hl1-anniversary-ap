@@ -211,6 +211,10 @@ class HalfLifeSvenContext(CommonContext):
         self.excluded_chapters: set[str] = set()
         self.unlocked_chapters: set[str] = set()
         self.unlocked_items: set[str] = set()
+        # Equipment this seed did not shuffle. No item will ever be sent for it,
+        # so the game has to be told up front or it gates it for the whole run --
+        # which for the HEV suit meant no armour, ever.
+        self.always_unlocked: set[str] = set(optional_item_options())
         self.completed_missions: set[str] = set()
         self.missions_required = len(
             [c for c in self.campaign["chapters"] if not c["is_goal"]]
@@ -357,6 +361,12 @@ class HalfLifeSvenContext(CommonContext):
             )
             self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
             self.excluded_chapters = set(slot_data.get("excluded_chapters", ()))
+            # Absent from slot data reads as "not shuffled", which grants it: a
+            # seed that never sends the item must not leave it locked forever.
+            self.always_unlocked = {
+                name for name, option in optional_item_options().items()
+                if not slot_data.get(option, False)
+            }
             self.death_link_enabled = bool(slot_data.get("death_link", False))
             self.death_link_amnesty = int(
                 slot_data.get("death_link_amnesty", self.death_link_amnesty)
@@ -470,6 +480,11 @@ class HalfLifeSvenContext(CommonContext):
         return False
 
     @property
+    def item_names(self) -> set[str]:
+        """Everything the game should treat as held, received or not."""
+        return self.unlocked_items | self.always_unlocked
+
+    @property
     def goal_open(self) -> bool:
         return len(self.completed_missions - {self.goal_chapter}) >= self.missions_required
 
@@ -507,6 +522,13 @@ def load_campaign() -> dict:
     from ..data import load_campaign as _load
 
     return _load()
+
+
+def optional_item_options() -> dict[str, str]:
+    """Optional equipment name -> the YAML toggle that shuffles it."""
+    from ..data import OPTIONAL_ITEM_NAMES
+
+    return OPTIONAL_ITEM_NAMES
 
 
 async def game_watcher(ctx: HalfLifeSvenContext) -> None:
@@ -588,7 +610,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
             ctx.bridge.write_snapshot(
                 connected=ctx.server is not None,
                 chapters=sorted(ctx.unlocked_chapters),
-                items=sorted(ctx.unlocked_items),
+                items=sorted(ctx.item_names),
                 goal_open=ctx.goal_open,
                 death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
@@ -619,7 +641,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
     ctx.bridge.write_snapshot(
         connected=ctx.server is not None,
         chapters=sorted(ctx.unlocked_chapters),
-        items=sorted(ctx.unlocked_items),
+        items=sorted(ctx.item_names),
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,

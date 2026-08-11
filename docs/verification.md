@@ -110,6 +110,28 @@ With `death_link_amnesty: 2`:
 - An inbound DeathLink must not spend amnesty; only local deaths do.
 - `/amnesty 0` in the client → the very next death goes straight out.
 
+### 4b. HEV suit
+
+With `shuffle_hev_suit: true` and the item not yet received:
+
+- The weapon HUD is present and weapons can be switched with the number keys and
+  the mouse wheel. This is the regression that made an unsuited run unplayable.
+- Armour reads 0 on spawn even though the campaign's own loadout grants some.
+- Pick up a battery → armour stays 0.
+- Hold use on an HEV charge panel → the number does not climb.
+- An `Armor Battery` filler grant → chat says it arrived, armour stays 0.
+- Walk over the suit pickup in Anomalous Materials → refused, with the usual
+  "you have not found the HEV Suit yet".
+
+Then receive the item:
+
+- Chat announces the suit, and armour starts accumulating from all four sources.
+- Cross a map boundary → no second announcement.
+
+With `shuffle_hev_suit: false`, armour must work from the first spawn. This used
+to be gated on an item the seed never sends, leaving the player with no armour
+for the entire run; the same applies to `shuffle_longjump: false` and the module.
+
 ### 5a. Weapon pickups
 
 - Walk over a weapon you have **not** been granted, in the mission that holds its
