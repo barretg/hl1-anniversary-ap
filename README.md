@@ -52,14 +52,27 @@ See [docs/protocol.md](docs/protocol.md).
 
 ## Locations
 
-Two kinds of location: "you reached this part of the campaign" (one per map, plus
-one per mission for finishing it) and "you found a charger" (one per health or
-HEV wall unit placed in a map). 160 locations against at most 32 progression
-items.
+Three kinds of location, 173 in total against at most 32 progression items:
+
+| Type | Count | Fires when |
+| --- | --- | --- |
+| `map_reached` / `chapter_complete` | 53 | you reach a map division, or finish a mission |
+| `charger` | 107 | you press use on a health or HEV wall unit |
+| `weapon_pickup` | 14 | you reach the weapon Half-Life would first have given you |
 
 Chargers are identified by their brush model index (`func_recharge:*79`), which
 is the only per-entity identity the BSP and the running game agree on — they have
-no targetname. The check fires on the `+use`, not on draining the unit.
+no targetname. The check fires on the `+use`, not on draining the unit. They can
+be switched off wholesale with `chargesanity: false`.
+
+Weapon checks sit at the *vanilla* first location: the earliest map in campaign
+order that contains that weapon, and only there. Picking the same weapon up later
+sends nothing. The crowbar has one too, despite being starting inventory.
+
+Walking over a weapon sends its check whether or not the multiworld has granted
+it. Because the engine's pickup hook does not fire for a weapon you already
+carry — the crowbar, always — a one-second proximity sweep backs it up, so no
+weapon check can become unsendable.
 
 Richer location types are already implemented and derived from the map files
 themselves: `tools/bsp_entities.py` reads the entity lump out of each shipped

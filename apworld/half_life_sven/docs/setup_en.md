@@ -92,9 +92,15 @@ The client also prints this list when it connects.
 Finishing a mission sends you back to the hub automatically and sends its
 completion check. Trying to enter a locked mission is refused.
 
-**Weapons are items.** A weapon lying in the world still sends its check when you
-walk over it, but you cannot keep it until the multiworld gives you that weapon.
+**Weapons are items.** A weapon lying in the world still sends its check the first
+time you walk over it — anywhere in the campaign, and whether or not you are
+allowed to keep it. You cannot hold it until the multiworld gives you that weapon.
 The campaign's own per-map loadouts are stripped for the same reason.
+
+**Chargers are checks.** Every health charger and HEV charge panel sends a check
+the first time someone presses use on it, even an empty one. That is 107 of the
+173 locations; `chargesanity: false` in your YAML removes them all for a much
+shorter run.
 
 **Nihilanth is not unlocked by an item.** It opens once you have completed
 `missions_required` missions (set in your YAML; the default is all 17 others).

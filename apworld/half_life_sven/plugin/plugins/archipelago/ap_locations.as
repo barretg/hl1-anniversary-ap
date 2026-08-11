@@ -6,22 +6,101 @@
 * a check fires off a classname, a kill, or a map transition.
 */
 
-/* A weapon or item was collected: fire the matching pickup check, if any. */
+/*
+* A weapon or item was walked over: fire the matching pickup check, if any.
+*
+* Both location kinds are scoped to this map. `weapon_pickup` is the one place
+* Half-Life would first have handed you that weapon; `pickup` is the older
+* per-copy variant, currently not generated.
+*
+* Called whether or not the player is allowed to keep the weapon: walking over it
+* is the discovery, and being told "you have not found the Shotgun yet" while
+* standing on a shotgun is the joke the randomiser is built on.
+*/
 void RegisterPickupCheck( const string& in szClassname )
 {
-	for( uint i = 0; i < g_MapPickups.length(); ++i )
+	if( MatchPickup( g_WeaponPickups, szClassname ) )
+		return;
+
+	MatchPickup( g_MapPickups, szClassname );
+}
+
+bool MatchPickup( array<APLocation@>@ locations, const string& in szClassname )
+{
+	for( uint i = 0; i < locations.length(); ++i )
 	{
-		APLocation@ pLocation = g_MapPickups[i];
+		APLocation@ pLocation = locations[i];
 
 		for( uint j = 0; j < pLocation.args.length(); ++j )
 		{
 			if( pLocation.args[j] == szClassname )
 			{
 				SendCheck( pLocation );
-				return;
+				return true;
 			}
 		}
 	}
+
+	return false;
+}
+
+// Roughly a player bounding box plus an item's. Generous on purpose: this is the
+// safety net, and a check is not worth being precious about.
+const float WEAPON_REACH = 72.0f;
+
+/*
+* The safety net behind the pickup hook.
+*
+* CanCollect only fires when the engine is deciding whether to hand something
+* over, and it does not for a weapon you are already carrying. The crowbar is in
+* everyone's starting inventory, so its check would otherwise be impossible to
+* send -- and with `accessibility: full` an unsendable location is a seed that
+* cannot be finished. Any weapon whose item has already arrived has the same
+* problem, so this covers all of them: standing next to the pickup is enough.
+*
+* Runs on the existing one-second sweep, and only while this map still has an
+* unsent weapon check on it, so the usual cost is one length check on an empty
+* array.
+*/
+void SweepWeaponPickups()
+{
+	for( uint i = 0; i < g_WeaponPickups.length(); ++i )
+	{
+		APLocation@ pLocation = g_WeaponPickups[i];
+
+		if( g_SentChecks.exists( "" + pLocation.id ) )
+			continue;
+
+		for( uint j = 0; j < pLocation.args.length(); ++j )
+		{
+			if( AnyPlayerNear( pLocation.args[j] ) )
+			{
+				SendCheck( pLocation );
+				break;
+			}
+		}
+	}
+}
+
+bool AnyPlayerNear( const string& in szClassname )
+{
+	CBaseEntity@ pEntity = null;
+
+	while( ( @pEntity = g_EntityFuncs.FindEntityByClassname( pEntity, szClassname ) ) !is null )
+	{
+		for( int i = 1; i <= g_Engine.maxClients; ++i )
+		{
+			CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( i );
+
+			if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
+				continue;
+
+			if( ( pPlayer.pev.origin - pEntity.pev.origin ).Length() <= WEAPON_REACH )
+				return true;
+		}
+	}
+
+	return false;
 }
 
 /*

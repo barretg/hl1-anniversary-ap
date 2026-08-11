@@ -36,15 +36,23 @@ RPG, Tau cannon, gluon gun, hivehand, satchel charges, tripmines, snarks, hand
 grenades), and optionally the HEV suit and long jump module. Everything else is
 filler: ammo caches, medkits and armour batteries.
 
-**Locations** — 160 of them:
+**Locations** — 173 of them:
 
 - reaching each part of a mission (Surface Tension has five, Office Complex one)
 - completing each mission
-- using each health charger and HEV charge panel in the campaign, 107 in all
+- reaching each weapon where Half-Life would first have given it to you, the
+  crowbar included
+- using each health charger and HEV charge panel, 107 in all
 
 Sven Co-op splits Half-Life's campaign into 35 maps across 18 missions, so
 progress through a mission is itself the check. Every wall-mounted charger is a
-check too, whether or not it still has juice in it — pressing use is enough.
+check too, whether or not it still has juice in it — pressing use is enough. Set
+`chargesanity: false` if you want a shorter run without them.
+
+Weapon checks are pinned to where the original campaign hands each weapon over:
+"First Shotgun" is the Office Complex shotgun, and no other shotgun in the game
+will send it. You do not have to be allowed to keep the gun for the check to
+count.
 
 ## Which items can be in another player's world?
 

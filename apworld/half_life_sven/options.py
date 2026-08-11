@@ -34,16 +34,36 @@ class MissionsRequired(Range):
 class LogicDifficulty(Choice):
     """How much firepower logic assumes you need to clear a mission.
 
-    strict: later missions expect a real gun, and the late game expects something
-    heavier than a pistol. Safe for anyone.
-    loose: only hard requirements (long jump module, HEV suit) are enforced, so
-    the generator may expect you to clear Surface Tension with a crowbar.
+    strict: a mission is only expected of you once you own a weapon suited to it.
+    Anything from We've Got Hostiles onward wants a firearm; Forget About Freeman
+    and Lambda Core want something heavier than a pistol; Xen onward wants the Tau
+    cannon and the RPG by name, plus the long jump module and HEV suit when those
+    are shuffled. Safe for anyone, and the default.
+    loose: weapon requirements are dropped entirely, so the generator may expect
+    you to clear Surface Tension with a crowbar and will happily place your only
+    gun behind a mission that assumes you already have one. The equipment gates on
+    Xen still apply.
+
+    Gates are per mission, not per part: being in logic means the mission is
+    enterable, not that every corner of it is comfortable.
     """
 
     display_name = "Logic Difficulty"
     option_strict = 0
     option_loose = 1
     default = 0
+
+
+class Chargesanity(DefaultOnToggle):
+    """Every health charger and HEV charge panel is a check.
+
+    107 of them, spread through the campaign, sent the moment you press use on
+    one — an empty charger counts, so this is about finding them rather than
+    needing them. Turn it off and the seed drops to the 48 mission checks plus
+    the 13 weapon checks, which makes for a much shorter run with far less filler.
+    """
+
+    display_name = "Chargesanity"
 
 
 class IncludeBlackMesaInbound(DefaultOnToggle):
@@ -115,6 +135,7 @@ class HalfLifeSvenOptions(PerGameCommonOptions):
     missions_required: MissionsRequired
     logic_difficulty: LogicDifficulty
     include_black_mesa_inbound: IncludeBlackMesaInbound
+    chargesanity: Chargesanity
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
     trap_percentage: TrapPercentage

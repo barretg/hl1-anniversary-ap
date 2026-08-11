@@ -27,6 +27,7 @@ const string TRIGGER_KILL_COUNT = "kill_count";
 const string TRIGGER_MAP_REACHED = "map_reached";
 const string TRIGGER_CHAPTER_COMPLETE = "chapter_complete";
 const string TRIGGER_CHARGER = "charger";
+const string TRIGGER_WEAPON_PICKUP = "weapon_pickup";
 
 class APChapter
 {
@@ -117,6 +118,11 @@ array<APLocation@> g_MapKills;
 array<APLocation@> g_MapKillCounts;
 array<APLocation@> g_MapChargers;
 
+// "First time you find this weapon", at the one map Half-Life would have given
+// it to you. Map-filtered like every other check: picking the same weapon up
+// somewhere later in the campaign is not the moment this check is about.
+array<APLocation@> g_WeaponPickups;
+
 APState g_State;
 
 // Checks already sent this session, so a re-entered map does not spam the client.
@@ -125,6 +131,22 @@ dictionary g_SentChecks;
 string g_szCurrentMap;
 APChapter@ g_CurrentChapter = null;
 int g_iMapKills = 0;
+
+/*
+* Are we actually *playing* the mission this map belongs to?
+*
+* False when the campaign chained us into a mission we never unlocked, and false
+* while we are bouncing back to the hub. Both cases look identical to a genuine
+* mission from inside MapChange -- the engine is leaving the last map of a
+* chapter either way -- and treating them alike is what credited Office Complex
+* the moment Unforeseen Consequences ended.
+*/
+bool g_bMissionActive = false;
+
+// Set just before we issue our own changelevel. A transition we asked for is
+// never a mission completion: `!hub` out of a one-map mission is walking away
+// from it, not finishing it.
+bool g_bSelfChange = false;
 
 // Set to g_Engine.time + a short window while a lobby wipe is in progress, so
 // the deaths we cause are neither reported nor able to re-trigger the wipe.
@@ -308,6 +330,7 @@ void IndexCurrentMap()
 	g_MapKills.resize( 0 );
 	g_MapKillCounts.resize( 0 );
 	g_MapChargers.resize( 0 );
+	g_WeaponPickups.resize( 0 );
 	g_iMapKills = 0;
 
 	for( uint i = 0; i < g_Locations.length(); ++i )
@@ -316,7 +339,9 @@ void IndexCurrentMap()
 		if( pLocation.map != g_szCurrentMap )
 			continue;
 
-		if( pLocation.kind == TRIGGER_PICKUP )
+		if( pLocation.kind == TRIGGER_WEAPON_PICKUP )
+			g_WeaponPickups.insertLast( pLocation );
+		else if( pLocation.kind == TRIGGER_PICKUP )
 			g_MapPickups.insertLast( pLocation );
 		else if( pLocation.kind == TRIGGER_KILL )
 			g_MapKills.insertLast( pLocation );

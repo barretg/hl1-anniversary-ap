@@ -185,6 +185,10 @@ void ApplyLoadoutToAll( bool bFull = true )
 void EnforceLoadouts()
 {
 	ApplyLoadoutToAll( false );
+
+	// Shares the timer rather than adding another: both are "look at the world
+	// once a second and fix what the hooks missed".
+	SweepWeaponPickups();
 }
 
 /*

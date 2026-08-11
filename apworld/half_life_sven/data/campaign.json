@@ -1,5 +1,5 @@
 {
- "data_version": "ede02c45dcba",
+ "data_version": "7719605f9ae1",
  "chapters": [
   {
    "key": "black_mesa_inbound",
@@ -204,7 +204,8 @@
    "is_goal": false,
    "gates": {
     "strict": [
-     "heavy"
+     "tau_cannon",
+     "rpg"
     ],
     "always": [
      "longjump",
@@ -222,7 +223,8 @@
    "is_goal": false,
    "gates": {
     "strict": [
-     "heavy"
+     "tau_cannon",
+     "rpg"
     ],
     "always": [
      "longjump",
@@ -243,7 +245,8 @@
    "is_goal": false,
    "gates": {
     "strict": [
-     "heavy"
+     "tau_cannon",
+     "rpg"
     ],
     "always": [
      "longjump",
@@ -262,7 +265,8 @@
    "is_goal": true,
    "gates": {
     "strict": [
-     "heavy"
+     "tau_cannon",
+     "rpg"
     ],
     "always": [
      "longjump",
@@ -2205,6 +2209,190 @@
    }
   },
   {
+   "id": 7720160,
+   "name": "First Glock",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c02_a1",
+    "classnames": [
+     "weapon_glock",
+     "weapon_9mmhandgun"
+    ]
+   }
+  },
+  {
+   "id": 7720161,
+   "name": "First .357 Magnum",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c05_a3",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720162,
+   "name": "First MP5",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c04",
+    "classnames": [
+     "weapon_9mmAR",
+     "weapon_m16"
+    ]
+   }
+  },
+  {
+   "id": 7720163,
+   "name": "First Shotgun",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c03",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720164,
+   "name": "First Crossbow",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c08_a1",
+    "classnames": [
+     "weapon_crossbow"
+    ]
+   }
+  },
+  {
+   "id": 7720165,
+   "name": "First RPG",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c11_a2",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720166,
+   "name": "First Tau Cannon",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c10",
+    "classnames": [
+     "weapon_gauss"
+    ]
+   }
+  },
+  {
+   "id": 7720167,
+   "name": "First Gluon Gun",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c13_a1",
+    "classnames": [
+     "weapon_egon"
+    ]
+   }
+  },
+  {
+   "id": 7720168,
+   "name": "First Hivehand",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c11_a3",
+    "classnames": [
+     "weapon_hornetgun"
+    ]
+   }
+  },
+  {
+   "id": 7720169,
+   "name": "First Satchel Charge",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720170,
+   "name": "First Tripmine",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c07_a1",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720171,
+   "name": "First Snarks",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c10",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720172,
+   "name": "First Hand Grenade",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c02_a2",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720173,
+   "name": "First Crowbar",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c02_a1",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
    "id": 7720035,
    "name": "Black Mesa Inbound - Complete",
    "chapter": "black_mesa_inbound",
@@ -2439,6 +2627,12 @@
    "Tau Cannon",
    "Gluon Gun",
    "Hivehand"
+  ],
+  "tau_cannon": [
+   "Tau Cannon"
+  ],
+  "rpg": [
+   "RPG"
   ]
  },
  "starting_weapons": [

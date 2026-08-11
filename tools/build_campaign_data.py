@@ -32,6 +32,7 @@ from campaign_layout import (
     NOTABLE_MONSTERS,
     OPTIONAL_ITEMS,
     REQUIREMENT_GROUPS,
+    UNRANDOMISED_WEAPON_LOCATIONS,
     STARTING_WEAPONS,
     WEAPON_ITEMS,
     CHAPTER_GATES,
@@ -127,6 +128,11 @@ def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
         arg = trigger["chapter"]
     elif kind == "charger":
         arg = f"{trigger['classname']}:{trigger['model']}"
+    elif kind == "weapon_pickup":
+        # A campaign-wide location: its identity is the weapon, not where the
+        # earliest copy happens to sit. Anchoring the key to the map would
+        # renumber it if a nearer pickup were ever found.
+        return f"*|*|{kind}|{','.join(sorted(trigger['classnames']))}"
     else:
         arg = ""
     return f"{chapter_key}|{map_name}|{kind}|{arg}"
@@ -141,8 +147,10 @@ class LocationBuilder:
         self._used_names: set[str] = set()
 
     def add(self, chapter: dict, map_name: str, base_name: str, trigger: dict,
-            requires: str | None = None) -> dict:
-        name = self._unique(f"{chapter['name']} - {base_name}")
+            requires: str | None = None, prefixed: bool = True) -> dict:
+        # Campaign-wide locations skip the mission prefix: the mission is only
+        # where logic hangs them, not where the player will find the thing.
+        name = self._unique(f"{chapter['name']} - {base_name}" if prefixed else base_name)
         key = location_key(chapter["key"], map_name, trigger)
         location = {
             "id": self.registry.get("locations", key, LOCATION_ID_BASE),
@@ -166,6 +174,19 @@ class LocationBuilder:
                 self._used_names.add(candidate)
                 return candidate
         raise RuntimeError(f"could not make {name!r} unique")
+
+
+def earliest_map_with(
+    chapters: list[dict], entities: dict[str, list[dict[str, str]]],
+    classnames: list[str],
+) -> tuple[dict, str] | None:
+    """First `(chapter, map)` in campaign order that contains one of these."""
+    wanted = set(classnames)
+    for chapter in chapters:
+        for map_name in chapter["maps"]:
+            if any(e["classname"] in wanted for e in entities[map_name]):
+                return chapter, map_name
+    return None
 
 
 def build(maps_dir: Path, registry: IdRegistry) -> dict:
@@ -303,6 +324,28 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                             {"type": "kill_count", "map": map_name, "count": threshold},
                         )
                         by_map[map_name] += 1
+
+    # One check per weapon, at the place Half-Life would first have handed it to
+    # you: the earliest map in campaign order that contains one. Deliberately not
+    # "anywhere": finding a shotgun six missions later is not the moment the
+    # check is about, and the per-map `pickup` type that fired on every copy is
+    # what read as noise. The crowbar is here too even though you start with one.
+    if "weapon_pickup" in enabled:
+        for item_name, classnames in {
+            **WEAPON_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
+        }.items():
+            anchor = earliest_map_with(chapters, entities, classnames)
+            if anchor is None:
+                continue  # nothing placed in any map; the check could never fire
+            chapter, map_name = anchor
+            builder.add(
+                chapter,
+                map_name,
+                f"First {item_name}",
+                {"type": "weapon_pickup", "map": map_name,
+                 "classnames": list(classnames)},
+                prefixed=False,
+            )
 
     # Chapter completion always comes last so it reads last in the list.
     if "chapter_complete" in enabled:

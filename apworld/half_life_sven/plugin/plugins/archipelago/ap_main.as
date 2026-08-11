@@ -78,6 +78,10 @@ void Initialise()
 	LoadAmnesty();
 	// Whatever level change was queued has happened; we are here.
 	g_szPendingLevel = "";
+	g_bSelfChange = false;
+	// Earned back in MapStart, once we know this map is one we are meant to be
+	// on. Until then nothing here counts as progress.
+	g_bMissionActive = false;
 
 	EnsureScheduled();
 }
@@ -158,25 +162,35 @@ void MapStart()
 
 	if( g_CurrentChapter !is null )
 	{
+		// Are we allowed to be here? Checked *before* anything is sent, not
+		// after. The campaign runs one mission straight into the next, so the
+		// engine will happily drop us on the first map of a mission we never
+		// unlocked -- and sending its "reached" check on the way through, then
+		// crediting its completion on the way back out, is exactly the run of
+		// phantom checks that produced a finished Office Complex nobody played.
+		//
+		// The playable test is only trusted while the client is connected: with
+		// no snapshot we do not know what is unlocked, and locking a player out
+		// of their own game is worse than a stray check.
+		if( g_State.connected && !ChapterPlayable( g_CurrentChapter ) )
+		{
+			g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
+				"[AP] " + g_CurrentChapter.name + " is locked. Returning to the hub.\n" );
+			g_Scheduler.SetTimeout( "ReturnToHub", 3.0f );
+			return;
+		}
+
+		// From here on this is a mission we are genuinely playing, so leaving its
+		// last map means we finished it.
+		g_bMissionActive = true;
+
 		RegisterMapReached();
 
 		// The final mission ends on hl_c18, which finishes with a game_end and
 		// never changes level again -- so MapChange can never see it finish.
 		// Arriving on the goal mission's last map means Nihilanth is dead.
 		if( g_CurrentChapter.isGoal && g_szCurrentMap == g_CurrentChapter.LastMap() )
-		{
 			CompleteChapter( g_CurrentChapter );
-			return;
-		}
-
-		// Someone got here by a route that bypassed MapChange (a direct
-		// `map` command, or a listen server started straight into a chapter).
-		if( !ChapterPlayable( g_CurrentChapter ) )
-		{
-			g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
-				"[AP] " + g_CurrentChapter.name + " is locked. Returning to the hub.\n" );
-			g_Scheduler.SetTimeout( "ReturnToHub", 3.0f );
-		}
 	}
 }
 

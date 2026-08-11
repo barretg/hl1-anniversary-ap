@@ -73,6 +73,12 @@ WEAPON_ITEMS: dict[str, list[str]] = {
 # Always granted, never randomised.
 STARTING_WEAPONS = ["weapon_crowbar", "weapon_medkit"]
 
+# Weapons that are a check but never an item. You start with a crowbar, but
+# walking up to the one Half-Life actually gives you is still a moment in the run.
+UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
+    "Crowbar": ["weapon_crowbar"],
+}
+
 # Optional items, controlled by YAML toggles.
 OPTIONAL_ITEMS: dict[str, list[str]] = {
     "HEV Suit": ["item_suit"],
@@ -144,11 +150,15 @@ NOTABLE_MONSTERS: dict[str, tuple[str, str | None]] = {
     "monster_miniturret": ("Mini Turret", "ranged"),
 }
 
+# Single-weapon groups. A gate naming several groups requires one item from each,
+# so a group of one is how "this exact weapon" is expressed.
 REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "ranged": RANGED_WEAPONS,
     "heavy": HEAVY_WEAPONS,
     "explosives": EXPLOSIVES,
     "underwater": UNDERWATER_WEAPONS,
+    "tau_cannon": ["Tau Cannon"],
+    "rpg": ["RPG"],
 }
 
 # --- Chapter entry gates --------------------------------------------------
@@ -170,11 +180,13 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "forget_about_freeman": {"strict": ["heavy"]},
     "lambda_core": {"strict": ["heavy"]},
     # Xen: the long jump module is standard equipment from here on, and the suit
-    # is what powers it.
-    "xen": {"strict": ["heavy"], "always": ["longjump", "suit"]},
-    "gonarchs_lair": {"strict": ["heavy"], "always": ["longjump", "suit"]},
-    "interloper": {"strict": ["heavy"], "always": ["longjump", "suit"]},
-    "nihilanth": {"strict": ["heavy"], "always": ["longjump", "suit"]},
+    # is what powers it. Strict logic names the two weapons by hand rather than a
+    # tier -- the alien grunt and Gonarch fights are not something to walk into
+    # with a shotgun, so both the Tau cannon and the RPG are required outright.
+    "xen": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
+    "gonarchs_lair": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
+    "interloper": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
+    "nihilanth": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
 }
 
 # --- Which location types to generate -------------------------------------
@@ -184,9 +196,13 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
 # arbitrary in play: the apache and tentacle at the start of Surface Tension are
 # scenery you run past, not objectives.
 #
-# So a location is "you got to this part of the campaign" (one per map, plus one
-# per mission for finishing it) and "you found a charger" (one per health or HEV
-# unit placed in a map). That is 160 checks against at most 32 progression items.
+# So a location is one of three things:
+#   - "you got to this part of the campaign": one per map, plus one per mission
+#     for finishing it.
+#   - "you found a charger": one per health or HEV unit placed in a map.
+#   - "you found a weapon for the first time": one per weapon, for the whole
+#     campaign rather than per map. The same shotgun in three levels is one
+#     discovery, which is what made the old per-map `pickup` type feel arbitrary.
 #
 # The generators for the other types are still here and still correct. Add the
 # names back to re-enable them once we have worked out which ones earn a check.
@@ -194,7 +210,8 @@ ENABLED_LOCATION_TYPES = {
     "map_reached",
     "chapter_complete",
     "charger",
-    # "pickup",
+    "weapon_pickup",
+    # "pickup",  # the per-map variant, superseded by weapon_pickup
     # "kill",
     # "kill_count",
 }

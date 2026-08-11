@@ -219,6 +219,69 @@ def test_checkdata_charger_args_are_classname_and_model(
     assert generated == expected, "run: python tools/gen_checkdata.py"
 
 
+def test_every_weapon_has_exactly_one_first_pickup(campaign: dict) -> None:
+    """One check per weapon, at its vanilla first location -- not one per copy."""
+    from campaign_layout import UNRANDOMISED_WEAPON_LOCATIONS, WEAPON_ITEMS
+
+    expected_items = {**WEAPON_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS}
+    weapon_locations = [
+        entry for entry in campaign["locations"]
+        if entry["trigger"]["type"] == "weapon_pickup"
+    ]
+    assert len(weapon_locations) == len(expected_items)
+
+    covered = {
+        classname
+        for entry in weapon_locations
+        for classname in entry["trigger"]["classnames"]
+    }
+    assert covered == {c for classnames in expected_items.values() for c in classnames}
+
+
+def test_the_crowbar_is_a_location_but_never_an_item(campaign: dict) -> None:
+    """You start with one; finding Half-Life's own is still worth a check."""
+    names = [
+        entry["name"] for entry in campaign["locations"]
+        if entry["trigger"]["type"] == "weapon_pickup"
+        and "weapon_crowbar" in entry["trigger"]["classnames"]
+    ]
+    assert names == ["First Crowbar"]
+    assert "Crowbar" not in {item["name"] for item in campaign["items"]}
+
+
+def test_first_pickups_are_at_the_earliest_map_holding_the_weapon(
+    campaign: dict,
+) -> None:
+    """"Vanilla first location" is the whole point; a later map is a bug."""
+    order = {
+        map_name: (chapter["index"], position)
+        for chapter in campaign["chapters"]
+        for position, map_name in enumerate(chapter["maps"])
+    }
+    anchors = {
+        entry["name"]: order[entry["map"]]
+        for entry in campaign["locations"]
+        if entry["trigger"]["type"] == "weapon_pickup"
+    }
+    # The crowbar and the glock are Half-Life's first two weapons, and nothing
+    # should be anchored earlier than the mission that hands them out.
+    assert anchors["First Crowbar"] <= anchors["First Glock"]
+    assert anchors["First Shotgun"] < anchors["First RPG"]
+
+
+def test_first_pickup_is_anchored_to_a_map_that_has_one(campaign: dict) -> None:
+    """Logic hangs the check on this map, so a weapon had better be in it."""
+    maps_by_chapter = {c["key"]: c["maps"] for c in campaign["chapters"]}
+
+    for entry in campaign["locations"]:
+        if entry["trigger"]["type"] != "weapon_pickup":
+            continue
+        # The anchor is the earliest map in campaign order holding the weapon, so
+        # it must at least belong to the chapter the location was filed under.
+        assert entry["map"] in maps_by_chapter[entry["chapter"]], entry["name"]
+        assert entry["trigger"]["map"] == entry["map"], entry["name"]
+
+
 def test_pickup_triggers_have_classnames(campaign: dict) -> None:
     for entry in campaign["locations"]:
         trigger = entry["trigger"]

@@ -128,6 +128,9 @@ void PerformLevelChange()
 
 	string szMap = g_szPendingLevel;
 	g_szPendingLevel = "";
+	// Survives until MapChange sees the transition, which is how a mission we
+	// walked out of is told apart from one the campaign ended for us.
+	g_bSelfChange = true;
 
 	// Queued, not forced. ServerExecute would run this synchronously from inside
 	// the scheduler tick instead of letting the engine drain it when ready.
@@ -200,10 +203,16 @@ HookReturnCode MapChange( const string& in szNextMap )
 
 	if( g_CurrentChapter !is null )
 	{
-		// A mission is only finished if we are leaving from its *last* map. The
-		// campaign's own changelevel there is the completion signal; walking out
-		// of the middle with !hub is not.
-		if( g_szCurrentMap == g_CurrentChapter.LastMap() )
+		// A mission is only finished if all three hold:
+		//   - we are leaving from its *last* map. Walking out of the middle is
+		//     not finishing it.
+		//   - the transition is the campaign's, not ours. `!hub` and `!warp` out
+		//     of a one-map mission are leaving, however far in you got.
+		//   - we were actually playing it (g_bMissionActive): the engine can
+		//     drop us on a locked mission's map and take us straight out again,
+		//     and that must not read as a completion.
+		if( g_szCurrentMap == g_CurrentChapter.LastMap()
+		    && !g_bSelfChange && g_bMissionActive )
 			CompleteChapter( g_CurrentChapter );
 
 		// The campaign wants to run straight on into the next chapter. Let it

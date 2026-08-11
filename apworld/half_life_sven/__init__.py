@@ -19,6 +19,7 @@ from .client.settings import SETTINGS_KEY
 
 from .data import (
     CHAPTERS,
+    CHARGER_TRIGGER,
     GOAL_CHAPTER,
     INTRO_CHAPTER,
     OPTIONAL_ITEM_NAMES,
@@ -118,12 +119,16 @@ class HalfLifeSvenWorld(World):
         # Missions left out of this seed: no regions, no checks, no unlock item,
         # and they do not count toward `missions_required`.
         self.excluded_chapters: set[str] = set()
+        # Whole categories of check switched off in the YAML, by trigger type.
+        self.excluded_triggers: set[str] = set()
 
     # -- generation ------------------------------------------------------
 
     def generate_early(self) -> None:
         if not self.options.include_black_mesa_inbound:
             self.excluded_chapters.add(INTRO_CHAPTER)
+        if not self.options.chargesanity:
+            self.excluded_triggers.add(CHARGER_TRIGGER)
 
         self.available_item_names = set(weapon_items)
         for name in optional_items:

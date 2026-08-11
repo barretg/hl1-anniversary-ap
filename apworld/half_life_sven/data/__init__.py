@@ -49,5 +49,8 @@ INTRO_CHAPTER: str = CHAPTERS[0]["key"]
 # Items that only enter the pool when the matching YAML toggle is on.
 OPTIONAL_ITEM_NAMES = {"HEV Suit": "shuffle_hev_suit", "Long Jump Module": "shuffle_longjump"}
 
+# Trigger type of the health / HEV charger checks, switched off by `chargesanity`.
+CHARGER_TRIGGER = "charger"
+
 MISSION_COMPLETE = "Mission Complete"
 VICTORY = "Victory"

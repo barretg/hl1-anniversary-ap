@@ -20,7 +20,7 @@ location_name_groups["Mission Completions"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] == "chapter_complete"
 }
 location_name_groups["Weapon Pickups"] = {
-    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "pickup"
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] in ("pickup", "weapon_pickup")
 }
 location_name_groups["Chargers"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] == "charger"

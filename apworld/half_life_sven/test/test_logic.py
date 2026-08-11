@@ -7,7 +7,7 @@ Run these from an Archipelago source checkout:
 """
 
 from . import HalfLifeSvenTestBase
-from ..data import CHAPTERS, CHAPTERS_BY_KEY, UNLOCKABLE_CHAPTERS
+from ..data import CHAPTERS, CHAPTERS_BY_KEY, LOCATIONS, UNLOCKABLE_CHAPTERS
 from ..items import chapter_unlock_items, unlock_item_for_chapter
 
 
@@ -106,6 +106,34 @@ class TestEquipmentShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
         self.assertFalse(self.can_reach_entrance("Enter Xen", state))
 
 
+class TestXenWeapons(HalfLifeSvenTestBase):
+    options = {"logic_difficulty": "strict"}
+
+    def test_xen_needs_both_the_tau_cannon_and_the_rpg(self) -> None:
+        """Strict logic names these two outright, not a weapon tier."""
+        world = self.multiworld.worlds[self.player]
+
+        for missing in ("Tau Cannon", "RPG"):
+            state = self.multiworld.get_all_state(False)
+            state.remove(world.create_item(missing))
+            state.sweep_for_advancements()
+
+            for chapter in ("Xen", "Gonarch's Lair", "Interloper", "Nihilanth"):
+                self.assertFalse(
+                    self.can_reach_entrance(f"Enter {chapter}", state),
+                    f"{chapter} is reachable without the {missing}",
+                )
+
+    def test_the_rest_of_the_campaign_is_not_tightened(self) -> None:
+        """Only Xen onward names weapons; Surface Tension still takes any gun."""
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        state.remove(world.create_item("Tau Cannon"))
+        state.sweep_for_advancements()
+
+        self.assertTrue(self.can_reach_entrance("Enter Surface Tension", state))
+
+
 class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"shuffle_hev_suit": False, "shuffle_longjump": False}
 
@@ -117,6 +145,46 @@ class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
     def test_xen_is_reachable_without_equipment(self) -> None:
         state = self.multiworld.get_all_state(False)
         self.assertTrue(self.can_reach_entrance("Enter Xen", state))
+
+
+class TestChargesanityOff(StartingMissionMixin, HalfLifeSvenTestBase):
+    options = {"chargesanity": False}
+
+    def test_no_charger_locations_exist(self) -> None:
+        charger_names = {
+            entry["name"] for entry in LOCATIONS
+            if entry["trigger"]["type"] == "charger"
+        }
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertFalse(names & charger_names)
+
+    def test_the_weapon_and_mission_checks_survive(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertIn("First Shotgun", names)
+        self.assertIn("Office Complex - Reached", names)
+
+    def test_the_pool_shrinks_with_the_location_set(self) -> None:
+        """Filler is sized from this slot's locations, so both drop together."""
+        pool = [item for item in self.multiworld.itempool if item.player == self.player]
+        non_event = [
+            location for location in self.multiworld.get_locations(self.player)
+            if location.address is not None
+        ]
+        self.assertEqual(len(pool), len(non_event))
+
+
+class TestChargesanityOn(HalfLifeSvenTestBase):
+    options = {"chargesanity": True}
+
+    def test_charger_locations_exist(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertIn("Office Complex - Health Charger 1", names)
 
 
 class TestBlackMesaInboundExcluded(StartingMissionMixin, HalfLifeSvenTestBase):

@@ -45,6 +45,11 @@ def create_regions(world: "HalfLifeSvenWorld") -> None:
             multiworld.regions.append(region)
 
             for entry in locations_by_map.get(map_name, []):
+                # A check category the YAML turned off is left out of the seed
+                # rather than placed and made unreachable.
+                if entry["trigger"]["type"] in world.excluded_triggers:
+                    continue
+
                 location = HalfLifeSvenLocation(
                     player, entry["name"], entry["id"], region
                 )

@@ -70,6 +70,16 @@ weapons via its `.cfg`, and you should spawn there with only the crowbar.
   level; a restart re-enters the same map and is not a transition.
 - Type `!hub` from the middle of a mission. You should go back to the hub with
   **no** completion check, since you did not leave from the mission's last map.
+- Type `!hub` from a **one-map** mission you just warped into (Office Complex).
+  Still no completion: a transition we asked for is never a completion, however
+  far into the map you got.
+- Finish a mission the campaign chains straight into another (Unforeseen
+  Consequences runs into Office Complex). Office Complex must send **nothing** —
+  no "Reached" on the way through, no "Complete" on the way back to the hub. This
+  is the phantom-check regression: reaching a mission you were bounced out of
+  used to credit both.
+- Repeat with the next mission **unlocked**. Still nothing: you were carried
+  through it, not playing it.
 - `MapChange` is observational only. Cancelling a transition with
   `HOOK_HANDLED` and then scheduling our own `changelevel` crashed the game, both
   on `restart` and on genuine mission completion, so the hook now only records
@@ -99,6 +109,20 @@ With `death_link_amnesty: 2`:
   it was. It lives in `ap_amnesty.txt`, not in a global.
 - An inbound DeathLink must not spend amnesty; only local deaths do.
 - `/amnesty 0` in the client → the very next death goes straight out.
+
+### 5a. Weapon pickups
+
+- Walk over a weapon you have **not** been granted, in the mission that holds its
+  vanilla first copy: the check sends and the centre-screen "you have not found
+  the X yet" still appears.
+- Walk over the same weapon type in **any other** mission: nothing sends. The
+  check belongs to one place in the campaign, not to the weapon.
+- Walk over a weapon you already own: the check still sends. The engine's pickup
+  hook does not fire for a duplicate, so this is the proximity sweep doing it.
+- `First Crowbar`, the case that only the sweep can send, since the crowbar is
+  never collectable. Stand next to Half-Life's crowbar and wait a second.
+- With `chargesanity: false`, charger presses send nothing and the client logs no
+  rejected checks.
 
 ### 5b. Chargers
 

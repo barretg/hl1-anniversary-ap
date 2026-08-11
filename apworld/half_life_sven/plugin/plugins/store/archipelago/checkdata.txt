@@ -7,7 +7,7 @@
 #   S|<classname>                  always granted, never randomised
 #   D|<data version>               must match the client's, or ids differ
 V|1
-D|ede02c45dcba
+D|7719605f9ae1
 C|0|black_mesa_inbound|Black Mesa Inbound|hl_c00|0
 C|1|anomalous_materials|Anomalous Materials|hl_c01_a1,hl_c01_a2|0
 C|2|unforeseen_consequences|Unforeseen Consequences|hl_c02_a1,hl_c02_a2|0
@@ -168,6 +168,20 @@ L|7720031|hl_c16_a3|map_reached||Interloper - Part 3 Reached
 L|7720032|hl_c16_a4|map_reached||Interloper - Part 4 Reached
 L|7720033|hl_c17|map_reached||Nihilanth - Part 1 Reached
 L|7720034|hl_c18|map_reached||Nihilanth - Part 2 Reached
+L|7720160|hl_c02_a1|weapon_pickup|weapon_glock,weapon_9mmhandgun|First Glock
+L|7720161|hl_c05_a3|weapon_pickup|weapon_357|First .357 Magnum
+L|7720162|hl_c04|weapon_pickup|weapon_9mmAR,weapon_m16|First MP5
+L|7720163|hl_c03|weapon_pickup|weapon_shotgun|First Shotgun
+L|7720164|hl_c08_a1|weapon_pickup|weapon_crossbow|First Crossbow
+L|7720165|hl_c11_a2|weapon_pickup|weapon_rpg|First RPG
+L|7720166|hl_c10|weapon_pickup|weapon_gauss|First Tau Cannon
+L|7720167|hl_c13_a1|weapon_pickup|weapon_egon|First Gluon Gun
+L|7720168|hl_c11_a3|weapon_pickup|weapon_hornetgun|First Hivehand
+L|7720169|hl_c07_a1|weapon_pickup|weapon_satchel|First Satchel Charge
+L|7720170|hl_c07_a1|weapon_pickup|weapon_tripmine|First Tripmine
+L|7720171|hl_c10|weapon_pickup|weapon_snark|First Snarks
+L|7720172|hl_c02_a2|weapon_pickup|weapon_handgrenade|First Hand Grenade
+L|7720173|hl_c02_a1|weapon_pickup|weapon_crowbar|First Crowbar
 L|7720035|hl_c00|chapter_complete|black_mesa_inbound|Black Mesa Inbound - Complete
 L|7720036|hl_c01_a2|chapter_complete|anomalous_materials|Anomalous Materials - Complete
 L|7720037|hl_c02_a2|chapter_complete|unforeseen_consequences|Unforeseen Consequences - Complete

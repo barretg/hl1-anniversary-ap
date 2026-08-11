@@ -58,7 +58,7 @@ def render(campaign: dict) -> str:
     for location in campaign["locations"]:
         trigger = location["trigger"]
         kind = trigger["type"]
-        if kind == "pickup":
+        if kind in ("pickup", "weapon_pickup"):
             arg = ",".join(trigger["classnames"])
         elif kind == "kill":
             arg = trigger["classname"]
@@ -107,7 +107,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  chapters {len(campaign['chapters'])}, locations {len(campaign['locations'])},"
           f" lockable classnames {lockable}")
     unused = set(CLASSNAME_TO_ITEM) - {
-        c for l in campaign["locations"] if l["trigger"]["type"] == "pickup"
+        c for l in campaign["locations"]
+        if l["trigger"]["type"] in ("pickup", "weapon_pickup")
         for c in l["trigger"]["classnames"]
     }
     if unused:

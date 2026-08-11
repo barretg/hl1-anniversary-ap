@@ -598,7 +598,16 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
             )
 
     if new_checks:
-        unseen = [cid for cid in new_checks if cid not in ctx.checked_locations]
+        # The plugin fires every check its checkdata.txt knows about, but the
+        # seed may not contain all of them: chargesanity off, or a mission left
+        # out. Report only locations this slot actually has. Before the Connected
+        # packet lands both sets are empty, which is not the same as "no
+        # locations", so the filter is skipped until we know.
+        in_seed = ctx.missing_locations | ctx.checked_locations
+        unseen = [
+            cid for cid in new_checks
+            if cid not in ctx.checked_locations and (not in_seed or cid in in_seed)
+        ]
         if unseen:
             for location_id in unseen:
                 logger.info(f"Check: {ctx.location_name_by_id.get(location_id, location_id)}")

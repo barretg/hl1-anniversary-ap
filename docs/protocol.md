@@ -142,9 +142,18 @@ Pipe-delimited so AngelScript can parse it with a single `string.Split("|")`.
 | `V` | format version |
 | `C` | index, key, name, comma-separated maps, is_goal |
 | `L` | id, map, trigger type, trigger arg, name |
-| | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79` |
+| | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79`; `weapon_pickup` carries the comma-separated classnames |
 | `K` | classname, item name — pickup refused until that item is held |
 | `S` | classname always granted (the crowbar and the medkit) |
+
+Every `L` record carries a map, but `weapon_pickup` is the one type the plugin
+does **not** filter by it: that field is only where the apworld anchors the
+check's logic, and the plugin matches on classname anywhere in the campaign.
+
+A seed does not necessarily contain every location in this file — `chargesanity`
+and `include_black_mesa_inbound` can drop whole groups. The plugin still fires
+them; the client drops any check that is not in its slot's location list rather
+than reporting a location the seed has never heard of.
 
 `tests/test_campaign_data.py` fails if this file and `campaign.json` disagree, so
 regenerate after any data change:
