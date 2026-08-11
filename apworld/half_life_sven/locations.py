@@ -22,6 +22,9 @@ location_name_groups["Mission Completions"] = {
 location_name_groups["Weapon Pickups"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] == "pickup"
 }
+location_name_groups["Chargers"] = {
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "charger"
+}
 location_name_groups["Kills"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] in ("kill", "kill_count")
 }

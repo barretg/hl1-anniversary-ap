@@ -89,6 +89,25 @@ With two players in the lobby and two AP slots on DeathLink:
 - Trigger a DeathLink during a map load → it must be ignored on arrival, not
   applied.
 
+With `death_link_amnesty: 2`:
+
+- Die → lobby gibs, chat reads "Amnesty remaining: 1", **no** DeathLink in the
+  client log. Die again → "Amnesty remaining: 0", still nothing sent. Die a third
+  time → no amnesty line, and one DeathLink goes out.
+- The fourth death starts the cycle again at "Amnesty remaining: 1".
+- Spend one death, change level, die again → the countdown continues from where
+  it was. It lives in `ap_amnesty.txt`, not in a global.
+- An inbound DeathLink must not spend amnesty; only local deaths do.
+- `/amnesty 0` in the client → the very next death goes straight out.
+
+### 5b. Chargers
+
+- Press use on a health charger and an HEV charger; each sends its own check
+  once, and pressing it again sends nothing.
+- An empty charger still sends its check.
+- Chargers in a mission you re-enter later do not resend.
+- Press use on ordinary buttons, doors and levers → no checks, no log spam.
+
 ### 6. Goal
 
 Set `missions_required: 1` for a short test seed. Confirm Nihilanth stays sealed

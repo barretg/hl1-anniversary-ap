@@ -146,6 +146,20 @@ class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
         logger.info(f"DeathLink {'enabled' if self.ctx.death_link_enabled else 'disabled'}.")
         return True
 
+    def _cmd_amnesty(self, count: str = "") -> bool:
+        """Show or set how many deaths are forgiven before a DeathLink goes out."""
+        if count:
+            try:
+                self.ctx.death_link_amnesty = max(0, int(count))
+            except ValueError:
+                logger.error("Usage: /amnesty <number of deaths>")
+                return True
+        logger.info(
+            f"DeathLink amnesty: {self.ctx.death_link_amnesty} "
+            f"death(s) forgiven before one is sent to the multiworld."
+        )
+        return True
+
     def _cmd_missions(self) -> bool:
         """Show mission unlock status."""
         self.ctx.print_missions()
@@ -200,6 +214,9 @@ class HalfLifeSvenContext(CommonContext):
             [c for c in self.campaign["chapters"] if not c["is_goal"]]
         )
         self.death_link_enabled = False
+        # Deaths the lobby is forgiven before one is reported to the multiworld.
+        # The plugin owns the countdown; this is only the allowance it counts from.
+        self.death_link_amnesty = 4
         self.goal_sent = False
         self.chat_relay = True
         self.bridge_failures = 0
@@ -338,6 +355,9 @@ class HalfLifeSvenContext(CommonContext):
             )
             self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
             self.death_link_enabled = bool(slot_data.get("death_link", False))
+            self.death_link_amnesty = int(
+                slot_data.get("death_link_amnesty", self.death_link_amnesty)
+            )
             if self.death_link_enabled:
                 asyncio.create_task(self.update_death_link(True), name="UpdateDeathLink")
 
@@ -537,7 +557,13 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         elif event.kind == "DEATH":
             player = event.args[0] if event.args else "Freeman"
             cause = event.args[1] if len(event.args) > 1 else "an unknown fate"
-            if ctx.death_link_enabled:
+            # The plugin reports every death and says whether its amnesty
+            # allowance absorbed this one. Older plugins send no such field,
+            # which reads as "not forgiven" and behaves exactly as before.
+            forgiven = len(event.args) > 2 and event.args[2] == "1"
+            if forgiven:
+                logger.debug(f"{player} died ({cause}); absorbed by DeathLink amnesty.")
+            elif ctx.death_link_enabled:
                 await ctx.send_death(f"{player} died to {cause}.")
             else:
                 # The plugin reports every death and lets us decide, so this
@@ -560,6 +586,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
                 items=sorted(ctx.unlocked_items),
                 goal_open=ctx.goal_open,
                 death_link=ctx.death_link_enabled,
+        death_link_amnesty=ctx.death_link_amnesty,
                 data_version=ctx.data_version,
                 force=True,
             )
@@ -580,6 +607,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         items=sorted(ctx.unlocked_items),
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
+        death_link_amnesty=ctx.death_link_amnesty,
         data_version=ctx.data_version,
     )
 

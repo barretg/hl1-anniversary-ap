@@ -57,6 +57,23 @@ class ShuffleLongJump(Toggle):
     display_name = "Shuffle Long Jump Module"
 
 
+class DeathLinkAmnesty(Range):
+    """How many deaths the lobby is forgiven before one is sent to the multiworld.
+
+    Only outgoing DeathLinks are affected. Inside Sven Co-op the rule never
+    changes: any death still gibs the whole lobby, and the death message says how
+    much amnesty is left. Once the allowance runs out the next death goes out to
+    the multiworld and the allowance starts again.
+
+    0 sends every death. The default forgives four.
+    """
+
+    display_name = "DeathLink Amnesty"
+    range_start = 0
+    range_end = 20
+    default = 4
+
+
 class TrapPercentage(Range):
     """Percentage of filler items replaced by traps.
 
@@ -79,3 +96,4 @@ class HalfLifeSvenOptions(PerGameCommonOptions):
     trap_percentage: TrapPercentage
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink
+    death_link_amnesty: DeathLinkAmnesty

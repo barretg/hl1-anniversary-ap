@@ -7,6 +7,9 @@
 *
 * The only thing standing between that and an infinite cascade is
 * g_flDeathLinkImmuneUntil, which is always set *before* the wipe runs.
+*
+* Amnesty (see ForgiveDeath) can hold a local death back from the multiworld. It
+* never holds back the wipe.
 */
 
 // Long enough to cover the gibs we cause and a co-op wipe from one explosion,
@@ -20,6 +23,83 @@ const float DEATHLINK_MAX_AGE = 10.0f;
 bool DeathLinkImmune()
 {
 	return g_Engine.time < g_flDeathLinkImmuneUntil;
+}
+
+/*
+* DeathLink amnesty.
+*
+* Amnesty only ever applies to deaths leaving the lobby. Inside it the rule does
+* not change: one death is still everyone's death, because a wipe that sometimes
+* happens and sometimes does not is worse than either.
+*
+* The allowance is a countdown shared by the whole lobby, spent one per death,
+* and refilled the moment a death gets through. It lives in a file because it has
+* to outlive map changes, which wipe every global the plugin has.
+*/
+void LoadAmnesty()
+{
+	g_iAmnestyRemaining = -1;
+
+	File@ pFile = g_FileSystem.OpenFile( AP_AMNESTY, OpenFile::READ );
+
+	if( pFile is null || !pFile.IsOpen() )
+		return;
+
+	string szLine;
+	if( !pFile.EOFReached() )
+		pFile.ReadLine( szLine );
+	pFile.Close();
+
+	szLine = APTrim( szLine );
+	if( szLine.Length() > 0 )
+		g_iAmnestyRemaining = atoi( szLine );
+}
+
+void SaveAmnesty()
+{
+	File@ pFile = g_FileSystem.OpenFile( AP_AMNESTY, OpenFile::WRITE );
+
+	if( pFile is null || !pFile.IsOpen() )
+		return;
+
+	pFile.Write( "" + g_iAmnestyRemaining + "\n" );
+	pFile.Close();
+}
+
+/*
+* Spend one death against the allowance.
+*
+* Returns true if it was forgiven, in which case nothing leaves the lobby.
+* A stale remaining count (the setting was lowered mid-run, or the file predates
+* it) is clamped rather than trusted.
+*/
+bool ForgiveDeath()
+{
+	int iAmnesty = g_State.deathLinkAmnesty;
+
+	if( iAmnesty <= 0 )
+		return false;
+
+	// Nothing is leaving the lobby anyway, so there is nothing to forgive and no
+	// allowance to spend. Reading a stale `false` here fails in the safe
+	// direction: the death is reported and the client decides, as usual.
+	if( !g_State.deathLink )
+		return false;
+
+	if( g_iAmnestyRemaining < 0 || g_iAmnestyRemaining > iAmnesty )
+		g_iAmnestyRemaining = iAmnesty;
+
+	if( g_iAmnestyRemaining > 0 )
+	{
+		--g_iAmnestyRemaining;
+		SaveAmnesty();
+		return true;
+	}
+
+	// Spent. This death goes out, and the allowance starts again.
+	g_iAmnestyRemaining = iAmnesty;
+	SaveAmnesty();
+	return false;
 }
 
 /*
@@ -60,16 +140,22 @@ HookReturnCode PlayerKilled( CBasePlayer@ pPlayer, CBaseEntity@ pAttacker, int i
 	if( DeathLinkImmune() )
 		return HOOK_CONTINUE;
 
-	string szName = string( pPlayer.pev.netname );
+	string szName = APSanitise( string( pPlayer.pev.netname ) );
 	string szCause = DeathCause( pAttacker );
+	bool bForgiven = ForgiveDeath();
 
-	// Reported unconditionally. Whether it becomes a DeathLink is the client's
-	// call, and the client is the only thing that actually knows -- gating here
-	// on our cached copy of its flags means any staleness silently swallows
-	// deaths, with nothing in either log to say why.
-	BridgeSend( "DEATH|" + szName + "|" + szCause );
+	// Reported unconditionally, forgiven or not. Whether it becomes a DeathLink
+	// is the client's call, and the client is the only thing that actually knows
+	// -- gating here on our cached copy of its flags means any staleness silently
+	// swallows deaths, with nothing in either log to say why. The amnesty flag is
+	// advice the client applies on top of that.
+	BridgeSend( "DEATH|" + szName + "|" + szCause + "|" + ( bForgiven ? "1" : "0" ) );
 
-	WipeLobby( pPlayer, szName + " died (" + szCause + ") and took everyone along." );
+	string szReason = szName + " died (" + szCause + ") and took everyone along.";
+	if( bForgiven )
+		szReason += " Amnesty remaining: " + g_iAmnestyRemaining;
+
+	WipeLobby( pPlayer, szReason );
 
 	return HOOK_CONTINUE;
 }

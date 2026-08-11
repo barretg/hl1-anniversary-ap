@@ -48,6 +48,32 @@ def any_of(world: "HalfLifeSvenWorld", groups: list[str]) -> Callable[[Collectio
     return rule
 
 
+def chapter_is_startable(world: "HalfLifeSvenWorld", chapter: dict) -> bool:
+    """Can this mission be entered with nothing but its own unlock item?
+
+    The mission handed out at the start has to be one of these. Every location in
+    the game sits behind a mission entrance, so if the one open mission also
+    demands a real weapon or the long jump module, *nothing* is reachable in
+    sphere one: fill has no legal spot for the item that would open sphere two,
+    burns its swap budget, and dies with "no more spots to place N items.
+    Remaining locations are invalid".
+
+    Called before the pool is built, so it reads `available_item_names` — a gate
+    naming equipment nobody will ever receive is not a gate.
+    """
+    gates = chapter["gates"]
+
+    if world.options.logic_difficulty.value == LogicDifficulty.option_strict:
+        if any(group_items(world, group) for group in gates.get("strict", [])):
+            return False
+
+    for key in gates.get("always", []):
+        if EQUIPMENT_GATES[key] in world.available_item_names:
+            return False
+
+    return True
+
+
 def chapter_entry_rule(
     world: "HalfLifeSvenWorld", chapter: dict
 ) -> Callable[[CollectionState], bool] | None:

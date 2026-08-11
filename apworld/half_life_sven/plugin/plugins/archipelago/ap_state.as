@@ -14,6 +14,10 @@ const string AP_OUT = AP_DIR + "ap_out.txt";
 // because the whole point is to survive the map change that is about to happen.
 const string AP_PENDING = AP_DIR + "ap_pending.txt";
 
+// How much DeathLink amnesty is left. Also a file, and for the same reason: the
+// allowance is spent across a whole run, not a single map.
+const string AP_AMNESTY = AP_DIR + "ap_amnesty.txt";
+
 const string HUB_MAP = "-sp_campaign_portal";
 
 // Location trigger kinds, as emitted by gen_checkdata.py.
@@ -22,6 +26,7 @@ const string TRIGGER_KILL = "kill";
 const string TRIGGER_KILL_COUNT = "kill_count";
 const string TRIGGER_MAP_REACHED = "map_reached";
 const string TRIGGER_CHAPTER_COMPLETE = "chapter_complete";
+const string TRIGGER_CHARGER = "charger";
 
 class APChapter
 {
@@ -65,6 +70,9 @@ class APState
 	bool goalOpen = false;
 	bool connected = false;
 	bool deathLink = false;
+	// Deaths the lobby may take before one is reported to the multiworld.
+	// 0 means every death counts, which is what an older client implies too.
+	int deathLinkAmnesty = 0;
 	int lastEventSeq = 0;
 
 	bool ChapterUnlocked( const string& in szKey ) const
@@ -99,6 +107,7 @@ array<string> g_StartingWeapons;
 array<APLocation@> g_MapPickups;
 array<APLocation@> g_MapKills;
 array<APLocation@> g_MapKillCounts;
+array<APLocation@> g_MapChargers;
 
 APState g_State;
 
@@ -112,6 +121,11 @@ int g_iMapKills = 0;
 // Set to g_Engine.time + a short window while a lobby wipe is in progress, so
 // the deaths we cause are neither reported nor able to re-trigger the wipe.
 float g_flDeathLinkImmuneUntil = 0.0f;
+
+// Deaths still forgiven before the next one goes out to the multiworld. -1 means
+// "not loaded yet"; it is filled from the amnesty setting the first time a death
+// has to be judged, since the snapshot may not have arrived at map load.
+int g_iAmnestyRemaining = -1;
 
 // --- helpers --------------------------------------------------------------
 
@@ -285,6 +299,7 @@ void IndexCurrentMap()
 	g_MapPickups.resize( 0 );
 	g_MapKills.resize( 0 );
 	g_MapKillCounts.resize( 0 );
+	g_MapChargers.resize( 0 );
 	g_iMapKills = 0;
 
 	for( uint i = 0; i < g_Locations.length(); ++i )
@@ -299,5 +314,7 @@ void IndexCurrentMap()
 			g_MapKills.insertLast( pLocation );
 		else if( pLocation.kind == TRIGGER_KILL_COUNT )
 			g_MapKillCounts.insertLast( pLocation );
+		else if( pLocation.kind == TRIGGER_CHARGER )
+			g_MapChargers.insertLast( pLocation );
 	}
 }

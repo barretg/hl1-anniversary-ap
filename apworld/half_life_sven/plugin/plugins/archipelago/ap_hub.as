@@ -223,7 +223,8 @@ HookReturnCode MapChange( const string& in szNextMap )
 */
 
 // Half-Life's use range is 64 units from the gun position; be a little generous.
-const float PORTAL_USE_RANGE = 96.0f;
+// Also used for the charger checks, which trace the same way.
+const float USE_TRACE_RANGE = 96.0f;
 
 // One press should mean one warp, not one per think while +use is held.
 const float PORTAL_USE_COOLDOWN = 2.0f;
@@ -258,19 +259,26 @@ int PortalChapterIndex( const string& in szName )
 
 /*
 * PlayerUse tells us who pressed but not what they pressed, so trace where they
-* are looking. This fires whether or not the button itself accepts the press,
-* which is the point -- the stock two-player lock never gets a say.
+* are looking. This fires whether or not the entity itself accepts the press,
+* which is the point in the hub -- the stock two-player lock never gets a say.
+*
+* Two things care about the result: the hub's mission consoles, and the health
+* and HEV chargers scattered through the campaign.
 */
 HookReturnCode PlayerUse( CBasePlayer@ pPlayer, uint& out uiFlags )
 {
 	uiFlags = 0;
 
-	if( pPlayer is null || g_szCurrentMap != HUB_MAP )
+	if( pPlayer is null )
+		return HOOK_CONTINUE;
+
+	// Nothing on this map is worth a trace on every +use tick.
+	if( g_szCurrentMap != HUB_MAP && g_MapChargers.length() == 0 )
 		return HOOK_CONTINUE;
 
 	Math.MakeVectors( pPlayer.pev.v_angle );
 	Vector vecStart = pPlayer.GetGunPosition();
-	Vector vecEnd = vecStart + g_Engine.v_forward * PORTAL_USE_RANGE;
+	Vector vecEnd = vecStart + g_Engine.v_forward * USE_TRACE_RANGE;
 
 	TraceResult tr;
 	g_Utility.TraceLine( vecStart, vecEnd, dont_ignore_monsters, pPlayer.edict(), tr );
@@ -281,6 +289,12 @@ HookReturnCode PlayerUse( CBasePlayer@ pPlayer, uint& out uiFlags )
 	CBaseEntity@ pHit = g_EntityFuncs.Instance( tr.pHit );
 	if( pHit is null )
 		return HOOK_CONTINUE;
+
+	if( g_szCurrentMap != HUB_MAP )
+	{
+		RegisterChargerCheck( pHit );
+		return HOOK_CONTINUE;
+	}
 
 	int iIndex = PortalChapterIndex( pHit.GetTargetname() );
 	if( iIndex < 0 )

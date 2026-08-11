@@ -32,13 +32,15 @@ RPG, Tau cannon, gluon gun, hivehand, satchel charges, tripmines, snarks, hand
 grenades), and optionally the HEV suit and long jump module. Everything else is
 filler: ammo caches, medkits and armour batteries.
 
-**Locations** — 53 of them, one for each division of the campaign:
+**Locations** — 160 of them:
 
 - reaching each part of a mission (Surface Tension has five, Office Complex one)
 - completing each mission
+- using each health charger and HEV charge panel in the campaign, 107 in all
 
 Sven Co-op splits Half-Life's campaign into 35 maps across 18 missions, so
-progress through a mission is itself the check.
+progress through a mission is itself the check. Every wall-mounted charger is a
+check too, whether or not it still has juice in it — pressing use is enough.
 
 ## Which items can be in another player's world?
 

@@ -20,6 +20,7 @@ from pathlib import Path
 from bsp_entities import load_map
 from campaign_layout import (
     CHAPTERS,
+    CHARGER_CLASSNAMES,
     CLASSNAME_TO_ITEM,
     ENABLED_LOCATION_TYPES,
     GOAL_CHAPTER,
@@ -59,6 +60,12 @@ def part_label(chapter_maps: list[str], map_name: str) -> str:
     if len(chapter_maps) == 1:
         return ""
     return f"Part {chapter_maps.index(map_name) + 1}"
+
+
+def brush_model_index(entity: dict[str, str]) -> int:
+    """Numeric part of a brush entity's `*N` model, for a deterministic order."""
+    model = entity.get("model", "")
+    return int(model[1:]) if model[1:].isdigit() else -1
 
 
 def weapon_display(classname: str) -> str:
@@ -118,6 +125,8 @@ def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
         arg = str(trigger["count"])
     elif kind == "chapter_complete":
         arg = trigger["chapter"]
+    elif kind == "charger":
+        arg = f"{trigger['classname']}:{trigger['model']}"
     else:
         arg = ""
     return f"{chapter_key}|{map_name}|{kind}|{arg}"
@@ -194,6 +203,26 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                     f"{label} Reached" if label else "Reached",
                     {"type": "map_reached", "map": map_name},
                 )
+
+            # Every health and HEV charger placed in the map is its own check.
+            # The brush model index ("*58") is the only per-entity identity the
+            # BSP and the running game both know, so ids are keyed to it.
+            if "charger" in enabled:
+                for classname, display in CHARGER_CLASSNAMES.items():
+                    chargers = sorted(
+                        (e for e in ents
+                         if e["classname"] == classname and brush_model_index(e) >= 0),
+                        key=brush_model_index,
+                    )
+                    for number, entity in enumerate(chargers, start=1):
+                        count = f" {number}" if len(chargers) > 1 else ""
+                        builder.add(
+                            chapter,
+                            map_name,
+                            f"{display}{count}{suffix}",
+                            {"type": "charger", "map": map_name,
+                             "classname": classname, "model": entity["model"]},
+                        )
 
             # Every distinct pickup classname present in the map becomes one
             # check -- collecting any instance of it fires the check once.

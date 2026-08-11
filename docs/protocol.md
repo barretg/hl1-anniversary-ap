@@ -9,6 +9,8 @@ Archipelago server; the plugin and the client talk through two files in
     checkdata.txt   generated, read-only at runtime
     ap_in.txt       client -> game
     ap_out.txt      game -> client
+    ap_pending.txt  plugin-owned, survives a map change
+    ap_amnesty.txt  plugin-owned, DeathLink amnesty remaining
 ```
 
 The client polls every 0.2 s, the plugin every 0.25 s, so a check reaches the
@@ -20,11 +22,17 @@ server and an item reaches the player in well under a second.
 make decisions by consulting its cached copy of a client-owned flag. `DEATH` is
 reported on every death and the client decides whether it becomes a DeathLink,
 because gating in the plugin means a stale snapshot silently swallows deaths with
-nothing in either log to explain it.
+nothing in either log to explain it. DeathLink amnesty is the one exception, and
+only because the death message has to name the remaining allowance at the instant
+of the death: the client sends the allowance, the plugin counts it down and tags
+the `DEATH` line, and the client still has the final say on whether anything
+leaves the lobby.
 
-The plugin holds no state that matters across a map change. On every map load it re-reads `checkdata.txt` and waits for
+The plugin holds no state in memory that matters across a map change. On every map load it re-reads `checkdata.txt` and waits for
 the next snapshot. A plugin reload, a map change, or a server restart therefore
-costs nothing.
+costs nothing. The two things that genuinely must outlive a map change are small
+files alongside the bridge: `ap_pending.txt` (a queued return to the hub) and
+`ap_amnesty.txt` (how much DeathLink amnesty is left).
 
 **The snapshot is idempotent, events are not.** `ap_in.txt` is a complete
 picture, rewritten whenever it changes and safe to apply any number of times.
@@ -60,7 +68,7 @@ If the file shrinks, the client treats it as a new game session and rewinds.
 | `CHECK\|<location id>` | a location was collected |
 | `COMPLETE\|<chapter key>` | a mission was finished |
 | `GOAL\|<chapter key>` | Nihilanth is dead; client sends `StatusUpdate: CLIENT_GOAL` |
-| `DEATH\|<player>\|<cause>` | a player died; sent unconditionally |
+| `DEATH\|<player>\|<cause>\|<forgiven>` | a player died; sent unconditionally. `forgiven` is `1` when DeathLink amnesty absorbed it, so the client does not report it onward |
 | `CHAT\|<player>\|<message>` | in-game chat, for relaying to multiworld chat |
 | `ACK\|<seq>` | event consumed; client may drop it |
 
@@ -85,6 +93,7 @@ session=9f3c1ab2
 connected=1
 goal_open=0
 death_link=1
+death_link_amnesty=4
 chapters=blast_pit,office_complex
 items=RPG;Shotgun
 now=1786000000
@@ -128,6 +137,7 @@ Pipe-delimited so AngelScript can parse it with a single `string.Split("|")`.
 | `V` | format version |
 | `C` | index, key, name, comma-separated maps, is_goal |
 | `L` | id, map, trigger type, trigger arg, name |
+| | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79` |
 | `K` | classname, item name — pickup refused until that item is held |
 | `S` | classname always granted (the crowbar and the medkit) |
 

@@ -52,9 +52,14 @@ See [docs/protocol.md](docs/protocol.md).
 
 ## Locations
 
-A location is currently "you reached this part of the campaign": one per map,
-plus one per mission for finishing it. 53 locations against at most 32
-progression items.
+Two kinds of location: "you reached this part of the campaign" (one per map, plus
+one per mission for finishing it) and "you found a charger" (one per health or
+HEV wall unit placed in a map). 160 locations against at most 32 progression
+items.
+
+Chargers are identified by their brush model index (`func_recharge:*79`), which
+is the only per-entity identity the BSP and the running game agree on — they have
+no targetname. The check fires on the `+use`, not on draining the unit.
 
 Richer location types are already implemented and derived from the map files
 themselves: `tools/bsp_entities.py` reads the entity lump out of each shipped

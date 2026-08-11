@@ -164,6 +164,61 @@ def test_checkdata_fields_contain_no_delimiters(checkdata: list[list[str]]) -> N
         assert all("|" not in field for field in record)
 
 
+def test_some_mission_is_enterable_with_nothing(campaign: dict) -> None:
+    """There must always be a legal starting mission.
+
+    One mission is precollected, and every location in the game sits behind a
+    mission entrance. If the only open mission were gated on a weapon or on the
+    long jump module, sphere one would be empty and fill would have nowhere to
+    put its first item. The world picks the starting mission from the ungated
+    ones; this fails if a `CHAPTER_GATES` edit leaves none.
+    """
+    ungated = [
+        chapter for chapter in campaign["chapters"]
+        if not chapter["is_goal"]
+        and not chapter["gates"].get("strict")
+        and not chapter["gates"].get("always")
+    ]
+    assert ungated, "every mission is gated; no seed can start"
+
+
+def test_charger_triggers_name_a_brush_model(campaign: dict) -> None:
+    """`*N` is the only identity the BSP and the running game share."""
+    chargers = [e for e in campaign["locations"] if e["trigger"]["type"] == "charger"]
+    assert chargers
+
+    for entry in chargers:
+        trigger = entry["trigger"]
+        assert trigger["classname"] in ("func_healthcharger", "func_recharge")
+        assert trigger["model"].startswith("*")
+        assert trigger["model"][1:].isdigit(), entry["name"]
+
+
+def test_chargers_are_unique_within_a_map(campaign: dict) -> None:
+    """Two locations on one model would make the second unreachable."""
+    seen: set[tuple[str, str]] = set()
+    for entry in campaign["locations"]:
+        trigger = entry["trigger"]
+        if trigger["type"] != "charger":
+            continue
+        key = (entry["map"], trigger["model"])
+        assert key not in seen, entry["name"]
+        seen.add(key)
+
+
+def test_checkdata_charger_args_are_classname_and_model(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """Exactly what the plugin builds from the entity a player pressed +use on."""
+    generated = {int(r[1]): r[4] for r in checkdata if r[0] == "L" and r[3] == "charger"}
+    expected = {
+        entry["id"]: f"{entry['trigger']['classname']}:{entry['trigger']['model']}"
+        for entry in campaign["locations"]
+        if entry["trigger"]["type"] == "charger"
+    }
+    assert generated == expected, "run: python tools/gen_checkdata.py"
+
+
 def test_pickup_triggers_have_classnames(campaign: dict) -> None:
     for entry in campaign["locations"]:
         trigger = entry["trigger"]

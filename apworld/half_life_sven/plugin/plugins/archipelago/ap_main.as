@@ -73,6 +73,9 @@ void Initialise()
 	// Force a full reparse of the snapshot.
 	g_szLastInput = "";
 	g_flDeathLinkImmuneUntil = 0.0f;
+	// Unlike everything else here, the amnesty countdown is deliberately carried
+	// across the map change: it is spent over a whole run.
+	LoadAmnesty();
 	// Whatever level change was queued has happened; we are here.
 	g_szPendingLevel = "";
 

@@ -107,6 +107,7 @@ void SendAck( int iSeq )
 *   items=<name>;<name>;...       AP item names we hold (weapons, equipment)
 *   goal_open=0|1                 enough missions done to enter the goal mission
 *   death_link=0|1
+*   death_link_amnesty=<n>        deaths forgiven before one is reported out
 *   connected=0|1
 *   event=<seq>|<kind>|<payload>|<unixtime>
 */
@@ -140,6 +141,7 @@ void BridgePoll()
 	bool bGoalOpen = false;
 	bool bConnected = false;
 	bool bDeathLink = false;
+	int iAmnesty = 0;
 	array<string> events;
 
 	string szSession;
@@ -191,6 +193,8 @@ void BridgePoll()
 			bConnected = szValue == "1";
 		else if( szKey == "death_link" )
 			bDeathLink = szValue == "1";
+		else if( szKey == "death_link_amnesty" )
+			iAmnesty = atoi( szValue );
 		else if( szKey == "event" )
 			events.insertLast( szValue );
 	}
@@ -212,6 +216,7 @@ void BridgePoll()
 	g_State.goalOpen = bGoalOpen;
 	g_State.connected = bConnected;
 	g_State.deathLink = bDeathLink;
+	g_State.deathLinkAmnesty = iAmnesty;
 
 	if( bConnected && !bWasConnected )
 		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,

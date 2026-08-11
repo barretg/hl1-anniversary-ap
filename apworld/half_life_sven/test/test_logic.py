@@ -7,11 +7,41 @@ Run these from an Archipelago source checkout:
 """
 
 from . import HalfLifeSvenTestBase
-from ..data import CHAPTERS, UNLOCKABLE_CHAPTERS
+from ..data import CHAPTERS, CHAPTERS_BY_KEY, UNLOCKABLE_CHAPTERS
 from ..items import chapter_unlock_items, unlock_item_for_chapter
 
 
-class TestDefaults(HalfLifeSvenTestBase):
+class StartingMissionMixin:
+    """The starting mission must be enterable with nothing but its unlock.
+
+    Every location sits behind a mission entrance, so a gated starting mission
+    means an empty sphere one and a fill failure. Asserted for each option set,
+    because which missions qualify depends on logic difficulty and on whether the
+    suit and long jump module are shuffled.
+    """
+
+    def test_the_starting_mission_is_reachable_from_nothing(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        chapter = CHAPTERS_BY_KEY[world.starting_chapter]
+
+        state = self.multiworld.get_state(self.multiworld)
+
+        self.assertTrue(
+            self.can_reach_entrance(f"Enter {chapter['name']}", state),
+            f"{chapter['name']} was handed out as the starting mission but cannot "
+            f"be entered with only its unlock item",
+        )
+
+    def test_something_is_reachable_at_the_start(self) -> None:
+        state = self.multiworld.get_state(self.multiworld)
+        reachable = [
+            location for location in self.multiworld.get_locations(self.player)
+            if location.can_reach(state)
+        ]
+        self.assertTrue(reachable, "sphere one is empty; fill cannot start")
+
+
+class TestDefaults(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {}
 
     def test_exactly_one_mission_is_precollected(self) -> None:
@@ -48,7 +78,7 @@ class TestDefaults(HalfLifeSvenTestBase):
         self.assertTrue(self.multiworld.completion_condition[self.player](state))
 
 
-class TestMinimumMissions(HalfLifeSvenTestBase):
+class TestMinimumMissions(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"missions_required": 1}
 
     def test_goal_opens_after_a_single_mission(self) -> None:
@@ -58,7 +88,7 @@ class TestMinimumMissions(HalfLifeSvenTestBase):
         self.assertTrue(self.multiworld.completion_condition[self.player](state))
 
 
-class TestEquipmentShuffled(HalfLifeSvenTestBase):
+class TestEquipmentShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"shuffle_hev_suit": True, "shuffle_longjump": True}
 
     def test_equipment_is_in_the_pool(self) -> None:
@@ -76,7 +106,7 @@ class TestEquipmentShuffled(HalfLifeSvenTestBase):
         self.assertFalse(self.can_reach_entrance("Enter Xen", state))
 
 
-class TestEquipmentNotShuffled(HalfLifeSvenTestBase):
+class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"shuffle_hev_suit": False, "shuffle_longjump": False}
 
     def test_equipment_is_absent_from_the_pool(self) -> None:
@@ -89,7 +119,7 @@ class TestEquipmentNotShuffled(HalfLifeSvenTestBase):
         self.assertTrue(self.can_reach_entrance("Enter Xen", state))
 
 
-class TestLooseLogic(HalfLifeSvenTestBase):
+class TestLooseLogic(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"logic_difficulty": "loose"}
 
     def test_weapon_gates_are_dropped(self) -> None:

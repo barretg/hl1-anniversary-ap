@@ -88,6 +88,20 @@ def test_snapshot_contents(bridge: Bridge) -> None:
     assert "now=" in text
 
 
+def test_snapshot_carries_the_deathlink_amnesty(bridge: Bridge) -> None:
+    """The plugin counts the allowance down, so it has to be told what it is."""
+    snapshot(bridge)
+    assert "death_link_amnesty=0" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, death_link_amnesty=4) is True
+    assert "death_link_amnesty=4" in bridge.in_path.read_text(encoding="utf-8")
+
+
+def test_snapshot_amnesty_is_never_negative(bridge: Bridge) -> None:
+    snapshot(bridge, death_link_amnesty=-3)
+    assert "death_link_amnesty=0" in bridge.in_path.read_text(encoding="utf-8")
+
+
 def test_snapshot_carries_a_session_id(bridge: Bridge) -> None:
     snapshot(bridge)
     assert f"session={bridge.session}" in bridge.in_path.read_text(encoding="utf-8")

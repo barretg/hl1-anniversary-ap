@@ -178,6 +178,7 @@ class Bridge:
         items: list[str],
         goal_open: bool,
         death_link: bool,
+        death_link_amnesty: int = 0,
         data_version: str = "",
         force: bool = False,
     ) -> bool:
@@ -197,6 +198,9 @@ class Bridge:
             f"connected={1 if connected else 0}",
             f"goal_open={1 if goal_open else 0}",
             f"death_link={1 if death_link else 0}",
+            # Counted down by the plugin, not here: the death message has to name
+            # the remaining allowance at the moment of the death.
+            f"death_link_amnesty={max(0, int(death_link_amnesty))}",
             "chapters=" + ",".join(sorted(chapters)),
             "items=" + ";".join(sorted(items)),
         ]

@@ -61,6 +61,7 @@ You should see `[AP] Connected to the multiworld.` in the game chat.
 | `/commands` | list the chat commands you type inside the game |
 | `/missions` | show mission unlock status |
 | `/deathlink` | toggle DeathLink |
+| `/amnesty <n>` | show or change the DeathLink amnesty for this session |
 
 ## Playing the randomizer
 
@@ -100,6 +101,14 @@ The campaign's own per-map loadouts are stripped for the same reason.
 Any death gibs the entire Sven Co-op lobby, and if DeathLink is on it is also
 sent to the multiworld. A DeathLink arriving from another world gibs everyone in
 the lobby too. Toggle it live with `/deathlink` in the client.
+
+**Amnesty.** `death_link_amnesty` in your YAML (default 4) is how many deaths the
+lobby is forgiven before one is reported to the multiworld. It only affects
+deaths going *out*: inside Sven Co-op the lobby still gibs every time, and the
+death message says how much is left ("Amnesty remaining: 3"). When the allowance
+runs out the next death goes to the multiworld and the allowance starts again.
+The countdown is shared by everyone in the lobby, survives map changes, and can
+be changed for the session with `/amnesty <n>`. Set it to 0 to send every death.
 
 ## Troubleshooting
 

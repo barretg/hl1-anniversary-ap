@@ -86,6 +86,17 @@ CLASSNAME_TO_ITEM: dict[str, str] = {
     for classname in classnames
 }
 
+# --- Chargers -------------------------------------------------------------
+#
+# The wall-mounted health and HEV units. Every one placed in a map is a check:
+# they are fixed, obvious, and spread through the levels, so finding one is a
+# real piece of exploration rather than an arbitrary milestone.
+
+CHARGER_CLASSNAMES: dict[str, str] = {
+    "func_healthcharger": "Health Charger",
+    "func_recharge": "HEV Charger",
+}
+
 # --- Logic groups ---------------------------------------------------------
 
 RANGED_WEAPONS = [
@@ -173,15 +184,16 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
 # arbitrary in play: the apache and tentacle at the start of Surface Tension are
 # scenery you run past, not objectives.
 #
-# So for now a location is simply "you got to this part of the campaign": one
-# per map, plus one per mission for finishing it. That is 53 checks against at
-# most 32 progression items, which is enough to place everything.
+# So a location is "you got to this part of the campaign" (one per map, plus one
+# per mission for finishing it) and "you found a charger" (one per health or HEV
+# unit placed in a map). That is 160 checks against at most 32 progression items.
 #
 # The generators for the other types are still here and still correct. Add the
 # names back to re-enable them once we have worked out which ones earn a check.
 ENABLED_LOCATION_TYPES = {
     "map_reached",
     "chapter_complete",
+    "charger",
     # "pickup",
     # "kill",
     # "kill_count",

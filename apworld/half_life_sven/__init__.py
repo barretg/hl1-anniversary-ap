@@ -39,6 +39,7 @@ from .items import (
 from .locations import location_name_groups, location_name_to_id
 from .options import HalfLifeSvenOptions
 from .regions import create_regions
+from .rules import chapter_is_startable
 
 GAME_NAME = "Half-Life (Sven Co-op)"
 
@@ -124,12 +125,19 @@ class HalfLifeSvenWorld(World):
                 self.available_item_names.add(name)
         self.available_item_names.update(chapter_unlock_items)
 
-        # Exactly one mission is playable from the word go.
-        starting_item = self.random.choice(chapter_unlock_items)
-        self.starting_chapter = next(
-            key for key, item in unlock_item_for_chapter.items() if item == starting_item
+        # Exactly one mission is playable from the word go, and it has to be one
+        # that a player with nothing but a crowbar can actually walk into. Picking
+        # a gated mission (anything from We've Got Hostiles on, under strict logic)
+        # leaves sphere one empty and fill has nowhere to put its first item.
+        startable = [
+            chapter for chapter in UNLOCKABLE_CHAPTERS
+            if chapter_is_startable(self, chapter)
+        ]
+        starting = self.random.choice(startable or UNLOCKABLE_CHAPTERS)
+        self.starting_chapter = starting["key"]
+        self.multiworld.push_precollected(
+            self.create_item(unlock_item_for_chapter[self.starting_chapter])
         )
-        self.multiworld.push_precollected(self.create_item(starting_item))
 
         # `missions_required` cannot exceed the number of unlockable missions.
         if self.options.missions_required.value > len(UNLOCKABLE_CHAPTERS):
@@ -182,6 +190,7 @@ class HalfLifeSvenWorld(World):
             "starting_chapter": self.starting_chapter,
             "starting_weapons": STARTING_WEAPONS,
             "death_link": bool(self.options.death_link),
+            "death_link_amnesty": self.options.death_link_amnesty.value,
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),
             "shuffle_longjump": bool(self.options.shuffle_longjump),
         }

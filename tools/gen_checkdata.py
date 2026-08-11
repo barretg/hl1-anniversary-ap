@@ -66,6 +66,10 @@ def render(campaign: dict) -> str:
             arg = str(trigger["count"])
         elif kind == "chapter_complete":
             arg = trigger["chapter"]
+        elif kind == "charger":
+            # `<classname>:<brush model>`, which is what the plugin matches the
+            # entity a player pressed +use on against.
+            arg = f"{trigger['classname']}:{trigger['model']}"
         else:  # map_reached
             arg = ""
         lines.append(

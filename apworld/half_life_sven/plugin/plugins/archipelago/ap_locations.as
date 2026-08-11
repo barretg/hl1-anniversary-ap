@@ -25,6 +25,35 @@ void RegisterPickupCheck( const string& in szClassname )
 }
 
 /*
+* A player pressed +use on something. If it is one of this map's chargers, that
+* is a check.
+*
+* Chargers are brush entities with no targetname, so the only identity the BSP
+* and the running game agree on is the brush model index the compiler gave them
+* ("*58"). checkdata.txt carries "<classname>:<model>" for exactly that reason.
+*
+* The check fires on the press, not on drinking the charger dry: an empty unit
+* is still a unit you found, and a player who tops up two points of health has
+* done the same amount of exploring as one who was nearly dead.
+*/
+void RegisterChargerCheck( CBaseEntity@ pEntity )
+{
+	if( pEntity is null || g_MapChargers.length() == 0 )
+		return;
+
+	string szKey = pEntity.GetClassname() + ":" + string( pEntity.pev.model );
+
+	for( uint i = 0; i < g_MapChargers.length(); ++i )
+	{
+		if( g_MapChargers[i].arg == szKey )
+		{
+			SendCheck( g_MapChargers[i] );
+			return;
+		}
+	}
+}
+
+/*
 * Something died. Two kinds of check care: the first kill of a notable monster
 * in this map, and cumulative kill-count milestones (which is how the sparse Xen
 * maps still get checks).
