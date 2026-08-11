@@ -54,91 +54,137 @@ const string SUIT_CLASSNAME = "item_suit";
 // before we put the weapons back.
 const float SUIT_PICKUP_RESTORE_DELAY = 1.5f;
 
-/*
-* Rebuild a player's inventory to exactly what the multiworld has granted.
-*
-* Ammo is deliberately kept (RemoveAllItems' second argument is false): ammo
-* pickups stay useful, and finding a stash before the gun is a normal part of
-* the run rather than a loss.
-*/
-void ApplyLoadout( CBasePlayer@ pPlayer )
+// The long jump module does not live in the inventory either, so we cannot tell
+// whether a player already has it by looking. It is granted only on the paths
+// that run once, never on the repeating one.
+const string LONGJUMP_CLASSNAME = "item_longjump";
+
+/* Is the player already carrying this weapon? */
+bool HasItem( CBasePlayer@ pPlayer, const string& in szClassname )
 {
-	if( pPlayer is null || !pPlayer.IsConnected() )
+	for( size_t iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
+	{
+		CBasePlayerItem@ pItem = pPlayer.m_rgpPlayerItems( iSlot );
+
+		while( pItem !is null )
+		{
+			if( pItem.GetClassname() == szClassname )
+				return true;
+			@pItem = cast<CBasePlayerItem@>( pItem.m_hNextItem.GetEntity() );
+		}
+	}
+
+	return false;
+}
+
+/* Take away anything the multiworld has not granted, and nothing else. */
+void StripDisallowed( CBasePlayer@ pPlayer )
+{
+	// m_rgpPlayerItems takes a size_t; using int here warns on every build.
+	for( size_t iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
+	{
+		CBasePlayerItem@ pItem = pPlayer.m_rgpPlayerItems( iSlot );
+
+		while( pItem !is null )
+		{
+			// Grab the next link first: removing an item unlinks it.
+			CBasePlayerItem@ pNext = cast<CBasePlayerItem@>( pItem.m_hNextItem.GetEntity() );
+
+			if( !ClassnameAllowed( pItem.GetClassname() ) )
+			{
+				pPlayer.RemovePlayerItem( pItem );
+				g_EntityFuncs.Remove( pItem );
+			}
+
+			@pItem = pNext;
+		}
+	}
+}
+
+/*
+* Bring a player's inventory in line with what the multiworld has granted.
+*
+* Deliberately additive: disallowed weapons are removed one at a time and
+* missing ones are handed over, so nothing that is legitimately held is ever
+* taken away first. The previous version wiped the inventory and rebuilt it,
+* which meant any grant that failed to land left the player with nothing.
+*
+* Ammo is never touched. Ammo pickups stay useful, and finding a stash before
+* the gun is a normal part of a run rather than a loss.
+*
+* `bFull` covers the things that cannot be detected on the player and so must
+* not run on a repeating timer: the suit and the long jump module.
+*/
+void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
+{
+	if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
 		return;
 
 	// Never strip on incomplete data. If checkdata.txt has not loaded we do not
-	// know what is allowed, and taking everything away and granting nothing back
-	// would leave the player with no crowbar and no explanation.
+	// know what is allowed, and taking everything away would leave the player
+	// with no crowbar and no explanation.
 	if( !CheckDataLoaded() )
 	{
 		APLog( "loadout skipped: checkdata.txt is not loaded" );
 		return;
 	}
 
-	// Only the strip half applies to the suit. Passing false here is what makes
-	// a respawn keep a suit the player already has.
-	bool bSuitAllowed = ClassnameAllowed( SUIT_CLASSNAME );
-	pPlayer.RemoveAllItems( !bSuitAllowed, false );
+	// Removing the suit is all-or-nothing in the API, so it is the one case that
+	// still costs a full wipe. It only happens when the suit is shuffled and not
+	// yet received, and the grant loop below puts the weapons straight back.
+	if( bFull && !ClassnameAllowed( SUIT_CLASSNAME ) )
+		pPlayer.RemoveAllItems( true, false );
+	else
+		StripDisallowed( pPlayer );
 
 	array<string> allowed = AllowedClassnames();
 	for( uint i = 0; i < allowed.length(); ++i )
 	{
-		if( allowed[i] == SUIT_CLASSNAME )
+		string szClassname = allowed[i];
+
+		// Never granted: doing so runs the suit's pickup sequence, which wipes
+		// the inventory we are rebuilding.
+		if( szClassname == SUIT_CLASSNAME )
 			continue;
 
-		pPlayer.GiveNamedItem( allowed[i] );
+		if( szClassname == LONGJUMP_CLASSNAME )
+		{
+			if( bFull )
+				pPlayer.GiveNamedItem( szClassname );
+			continue;
+		}
+
+		if( !HasItem( pPlayer, szClassname ) )
+			pPlayer.GiveNamedItem( szClassname );
 	}
 }
 
-void ApplyLoadoutToAll()
+void ApplyLoadoutToAll( bool bFull = true )
 {
 	for( int i = 1; i <= g_Engine.maxClients; ++i )
 	{
 		CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( i );
 		if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
 			continue;
-		ApplyLoadout( pPlayer );
+		ApplyLoadout( pPlayer, bFull );
 	}
 }
 
 /*
-* Catch weapons that arrived by a route CanCollect does not cover -- most
-* importantly the per-map `game_player_equip` entities the HL campaign uses.
+* The safety net, on a slow repeating timer.
 *
-* Runs on a slow timer rather than every think: it walks the inventory and only
-* touches it when something is actually not allowed, so an untouched loadout
-* costs nothing and firing is never interrupted.
+* Catches weapons that arrived by a route CanCollect does not cover (most
+* importantly the per-map `game_player_equip` entities the HL campaign uses),
+* and equally puts back anything a grant failed to deliver. Because the work is
+* now additive, a loadout that is already correct costs one inventory walk and
+* changes nothing, so firing is never interrupted.
+*
+* This is what makes the loadout self-correcting: whatever goes wrong on spawn,
+* it is right again within a second.
 */
-void SweepIllegalWeapons()
+void EnforceLoadouts()
 {
-	for( int iClient = 1; iClient <= g_Engine.maxClients; ++iClient )
-	{
-		CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( iClient );
-		if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
-		{
-			continue;
-		}
-
-		// m_rgpPlayerItems takes a size_t; using int here warns on every build.
-		for( size_t iSlot = 0; iSlot < MAX_ITEM_TYPES; ++iSlot )
-		{
-			CBasePlayerItem@ pItem = pPlayer.m_rgpPlayerItems( iSlot );
-
-			while( pItem !is null )
-			{
-				// Grab the next link first: removing an item unlinks it.
-				CBasePlayerItem@ pNext = cast<CBasePlayerItem@>( pItem.m_hNextItem.GetEntity() );
-
-				if( !ClassnameAllowed( pItem.GetClassname() ) )
-				{
-					pPlayer.RemovePlayerItem( pItem );
-					g_EntityFuncs.Remove( pItem );
-				}
-
-				@pItem = pNext;
-			}
-		}
-	}
+	ApplyLoadoutToAll( false );
 }
 
 /*

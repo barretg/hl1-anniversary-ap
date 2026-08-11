@@ -10,9 +10,12 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
+import settings
 from BaseClasses import Tutorial
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, Type, components, launch_subprocess
+
+from .client.settings import SETTINGS_KEY
 
 from .data import (
     GOAL_CHAPTER,
@@ -57,6 +60,21 @@ components.append(
 )
 
 
+class HalfLifeSvenSettings(settings.Group):
+    """This world's section of `host.yaml`."""
+
+    class GameFolder(settings.UserFolderPath):
+        """Your Sven Co-op installation: the folder that contains 'svencoop'.
+
+        The client fills this in the first time you pick a folder, so you should
+        not have to set it by hand.
+        """
+
+        description = "Sven Co-op installation folder"
+
+    game_folder: GameFolder = GameFolder("")
+
+
 class HalfLifeSvenWeb(WebWorld):
     theme = "dirt"
     tutorials = [
@@ -79,6 +97,9 @@ class HalfLifeSvenWorld(World):
     options_dataclass = HalfLifeSvenOptions
     options: HalfLifeSvenOptions
     web = HalfLifeSvenWeb()
+
+    settings_key = SETTINGS_KEY
+    settings: ClassVar[HalfLifeSvenSettings]
 
     item_name_to_id = item_name_to_id
     location_name_to_id = location_name_to_id

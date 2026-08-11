@@ -62,18 +62,20 @@ weapons via its `.cfg`, and you should spawn there with only the crowbar.
   player and no "Access Denied" clip. Pressing a locked mission's console should
   print the lock message instead.
 - `!warp` into an unlocked mission, `!warp` into a locked one (must be refused).
-- Play a multi-part mission to its end. The transition out of the mission's last
-  map should send the completion check and return you to the hub rather than
-  continuing to the next chapter.
+- Play a multi-part mission to its end. The completion check should send, the
+  next chapter's first map will load briefly, and you should then be returned to
+  the hub. That brief load is deliberate: `MapChange` never cancels a transition,
+  because doing so and then issuing our own `changelevel` crashed the game.
 - Run `restart` mid-mission. Nothing should be sent and nothing should change
   level; a restart re-enters the same map and is not a transition.
 - Type `!hub` from the middle of a mission. You should go back to the hub with
   **no** completion check, since you did not leave from the mission's last map.
-- The `MapChange` hook's ability to *cancel* a transition by returning
-  `HOOK_HANDLED` is the second unverified assumption. If cancellation does not
-  work, you will land in the next chapter and be bounced back to the hub a few
-  seconds later by the `MapStart` guard in `ap_main.as` — functional, but ugly.
-  Fix by leaning on the `MapStart` path only.
+- `MapChange` is observational only. Cancelling a transition with
+  `HOOK_HANDLED` and then scheduling our own `changelevel` crashed the game, both
+  on `restart` and on genuine mission completion, so the hook now only records
+  what happened. Everything acts from `MapStart` on the far side of the
+  transition, and `ChangeLevel` queues the command rather than calling
+  `ServerExecute` to run it synchronously.
 
 ### 5. DeathLink
 

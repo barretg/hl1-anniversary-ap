@@ -12,7 +12,15 @@
 1. Put `half_life_sven.apworld` in your Archipelago `custom_worlds` folder.
 2. Open the Archipelago Launcher and start **Half-Life (Sven Co-op) Client**.
 3. The first time it runs, a folder picker asks for your Sven Co-op folder (the
-   one containing `svencoop`). It remembers the answer, so it only asks once.
+   one containing `svencoop`). It remembers the answer in your `host.yaml`, so it
+   only asks once:
+
+   ```yaml
+   half_life_sven_settings:
+     game_folder: F:/SteamLibrary/steamapps/common/Sven Co-op
+   ```
+
+   You can edit that by hand instead of using the picker if you prefer.
 4. Type `/install` in the client. That copies the AngelScript plugin into your
    game and registers it in `svencoop/default_plugins.txt`.
 

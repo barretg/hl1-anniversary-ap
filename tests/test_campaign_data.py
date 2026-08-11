@@ -140,19 +140,22 @@ def test_checkdata_locked_classnames_map_to_real_items(
         assert item_name in names, classname
 
 
-def test_crowbar_is_never_randomised(campaign: dict, checkdata: list[list[str]]) -> None:
+def test_crowbar_is_never_randomised(checkdata: list[list[str]]) -> None:
     starting = {r[1] for r in checkdata if r[0] == "S"}
     locked = {r[1] for r in checkdata if r[0] == "K"}
 
     assert "weapon_crowbar" in starting
     assert "weapon_crowbar" not in locked
-    # ...but the crowbars lying in the world are still checks.
-    crowbar_locations = [
-        entry for entry in campaign["locations"]
-        if entry["trigger"]["type"] == "pickup"
-        and "weapon_crowbar" in entry["trigger"]["classnames"]
-    ]
-    assert crowbar_locations
+
+
+def test_every_map_has_a_reached_location(campaign: dict) -> None:
+    """One check per map division is the whole location set right now."""
+    reached = {
+        entry["map"] for entry in campaign["locations"]
+        if entry["trigger"]["type"] == "map_reached"
+    }
+    all_maps = {m for chapter in campaign["chapters"] for m in chapter["maps"]}
+    assert reached == all_maps
 
 
 def test_checkdata_fields_contain_no_delimiters(checkdata: list[list[str]]) -> None:

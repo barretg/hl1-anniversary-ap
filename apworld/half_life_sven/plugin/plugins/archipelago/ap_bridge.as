@@ -48,8 +48,43 @@ void BridgeSend( const string& in szLine )
 	pFile.Close();
 }
 
+/*
+* Refuse to work if our location ids do not mean the same thing as the seed's.
+*
+* This is the failure that looks like the plugin sending random checks: reaching
+* a map fires the right id, but an older seed resolves that id to whatever
+* location used to hold it.
+*/
+void CheckDataVersion( const string& in szClientVersion )
+{
+	if( szClientVersion.Length() == 0 || g_szDataVersion.Length() == 0 )
+		return;
+
+	bool bMismatch = szClientVersion != g_szDataVersion;
+	if( bMismatch == g_bDataMismatch )
+		return;
+
+	g_bDataMismatch = bMismatch;
+
+	if( bMismatch )
+	{
+		APLog( "DATA MISMATCH: plugin " + g_szDataVersion + ", client " + szClientVersion );
+		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
+			"[AP] Plugin and apworld versions do not match. Checks are paused.\n"
+			"[AP] Reinstall the plugin with /install, or regenerate your seed.\n" );
+	}
+	else
+	{
+		APLog( "data version matches the client" );
+	}
+}
+
 void SendCheck( APLocation@ pLocation )
 {
+	// Sending here would report a location the seed does not agree with.
+	if( g_bDataMismatch )
+		return;
+
 	string szKey = "" + pLocation.id;
 	if( g_SentChecks.exists( szKey ) )
 		return;
@@ -148,6 +183,8 @@ void BridgePoll()
 			g_flSnapshotNow = atof( szValue );
 		else if( szKey == "session" )
 			szSession = szValue;
+		else if( szKey == "data_version" )
+			CheckDataVersion( szValue );
 		else if( szKey == "goal_open" )
 			bGoalOpen = szValue == "1";
 		else if( szKey == "connected" )

@@ -16,12 +16,32 @@ from __future__ import annotations
 import os
 import time
 import uuid
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 
 CHECKDATA_NAME = "checkdata.txt"
 IN_NAME = "ap_in.txt"
 OUT_NAME = "ap_out.txt"
+
+# How many un-acked events may sit in the snapshot at once.
+#
+# Finishing a game releases every remaining item at once, which can be hundreds
+# of filler grants. Writing them all into every snapshot means the plugin
+# reparses and re-ACKs the whole backlog several times a second, which saturates
+# the bridge and starves everything else going through it. The rest wait in a
+# backlog and drain a window at a time.
+MAX_PENDING_IN_SNAPSHOT = 16
+
+# Kinds that bypass the window entirely. Both are time-sensitive and tiny: the
+# plugin discards a DeathLink older than ten seconds, so one stuck behind a
+# few hundred filler grants would simply never fire, and chat that arrives
+# minutes late is worse than useless.
+PRIORITY_KINDS = frozenset({"DEATHLINK", "CHAT"})
+
+# How hard to try the atomic rename before writing in place instead.
+REPLACE_ATTEMPTS = 5
+REPLACE_RETRY_DELAY = 0.02
 
 
 @dataclass
@@ -59,8 +79,13 @@ class Bridge:
 
         self._cursor = 0
         self._seq = 0
+        # Events currently visible to the game, and the queue waiting behind
+        # them. Nothing is ever discarded: the backlog drains a window at a time
+        # as the game acknowledges what it has already applied.
         self._pending: dict[int, PendingEvent] = {}
+        self._backlog: deque[PendingEvent] = deque()
         self._last_snapshot = ""
+        self._last_pending: tuple[int, ...] = ()
         # Identifies this run of the client. Our event sequence restarts from 1
         # on every launch, so the plugin needs to know when that has happened or
         # it would mistake fresh events for ones it had already applied.
@@ -111,17 +136,39 @@ class Bridge:
     # -- client -> game --------------------------------------------------
 
     def queue_event(self, kind: str, payload: str) -> PendingEvent:
+        """Queue a one-shot delivery. Never dropped, only metered."""
         self._seq += 1
         event = PendingEvent(self._seq, kind, payload)
-        self._pending[event.seq] = event
+
+        if kind in PRIORITY_KINDS:
+            # Straight into the snapshot, over the cap if need be.
+            self._pending[event.seq] = event
+        else:
+            self._backlog.append(event)
+            self._fill_window()
+
         return event
 
     def acknowledge(self, seq: int) -> None:
-        self._pending.pop(seq, None)
+        """The game has applied this event; make room for the next one."""
+        if self._pending.pop(seq, None) is not None:
+            self._fill_window()
+
+    def _fill_window(self) -> None:
+        """Promote backlog events into the snapshot, oldest first."""
+        while self._backlog and len(self._pending) < MAX_PENDING_IN_SNAPSHOT:
+            event = self._backlog.popleft()
+            self._pending[event.seq] = event
 
     @property
     def pending_count(self) -> int:
+        """Events visible to the game right now."""
         return len(self._pending)
+
+    @property
+    def queued_count(self) -> int:
+        """Everything still owed to the game, in flight or waiting."""
+        return len(self._pending) + len(self._backlog)
 
     def write_snapshot(
         self,
@@ -131,17 +178,22 @@ class Bridge:
         items: list[str],
         goal_open: bool,
         death_link: bool,
+        data_version: str = "",
         force: bool = False,
     ) -> bool:
         """Rewrite ap_in.txt. Returns True if anything was written.
 
-        Unchanged snapshots are skipped so the plugin's size-based early-out
-        stays effective -- but only when nothing is pending, since a pending
-        event needs its timestamp refreshed until it is acknowledged.
+        Only written when something the game cares about actually changed: the
+        state itself, or which events are in flight. Rewriting on every poll
+        because `now=` had moved on made the plugin reparse and re-ACK the whole
+        pending set several times a second.
         """
         lines = [
             "# Written by the Half-Life (Sven Co-op) Archipelago client.",
             f"session={self.session}",
+            # The plugin refuses to send checks if this disagrees with its own
+            # copy, since the two would be numbering locations differently.
+            f"data_version={data_version}",
             f"connected={1 if connected else 0}",
             f"goal_open={1 if goal_open else 0}",
             f"death_link={1 if death_link else 0}",
@@ -149,27 +201,54 @@ class Bridge:
             "items=" + ";".join(sorted(items)),
         ]
         body = "\n".join(lines)
+        pending = tuple(sorted(self._pending))
 
-        if body == self._last_snapshot and not self._pending and not force:
+        if body == self._last_snapshot and pending == self._last_pending and not force:
             return False
+
         self._last_snapshot = body
+        self._last_pending = pending
 
         full = [body, f"now={time.time():.0f}"]
-        full += [event.render() for event in sorted(self._pending.values(), key=lambda e: e.seq)]
+        full += [self._pending[seq].render() for seq in pending]
 
         self.dir.mkdir(parents=True, exist_ok=True)
-        # Written via a temp file and replaced, so the plugin never reads a
-        # half-written snapshot and mistakes it for a shorter one.
-        temp = self.in_path.with_suffix(".tmp")
-        temp.write_text("\n".join(full) + "\n", encoding="utf-8")
-        os.replace(temp, self.in_path)
+        self._publish("\n".join(full) + "\n")
         return True
+
+    def _publish(self, text: str) -> None:
+        """Write the snapshot without ever leaving a half-written file visible.
+
+        Normally a temp file and a rename. On Windows the rename fails outright
+        if the destination is open in another process, and the plugin opens
+        ap_in.txt several times a second, so a collision is a matter of when
+        rather than if. Retry briefly, then fall back to writing in place: a torn
+        read is transient and the plugin re-reads on the next poll, whereas a
+        failed write freezes the bridge until the client is restarted.
+        """
+        temp = self.in_path.with_suffix(".tmp")
+        temp.write_text(text, encoding="utf-8")
+
+        for attempt in range(REPLACE_ATTEMPTS):
+            try:
+                os.replace(temp, self.in_path)
+                return
+            except PermissionError:
+                if attempt < REPLACE_ATTEMPTS - 1:
+                    time.sleep(REPLACE_RETRY_DELAY)
+
+        self.in_path.write_text(text, encoding="utf-8")
+        temp.unlink(missing_ok=True)
 
     def clear_log(self) -> None:
         """Truncate ap_out.txt, e.g. when starting a fresh session."""
         self.dir.mkdir(parents=True, exist_ok=True)
         self.out_path.write_text("", encoding="utf-8")
         self._cursor = 0
+        # A leftover .tmp means a previous session died mid-publish. It is not
+        # read by anything, but it is the visible symptom of that failure and
+        # should not be mistaken for a live file.
+        self.in_path.with_suffix(".tmp").unlink(missing_ok=True)
 
 
 def find_store_dir(game_dir: str | os.PathLike[str]) -> Path:

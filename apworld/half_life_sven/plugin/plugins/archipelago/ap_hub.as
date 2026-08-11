@@ -85,21 +85,95 @@ void ReturnToHub()
 	ChangeLevel( HUB_MAP );
 }
 
+// The map we are about to travel to. Non-empty means a change is already
+// queued, which is what stops two button presses, or a button press racing the
+// portal map's own teleporter, from issuing two changelevels at once.
+string g_szPendingLevel;
+
+// Short, but long enough that the hook which asked for this has returned and the
+// engine is back in its normal loop.
+const float LEVEL_CHANGE_DELAY = 0.5f;
+
+/*
+* Ask for a level change.
+*
+* Never performed inline. Every caller is a hook -- PlayerUse, MapChange,
+* MapStart -- and issuing a changelevel from inside one crashed the game on both
+* mission completion and the hub buttons. Going through the scheduler means the
+* engine is idle by the time the command runs.
+*/
 void ChangeLevel( const string& in szMap )
 {
+	if( g_szPendingLevel.Length() > 0 )
+		return;
+
+	g_szPendingLevel = szMap;
+	g_Scheduler.SetTimeout( "PerformLevelChange", LEVEL_CHANGE_DELAY );
+}
+
+void PerformLevelChange()
+{
+	if( g_szPendingLevel.Length() == 0 )
+		return;
+
+	string szMap = g_szPendingLevel;
+	g_szPendingLevel = "";
+
+	// Queued, not forced. ServerExecute would run this synchronously from inside
+	// the scheduler tick instead of letting the engine drain it when ready.
 	g_EngineFuncs.ServerCommand( "changelevel " + szMap + "\n" );
-	g_EngineFuncs.ServerExecute();
 }
 
 /*
-* Decide what a pending map change means and whether to allow it.
+* Remember that we owe the player a trip back to the hub.
+*
+* Written to disk because it has to outlive the map change it is queued behind:
+* the plugin's globals do not survive one.
+*/
+void SetPendingHubReturn( bool bPending )
+{
+	File@ pFile = g_FileSystem.OpenFile( AP_PENDING, OpenFile::WRITE );
+
+	if( pFile is null || !pFile.IsOpen() )
+		return;
+
+	pFile.Write( bPending ? "1\n" : "\n" );
+	pFile.Close();
+}
+
+bool ConsumePendingHubReturn()
+{
+	File@ pFile = g_FileSystem.OpenFile( AP_PENDING, OpenFile::READ );
+
+	if( pFile is null || !pFile.IsOpen() )
+		return false;
+
+	string szLine;
+	if( !pFile.EOFReached() )
+		pFile.ReadLine( szLine );
+	pFile.Close();
+
+	if( APTrim( szLine ) != "1" )
+		return false;
+
+	SetPendingHubReturn( false );
+	return true;
+}
+
+/*
+* Observe a map change. Never block one.
+*
+* Returning HOOK_HANDLED here to cancel a transition, and then issuing our own
+* changelevel, crashed the game on mission completion. The engine is already
+* committed by the time this runs, so the only safe thing to do is note what is
+* happening and act once the next map has loaded (see MapStart in ap_main.as).
 *
 * Three cases matter:
-*   - staying inside the current mission: allow it, and let the destination map
-*     fire its own "part reached" check.
-*   - leaving the current mission: the mission is finished. Send the completion,
-*     then send everyone back to the hub instead of on to the next chapter.
-*   - entering a locked mission: refuse and stay put.
+*   - staying inside the current mission: nothing to do, and the destination map
+*     fires its own "part reached" check.
+*   - leaving the current mission from its last map: the mission is finished.
+*     Send the completion and queue a return to the hub.
+*   - entering a locked mission: let it load; MapStart bounces us back out.
 */
 HookReturnCode MapChange( const string& in szNextMap )
 {
@@ -122,20 +196,10 @@ HookReturnCode MapChange( const string& in szNextMap )
 		if( g_szCurrentMap == g_CurrentChapter.LastMap() )
 			CompleteChapter( g_CurrentChapter );
 
+		// The campaign wants to run straight on into the next chapter. Let it
+		// load, then bounce back to the hub from there.
 		if( szNextMap != HUB_MAP )
-		{
-			g_Scheduler.SetTimeout( "ReturnToHub", 2.0f );
-			return HOOK_HANDLED;
-		}
-		return HOOK_CONTINUE;
-	}
-
-	// Leaving the hub for a mission.
-	if( pNext !is null && !ChapterPlayable( pNext ) )
-	{
-		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
-			"[AP] " + pNext.name + " is locked -- you have not received its unlock yet.\n" );
-		return HOOK_HANDLED;
+			SetPendingHubReturn( true );
 	}
 
 	return HOOK_CONTINUE;

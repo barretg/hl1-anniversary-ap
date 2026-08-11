@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -9,7 +10,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "apworld" / "half_life_sven"))
 
-from client.bridge import Bridge, find_store_dir, is_game_dir  # noqa: E402
+from client.bridge import (  # noqa: E402
+    MAX_PENDING_IN_SNAPSHOT,
+    Bridge,
+    find_store_dir,
+    is_game_dir,
+)
 
 
 @pytest.fixture
@@ -125,6 +131,90 @@ def test_pending_event_survives_until_acknowledged(bridge: Bridge) -> None:
     assert "event=" not in bridge.in_path.read_text(encoding="utf-8")
 
 
+def pending_lines(bridge: Bridge) -> list[str]:
+    return [
+        line for line in bridge.in_path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("event=")
+    ]
+
+
+def test_snapshot_is_not_rewritten_while_pending_is_unchanged(bridge: Bridge) -> None:
+    """The write amplifier: rewriting every poll made the plugin re-ACK the lot."""
+    bridge.queue_event("ITEM", "Ammo Cache")
+    assert snapshot(bridge) is True
+    assert snapshot(bridge) is False
+    assert snapshot(bridge) is False
+
+
+def test_snapshot_is_rewritten_when_pending_changes(bridge: Bridge) -> None:
+    first = bridge.queue_event("ITEM", "Ammo Cache")
+    snapshot(bridge)
+
+    bridge.acknowledge(first.seq)
+    assert snapshot(bridge) is True
+
+
+def test_flood_is_windowed_not_dropped(bridge: Bridge) -> None:
+    for index in range(300):
+        bridge.queue_event("ITEM", f"Item {index}")
+
+    assert bridge.queued_count == 300
+    assert bridge.pending_count == MAX_PENDING_IN_SNAPSHOT
+
+    snapshot(bridge)
+    assert len(pending_lines(bridge)) == MAX_PENDING_IN_SNAPSHOT
+
+
+def test_flood_drains_completely(bridge: Bridge) -> None:
+    """Every queued item must eventually reach the game."""
+    total = 300
+    for index in range(total):
+        bridge.queue_event("ITEM", f"Item {index}")
+
+    delivered: list[int] = []
+    for _ in range(total * 2):  # generous bound; must finish well inside it
+        if bridge.queued_count == 0:
+            break
+        for seq in list(bridge._pending):
+            delivered.append(seq)
+            bridge.acknowledge(seq)
+
+    assert bridge.queued_count == 0
+    assert len(delivered) == total
+    assert delivered == sorted(delivered)  # oldest first, in order
+
+
+def test_acknowledging_refills_the_window(bridge: Bridge) -> None:
+    for index in range(MAX_PENDING_IN_SNAPSHOT + 5):
+        bridge.queue_event("ITEM", f"Item {index}")
+
+    first = min(bridge._pending)
+    bridge.acknowledge(first)
+
+    assert bridge.pending_count == MAX_PENDING_IN_SNAPSHOT
+
+
+def test_deathlink_skips_the_queue(bridge: Bridge) -> None:
+    """A DeathLink stuck behind a flood would go stale and never fire."""
+    for index in range(300):
+        bridge.queue_event("ITEM", f"Item {index}")
+
+    death = bridge.queue_event("DEATHLINK", "PlayerOne~a gargantua")
+    snapshot(bridge)
+
+    assert any(f"event={death.seq}|DEATHLINK" in line for line in pending_lines(bridge))
+
+
+def test_chat_skips_the_queue(bridge: Bridge) -> None:
+    for index in range(300):
+        bridge.queue_event("ITEM", f"Item {index}")
+
+    chat = bridge.queue_event("CHAT", "[AP] hello")
+    snapshot(bridge)
+
+    assert any(f"event={chat.seq}|CHAT" in line for line in pending_lines(bridge))
+
+
 def test_event_sequence_numbers_are_monotonic(bridge: Bridge) -> None:
     first = bridge.queue_event("ITEM", "Medkit")
     second = bridge.queue_event("DEATHLINK", "someone~a headcrab")
@@ -151,6 +241,53 @@ def test_deathlink_payload_avoids_the_field_separator(bridge: Bridge) -> None:
 def test_snapshot_write_is_atomic(bridge: Bridge) -> None:
     snapshot(bridge)
     assert not list(bridge.dir.glob("*.tmp"))
+
+
+def test_snapshot_survives_a_locked_destination(bridge: Bridge, monkeypatch) -> None:
+    """Windows refuses os.replace while the plugin has ap_in.txt open.
+
+    Letting that propagate killed the client's watcher task, which then sat
+    there looking connected while delivering nothing.
+    """
+    def always_locked(src, dst):
+        raise PermissionError(32, "in use by another process")
+
+    monkeypatch.setattr("client.bridge.os.replace", always_locked)
+    monkeypatch.setattr("client.bridge.REPLACE_RETRY_DELAY", 0)
+
+    snapshot(bridge, items=["Shotgun"])
+
+    assert "items=Shotgun" in bridge.in_path.read_text(encoding="utf-8")
+    assert not list(bridge.dir.glob("*.tmp"))
+
+
+def test_snapshot_retries_before_falling_back(bridge: Bridge, monkeypatch) -> None:
+    calls = {"n": 0}
+    real_replace = os.replace
+
+    def flaky(src, dst):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise PermissionError(32, "in use by another process")
+        return real_replace(src, dst)
+
+    monkeypatch.setattr("client.bridge.os.replace", flaky)
+    monkeypatch.setattr("client.bridge.REPLACE_RETRY_DELAY", 0)
+
+    snapshot(bridge)
+
+    assert calls["n"] == 3
+    assert not list(bridge.dir.glob("*.tmp"))
+
+
+def test_clear_log_removes_a_stale_temp(bridge: Bridge) -> None:
+    """A leftover .tmp is the visible symptom of a previous crashed publish."""
+    stale = bridge.in_path.with_suffix(".tmp")
+    stale.write_text("half written", encoding="utf-8")
+
+    bridge.clear_log()
+
+    assert not stale.exists()
 
 
 def test_clear_log_resets_cursor(bridge: Bridge) -> None:

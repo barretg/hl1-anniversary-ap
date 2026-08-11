@@ -5,7 +5,9 @@
 #   L|<id>|<map>|<type>|<arg>|<name>
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
+#   D|<data version>               must match the client's, or ids differ
 V|1
+D|28a15519b898
 C|0|black_mesa_inbound|Black Mesa Inbound|hl_c00|0
 C|1|anomalous_materials|Anomalous Materials|hl_c01_a1,hl_c01_a2|0
 C|2|unforeseen_consequences|Unforeseen Consequences|hl_c02_a1,hl_c02_a2|0
@@ -24,180 +26,59 @@ C|14|xen|Xen|hl_c14|0
 C|15|gonarchs_lair|Gonarch's Lair|hl_c15|0
 C|16|interloper|Interloper|hl_c16_a1,hl_c16_a2,hl_c16_a3,hl_c16_a4|0
 C|17|nihilanth|Nihilanth|hl_c17,hl_c18|1
-L|7720000|hl_c01_a1|pickup|item_suit|Anomalous Materials - HEV Suit (Part 1)
-L|7720001|hl_c01_a2|map_reached||Anomalous Materials - Part 2 Reached
-L|7720002|hl_c02_a1|pickup|weapon_9mmhandgun|Unforeseen Consequences - Glock (Part 1)
-L|7720003|hl_c02_a1|pickup|weapon_crowbar|Unforeseen Consequences - Crowbar (Part 1)
-L|7720004|hl_c02_a1|pickup|weapon_medkit|Unforeseen Consequences - Medkit (Part 1)
-L|7720005|hl_c02_a2|map_reached||Unforeseen Consequences - Part 2 Reached
-L|7720006|hl_c02_a2|pickup|weapon_glock|Unforeseen Consequences - Glock (Part 2)
-L|7720007|hl_c02_a2|pickup|weapon_handgrenade|Unforeseen Consequences - Hand Grenade (Part 2)
-L|7720008|hl_c03|pickup|weapon_handgrenade|Office Complex - Hand Grenade
-L|7720009|hl_c03|pickup|weapon_shotgun|Office Complex - Shotgun
-L|7720010|hl_c03|kill|monster_miniturret|Office Complex - Mini Turret Slain
-L|7720011|hl_c04|pickup|weapon_9mmAR|We've Got Hostiles - MP5
-L|7720012|hl_c04|pickup|weapon_m16|We've Got Hostiles - MP5 #2
-L|7720013|hl_c04|pickup|weapon_shotgun|We've Got Hostiles - Shotgun
-L|7720014|hl_c04|kill|monster_osprey|We've Got Hostiles - Osprey Slain
-L|7720015|hl_c04|kill|monster_sentry|We've Got Hostiles - Sentry Turret Slain
-L|7720016|hl_c05_a1|pickup|weapon_crowbar|Blast Pit - Crowbar (Part 1)
-L|7720017|hl_c05_a1|pickup|weapon_handgrenade|Blast Pit - Hand Grenade (Part 1)
-L|7720018|hl_c05_a2|map_reached||Blast Pit - Part 2 Reached
-L|7720019|hl_c05_a2|pickup|weapon_handgrenade|Blast Pit - Hand Grenade (Part 2)
-L|7720020|hl_c05_a2|kill|monster_tentacle|Blast Pit - Tentacle Slain (Part 2)
-L|7720021|hl_c05_a3|map_reached||Blast Pit - Part 3 Reached
-L|7720022|hl_c05_a3|pickup|weapon_357|Blast Pit - .357 Magnum (Part 3)
-L|7720023|hl_c06|pickup|weapon_357|Power Up - .357 Magnum
-L|7720024|hl_c06|pickup|weapon_handgrenade|Power Up - Hand Grenade
-L|7720025|hl_c06|pickup|weapon_shotgun|Power Up - Shotgun
-L|7720026|hl_c06|kill|monster_gargantua|Power Up - Gargantua Slain
-L|7720027|hl_c06|kill|monster_sentry|Power Up - Sentry Turret Slain
-L|7720028|hl_c07_a1|pickup|weapon_357|On A Rail - .357 Magnum (Part 1)
-L|7720029|hl_c07_a1|pickup|weapon_9mmAR|On A Rail - MP5 (Part 1)
-L|7720030|hl_c07_a1|pickup|weapon_handgrenade|On A Rail - Hand Grenade (Part 1)
-L|7720031|hl_c07_a1|pickup|weapon_satchel|On A Rail - Satchel Charge (Part 1)
-L|7720032|hl_c07_a1|pickup|weapon_tripmine|On A Rail - Tripmine (Part 1)
-L|7720033|hl_c07_a1|kill|monster_sentry|On A Rail - Sentry Turret Slain (Part 1)
-L|7720034|hl_c07_a2|map_reached||On A Rail - Part 2 Reached
-L|7720035|hl_c07_a2|pickup|weapon_9mmAR|On A Rail - MP5 (Part 2)
-L|7720036|hl_c07_a2|pickup|weapon_handgrenade|On A Rail - Hand Grenade (Part 2)
-L|7720037|hl_c07_a2|pickup|weapon_satchel|On A Rail - Satchel Charge (Part 2)
-L|7720038|hl_c07_a2|pickup|weapon_tripmine|On A Rail - Tripmine (Part 2)
-L|7720039|hl_c07_a2|kill|monster_sentry|On A Rail - Sentry Turret Slain (Part 2)
-L|7720040|hl_c08_a1|pickup|weapon_crossbow|Apprehension - Crossbow (Part 1)
-L|7720041|hl_c08_a1|pickup|weapon_satchel|Apprehension - Satchel Charge (Part 1)
-L|7720042|hl_c08_a1|pickup|weapon_shotgun|Apprehension - Shotgun (Part 1)
-L|7720043|hl_c08_a1|pickup|weapon_tripmine|Apprehension - Tripmine (Part 1)
-L|7720044|hl_c08_a1|kill|monster_ichthyosaur|Apprehension - Ichthyosaur Slain (Part 1)
-L|7720045|hl_c08_a2|map_reached||Apprehension - Part 2 Reached
-L|7720046|hl_c08_a2|pickup|weapon_crowbar|Apprehension - Crowbar (Part 2)
-L|7720047|hl_c08_a2|pickup|weapon_satchel|Apprehension - Satchel Charge (Part 2)
-L|7720048|hl_c08_a2|kill|monster_human_assassin|Apprehension - Assassin Slain (Part 2)
-L|7720049|hl_c08_a2|kill|monster_ichthyosaur|Apprehension - Ichthyosaur Slain (Part 2)
-L|7720050|hl_c09|pickup|weapon_357|Residue Processing - .357 Magnum
-L|7720051|hl_c09|pickup|weapon_satchel|Residue Processing - Satchel Charge
-L|7720052|hl_c10|pickup|weapon_crossbow|Questionable Ethics - Crossbow
-L|7720053|hl_c10|pickup|weapon_gauss|Questionable Ethics - Tau Cannon
-L|7720054|hl_c10|pickup|weapon_snark|Questionable Ethics - Snarks
-L|7720055|hl_c10|pickup|weapon_tripmine|Questionable Ethics - Tripmine
-L|7720056|hl_c10|kill|monster_alien_grunt|Questionable Ethics - Alien Grunt Slain
-L|7720057|hl_c10|kill|monster_sentry|Questionable Ethics - Sentry Turret Slain
-L|7720058|hl_c11_a1|pickup|weapon_snark|Surface Tension - Snarks (Part 1)
-L|7720059|hl_c11_a1|kill|monster_apache|Surface Tension - Apache Slain (Part 1)
-L|7720060|hl_c11_a1|kill|monster_ichthyosaur|Surface Tension - Ichthyosaur Slain (Part 1)
-L|7720061|hl_c11_a1|kill|monster_tentacle|Surface Tension - Tentacle Slain (Part 1)
-L|7720062|hl_c11_a2|map_reached||Surface Tension - Part 2 Reached
-L|7720063|hl_c11_a2|pickup|weapon_rpg|Surface Tension - RPG (Part 2)
-L|7720064|hl_c11_a2|pickup|weapon_shotgun|Surface Tension - Shotgun (Part 2)
-L|7720065|hl_c11_a2|kill|monster_apache|Surface Tension - Apache Slain (Part 2)
-L|7720066|hl_c11_a2|kill|monster_sentry|Surface Tension - Sentry Turret Slain (Part 2)
-L|7720067|hl_c11_a3|map_reached||Surface Tension - Part 3 Reached
-L|7720068|hl_c11_a3|pickup|weapon_hornetgun|Surface Tension - Hivehand (Part 3)
-L|7720069|hl_c11_a3|pickup|weapon_tripmine|Surface Tension - Tripmine (Part 3)
-L|7720070|hl_c11_a4|map_reached||Surface Tension - Part 4 Reached
-L|7720071|hl_c11_a4|pickup|weapon_9mmAR|Surface Tension - MP5 (Part 4)
-L|7720072|hl_c11_a4|pickup|weapon_9mmhandgun|Surface Tension - Glock (Part 4)
-L|7720073|hl_c11_a4|pickup|weapon_handgrenade|Surface Tension - Hand Grenade (Part 4)
-L|7720074|hl_c11_a4|pickup|weapon_rpg|Surface Tension - RPG (Part 4)
-L|7720075|hl_c11_a4|pickup|weapon_satchel|Surface Tension - Satchel Charge (Part 4)
-L|7720076|hl_c11_a4|pickup|weapon_shotgun|Surface Tension - Shotgun (Part 4)
-L|7720077|hl_c11_a4|pickup|weapon_tripmine|Surface Tension - Tripmine (Part 4)
-L|7720078|hl_c11_a4|kill|monster_alien_grunt|Surface Tension - Alien Grunt Slain (Part 4)
-L|7720079|hl_c11_a4|kill|monster_osprey|Surface Tension - Osprey Slain (Part 4)
-L|7720080|hl_c11_a4|kill|monster_sentry|Surface Tension - Sentry Turret Slain (Part 4)
-L|7720081|hl_c11_a5|map_reached||Surface Tension - Part 5 Reached
-L|7720082|hl_c11_a5|pickup|weapon_shotgun|Surface Tension - Shotgun (Part 5)
-L|7720083|hl_c11_a5|pickup|weapon_snark|Surface Tension - Snarks (Part 5)
-L|7720084|hl_c12|pickup|weapon_handgrenade|Forget About Freeman - Hand Grenade
-L|7720085|hl_c12|pickup|weapon_rpg|Forget About Freeman - RPG
-L|7720086|hl_c12|pickup|weapon_snark|Forget About Freeman - Snarks
-L|7720087|hl_c12|kill|monster_alien_grunt|Forget About Freeman - Alien Grunt Slain
-L|7720088|hl_c12|kill|monster_ichthyosaur|Forget About Freeman - Ichthyosaur Slain
-L|7720089|hl_c12|kill|monster_sentry|Forget About Freeman - Sentry Turret Slain
-L|7720090|hl_c12|kill|monster_turret|Forget About Freeman - Ceiling Turret Slain
-L|7720091|hl_c13_a1|pickup|weapon_egon|Lambda Core - Gluon Gun (Part 1)
-L|7720092|hl_c13_a1|pickup|weapon_handgrenade|Lambda Core - Hand Grenade (Part 1)
-L|7720093|hl_c13_a1|kill|monster_alien_grunt|Lambda Core - Alien Grunt Slain (Part 1)
-L|7720094|hl_c13_a1|kill|monster_human_assassin|Lambda Core - Assassin Slain (Part 1)
-L|7720095|hl_c13_a2|map_reached||Lambda Core - Part 2 Reached
-L|7720096|hl_c13_a2|kill|monster_alien_grunt|Lambda Core - Alien Grunt Slain (Part 2)
-L|7720097|hl_c13_a3|map_reached||Lambda Core - Part 3 Reached
-L|7720098|hl_c13_a3|pickup|weapon_handgrenade|Lambda Core - Hand Grenade (Part 3)
-L|7720099|hl_c13_a3|pickup|weapon_satchel|Lambda Core - Satchel Charge (Part 3)
-L|7720100|hl_c13_a3|kill|monster_alien_grunt|Lambda Core - Alien Grunt Slain (Part 3)
-L|7720101|hl_c13_a4|map_reached||Lambda Core - Part 4 Reached
-L|7720102|hl_c13_a4|pickup|item_longjump|Lambda Core - Long Jump Module (Part 4)
-L|7720103|hl_c13_a4|pickup|weapon_egon|Lambda Core - Gluon Gun (Part 4)
-L|7720104|hl_c13_a4|pickup|weapon_gauss|Lambda Core - Tau Cannon (Part 4)
-L|7720105|hl_c13_a4|pickup|weapon_handgrenade|Lambda Core - Hand Grenade (Part 4)
-L|7720106|hl_c13_a4|pickup|weapon_hornetgun|Lambda Core - Hivehand (Part 4)
-L|7720107|hl_c13_a4|pickup|weapon_rpg|Lambda Core - RPG (Part 4)
-L|7720108|hl_c13_a4|pickup|weapon_satchel|Lambda Core - Satchel Charge (Part 4)
-L|7720109|hl_c13_a4|pickup|weapon_shotgun|Lambda Core - Shotgun (Part 4)
-L|7720110|hl_c13_a4|pickup|weapon_tripmine|Lambda Core - Tripmine (Part 4)
-L|7720111|hl_c15|kill|monster_bigmomma|Gonarch's Lair - Gonarch Slain
-L|7720112|hl_c16_a1|kill|monster_alien_controller|Interloper - Alien Controller Slain (Part 1)
-L|7720113|hl_c16_a2|map_reached||Interloper - Part 2 Reached
-L|7720114|hl_c16_a2|pickup|weapon_handgrenade|Interloper - Hand Grenade (Part 2)
-L|7720115|hl_c16_a2|pickup|weapon_snark|Interloper - Snarks (Part 2)
-L|7720116|hl_c16_a2|kill|monster_alien_grunt|Interloper - Alien Grunt Slain (Part 2)
-L|7720117|hl_c16_a2|kill|monster_gargantua|Interloper - Gargantua Slain (Part 2)
-L|7720118|hl_c16_a2|kill|monster_tentacle|Interloper - Tentacle Slain (Part 2)
-L|7720119|hl_c16_a3|map_reached||Interloper - Part 3 Reached
-L|7720120|hl_c16_a3|pickup|weapon_handgrenade|Interloper - Hand Grenade (Part 3)
-L|7720121|hl_c16_a3|pickup|weapon_satchel|Interloper - Satchel Charge (Part 3)
-L|7720122|hl_c16_a3|pickup|weapon_tripmine|Interloper - Tripmine (Part 3)
-L|7720123|hl_c16_a3|kill|monster_alien_controller|Interloper - Alien Controller Slain (Part 3)
-L|7720124|hl_c16_a4|map_reached||Interloper - Part 4 Reached
-L|7720125|hl_c17|pickup|weapon_satchel|Nihilanth - Satchel Charge (Part 1)
-L|7720126|hl_c17|kill|monster_alien_controller|Nihilanth - Alien Controller Slain (Part 1)
-L|7720127|hl_c17|kill|monster_ichthyosaur|Nihilanth - Ichthyosaur Slain (Part 1)
-L|7720128|hl_c17|kill|monster_nihilanth|Nihilanth - Nihilanth Slain (Part 1)
-L|7720129|hl_c18|map_reached||Nihilanth - Part 2 Reached
-L|7720130|hl_c18|kill|monster_alien_controller|Nihilanth - Alien Controller Slain (Part 2)
-L|7720131|hl_c18|kill|monster_alien_grunt|Nihilanth - Alien Grunt Slain (Part 2)
-L|7720132|hl_c01_a1|kill_count|8|Anomalous Materials - 8 Kills (Part 1)
-L|7720133|hl_c01_a1|kill_count|16|Anomalous Materials - 16 Kills (Part 1)
-L|7720134|hl_c01_a1|kill_count|24|Anomalous Materials - 24 Kills (Part 1)
-L|7720135|hl_c01_a2|kill_count|6|Anomalous Materials - 6 Kills (Part 2)
-L|7720136|hl_c02_a1|kill_count|5|Unforeseen Consequences - 5 Kills (Part 1)
-L|7720137|hl_c02_a2|pickup|item_battery|Unforeseen Consequences - Battery (Part 2)
-L|7720138|hl_c03|pickup|item_battery|Office Complex - Battery
-L|7720139|hl_c05_a1|pickup|item_battery|Blast Pit - Battery (Part 1)
-L|7720140|hl_c05_a1|pickup|item_healthkit|Blast Pit - Health Kit (Part 1)
-L|7720141|hl_c05_a2|pickup|item_healthkit|Blast Pit - Health Kit (Part 2)
-L|7720142|hl_c05_a3|pickup|item_healthkit|Blast Pit - Health Kit (Part 3)
-L|7720143|hl_c09|kill_count|6|Residue Processing - 6 Kills
-L|7720144|hl_c09|kill_count|13|Residue Processing - 13 Kills
-L|7720145|hl_c11_a3|kill_count|6|Surface Tension - 6 Kills (Part 3)
-L|7720146|hl_c11_a5|pickup|item_battery|Surface Tension - Battery (Part 5)
-L|7720147|hl_c13_a2|pickup|item_battery|Lambda Core - Battery (Part 2)
-L|7720148|hl_c13_a2|pickup|item_healthkit|Lambda Core - Health Kit (Part 2)
-L|7720149|hl_c14|pickup|item_battery|Xen - Battery
-L|7720150|hl_c14|pickup|item_healthkit|Xen - Health Kit
-L|7720151|hl_c15|pickup|item_battery|Gonarch's Lair - Battery
-L|7720152|hl_c16_a1|pickup|item_battery|Interloper - Battery (Part 1)
-L|7720153|hl_c16_a1|pickup|item_healthkit|Interloper - Health Kit (Part 1)
-L|7720154|hl_c16_a1|kill_count|6|Interloper - 6 Kills (Part 1)
-L|7720155|hl_c18|kill_count|7|Nihilanth - 7 Kills (Part 2)
-L|7720156|hl_c00|chapter_complete|black_mesa_inbound|Black Mesa Inbound - Complete
-L|7720157|hl_c01_a2|chapter_complete|anomalous_materials|Anomalous Materials - Complete
-L|7720158|hl_c02_a2|chapter_complete|unforeseen_consequences|Unforeseen Consequences - Complete
-L|7720159|hl_c03|chapter_complete|office_complex|Office Complex - Complete
-L|7720160|hl_c04|chapter_complete|weve_got_hostiles|We've Got Hostiles - Complete
-L|7720161|hl_c05_a3|chapter_complete|blast_pit|Blast Pit - Complete
-L|7720162|hl_c06|chapter_complete|power_up|Power Up - Complete
-L|7720163|hl_c07_a2|chapter_complete|on_a_rail|On A Rail - Complete
-L|7720164|hl_c08_a2|chapter_complete|apprehension|Apprehension - Complete
-L|7720165|hl_c09|chapter_complete|residue_processing|Residue Processing - Complete
-L|7720166|hl_c10|chapter_complete|questionable_ethics|Questionable Ethics - Complete
-L|7720167|hl_c11_a5|chapter_complete|surface_tension|Surface Tension - Complete
-L|7720168|hl_c12|chapter_complete|forget_about_freeman|Forget About Freeman - Complete
-L|7720169|hl_c13_a4|chapter_complete|lambda_core|Lambda Core - Complete
-L|7720170|hl_c14|chapter_complete|xen|Xen - Complete
-L|7720171|hl_c15|chapter_complete|gonarchs_lair|Gonarch's Lair - Complete
-L|7720172|hl_c16_a4|chapter_complete|interloper|Interloper - Complete
-L|7720173|hl_c18|chapter_complete|nihilanth|Nihilanth - Complete
+L|7720000|hl_c00|map_reached||Black Mesa Inbound - Reached
+L|7720001|hl_c01_a1|map_reached||Anomalous Materials - Part 1 Reached
+L|7720002|hl_c01_a2|map_reached||Anomalous Materials - Part 2 Reached
+L|7720003|hl_c02_a1|map_reached||Unforeseen Consequences - Part 1 Reached
+L|7720004|hl_c02_a2|map_reached||Unforeseen Consequences - Part 2 Reached
+L|7720005|hl_c03|map_reached||Office Complex - Reached
+L|7720006|hl_c04|map_reached||We've Got Hostiles - Reached
+L|7720007|hl_c05_a1|map_reached||Blast Pit - Part 1 Reached
+L|7720008|hl_c05_a2|map_reached||Blast Pit - Part 2 Reached
+L|7720009|hl_c05_a3|map_reached||Blast Pit - Part 3 Reached
+L|7720010|hl_c06|map_reached||Power Up - Reached
+L|7720011|hl_c07_a1|map_reached||On A Rail - Part 1 Reached
+L|7720012|hl_c07_a2|map_reached||On A Rail - Part 2 Reached
+L|7720013|hl_c08_a1|map_reached||Apprehension - Part 1 Reached
+L|7720014|hl_c08_a2|map_reached||Apprehension - Part 2 Reached
+L|7720015|hl_c09|map_reached||Residue Processing - Reached
+L|7720016|hl_c10|map_reached||Questionable Ethics - Reached
+L|7720017|hl_c11_a1|map_reached||Surface Tension - Part 1 Reached
+L|7720018|hl_c11_a2|map_reached||Surface Tension - Part 2 Reached
+L|7720019|hl_c11_a3|map_reached||Surface Tension - Part 3 Reached
+L|7720020|hl_c11_a4|map_reached||Surface Tension - Part 4 Reached
+L|7720021|hl_c11_a5|map_reached||Surface Tension - Part 5 Reached
+L|7720022|hl_c12|map_reached||Forget About Freeman - Reached
+L|7720023|hl_c13_a1|map_reached||Lambda Core - Part 1 Reached
+L|7720024|hl_c13_a2|map_reached||Lambda Core - Part 2 Reached
+L|7720025|hl_c13_a3|map_reached||Lambda Core - Part 3 Reached
+L|7720026|hl_c13_a4|map_reached||Lambda Core - Part 4 Reached
+L|7720027|hl_c14|map_reached||Xen - Reached
+L|7720028|hl_c15|map_reached||Gonarch's Lair - Reached
+L|7720029|hl_c16_a1|map_reached||Interloper - Part 1 Reached
+L|7720030|hl_c16_a2|map_reached||Interloper - Part 2 Reached
+L|7720031|hl_c16_a3|map_reached||Interloper - Part 3 Reached
+L|7720032|hl_c16_a4|map_reached||Interloper - Part 4 Reached
+L|7720033|hl_c17|map_reached||Nihilanth - Part 1 Reached
+L|7720034|hl_c18|map_reached||Nihilanth - Part 2 Reached
+L|7720035|hl_c00|chapter_complete|black_mesa_inbound|Black Mesa Inbound - Complete
+L|7720036|hl_c01_a2|chapter_complete|anomalous_materials|Anomalous Materials - Complete
+L|7720037|hl_c02_a2|chapter_complete|unforeseen_consequences|Unforeseen Consequences - Complete
+L|7720038|hl_c03|chapter_complete|office_complex|Office Complex - Complete
+L|7720039|hl_c04|chapter_complete|weve_got_hostiles|We've Got Hostiles - Complete
+L|7720040|hl_c05_a3|chapter_complete|blast_pit|Blast Pit - Complete
+L|7720041|hl_c06|chapter_complete|power_up|Power Up - Complete
+L|7720042|hl_c07_a2|chapter_complete|on_a_rail|On A Rail - Complete
+L|7720043|hl_c08_a2|chapter_complete|apprehension|Apprehension - Complete
+L|7720044|hl_c09|chapter_complete|residue_processing|Residue Processing - Complete
+L|7720045|hl_c10|chapter_complete|questionable_ethics|Questionable Ethics - Complete
+L|7720046|hl_c11_a5|chapter_complete|surface_tension|Surface Tension - Complete
+L|7720047|hl_c12|chapter_complete|forget_about_freeman|Forget About Freeman - Complete
+L|7720048|hl_c13_a4|chapter_complete|lambda_core|Lambda Core - Complete
+L|7720049|hl_c14|chapter_complete|xen|Xen - Complete
+L|7720050|hl_c15|chapter_complete|gonarchs_lair|Gonarch's Lair - Complete
+L|7720051|hl_c16_a4|chapter_complete|interloper|Interloper - Complete
+L|7720052|hl_c18|chapter_complete|nihilanth|Nihilanth - Complete
 K|item_longjump|Long Jump Module
 K|item_suit|HEV Suit
 K|weapon_357|.357 Magnum

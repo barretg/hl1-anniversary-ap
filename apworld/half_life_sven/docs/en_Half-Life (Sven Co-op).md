@@ -32,15 +32,13 @@ RPG, Tau cannon, gluon gun, hivehand, satchel charges, tripmines, snarks, hand
 grenades), and optionally the HEV suit and long jump module. Everything else is
 filler: ammo caches, medkits and armour batteries.
 
-**Locations** — 174 of them, all derived from entities that actually exist in the
-map files:
+**Locations** — 53 of them, one for each division of the campaign:
 
-- every distinct weapon or equipment pickup in each map
-- the first kill of each notable enemy present in a map — gargantuas, tentacles,
-  ichthyosaurs, apaches, ospreys, assassins, alien grunts, Gonarch, Nihilanth
-- reaching each later part of a multi-part mission
+- reaching each part of a mission (Surface Tension has five, Office Complex one)
 - completing each mission
-- kill-count milestones, which is how the sparse Xen maps still carry checks
+
+Sven Co-op splits Half-Life's campaign into 35 maps across 18 missions, so
+progress through a mission is itself the check.
 
 ## Which items can be in another player's world?
 

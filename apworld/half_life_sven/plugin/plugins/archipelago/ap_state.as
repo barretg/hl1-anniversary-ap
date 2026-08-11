@@ -10,6 +10,10 @@ const string AP_CHECKDATA = AP_DIR + "checkdata.txt";
 const string AP_IN = AP_DIR + "ap_in.txt";
 const string AP_OUT = AP_DIR + "ap_out.txt";
 
+// "go back to the hub once the next map has loaded". A file rather than a global
+// because the whole point is to survive the map change that is about to happen.
+const string AP_PENDING = AP_DIR + "ap_pending.txt";
+
 const string HUB_MAP = "-sp_campaign_portal";
 
 // Location trigger kinds, as emitted by gen_checkdata.py.
@@ -78,6 +82,12 @@ class APState
 
 array<APChapter@> g_Chapters;
 array<APLocation@> g_Locations;
+
+// Fingerprint of the id map checkdata.txt was generated from. If the client
+// reports a different one, our location ids mean different things than the
+// seed's do and every check we send would land on the wrong location.
+string g_szDataVersion;
+bool g_bDataMismatch = false;
 
 // classname -> AP item name; a pickup of this classname is refused until owned.
 dictionary g_LockedClassnames;
@@ -255,6 +265,10 @@ void LoadCheckData()
 		else if( parts[0] == "S" )
 		{
 			g_StartingWeapons.insertLast( parts[1] );
+		}
+		else if( parts[0] == "D" )
+		{
+			g_szDataVersion = parts[1];
 		}
 	}
 

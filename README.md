@@ -50,12 +50,19 @@ Sven Co-op running hl_c00 ... hl_c18
 The client is the source of truth; the plugin holds no state across map changes.
 See [docs/protocol.md](docs/protocol.md).
 
-## Locations come from the map files
+## Locations
 
-Nothing about the location list was written from memory. `tools/bsp_entities.py`
-reads the entity lump out of each shipped `.bsp`, and `tools/build_campaign_data.py`
-turns that into `campaign.json` — so a check only exists where the entity behind
-it provably exists. 174 locations against 32 progression items.
+A location is currently "you reached this part of the campaign": one per map,
+plus one per mission for finishing it. 53 locations against at most 32
+progression items.
+
+Richer location types are already implemented and derived from the map files
+themselves: `tools/bsp_entities.py` reads the entity lump out of each shipped
+`.bsp`, so a check can only exist where the entity behind it provably exists.
+That produced individual weapon pickups, notable-enemy kills and kill-count
+milestones, but too many of them read as arbitrary in play, so they are switched
+off via `ENABLED_LOCATION_TYPES` in `tools/campaign_layout.py` pending a pass to
+work out which ones actually earn a check.
 
 Editorial decisions that *cannot* be derived from the maps — mission grouping,
 which classnames map to which item, and the logic gates — live in one file,

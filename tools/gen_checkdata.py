@@ -39,7 +39,9 @@ def render(campaign: dict) -> str:
         "#   L|<id>|<map>|<type>|<arg>|<name>",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
+        "#   D|<data version>               must match the client's, or ids differ",
         f"V|{FORMAT_VERSION}",
+        f"D|{campaign['data_version']}",
     ]
 
     for chapter in campaign["chapters"]:

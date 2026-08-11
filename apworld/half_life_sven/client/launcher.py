@@ -28,9 +28,8 @@ from .bridge import Bridge, find_store_dir, is_game_dir
 GAME_NAME = "Half-Life (Sven Co-op)"
 POLL_INTERVAL = 0.2
 
-# Key under which the chosen install path is remembered between sessions, so the
-# folder picker only ever appears once.
-STORE_KEY = "game_dir"
+# The chosen install path is remembered in host.yaml (see client/settings.py), so
+# the folder picker only ever appears once.
 
 # Printed on connect, because these are typed in the game's chat rather than
 # here and are easy to forget between sessions.
@@ -190,6 +189,9 @@ class HalfLifeSvenContext(CommonContext):
             entry["id"]: entry["name"] for entry in self.campaign["locations"]
         }
         self.goal_chapter = next(c["key"] for c in self.campaign["chapters"] if c["is_goal"])
+        # Fingerprint of the id map this apworld was built from. The plugin
+        # compares it against its own and pauses checks if they disagree.
+        self.data_version = str(self.campaign.get("data_version", ""))
 
         self.unlocked_chapters: set[str] = set()
         self.unlocked_items: set[str] = set()
@@ -200,30 +202,45 @@ class HalfLifeSvenContext(CommonContext):
         self.death_link_enabled = False
         self.goal_sent = False
         self.chat_relay = True
+        self.bridge_failures = 0
+        # How far through the server's item history we have got. Guards against
+        # re-delivering filler when it resends everything on reconnect.
+        self.items_seen = 0
 
         self.resolve_game_dir()
 
     # -- setup -----------------------------------------------------------
 
     def resolve_game_dir(self) -> None:
-        """Find the install without asking, or fall back to the folder picker.
+        """Find the install without asking. Only prompt if that fails.
 
-        Order: the remembered choice, then SVENCOOP_DIR, then the usual Steam
-        locations. Only if all three miss does the user get prompted, and the
-        answer is remembered so it never asks twice.
+        Order: an explicit --gamedir, the remembered choice, SVENCOOP_DIR, then
+        the usual Steam locations. The folder picker is a last resort and never
+        appears while a valid folder is known.
         """
+        saved = self.load_saved_game_dir()
+
         for source, candidate in (
             ("--gamedir", self._forced_game_dir),
-            ("saved", self.load_saved_game_dir()),
+            ("your saved setting", saved),
             ("SVENCOOP_DIR", os.environ.get("SVENCOOP_DIR", "")),
-            ("default install path", self._guess_game_dir()),
+            ("the default install path", self._guess_game_dir()),
         ):
             if is_game_dir(candidate):
-                logger.info(f"Found Sven Co-op via {source}.")
-                self.set_game_dir(candidate)
+                logger.info(f"Using the Sven Co-op folder from {source}.")
+                self.set_game_dir(candidate, remember=False)
                 return
 
-        logger.info("Sven Co-op not found automatically. Please pick the folder.")
+        # Say which of the two cases this is, so a folder that stopped being
+        # valid is not mistaken for one that was never saved.
+        if saved:
+            logger.warning(
+                f"Your saved Sven Co-op folder is no longer valid: {saved}. "
+                f"Please pick it again."
+            )
+        else:
+            logger.info("Sven Co-op not found automatically. Please pick the folder.")
+
         self.prompt_for_game_dir()
 
     def prompt_for_game_dir(self) -> None:
@@ -246,7 +263,7 @@ class HalfLifeSvenContext(CommonContext):
 
     @staticmethod
     def load_saved_game_dir() -> str:
-        return settings.get(STORE_KEY, "") or ""
+        return settings.read_game_dir()
 
     @staticmethod
     def save_game_dir(path: str) -> None:
@@ -257,19 +274,30 @@ class HalfLifeSvenContext(CommonContext):
         debug level.
         """
         try:
-            settings.set_value(STORE_KEY, path)
+            where = settings.write_game_dir(path)
         except OSError as exc:
             logger.warning(
-                f"Could not save your game folder to {settings.settings_path()}: {exc}. "
+                f"Could not save your game folder: {exc}. "
                 f"You will be asked for it again next launch."
             )
             return
 
-        if settings.get(STORE_KEY, "") != path:
-            logger.warning("Your game folder did not save correctly.")
+        # Read it back rather than trusting the write: a save that silently does
+        # nothing is exactly what makes the picker reappear every launch.
+        if settings.read_game_dir() != path:
+            logger.warning(
+                "Your game folder did not save correctly, so you will be asked "
+                "for it again next launch."
+            )
+        else:
+            logger.info(f"Saved your Sven Co-op folder to {where}.")
 
-    def set_game_dir(self, path: str) -> None:
-        """Point the bridge at an install, rejecting anything that is not one."""
+    def set_game_dir(self, path: str, remember: bool = True) -> None:
+        """Point the bridge at an install, rejecting anything that is not one.
+
+        `remember` is false when the path came from storage already, so a normal
+        startup does not rewrite host.yaml for no reason.
+        """
         if not path:
             self.game_dir = ""
             self.bridge = None
@@ -287,7 +315,8 @@ class HalfLifeSvenContext(CommonContext):
         store.mkdir(parents=True, exist_ok=True)
         self.bridge = Bridge(store)
         self.bridge.clear_log()
-        self.save_game_dir(path)
+        if remember:
+            self.save_game_dir(path)
         logger.info(f"Bridging through {store}")
 
         if not plugin.is_installed(path):
@@ -326,8 +355,7 @@ class HalfLifeSvenContext(CommonContext):
             self.print_in_game_commands()
 
         elif cmd == "ReceivedItems":
-            for item in args["items"]:
-                self.apply_item(item.item)
+            self.receive_items(args)
 
         elif cmd == "PrintJSON":
             self.relay_to_game(args)
@@ -361,7 +389,38 @@ class HalfLifeSvenContext(CommonContext):
         if text:
             self.bridge.queue_event("CHAT", f"[AP] {text}")
 
-    def apply_item(self, item_id: int) -> None:
+    def receive_items(self, args: dict) -> None:
+        """Apply an item packet.
+
+        The server resends the whole item history on every reconnect, with
+        `index` saying where the batch starts. Unlocks are idempotent so they can
+        simply be reapplied, but filler is a one-shot effect -- health, armour,
+        an ammo top-up -- and re-delivering it on reconnect both floods the
+        bridge and means nothing in the game. Two reconnects used to double the
+        backlog each time, which is how a few dozen items became hundreds.
+        """
+        start = int(args.get("index", 0))
+        items = args["items"]
+
+        if start == 0:
+            # Full resync. Rebuild unlock state from scratch.
+            self.unlocked_chapters.clear()
+            self.unlocked_items.clear()
+
+        for offset, item in enumerate(items):
+            # Only genuinely new items earn a filler delivery.
+            is_new = (start + offset) >= self.items_seen
+            self.apply_item(item.item, deliver_filler=is_new)
+
+        self.items_seen = max(self.items_seen, start + len(items))
+
+        if self.bridge is not None and self.bridge.queued_count > 50:
+            logger.info(
+                f"Delivering {self.bridge.queued_count} items to the game; "
+                f"this drains over a few seconds."
+            )
+
+    def apply_item(self, item_id: int, deliver_filler: bool = True) -> None:
         entry = self.item_by_id.get(item_id)
         if entry is None:
             return
@@ -370,7 +429,7 @@ class HalfLifeSvenContext(CommonContext):
             self.unlocked_chapters.add(entry["chapter"])
         elif group in ("weapon", "optional"):
             self.unlocked_items.add(entry["name"])
-        elif group == "filler" and self.bridge:
+        elif group == "filler" and deliver_filler and self.bridge:
             self.bridge.queue_event("ITEM", entry["name"])
 
     # -- campaign helpers ------------------------------------------------
@@ -426,7 +485,11 @@ def load_campaign() -> dict:
 
 
 async def game_watcher(ctx: HalfLifeSvenContext) -> None:
-    """Pump the bridge: game events in, snapshot out."""
+    """Pump the bridge: game events in, snapshot out.
+
+    Nothing in here may raise. An unhandled error kills this task, and the client
+    then sits there looking connected while the game silently receives nothing.
+    """
     while not ctx.exit_event.is_set():
         await asyncio.sleep(POLL_INTERVAL)
 
@@ -434,64 +497,91 @@ async def game_watcher(ctx: HalfLifeSvenContext) -> None:
             continue
 
         try:
-            events = ctx.bridge.read_events()
-        except OSError as exc:
-            logger.debug(f"bridge read failed: {exc}")
-            continue
+            await pump(ctx)
+        except Exception as exc:  # noqa: BLE001 - the watcher must survive anything
+            ctx.bridge_failures += 1
+            if ctx.bridge_failures in (1, 10, 100):
+                logger.warning(f"Bridge error ({ctx.bridge_failures}): {exc}")
+        else:
+            if ctx.bridge_failures:
+                logger.info("Bridge recovered.")
+                ctx.bridge_failures = 0
 
-        new_checks: list[int] = []
-        for event in events:
-            if event.kind == "CHECK":
-                new_checks.append(int(event.arg))
-            elif event.kind == "COMPLETE":
-                ctx.completed_missions.add(event.arg)
-            elif event.kind == "GOAL":
-                if not ctx.goal_sent and ctx.server and not ctx.server.socket.closed:
-                    ctx.goal_sent = True
-                    await ctx.send_msgs(
-                        [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
-                    )
-                    logger.info("Goal complete!")
-            elif event.kind == "ACK":
-                ctx.bridge.acknowledge(int(event.arg))
-            elif event.kind == "DEATH":
-                if ctx.death_link_enabled:
-                    player = event.args[0] if event.args else "Freeman"
-                    cause = event.args[1] if len(event.args) > 1 else "an unknown fate"
-                    await ctx.send_death(f"{player} died to {cause}.")
-            elif event.kind == "CHAT":
-                if ctx.chat_relay and ctx.server and not ctx.server.socket.closed:
-                    player = event.args[0] if event.args else "?"
-                    text = event.args[1] if len(event.args) > 1 else ""
-                    if text:
-                        await ctx.send_msgs([{"cmd": "Say", "text": f"[{player}] {text}"}])
-            elif event.kind == "HELLO":
-                logger.info(f"Game is on {event.arg}.")
-                ctx.bridge.write_snapshot(
-                    connected=ctx.server is not None,
-                    chapters=sorted(ctx.unlocked_chapters),
-                    items=sorted(ctx.unlocked_items),
-                    goal_open=ctx.goal_open,
-                    death_link=ctx.death_link_enabled,
-                    force=True,
-                )
 
-        if new_checks:
-            unseen = [cid for cid in new_checks if cid not in ctx.checked_locations]
-            if unseen:
-                for location_id in unseen:
-                    logger.info(f"Check: {ctx.location_name_by_id.get(location_id, location_id)}")
+async def pump(ctx: HalfLifeSvenContext) -> None:
+    """One poll: drain the game's events, then publish the snapshot."""
+    if ctx.bridge is None:
+        return
+
+    try:
+        events = ctx.bridge.read_events()
+    except OSError as exc:
+        logger.debug(f"bridge read failed: {exc}")
+        events = []
+
+    new_checks: list[int] = []
+    for event in events:
+        if event.kind == "CHECK":
+            new_checks.append(int(event.arg))
+        elif event.kind == "COMPLETE":
+            ctx.completed_missions.add(event.arg)
+        elif event.kind == "GOAL":
+            if not ctx.goal_sent and ctx.server and not ctx.server.socket.closed:
+                ctx.goal_sent = True
                 await ctx.send_msgs(
-                    [{"cmd": "LocationChecks", "locations": unseen}]
+                    [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
                 )
+                logger.info("Goal complete!")
+        elif event.kind == "ACK":
+            ctx.bridge.acknowledge(int(event.arg))
+        elif event.kind == "DEATH":
+            player = event.args[0] if event.args else "Freeman"
+            cause = event.args[1] if len(event.args) > 1 else "an unknown fate"
+            if ctx.death_link_enabled:
+                await ctx.send_death(f"{player} died to {cause}.")
+            else:
+                # The plugin reports every death and lets us decide, so this
+                # is the only place that can explain a DeathLink not going
+                # out. Say so rather than dropping it silently.
+                logger.debug(
+                    f"{player} died ({cause}) but DeathLink is off; use /deathlink."
+                )
+        elif event.kind == "CHAT":
+            if ctx.chat_relay and ctx.server and not ctx.server.socket.closed:
+                player = event.args[0] if event.args else "?"
+                text = event.args[1] if len(event.args) > 1 else ""
+                if text:
+                    await ctx.send_msgs([{"cmd": "Say", "text": f"[{player}] {text}"}])
+        elif event.kind == "HELLO":
+            logger.info(f"Game is on {event.arg}.")
+            ctx.bridge.write_snapshot(
+                connected=ctx.server is not None,
+                chapters=sorted(ctx.unlocked_chapters),
+                items=sorted(ctx.unlocked_items),
+                goal_open=ctx.goal_open,
+                death_link=ctx.death_link_enabled,
+                data_version=ctx.data_version,
+                force=True,
+            )
 
-        ctx.bridge.write_snapshot(
-            connected=ctx.server is not None,
-            chapters=sorted(ctx.unlocked_chapters),
-            items=sorted(ctx.unlocked_items),
-            goal_open=ctx.goal_open,
-            death_link=ctx.death_link_enabled,
-        )
+    if new_checks:
+        unseen = [cid for cid in new_checks if cid not in ctx.checked_locations]
+        if unseen:
+            for location_id in unseen:
+                logger.info(f"Check: {ctx.location_name_by_id.get(location_id, location_id)}")
+            await ctx.send_msgs([{"cmd": "LocationChecks", "locations": unseen}])
+
+    # Always published, even if reading failed: the snapshot is how the game
+    # learns about unlocks, and it must not be skipped just because ap_out.txt
+    # was momentarily unreadable.
+    ctx.bridge.write_snapshot(
+        connected=ctx.server is not None,
+        chapters=sorted(ctx.unlocked_chapters),
+        items=sorted(ctx.unlocked_items),
+        goal_open=ctx.goal_open,
+        death_link=ctx.death_link_enabled,
+        data_version=ctx.data_version,
+    )
 
 
 async def main(args) -> None:

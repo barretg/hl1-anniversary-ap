@@ -24,8 +24,8 @@
 // arrives while it still feels connected to the check that earned it.
 const float POLL_INTERVAL = 0.25f;
 
-// The illegal-weapon sweep is a safety net behind CanCollect, not the primary
-// mechanism, so it can afford to be slow.
+// The loadout sweep is a safety net behind CanCollect and the spawn hook, not
+// the primary mechanism, so it can afford to be slow.
 const float SWEEP_INTERVAL = 1.0f;
 
 void PluginInit()
@@ -73,6 +73,8 @@ void Initialise()
 	// Force a full reparse of the snapshot.
 	g_szLastInput = "";
 	g_flDeathLinkImmuneUntil = 0.0f;
+	// Whatever level change was queued has happened; we are here.
+	g_szPendingLevel = "";
 
 	EnsureScheduled();
 }
@@ -93,7 +95,7 @@ void EnsureScheduled()
 	g_bScheduled = true;
 
 	g_Scheduler.SetInterval( "BridgePoll", POLL_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
-	g_Scheduler.SetInterval( "SweepIllegalWeapons", SWEEP_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
+	g_Scheduler.SetInterval( "EnforceLoadouts", SWEEP_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
 }
 
 /*
@@ -138,6 +140,18 @@ void MapStart()
 	ForceSurvivalOff();
 
 	BridgeHello();
+
+	// A mission finished on the way here and the campaign carried us into the
+	// next one. Nothing on this map counts; go back to the hub.
+	if( ConsumePendingHubReturn() )
+	{
+		if( g_szCurrentMap != HUB_MAP )
+		{
+			g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, "[AP] Returning to the hub...\n" );
+			g_Scheduler.SetTimeout( "ReturnToHub", 3.0f );
+		}
+		return;
+	}
 
 	if( g_CurrentChapter !is null )
 	{

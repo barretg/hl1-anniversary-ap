@@ -37,6 +37,17 @@ Those ride as sequenced `event=` lines instead.
 does not have to persist a cursor: if it restarts mid-flight, the event is still
 in the snapshot and gets applied on the way back up.
 
+**The snapshot is written only when it changes.** Not when `now=` moves on. An
+earlier version rewrote it on every poll while anything was pending, so the
+plugin reparsed and re-ACKed the entire pending set several times a second. With
+the few hundred filler items a finished game releases at once, that saturated the
+bridge and starved everything else going through it.
+
+**At most 16 events are in flight at a time.** The rest wait in a backlog and
+drain as the game acknowledges what it has. Nothing is dropped. `DEATHLINK` and
+`CHAT` bypass the window, because both are time-sensitive and the plugin discards
+a DeathLink older than ten seconds.
+
 ## `ap_out.txt` — game to client
 
 Append-only. The client keeps a byte cursor and only consumes complete lines, so
