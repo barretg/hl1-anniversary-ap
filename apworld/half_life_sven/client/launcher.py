@@ -484,8 +484,12 @@ class HalfLifeSvenContext(CommonContext):
         return False
 
     @property
-    def item_names(self) -> set[str]:
-        """Everything the game should treat as held, received or not."""
+    def held_item_names(self) -> set[str]:
+        """Everything the game should treat as held, received or not.
+
+        Not `item_names`: CommonContext owns that one for its datapackage lookup,
+        and shadowing it with a read-only property breaks its constructor.
+        """
         return self.unlocked_items | self.always_unlocked
 
     @property
@@ -614,7 +618,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
             ctx.bridge.write_snapshot(
                 connected=ctx.server is not None,
                 chapters=sorted(ctx.unlocked_chapters),
-                items=sorted(ctx.item_names),
+                items=sorted(ctx.held_item_names),
                 goal_open=ctx.goal_open,
                 death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
@@ -645,7 +649,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
     ctx.bridge.write_snapshot(
         connected=ctx.server is not None,
         chapters=sorted(ctx.unlocked_chapters),
-        items=sorted(ctx.item_names),
+        items=sorted(ctx.held_item_names),
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
