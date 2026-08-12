@@ -66,8 +66,22 @@ class Campaign:
     weapons: dict[str, list[str]] = field(default_factory=dict)
     # What this campaign can hand you to swing at things with. One of these
     # replaces the crowbar when `random_starting_weapon` is on, so every entry
-    # has to be a melee weapon the campaign's own maps actually contain.
+    # has to be a melee weapon the campaign's own maps actually contain *and* one
+    # the engine knows about everywhere -- see `script_weapons`.
     melee: dict[str, list[str]] = field(default_factory=dict)
+    # What a shared weapon is called *here*, when this campaign reskins it into
+    # something else. Sven Co-op does that with a `globalmodellist` in the map
+    # .cfg: They Hunger's maps swap the pipe wrench's models for a shovel and the
+    # hand grenade's for a stick of TNT, so a check reading "First Pipe Wrench"
+    # names something the player never sees. Display only -- the item, the
+    # classname and the location id are all unchanged.
+    weapon_aliases: dict[str, str] = field(default_factory=dict)
+    # True when this campaign's weapons are custom entities its own map scripts
+    # register (`g_CustomEntityFuncs.RegisterCustomEntity`) rather than weapons
+    # built into the game. Those classnames only exist while one of its maps is
+    # running, so they can be shuffled within the campaign but never handed over
+    # anywhere else: `GiveNamedItem` on another campaign's map has nothing to make.
+    script_weapons: bool = False
     # Mission entry gates, as `{chapter key: {"strict": [group, ...]}}`.
     gates: dict[str, dict[str, list[str]]] = field(default_factory=dict)
 
@@ -190,13 +204,26 @@ OPPOSING_FORCE = Campaign(
         "Displacer Cannon": ["weapon_displacer"],
         "Spore Launcher": ["weapon_sporelauncher"],
         "Barnacle Grapple": ["weapon_grapple"],
-        "Combat Knife": ["weapon_knife"],
         "Pipe Wrench": ["weapon_pipewrench"],
         "Minigun": ["weapon_minigun"],
+        # No combat knife. Opposing Force's maps still place `weapon_knife`, but
+        # this build of Sven Co-op has no such weapon -- it is in neither
+        # server.dll nor any map script -- so those entities never spawn. As an
+        # item it could never be granted and as a check it could never fire,
+        # which is exactly the sort of location fill will hide progression behind.
     },
+    # From `maps/ofglobal.gmr`, read out of the models it names. Most of that
+    # list is the same weapon with soldier's hands and a nicer mesh, but the
+    # crowbar is replaced outright: `v_crowbar.mdl` becomes `v_knife.mdl`, skin
+    # `knife_blade.BMP`. Shephard carries a combat knife, not a crowbar.
+    #
+    # `weapon_knife` was its own entity once and is unsupported in this build --
+    # Opposing Force's maps still place a few, and those never spawn -- so the
+    # knife reaches players the only way it can, as the crowbar's local face.
+    weapon_aliases={"Crowbar": "Combat Knife"},
     melee={
+        "Crowbar": ["weapon_crowbar"],
         "Pipe Wrench": ["weapon_pipewrench"],
-        "Combat Knife": ["weapon_knife"],
     },
     gates={
         # Boot camp is a firing range and the first two missions are the escape
@@ -280,10 +307,38 @@ THEY_HUNGER = Campaign(
         "Tesla Gun": ["weapon_teslagun"],
         "Spanner": ["weapon_spanner"],
     },
+    # From `models/hunger/hungerglobal.txt`, the model replacement list its maps
+    # load -- and read out of the models themselves, because the replacement
+    # *filenames* lie: `v_hungercrowbar.mdl` is internally `v_umbrella.mdl` and
+    # skinned `Umbrella_Base.bmp`. They Hunger's melee weapon is the umbrella.
+    #
+    # Only the three that stop being recognisable are renamed. Its .357 is a
+    # detective's revolver and its crossbow is a crossbow, so those keep their
+    # names; a shovel is not a pipe wrench, a stick of dynamite is not a hand
+    # grenade, and an umbrella is certainly not a crowbar.
+    weapon_aliases={
+        "Crowbar": "Umbrella",
+        "Pipe Wrench": "Shovel",
+        "Hand Grenade": "TNT",
+    },
+    # Every one of these is a custom entity registered by They Hunger's own map
+    # scripts (`scripts/maps/hunger/weapons/`), not a weapon the game ships, so
+    # none of them can be handed over outside its maps.
+    script_weapons=True,
+    # The crowbar and the wrench are built into the game, so they exist
+    # everywhere -- they just look like an umbrella and a shovel while you are
+    # here, which is the whole charm of opening a They Hunger run with one.
+    #
+    # The spanner is the deliberate rough edge. It is script-registered, so a
+    # seed that starts you with it leaves you empty-handed on any map that is not
+    # They Hunger's, and logic does not model that: everything past the point you
+    # would have found your first melee weapon is technically out of logic until
+    # a real weapon arrives. Offered anyway, because it is only reachable when
+    # They Hunger is in the seed and it is that campaign's own weapon.
     melee={
-        "Spanner": ["weapon_spanner"],
-        # Its maps carry Opposing Force's wrench too, which is the same item.
+        "Crowbar": ["weapon_crowbar"],
         "Pipe Wrench": ["weapon_pipewrench"],
+        "Spanner": ["weapon_spanner"],
     },
 )
 
@@ -335,6 +390,22 @@ WEAPON_CAMPAIGN: dict[str, str] = {
     for name in campaign.weapons
 }
 
+# Weapons that may only be handed over on their own campaign's maps, as
+# classname -> the campaigns whose scripts define them.
+#
+# They Hunger's whole arsenal is like this: the spanner, the tommy gun, the tesla
+# gun and the rest are custom entities its map scripts register, so on any other
+# campaign's map the classname does not exist and `GiveNamedItem` has nothing to
+# make. They still shuffle inside a They Hunger seed; they just cannot travel.
+# Everything Half-Life and Opposing Force ship is in server.dll and travels fine.
+RESTRICTED_CLASSNAMES: dict[str, list[str]] = {
+    classname: [campaign.key]
+    for campaign in CAMPAIGNS
+    if campaign.script_weapons
+    for classnames in campaign.weapons.values()
+    for classname in classnames
+}
+
 # What you start with when nothing randomises it: the crowbar, as it always was.
 # `random_starting_weapon` replaces the melee half with one of MELEE_STARTERS,
 # chosen per seed and sent through the snapshot rather than living here.
@@ -350,6 +421,13 @@ MELEE_STARTERS: dict[str, list[str]] = {
     name: classnames
     for campaign in CAMPAIGNS
     for name, classnames in campaign.melee.items()
+}
+
+# campaign key -> {item name: what that campaign calls it}. Display only.
+WEAPON_ALIASES: dict[str, dict[str, str]] = {
+    campaign.key: campaign.weapon_aliases
+    for campaign in CAMPAIGNS
+    if campaign.weapon_aliases
 }
 
 MELEE_CAMPAIGNS: dict[str, list[str]] = {}
@@ -394,6 +472,12 @@ CHARGER_CLASSNAMES: dict[str, str] = {
 
 # --- Logic groups ---------------------------------------------------------
 
+# Deliberately no They Hunger weapons in any of these groups. They cannot be
+# carried outside its maps, so counting a tommy gun as "you have a gun" would let
+# strict logic expect you to walk into We've Got Hostiles armed with something the
+# engine will not give you there. They Hunger's own missions have no gates, so the
+# groups lose nothing by leaving them out.
+
 RANGED_WEAPONS = [
     "Glock",
     ".357 Magnum",
@@ -412,15 +496,6 @@ RANGED_WEAPONS = [
     "Displacer Cannon",
     "Spore Launcher",
     "Minigun",
-    # They Hunger
-    "Colt 1911",
-    "Taurus",
-    "Sawed-Off Shotgun",
-    "Grease Gun",
-    "Tommy Gun",
-    "M14",
-    "M16A1",
-    "Tesla Gun",
 ]
 
 # Enough punch to kill an armoured target in reasonable time.
@@ -437,9 +512,6 @@ HEAVY_WEAPONS = [
     "Spore Launcher",
     "Minigun",
     "Sniper Rifle",
-    "Tesla Gun",
-    "M14",
-    "M16A1",
 ]
 
 EXPLOSIVES = ["RPG", "Hand Grenade", "Satchel Charge", "Tripmine", "Spore Launcher"]
@@ -448,7 +520,7 @@ EXPLOSIVES = ["RPG", "Hand Grenade", "Satchel Charge", "Tripmine", "Spore Launch
 # a melee fight, and grenades/tripmines do not work underwater.
 UNDERWATER_WEAPONS = [
     "Glock", ".357 Magnum", "MP5", "Crossbow", "Tau Cannon", "Gluon Gun", "Hivehand",
-    "Desert Eagle", "Colt 1911", "Taurus",
+    "Desert Eagle",
 ]
 
 # --- Monster locations ----------------------------------------------------

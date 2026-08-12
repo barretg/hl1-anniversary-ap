@@ -92,16 +92,54 @@ Only Half-Life is on by default, so a YAML written before this existed generates
 exactly the seed it always did. Switch every campaign off and Half-Life comes
 back on regardless, because a seed has to contain something.
 
+### What each campaign needs installed
+
+Everything runs on the **host's** machine: the plugin and these maps have to be
+on the server, not on the people joining it. A campaign whose maps are missing
+will fail the moment someone warps into it, so check before you generate.
+
+| Campaign | Maps it needs | Check for |
+| --- | --- | --- |
+| Half-Life | `hl_c00` … `hl_c18` | `svencoop/maps/hl_c00.bsp` |
+| Opposing Force | `of0a0` … `of6a5` | `svencoop/maps/of0a0.bsp` |
+| Blue Shift | `ba_tram1` … `ba_outro` | `svencoop/maps/ba_tram1.bsp` |
+| They Hunger | `th_ep1_00` … `th_ep3_07` | `svencoop/maps/th_ep1_00.bsp` |
+
+The campaign portal can also have whole areas switched off by the server, which
+looks identical to a missing campaign from in-game. If a campaign's consoles are
+sealed, check these in your `server.cfg`:
+
+```
+as_command spcp_hlsp 1
+as_command spcp_opfor 1
+as_command spcp_bshift 1
+as_command spcp_theyhunger 1
+```
+
 Enabling more than one changes the run in three ways:
 
 - **Every campaign hands you one of its own missions at the start.** Four
   campaigns means four missions open from the first spawn, not one.
 - **Every campaign's finale is a goal.** The seed is won when all of them are
   done, and the client says how many are left as each falls.
-- **Weapons go into one shared pool.** Opposing Force's displacer and sniper
-  rifle and They Hunger's tommy gun and tesla gun turn up in Black Mesa, and
-  Half-Life's crossbow and Tau cannon turn up in theirs. Blue Shift brings no
-  weapons of its own, so it gains the most from having company.
+- **Weapons go into one shared pool.** Opposing Force's displacer, sniper rifle,
+  SAW and spore launcher turn up in Black Mesa, and Half-Life's crossbow and Tau
+  cannon turn up in theirs. Blue Shift brings no weapons of its own, so it gains
+  the most from having company.
+
+**They Hunger's weapons are the exception.** Its tommy gun, tesla gun, spanner
+and the rest are not weapons Sven Co-op ships: they are custom entities its own
+maps register, so they only exist while you are playing They Hunger. They still
+shuffle inside the seed, but the game will only hand one over once you are in a
+They Hunger map. Receive a tesla gun while you are in Black Mesa and it is
+waiting for you the moment you warp to an episode. Nothing is lost, and nothing
+in Half-Life's or Opposing Force's logic ever expects one.
+
+**They Hunger also reskins the weapons it borrows**, so a few checks are named
+for what you see rather than what the engine calls it. The crowbar is an
+umbrella, the pipe wrench is a shovel, and hand grenades are sticks of TNT. They
+are the same items as everywhere else — send someone the Pipe Wrench and they
+swing a shovel in Episode 1 and a wrench in Black Mesa.
 
 **Missions Required is per campaign and the settings are independent.**
 `missions_required` is Half-Life's and opens Nihilanth;
@@ -145,8 +183,17 @@ Chat commands (press `Y` in game, not the console):
 | --- | --- |
 | `!help` | list these commands |
 | `!ap` | list every mission and its status, printed to your console (`~`) |
+| `!tracker` | every location in the seed, by map, found or not, to your console |
+| `!tracker <text>` | just the maps or missions matching that, e.g. `!tracker hl_c03` or `!tracker office` |
 | `!warp <number>` | travel to an unlocked mission |
 | `!hub` | return to the campaign portal |
+
+`!warp` numbers run across all campaigns: 0-17 Half-Life, 18-27 Opposing Force,
+28-33 Blue Shift, 34-36 They Hunger. Half-Life's are unchanged, and `!ap` prints
+the numbers grouped by campaign.
+
+`!tracker` only lists checks the seed actually contains, so `chargesanity: false`
+means no charger lines rather than two hundred that can never be ticked.
 
 The client also prints this list when it connects.
 

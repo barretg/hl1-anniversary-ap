@@ -71,11 +71,11 @@
     "of_worlds_collide"
    ],
    "melee": {
+    "Crowbar": [
+     "weapon_crowbar"
+    ],
     "Pipe Wrench": [
      "weapon_pipewrench"
-    ],
-    "Combat Knife": [
-     "weapon_knife"
     ]
    },
    "consoles": {
@@ -131,11 +131,14 @@
     "th_episode_3"
    ],
    "melee": {
-    "Spanner": [
-     "weapon_spanner"
+    "Crowbar": [
+     "weapon_crowbar"
     ],
     "Pipe Wrench": [
      "weapon_pipewrench"
+    ],
+    "Spanner": [
+     "weapon_spanner"
     ]
    },
    "consoles": {
@@ -1287,19 +1290,6 @@
    "group": "weapon",
    "classnames": [
     "weapon_grapple"
-   ],
-   "campaign": "opposing_force",
-   "campaigns": [
-    "opposing_force"
-   ]
-  },
-  {
-   "id": 7710061,
-   "name": "Combat Knife",
-   "classification": "progression",
-   "group": "weapon",
-   "classnames": [
-    "weapon_knife"
    ],
    "campaign": "opposing_force",
    "campaigns": [
@@ -4807,19 +4797,6 @@
    }
   },
   {
-   "id": 7720308,
-   "name": "Opposing Force - First Combat Knife",
-   "chapter": "of_we_are_pulling_out",
-   "map": "of2a6",
-   "trigger": {
-    "type": "weapon_pickup",
-    "map": "of2a6",
-    "classnames": [
-     "weapon_knife"
-    ]
-   }
-  },
-  {
    "id": 7720309,
    "name": "Opposing Force - First Pipe Wrench",
    "chapter": "of_welcome_to_black_mesa",
@@ -4847,7 +4824,7 @@
   },
   {
    "id": 7720311,
-   "name": "Opposing Force - First Crowbar",
+   "name": "Opposing Force - First Combat Knife",
    "chapter": "of_welcome_to_black_mesa",
    "map": "of1a2",
    "trigger": {
@@ -4992,7 +4969,7 @@
   },
   {
    "id": 7720322,
-   "name": "They Hunger - First Hand Grenade",
+   "name": "They Hunger - First TNT",
    "chapter": "th_episode_1",
    "map": "th_ep1_03",
    "trigger": {
@@ -5005,7 +4982,7 @@
   },
   {
    "id": 7720323,
-   "name": "They Hunger - First Pipe Wrench",
+   "name": "They Hunger - First Shovel",
    "chapter": "th_episode_1",
    "map": "th_ep1_01",
    "trigger": {
@@ -5135,7 +5112,7 @@
   },
   {
    "id": 7720333,
-   "name": "They Hunger - First Crowbar",
+   "name": "They Hunger - First Umbrella",
    "chapter": "th_episode_1",
    "map": "th_ep1_01",
    "trigger": {
@@ -5571,15 +5548,7 @@
    "Sniper Rifle",
    "Displacer Cannon",
    "Spore Launcher",
-   "Minigun",
-   "Colt 1911",
-   "Taurus",
-   "Sawed-Off Shotgun",
-   "Grease Gun",
-   "Tommy Gun",
-   "M14",
-   "M16A1",
-   "Tesla Gun"
+   "Minigun"
   ],
   "heavy": [
    "RPG",
@@ -5593,10 +5562,7 @@
    "Displacer Cannon",
    "Spore Launcher",
    "Minigun",
-   "Sniper Rifle",
-   "Tesla Gun",
-   "M14",
-   "M16A1"
+   "Sniper Rifle"
   ],
   "explosives": [
    "RPG",
@@ -5613,9 +5579,7 @@
    "Tau Cannon",
    "Gluon Gun",
    "Hivehand",
-   "Desert Eagle",
-   "Colt 1911",
-   "Taurus"
+   "Desert Eagle"
   ],
   "tau_cannon": [
    "Tau Cannon"
@@ -5627,5 +5591,34 @@
  "starting_weapons": [
   "weapon_crowbar",
   "weapon_medkit"
- ]
+ ],
+ "restricted_classnames": {
+  "weapon_colt1911": [
+   "they_hunger"
+  ],
+  "weapon_th_taurus": [
+   "they_hunger"
+  ],
+  "weapon_sawedoff": [
+   "they_hunger"
+  ],
+  "weapon_greasegun": [
+   "they_hunger"
+  ],
+  "weapon_tommygun": [
+   "they_hunger"
+  ],
+  "weapon_m14": [
+   "they_hunger"
+  ],
+  "weapon_m16a1": [
+   "they_hunger"
+  ],
+  "weapon_teslagun": [
+   "they_hunger"
+  ],
+  "weapon_spanner": [
+   "they_hunger"
+  ]
+ }
 }

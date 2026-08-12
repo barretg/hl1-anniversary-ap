@@ -39,9 +39,15 @@ that have never run in-game at all.
 - **Weapons cross over.** This is the untested engine question: receive an
   Opposing Force weapon (displacer, sniper rifle, spore launcher) while standing
   in a Half-Life map and confirm it arrives, draws, and fires rather than erroring
-  or dropping the server. If a weapon does not exist outside its own campaign's
-  maps, the plugin will need to precache it at map start. Test the reverse too: a
-  crossbow or Tau cannon on `of1a1`, and a tommy gun in Black Mesa.
+  or dropping the server. Those classnames are all in `server.dll`, so the risk
+  is precaching rather than existence: models and sounds a Half-Life map never
+  loaded. Test the reverse too, a crossbow or Tau cannon on `of1a1`.
+- **They Hunger's weapons deliberately do not cross over.** Receive a tommy gun
+  or tesla gun while in Black Mesa: nothing should happen, no error, no crash.
+  Warp to a They Hunger episode and it should be in your hands on the next spawn.
+  Its arsenal is custom entities its own map scripts register, so asking for one
+  elsewhere would ask the engine to build something that does not exist. If one
+  *does* arrive on a Half-Life map, the `R` records are not being honoured.
 - **A finale ends its campaign, not the run.** Finish one campaign's last mission
   and confirm chat says that campaign is complete, the client logs how many are
   left, and the slot is **not** marked goal-complete. Only the last one should
@@ -63,6 +69,21 @@ With `random_starting_weapon: true` and Opposing Force or They Hunger enabled:
 - **Crowbars are refused.** Walk over one: the `First Crowbar` check still sends,
   the weapon is not kept. That is the point of the swap.
 - **The rolled weapon never arrives as an item**, because it left the pool.
+- With `allow_restricted_starting_weapon: true` and They Hunger enabled, the
+  spanner becomes possible. If it rolls, expect to be **empty-handed outside They
+  Hunger** until a weapon arrives: that is the documented rough edge, not a bug.
+  Check the medkit is still there.
+
+`!tracker`:
+
+- Prints to console grouped by mission and map, `[x]` for found. The chat line
+  reports the same totals.
+- Charger lines are absent entirely on a `chargesanity: false` seed, rather than
+  listed and permanently unticked. Same for a campaign left out.
+- `!tracker hl_c03` and `!tracker office` both narrow it; the totals at the
+  bottom stay for the whole seed.
+- Send a check and run it again: that location flips to `[x]` without a map
+  change, since the client rewrites the snapshot as soon as the check lands.
 - With only Half-Life or Blue Shift enabled it is always the crowbar, and the
   seed is indistinguishable from one with the option off.
 

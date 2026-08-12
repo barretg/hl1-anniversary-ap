@@ -182,6 +182,8 @@ class Bridge:
         ungated: list[str] | None = None,
         goals_open: list[str] | None = None,
         starting: list[str] | None = None,
+        checked: list[int] | None = None,
+        missing: list[int] | None = None,
         death_link_amnesty: int = 0,
         data_version: str = "",
         force: bool = False,
@@ -224,6 +226,13 @@ class Bridge:
             # Order is not sorted: it is the seed's list, and an empty one means
             # "use the file", not "start with nothing".
             "starting=" + ";".join(starting or ()),
+            # What `!tracker` prints. Both halves are sent because between them
+            # they say which locations this seed contains at all: an id in
+            # neither list was dropped by chargesanity or an excluded campaign,
+            # and the tracker leaves those out rather than showing a check the
+            # player can never make.
+            "checked=" + ",".join(str(i) for i in checked or ()),
+            "missing=" + ",".join(str(i) for i in missing or ()),
         ]
         body = "\n".join(lines)
         pending = tuple(sorted(self._pending))

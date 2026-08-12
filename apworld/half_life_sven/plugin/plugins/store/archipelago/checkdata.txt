@@ -7,6 +7,7 @@
 #   L|<id>|<map>|<type>|<arg>|<name>
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
+#   R|<classname>|<campaign,...>   grantable only on those campaigns' maps
 #   D|<data version>               must match the client's, or ids differ
 V|2
 D|2f192633545d
@@ -377,10 +378,9 @@ L|7720304|of5a1|weapon_pickup|weapon_sniperrifle|Opposing Force - First Sniper R
 L|7720305|of3a5|weapon_pickup|weapon_displacer|Opposing Force - First Displacer Cannon
 L|7720306|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force - First Spore Launcher
 L|7720307|of4a3|weapon_pickup|weapon_grapple|Opposing Force - First Barnacle Grapple
-L|7720308|of2a6|weapon_pickup|weapon_knife|Opposing Force - First Combat Knife
 L|7720309|of1a1|weapon_pickup|weapon_pipewrench|Opposing Force - First Pipe Wrench
 L|7720310|of2a4|weapon_pickup|weapon_minigun|Opposing Force - First Minigun
-L|7720311|of1a2|weapon_pickup|weapon_crowbar|Opposing Force - First Crowbar
+L|7720311|of1a2|weapon_pickup|weapon_crowbar|Opposing Force - First Combat Knife
 L|7720312|ba_yard3|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift - First Glock
 L|7720313|ba_yard1|weapon_pickup|weapon_357|Blue Shift - First .357 Magnum
 L|7720314|ba_power1|weapon_pickup|weapon_9mmAR,weapon_m16|Blue Shift - First MP5
@@ -391,8 +391,8 @@ L|7720318|ba_xen2|weapon_pickup|weapon_snark|Blue Shift - First Snarks
 L|7720319|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift - First Hand Grenade
 L|7720320|ba_canal1|weapon_pickup|weapon_crowbar|Blue Shift - First Crowbar
 L|7720321|th_ep1_02|weapon_pickup|weapon_357|They Hunger - First .357 Magnum
-L|7720322|th_ep1_03|weapon_pickup|weapon_handgrenade|They Hunger - First Hand Grenade
-L|7720323|th_ep1_01|weapon_pickup|weapon_pipewrench|They Hunger - First Pipe Wrench
+L|7720322|th_ep1_03|weapon_pickup|weapon_handgrenade|They Hunger - First TNT
+L|7720323|th_ep1_01|weapon_pickup|weapon_pipewrench|They Hunger - First Shovel
 L|7720324|th_ep1_01|weapon_pickup|weapon_colt1911|They Hunger - First Colt 1911
 L|7720325|th_ep3_00|weapon_pickup|weapon_th_taurus|They Hunger - First Taurus
 L|7720326|th_ep1_01|weapon_pickup|weapon_sawedoff|They Hunger - First Sawed-Off Shotgun
@@ -402,7 +402,7 @@ L|7720329|th_ep1_01|weapon_pickup|weapon_m14|They Hunger - First M14
 L|7720330|th_ep2_00|weapon_pickup|weapon_m16a1|They Hunger - First M16A1
 L|7720331|th_ep1_04|weapon_pickup|weapon_teslagun|They Hunger - First Tesla Gun
 L|7720332|th_ep2_00|weapon_pickup|weapon_spanner|They Hunger - First Spanner
-L|7720333|th_ep1_01|weapon_pickup|weapon_crowbar|They Hunger - First Crowbar
+L|7720333|th_ep1_01|weapon_pickup|weapon_crowbar|They Hunger - First Umbrella
 L|7720035|hl_c00|chapter_complete|black_mesa_inbound|Black Mesa Inbound - Complete
 L|7720036|hl_c01_a2|chapter_complete|anomalous_materials|Anomalous Materials - Complete
 L|7720037|hl_c02_a2|chapter_complete|unforeseen_consequences|Unforeseen Consequences - Complete
@@ -457,7 +457,6 @@ K|weapon_grapple|Barnacle Grapple
 K|weapon_greasegun|Grease Gun
 K|weapon_handgrenade|Hand Grenade
 K|weapon_hornetgun|Hivehand
-K|weapon_knife|Combat Knife
 K|weapon_m14|M14
 K|weapon_m16|MP5
 K|weapon_m16a1|M16A1
@@ -479,3 +478,12 @@ K|weapon_tommygun|Tommy Gun
 K|weapon_tripmine|Tripmine
 S|weapon_crowbar
 S|weapon_medkit
+R|weapon_colt1911|they_hunger
+R|weapon_greasegun|they_hunger
+R|weapon_m14|they_hunger
+R|weapon_m16a1|they_hunger
+R|weapon_sawedoff|they_hunger
+R|weapon_spanner|they_hunger
+R|weapon_teslagun|they_hunger
+R|weapon_th_taurus|they_hunger
+R|weapon_tommygun|they_hunger

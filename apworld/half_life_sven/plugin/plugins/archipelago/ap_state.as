@@ -142,6 +142,16 @@ bool g_bDataMismatch = false;
 dictionary g_CampaignNames;
 dictionary g_PortalConsoles;
 
+/*
+* classname -> comma-separated campaign keys it may be granted on.
+*
+* They Hunger's whole arsenal is custom entities its own map scripts register,
+* not weapons the game ships, so the classnames simply do not exist anywhere
+* else. Handing one over on a Half-Life map asks the engine to build something it
+* has never heard of. A weapon absent from this table travels anywhere.
+*/
+dictionary g_RestrictedClassnames;
+
 // classname -> AP item name; a pickup of this classname is refused until owned.
 dictionary g_LockedClassnames;
 /*
@@ -187,6 +197,18 @@ APState g_State;
 
 // Checks already sent this session, so a re-entered map does not spam the client.
 dictionary g_SentChecks;
+
+/*
+* What `!tracker` prints, as location id -> true.
+*
+* Both come from the client, which is the only side that knows: `g_SentChecks`
+* is this session's sending, not the run's progress, and it forgets everything on
+* a map change. A location in neither table is not in this seed at all --
+* chargesanity off, or a campaign left out -- and the tracker skips those rather
+* than listing a check nobody can make.
+*/
+dictionary g_CheckedLocations;
+dictionary g_MissingLocations;
 
 string g_szCurrentMap;
 APChapter@ g_CurrentChapter = null;
@@ -346,6 +368,7 @@ void LoadCheckData()
 	g_DefaultStartingWeapons.resize( 0 );
 	g_CampaignNames.deleteAll();
 	g_PortalConsoles.deleteAll();
+	g_RestrictedClassnames.deleteAll();
 
 	File@ pFile = g_FileSystem.OpenFile( AP_CHECKDATA, OpenFile::READ );
 
@@ -407,6 +430,10 @@ void LoadCheckData()
 		{
 			g_StartingWeapons.insertLast( parts[1] );
 			g_DefaultStartingWeapons.insertLast( parts[1] );
+		}
+		else if( parts[0] == "R" && parts.length() >= 3 )
+		{
+			g_RestrictedClassnames[ parts[1] ] = parts[2];
 		}
 		else if( parts[0] == "D" )
 		{

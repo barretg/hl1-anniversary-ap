@@ -35,6 +35,7 @@ POLL_INTERVAL = 0.2
 # here and are easy to forget between sessions.
 IN_GAME_COMMANDS = (
     ("!ap", "list every mission and its unlock status"),
+    ("!tracker [map]", "locations found and still out there, printed to console"),
     ("!warp <number>", "travel to an unlocked mission"),
     ("!hub", "return to the campaign portal"),
     ("!help", "show these commands in game"),
@@ -781,6 +782,8 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
                 excluded=sorted(ctx.excluded_chapters),
                 ungated=sorted(ctx.ungated_classnames),
                 starting=list(ctx.starting_weapons),
+                checked=sorted(ctx.checked_locations),
+                missing=sorted(ctx.missing_locations),
                 data_version=ctx.data_version,
                 force=True,
             )
@@ -815,6 +818,8 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         excluded=sorted(ctx.excluded_chapters),
         ungated=sorted(ctx.ungated_classnames),
         starting=list(ctx.starting_weapons),
+        checked=sorted(ctx.checked_locations),
+        missing=sorted(ctx.missing_locations),
         data_version=ctx.data_version,
     )
 

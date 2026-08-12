@@ -44,6 +44,7 @@ def render(campaign: dict) -> str:
         "#   L|<id>|<map>|<type>|<arg>|<name>",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
+        "#   R|<classname>|<campaign,...>   grantable only on those campaigns' maps",
         "#   D|<data version>               must match the client's, or ids differ",
         f"V|{FORMAT_VERSION}",
         f"D|{campaign['data_version']}",
@@ -108,6 +109,15 @@ def render(campaign: dict) -> str:
 
     for classname in STARTING_WEAPONS:
         lines.append(f"S|{classname}")
+
+    # Weapons a campaign's own map script defines rather than the game. Handing
+    # one over anywhere else asks the engine to build an entity it has never
+    # heard of, so the plugin holds it back until the player is somewhere it
+    # exists -- the loadout is reapplied on every spawn, so it lands by itself.
+    for classname, campaign_keys in sorted(
+        campaign.get("restricted_classnames", {}).items()
+    ):
+        lines.append(f"R|{classname}|{','.join(campaign_keys)}")
 
     return "\n".join(lines) + "\n"
 

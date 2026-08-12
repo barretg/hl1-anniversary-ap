@@ -142,6 +142,8 @@ void BridgePoll()
 	dictionary items;
 	dictionary ungated;
 	dictionary goalsOpen;
+	dictionary checked;
+	dictionary missing;
 	array<string> starting;
 	bool bGoalOpen = false;
 	bool bConnected = false;
@@ -219,6 +221,22 @@ void BridgePoll()
 					ungated[ szClassname ] = true;
 			}
 		}
+		else if( szKey == "checked" || szKey == "missing" )
+		{
+			// Location ids, comma separated. Kept as strings: they are only ever
+			// looked up by the tracker, never compared as numbers.
+			array<string>@ ids = szValue.Split( "," );
+			for( uint i = 0; i < ids.length(); ++i )
+			{
+				string szId = APTrim( ids[i] );
+				if( szId.Length() == 0 )
+					continue;
+				if( szKey == "checked" )
+					checked[ szId ] = true;
+				else
+					missing[ szId ] = true;
+			}
+		}
 		else if( szKey == "starting" )
 		{
 			array<string>@ names = szValue.Split( ";" );
@@ -271,6 +289,9 @@ void BridgePoll()
 		g_StartingWeapons = starting;
 	else
 		g_StartingWeapons = g_DefaultStartingWeapons;
+
+	g_CheckedLocations = checked;
+	g_MissingLocations = missing;
 
 	g_State.goalsOpen = goalsOpen;
 	g_State.goalOpen = bGoalOpen;

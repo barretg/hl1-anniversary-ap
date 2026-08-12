@@ -70,10 +70,15 @@ Everything else is filler: ammo caches, medkits and armour batteries.
 
 Half-Life brings 13 weapons (Glock, .357, MP5, shotgun, crossbow, RPG, Tau
 cannon, gluon gun, hivehand, satchel charges, tripmines, snarks, hand grenades).
-Opposing Force adds nine more: the desert eagle, SAW, sniper rifle, displacer,
-spore launcher, barnacle grapple, combat knife, pipe wrench and minigun. They
-Hunger adds nine of its own, from the Colt 1911 and tommy gun to the tesla gun.
-Blue Shift adds none — in Sven Co-op it uses Half-Life's, down to the crowbar.
+Opposing Force adds eight more: the desert eagle, SAW, sniper rifle, displacer,
+spore launcher, barnacle grapple, pipe wrench and minigun. They Hunger adds nine
+of its own, from the Colt 1911 and tommy gun to the tesla gun. Blue Shift adds
+none — in Sven Co-op it uses Half-Life's, down to the crowbar.
+
+They Hunger's are the one set that cannot travel. They are custom entities its
+own maps register rather than weapons the game ships, so they exist only while
+you are playing They Hunger: receive one elsewhere and it is handed to you the
+moment you arrive in an episode.
 
 `trap_percentage` turns some of that filler into traps. There are three. Like
 DeathLink, they are the whole lobby's problem rather than one player's, and all

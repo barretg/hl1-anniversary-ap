@@ -22,6 +22,35 @@ bool ClassnameUngated( const string& in szClassname )
 	return g_UngatedClassnames.exists( szClassname );
 }
 
+/*
+* Can this classname be handed over on the map we are on?
+*
+* False only for a weapon another campaign's map script owns. They Hunger's
+* arsenal is custom entities registered by `scripts/maps/hunger/weapons/`, so
+* asking for a tommy gun in Black Mesa asks the engine to build an entity that
+* does not exist there. The item is not lost: the loadout is reapplied on every
+* spawn and every map change, so it lands the moment the player is somewhere the
+* weapon is real.
+*/
+bool ClassnameGrantableHere( const string& in szClassname )
+{
+	string szCampaigns;
+	if( !g_RestrictedClassnames.get( szClassname, szCampaigns ) )
+		return true;  // travels anywhere
+
+	if( g_CurrentChapter is null )
+		return false;
+
+	array<string>@ keys = szCampaigns.Split( "," );
+	for( uint i = 0; i < keys.length(); ++i )
+	{
+		if( APTrim( keys[i] ) == g_CurrentChapter.campaign )
+			return true;
+	}
+
+	return false;
+}
+
 /* Is this classname allowed in a player's hands right now? */
 bool ClassnameAllowed( const string& in szClassname )
 {
@@ -182,6 +211,11 @@ void ApplyLoadout( CBasePlayer@ pPlayer )
 
 		// Not an inventory item; SetLongJump above has already dealt with it.
 		if( szClassname == LONGJUMP_CLASSNAME )
+			continue;
+
+		// Owned, but not a thing this map knows how to build. See
+		// ClassnameGrantableHere.
+		if( !ClassnameGrantableHere( szClassname ) )
 			continue;
 
 		// Butterfingers put this on the floor on purpose. Handing it back one

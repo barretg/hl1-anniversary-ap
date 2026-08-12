@@ -443,3 +443,94 @@ def test_shared_weapons_are_available_in_every_campaign_holding_them(
     assert by_name["Displacer Cannon"]["campaigns"] == ["opposing_force"]
     # They Hunger carries Opposing Force's wrench, so it needs that item too.
     assert "they_hunger" in by_name["Pipe Wrench"]["campaigns"]
+
+
+def test_script_registered_weapons_are_restricted_to_their_campaign(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """They Hunger's arsenal only exists while its own map script is running.
+
+    Its weapons are custom entities registered by `scripts/maps/hunger/weapons/`
+    rather than weapons the game ships, so `GiveNamedItem` on any other
+    campaign's map has nothing to build. Every one of them must carry a rule
+    saying where it may be handed over.
+    """
+    restricted = {r[1]: r[2].split(",") for r in checkdata if r[0] == "R"}
+    assert restricted, "no restrictions emitted"
+
+    hunger_classnames = {
+        classname
+        for entry in campaign["items"]
+        if entry.get("group") == "weapon" and entry.get("campaign") == "they_hunger"
+        for classname in entry["classnames"]
+    }
+    assert hunger_classnames <= set(restricted)
+    for classname in hunger_classnames:
+        assert restricted[classname] == ["they_hunger"], classname
+
+
+def test_restricted_weapons_are_absent_from_every_logic_group(campaign: dict) -> None:
+    """A weapon you cannot carry into a mission cannot satisfy its gate.
+
+    Counting a tommy gun as "you have a gun" would let strict logic expect you to
+    enter We've Got Hostiles holding something the engine will not give you there.
+    """
+    restricted = set(campaign["restricted_classnames"])
+    grouped = {
+        name for names in campaign["requirement_groups"].values() for name in names
+    }
+
+    for entry in campaign["items"]:
+        if entry.get("group") != "weapon":
+            continue
+        if set(entry["classnames"]) & restricted:
+            assert entry["name"] not in grouped, entry["name"]
+
+
+def test_a_script_registered_melee_starter_belongs_to_its_own_campaign(
+    campaign: dict,
+) -> None:
+    """They Hunger may open you with its spanner; nobody else may.
+
+    A script-registered weapon does not exist outside its own maps, so starting
+    with one means empty hands everywhere else. That is accepted for the campaign
+    that owns the weapon -- it is only reachable when that campaign is in the
+    seed -- but offering it from anywhere else would be a plain bug.
+    """
+    restricted = campaign["restricted_classnames"]
+
+    for entry in campaign["campaigns"]:
+        for name, classnames in entry["melee"].items():
+            for classname in classnames:
+                if classname in restricted:
+                    assert restricted[classname] == [entry["key"]], f"{entry['key']}: {name}"
+
+
+def test_every_campaign_can_open_with_a_weapon_that_works_everywhere(
+    campaign: dict,
+) -> None:
+    """However the roll goes, a seed must be able to arm you across all of it."""
+    restricted = set(campaign["restricted_classnames"])
+
+    for entry in campaign["campaigns"]:
+        portable = [
+            name for name, classnames in entry["melee"].items()
+            if not set(classnames) & restricted
+        ]
+        assert portable, entry["key"]
+
+
+def test_no_item_or_check_exists_for_a_weapon_the_game_lacks(campaign: dict) -> None:
+    """`weapon_knife` is placed in Opposing Force's maps but does not exist.
+
+    It is in neither server.dll nor any map script in this build, so those
+    entities never spawn. An item for it could never be granted and a check for it
+    could never fire, which is exactly where fill would hide progression.
+    """
+    absent = "weapon_knife"
+
+    for entry in campaign["items"]:
+        assert absent not in entry.get("classnames", ()), entry["name"]
+
+    for entry in campaign["locations"]:
+        assert absent not in entry["trigger"].get("classnames", ()), entry["name"]

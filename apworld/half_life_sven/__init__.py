@@ -240,7 +240,10 @@ class HalfLifeSvenWorld(World):
         stops being a starting weapon it is refused like any other ungranted
         weapon, and a wrench start means a wrench for the whole run.
         """
-        candidates = melee_starters_for(self.included_campaigns)
+        candidates = melee_starters_for(
+            self.included_campaigns,
+            allow_restricted=bool(self.options.allow_restricted_starting_weapon),
+        )
         if not self.options.random_starting_weapon or not candidates:
             self.starting_weapons = list(STARTING_WEAPONS)
             return

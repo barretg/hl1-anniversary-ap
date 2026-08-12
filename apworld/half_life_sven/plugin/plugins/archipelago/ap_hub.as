@@ -21,6 +21,7 @@ void ShowHelp( CBasePlayer@ pPlayer )
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"[AP] Commands:\n"
 		"  !ap            list missions and what is unlocked\n"
+		"  !tracker [map] locations found and still out there, to console\n"
 		"  !warp <number> travel to an unlocked mission\n"
 		"  !hub           return to the campaign portal\n"
 		"  !help          this list\n"
@@ -74,6 +75,121 @@ void ShowStatus( CBasePlayer@ pPlayer )
 		"Mission 0 has no console in the portal room; !warp 0 is the only way there.\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"[AP] Mission list printed to your console (~).\n" );
+}
+
+/*
+* `!tracker` -- every location in the seed, by map, found or not.
+*
+* Printed to console rather than chat: it is a couple of hundred lines on a full
+* seed, and chat holds five. A location the seed does not contain is skipped
+* entirely, so chargesanity off means no charger lines rather than two hundred
+* that can never be ticked.
+*
+* Optionally filtered: `!tracker hl_c03` for one map, `!tracker office` for
+* anything whose mission or map name contains that.
+*/
+void ShowTracker( CBasePlayer@ pPlayer, const string& in szFilter )
+{
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+		"\n=== Archipelago: location tracker ===\n" );
+
+	if( g_CheckedLocations.getSize() == 0 && g_MissingLocations.getSize() == 0 )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+			"No location data yet -- is the client connected?\n" );
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] No location data yet; check the client.\n" );
+		return;
+	}
+
+	string szWanted = szFilter;
+	szWanted.ToLowercase();
+
+	uint uiFound = 0;
+	uint uiTotal = 0;
+	uint uiShown = 0;
+
+	for( uint iChapter = 0; iChapter < g_Chapters.length(); ++iChapter )
+	{
+		APChapter@ pChapter = g_Chapters[iChapter];
+		if( g_State.ChapterExcluded( pChapter.key ) )
+			continue;
+
+		for( uint iMap = 0; iMap < pChapter.maps.length(); ++iMap )
+		{
+			string szMap = pChapter.maps[iMap];
+
+			// Gather this map's locations first: a map with nothing in the seed
+			// should not print a heading at all.
+			array<APLocation@> onMap;
+			for( uint i = 0; i < g_Locations.length(); ++i )
+			{
+				APLocation@ pLocation = g_Locations[i];
+				if( pLocation.map != szMap )
+					continue;
+
+				string szId = "" + pLocation.id;
+				if( !g_CheckedLocations.exists( szId ) && !g_MissingLocations.exists( szId ) )
+					continue;  // not in this seed
+
+				onMap.insertLast( pLocation );
+			}
+
+			if( onMap.length() == 0 )
+				continue;
+
+			uint uiMapFound = 0;
+			for( uint i = 0; i < onMap.length(); ++i )
+			{
+				string szId = "" + onMap[i].id;
+				if( g_CheckedLocations.exists( szId ) )
+					++uiMapFound;
+			}
+
+			uiFound += uiMapFound;
+			uiTotal += onMap.length();
+
+			if( szWanted.Length() > 0 )
+			{
+				string szMapLower = szMap;
+				szMapLower.ToLowercase();
+				string szChapterLower = pChapter.name;
+				szChapterLower.ToLowercase();
+				// Find returns String::INVALID_INDEX rather than -1, and it is
+				// unsigned -- so it is taken as an int the way the rest of this
+				// file does, where a miss reads as negative.
+				int iInMap = szMapLower.Find( szWanted );
+				int iInChapter = szChapterLower.Find( szWanted );
+				if( iInMap < 0 && iInChapter < 0 )
+					continue;
+			}
+
+			++uiShown;
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+				"\n" + pChapter.name + " -- " + szMap
+				+ "  (" + uiMapFound + "/" + onMap.length() + ")\n" );
+
+			for( uint i = 0; i < onMap.length(); ++i )
+			{
+				string szId = "" + onMap[i].id;
+				string szMark = g_CheckedLocations.exists( szId ) ? "[x] " : "[ ] ";
+				g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+					"    " + szMark + onMap[i].name + "\n" );
+			}
+		}
+	}
+
+	if( uiShown == 0 && szWanted.Length() > 0 )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+			"Nothing matches \"" + szFilter + "\".\n" );
+	}
+
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+		"\nFound " + uiFound + " of " + uiTotal + " locations in this seed.\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] Tracker printed to your console (~): "
+		+ uiFound + "/" + uiTotal + " found.\n" );
 }
 
 void WarpToChapter( CBasePlayer@ pPlayer, int iIndex )
@@ -376,6 +492,16 @@ HookReturnCode ClientSay( SayParameters@ pParams )
 	{
 		pParams.ShouldHide = true;
 		ShowStatus( pPlayer );
+		return HOOK_HANDLED;
+	}
+
+	if( szCommand == "!tracker" )
+	{
+		pParams.ShouldHide = true;
+		string szFilter;
+		if( pArguments.ArgC() >= 2 )
+			szFilter = pArguments[1];
+		ShowTracker( pPlayer, szFilter );
 		return HOOK_HANDLED;
 	}
 

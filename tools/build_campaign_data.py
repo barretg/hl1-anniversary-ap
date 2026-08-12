@@ -35,6 +35,8 @@ from campaign_layout import (
     NOTABLE_MONSTERS,
     OPTIONAL_ITEMS,
     REQUIREMENT_GROUPS,
+    RESTRICTED_CLASSNAMES,
+    WEAPON_ALIASES,
     UNRANDOMISED_WEAPON_LOCATIONS,
     STARTING_WEAPONS,
     WEAPON_CAMPAIGN,
@@ -399,13 +401,17 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 if anchor is None:
                     continue  # not placed in this campaign; the check could never fire
                 chapter, map_name = anchor
+                # What this campaign actually puts in the player's hands. They
+                # Hunger reskins the pipe wrench into a shovel, and a check named
+                # after a wrench sends people looking for the wrong thing.
+                shown = WEAPON_ALIASES.get(campaign.key, {}).get(item_name, item_name)
                 # Half-Life's names predate the other campaigns and stay as they
                 # were; the rest say which campaign they belong to, since "First
                 # Shotgun" now exists in more than one.
                 label = (
-                    f"First {item_name}"
+                    f"First {shown}"
                     if campaign.key == DEFAULT_CAMPAIGN
-                    else f"{campaign.name} - First {item_name}"
+                    else f"{campaign.name} - First {shown}"
                 )
                 builder.add(
                     chapter,
@@ -469,6 +475,9 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         "locations": builder.locations,
         "requirement_groups": REQUIREMENT_GROUPS,
         "starting_weapons": STARTING_WEAPONS,
+        # Classnames that only exist while their own campaign's map script is
+        # running, so they can never be handed over anywhere else.
+        "restricted_classnames": RESTRICTED_CLASSNAMES,
     }
 
 

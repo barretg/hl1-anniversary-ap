@@ -137,6 +137,14 @@ Reporting the module as owned instead granted it from the first spawn of the run
 An older client sends no `ungated` line, which parses as an empty list and
 reproduces the previous behaviour exactly.
 
+`checked` and `missing` are location ids, and they are what `!tracker` prints.
+Both are sent because between them they say which locations the seed contains at
+all: an id in neither list was dropped by `chargesanity` or by a campaign left
+out, and the tracker skips those rather than showing a check nobody can make.
+They are the client's own `checked_locations` and `missing_locations`, so the
+plugin never has to infer progress from the checks it happens to have sent this
+session.
+
 `starting` is the classnames the run opens with and the plugin must never take
 away, which `random_starting_weapon` turns into a per-seed answer: the melee half
 can be a pipe wrench or a spanner rather than the crowbar. It overrides the `S`
@@ -188,7 +196,17 @@ Pipe-delimited so AngelScript can parse it with a single `string.Split("|")`.
 | `L` | id, map, trigger type, trigger arg, name |
 | | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79`; `weapon_pickup` carries the comma-separated classnames |
 | `K` | classname, item name — pickup refused until that item is held |
-| `S` | classname always granted (the crowbar and the medkit) |
+| `S` | classname always granted (the crowbar and the medkit), the default a snapshot's `starting` may override |
+| `R` | classname, comma-separated campaigns whose maps it may be granted on |
+
+`R` exists because They Hunger's weapons are not weapons Sven Co-op ships. Its
+spanner, tommy gun, tesla gun and the rest are custom entities registered by
+`scripts/maps/hunger/weapons/`, so the classnames only exist while one of its
+maps is running and `GiveNamedItem` anywhere else has nothing to build. The
+plugin holds such an item back rather than dropping it: the loadout is reapplied
+on every spawn and map change, so it lands the moment the player is somewhere the
+weapon is real. Half-Life's and Opposing Force's weapons are all in `server.dll`
+and carry no `R` record.
 
 Every `L` record carries a map, but `weapon_pickup` is the one type the plugin
 does **not** filter by it: that field is only where the apworld anchors the

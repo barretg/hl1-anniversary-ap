@@ -195,6 +195,26 @@ class RandomStartingWeapon(Toggle):
     display_name = "Random Starting Weapon"
 
 
+class AllowRestrictedStartingWeapon(Toggle):
+    """Let `random_starting_weapon` also roll a campaign's own melee weapon.
+
+    Today that means exactly one thing: They Hunger's spanner, and only when They
+    Hunger is in the seed. It is a weapon its maps register themselves rather
+    than one the game ships, so it does not exist anywhere else -- start with it
+    and you are empty-handed in every other campaign until a real weapon arrives.
+
+    Logic does not model that. Anything past the point you would have picked up
+    your first melee weapon is technically out of logic until you are given
+    something, so this is off unless you want the rough edge.
+
+    Nothing to do with the umbrella, the shovel or the combat knife: those are
+    Half-Life's crowbar and pipe wrench wearing local models, and they travel
+    everywhere.
+    """
+
+    display_name = "Allow Restricted Starting Weapon"
+
+
 class ShuffleHevSuit(Toggle):
     """Shuffle the HEV suit into the item pool.
 
@@ -275,6 +295,7 @@ class HalfLifeSvenOptions(PerGameCommonOptions):
     include_black_mesa_inbound: IncludeBlackMesaInbound
     chargesanity: Chargesanity
     random_starting_weapon: RandomStartingWeapon
+    allow_restricted_starting_weapon: AllowRestrictedStartingWeapon
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
     trap_percentage: TrapPercentage

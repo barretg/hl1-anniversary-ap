@@ -71,11 +71,25 @@ FIXED_STARTING_WEAPONS: list[str] = [
 ]
 
 
-def melee_starters_for(campaign_keys: list[str]) -> dict[str, list[str]]:
-    """Every melee weapon the campaigns in a seed could start you with."""
+# Classnames that only exist while their own campaign's map script is running.
+RESTRICTED_CLASSNAMES: dict[str, list[str]] = CAMPAIGN.get("restricted_classnames", {})
+
+
+def melee_starters_for(
+    campaign_keys: list[str], allow_restricted: bool = False
+) -> dict[str, list[str]]:
+    """Every melee weapon the campaigns in a seed could start you with.
+
+    `allow_restricted` lets in weapons that exist only on their own campaign's
+    maps -- They Hunger's spanner, and nothing else today. Off by default,
+    because starting with one means empty hands everywhere else.
+    """
     starters: dict[str, list[str]] = {}
     for key in campaign_keys:
-        starters.update(MELEE_STARTERS.get(key, {}))
+        for name, classnames in MELEE_STARTERS.get(key, {}).items():
+            if not allow_restricted and any(c in RESTRICTED_CLASSNAMES for c in classnames):
+                continue
+            starters[name] = classnames
     return starters
 
 # Each campaign's own `missions_required`. Independent settings, so a seed with

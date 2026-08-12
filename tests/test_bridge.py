@@ -400,3 +400,19 @@ def test_is_game_dir_rejects_empty_input(value) -> None:
 
 def test_is_game_dir_rejects_unrelated_folder(tmp_path: Path) -> None:
     assert not is_game_dir(tmp_path)
+
+
+def test_snapshot_carries_the_tracker_location_sets(bridge: Bridge) -> None:
+    """`!tracker` needs both: between them they say what is in the seed at all."""
+    snapshot(bridge)
+    text = bridge.in_path.read_text(encoding="utf-8")
+    assert "checked=\n" in text
+    assert "missing=\n" in text
+
+    assert snapshot(bridge, checked=[7720001, 7720002], missing=[7720003]) is True
+    text = bridge.in_path.read_text(encoding="utf-8")
+    assert "checked=7720001,7720002" in text
+    assert "missing=7720003" in text
+
+    # A check landing has to reach the game, so this counts as a change.
+    assert snapshot(bridge, checked=[7720001, 7720002, 7720003], missing=[]) is True
