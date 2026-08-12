@@ -128,4 +128,6 @@ The AngelScript plugin has been tested in-game but requires further stress testi
 gives an ordered in-game checklist that calls out the two assumptions most likely
 to need adjusting.
 
+## AI Usage Disclosure
 
+Claude Code was used in the production of this apworld and client integrated into the IDE. No images/assets or other such content were created with generative AI. This apworld is fully human designed with no creative design input from generative AI. 
