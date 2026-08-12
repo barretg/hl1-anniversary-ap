@@ -25,30 +25,57 @@ const int SCIENTIST_VARIANTS = 4;
 // lift shaft is not a lost item.
 const float BUTTERFINGERS_SECONDS = 30.0f;
 
-// "<player entindex>|<classname>" -> g_Engine.time when the sweep may hand it
-// back. Checked by ApplyLoadout, which would otherwise re-grant within a second
-// and make the whole trap a flicker.
-dictionary g_flWeaponWithheldUntil;
+// How long before the dropped weapon can be picked back up. Without this the
+// player is standing on it and collects it again the same tick, and the trap is
+// a flicker of the HUD.
+const float BUTTERFINGERS_GRACE = 2.0f;
 
-string WithheldKey( CBasePlayer@ pPlayer, const string& in szClassname )
+// How hard it is thrown, and how much of that is upward. Enough to land a stride
+// or two away rather than at the player's feet.
+const float BUTTERFINGERS_THROW = 250.0f;
+const float BUTTERFINGERS_LIFT = 150.0f;
+
+// "<player entindex>|<classname>" -> g_Engine.time it hit the floor. Two windows
+// hang off it: the grace period, and the far longer one during which the loadout
+// sweep must leave the weapon where it landed.
+dictionary g_flWeaponDroppedAt;
+
+string DroppedKey( CBasePlayer@ pPlayer, const string& in szClassname )
 {
 	return "" + pPlayer.entindex() + "|" + szClassname;
 }
 
-/* Is this weapon currently on the floor because a trap put it there? */
+float SecondsSinceDropped( CBasePlayer@ pPlayer, const string& in szClassname )
+{
+	float flWhen = 0.0f;
+	if( !g_flWeaponDroppedAt.get( DroppedKey( pPlayer, szClassname ), flWhen ) )
+		return -1.0f;
+
+	return g_Engine.time - flWhen;
+}
+
+/* Is this weapon on the floor because a trap put it there? */
 bool WeaponWithheld( CBasePlayer@ pPlayer, const string& in szClassname )
 {
-	float flUntil = 0.0f;
-	if( !g_flWeaponWithheldUntil.get( WithheldKey( pPlayer, szClassname ), flUntil ) )
+	float flAge = SecondsSinceDropped( pPlayer, szClassname );
+
+	if( flAge < 0.0f )
 		return false;
 
-	if( g_Engine.time >= flUntil )
+	if( flAge >= BUTTERFINGERS_SECONDS )
 	{
-		g_flWeaponWithheldUntil.delete( WithheldKey( pPlayer, szClassname ) );
+		g_flWeaponDroppedAt.delete( DroppedKey( pPlayer, szClassname ) );
 		return false;
 	}
 
 	return true;
+}
+
+/* Too soon to pick it straight back up? */
+bool WeaponJustDropped( CBasePlayer@ pPlayer, const string& in szClassname )
+{
+	float flAge = SecondsSinceDropped( pPlayer, szClassname );
+	return flAge >= 0.0f && flAge < BUTTERFINGERS_GRACE;
 }
 
 /*
@@ -62,7 +89,7 @@ bool WeaponWithheld( CBasePlayer@ pPlayer, const string& in szClassname )
 */
 void ClearWithheldWeapons()
 {
-	g_flWeaponWithheldUntil.deleteAll();
+	g_flWeaponDroppedAt.deleteAll();
 }
 
 /*
@@ -78,12 +105,12 @@ void ClearWithheldWeapons( CBasePlayer@ pPlayer )
 		return;
 
 	string szPrefix = "" + pPlayer.entindex() + "|";
-	array<string>@ keys = g_flWeaponWithheldUntil.getKeys();
+	array<string>@ keys = g_flWeaponDroppedAt.getKeys();
 
 	for( uint i = 0; i < keys.length(); ++i )
 	{
 		if( keys[i].SubString( 0, szPrefix.Length() ) == szPrefix )
-			g_flWeaponWithheldUntil.delete( keys[i] );
+			g_flWeaponDroppedAt.delete( keys[i] );
 	}
 }
 
@@ -200,10 +227,21 @@ void Butterfingers()
 
 		// Booked before the drop: the loadout sweep runs every second and would
 		// put it straight back in their hands.
-		g_flWeaponWithheldUntil[ WithheldKey( pPlayer, szClassname ) ] =
-			g_Engine.time + BUTTERFINGERS_SECONDS;
+		g_flWeaponDroppedAt[ DroppedKey( pPlayer, szClassname ) ] = g_Engine.time;
 
-		pPlayer.DropPlayerItem( szClassname );
+		// DropItem with no position throws the held weapon the way the engine's
+		// own drop does. It is `DropItem`, not `DropPlayerItem` -- the latter is
+		// the C++ name and is not bound to script.
+		CBaseEntity@ pDropped = pPlayer.DropItem( szClassname );
+
+		if( pDropped is null )
+		{
+			// Some weapons refuse to be dropped. Do not leave a booking behind
+			// that would stop the sweep reissuing something they still hold.
+			g_flWeaponDroppedAt.delete( DroppedKey( pPlayer, szClassname ) );
+			continue;
+		}
+
 		++iDropped;
 	}
 

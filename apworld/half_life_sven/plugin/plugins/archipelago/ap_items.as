@@ -10,6 +10,47 @@
 *      game_player_equip, monster drops) is caught by a periodic sweep.
 */
 
+/*
+* Precache everything the plugin can put into the world, at map load.
+*
+* This is not an optimisation, it is a correctness requirement. GoldSrc hands
+* each client the server's model and sound index tables when they connect;
+* precaching after that appends to those tables, and the client is left
+* resolving indices against a stale copy. What that sounds like is every sound
+* in the game being the wrong one. The host never notices, because on a listen
+* server the client *is* the server, and neither does a solo player.
+*
+* Granting a weapon the current map does not contain is the entire premise of
+* this randomiser -- a shotgun in Anomalous Materials, which has no weapons at
+* all -- so every gated classname has to be precached on every map whether the
+* map has one or not. Same for the monsters the traps spawn with CreateEntity.
+*
+* MapInit is the only safe window: g_Game.PrecacheModel refuses to run outside
+* it, and anything later is the bug this exists to prevent.
+*/
+void PrecacheGrantables()
+{
+	if( !CheckDataLoaded() )
+	{
+		APLog( "precache skipped: checkdata.txt is not loaded" );
+		return;
+	}
+
+	array<string>@ classnames = g_LockedClassnames.getKeys();
+
+	for( uint i = 0; i < classnames.length(); ++i )
+		g_Game.PrecacheOther( classnames[i] );
+
+	for( uint i = 0; i < g_StartingWeapons.length(); ++i )
+		g_Game.PrecacheOther( g_StartingWeapons[i] );
+
+	g_Game.PrecacheMonster( "monster_scientist", true );
+	g_Game.PrecacheMonster( "monster_headcrab", false );
+
+	APLog( "precached " + ( classnames.length() + g_StartingWeapons.length() )
+	       + " grantable classnames and 2 trap monsters" );
+}
+
 /* Is this classname allowed in a player's hands right now? */
 bool ClassnameAllowed( const string& in szClassname )
 {
@@ -301,6 +342,14 @@ HookReturnCode PickupCanCollect( CBaseEntity@ pPickup, CBaseEntity@ pOther, bool
 	// Walking over the weapon is what sends the check, whether or not the player
 	// is allowed to keep it -- that is the whole point of the randomiser.
 	RegisterPickupCheck( szClassname );
+
+	// Butterfingers just threw this out of their hands and they are standing on
+	// it. Without a moment's grace they collect it again the same tick.
+	if( WeaponJustDropped( pPlayer, szClassname ) )
+	{
+		bResult = false;
+		return HOOK_HANDLED;
+	}
 
 	if( ClassnameAllowed( szClassname ) )
 	{

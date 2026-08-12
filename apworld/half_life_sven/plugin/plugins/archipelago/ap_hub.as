@@ -391,7 +391,9 @@ void RelayChat( CBasePlayer@ pPlayer, const CCommand@ pArguments )
 {
 	string szMessage;
 
-	for( uint i = 0; i < pArguments.ArgC(); ++i )
+	// ArgC() is signed and the index is not, which the compiler warns about on
+	// every build unless the comparison is made explicit.
+	for( uint i = 0; i < uint( pArguments.ArgC() ); ++i )
 	{
 		if( i > 0 )
 			szMessage += " ";
