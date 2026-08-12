@@ -16,6 +16,7 @@
   * Now lets you warp back to individual maps you've reached within a chapter so you don't always have to start at the beginning
 * Console variants of all commands using `.ap` or `.ap_<cmd>`
 * Updated weapon locations and added locations for HEV Suit pickups in all campaigns that have an HEV Suit equivalent
+* Universal Tracker integration
 
 ## Known Issues
 * General instability: expect some crashing or other random issues

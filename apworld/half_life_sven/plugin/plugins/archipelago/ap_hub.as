@@ -29,7 +29,7 @@ void ShowHelp( CBasePlayer@ pPlayer )
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"  !find [text]  point at the nearest check, or one you name\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-		"  !warp <number>  travel to an unlocked mission\n" );
+		"  !warp <number or name>  travel to a mission, or \"name 2\" for a part\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"  !hub  return to the campaign portal\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
@@ -61,6 +61,13 @@ void ShowStatus( CBasePlayer@ pPlayer )
 
 		if( g_State.ChapterExcluded( pChapter.key ) )
 			szStatus = "not in this seed";
+		// Said instead of "unlocked", and instead of a finale's seal, rather than
+		// alongside either: having got into a mission is implied by having
+		// emptied it, and the list is read to find where there is still something
+		// left. A mission with nothing left in it is done with whether or not its
+		// own door is still open.
+		else if( ChapterAllFound( pChapter ) )
+			szStatus = "complete";
 		else if( pChapter.isGoal )
 		{
 			if( g_State.GoalOpen( pChapter.key ) )
@@ -102,7 +109,7 @@ void ShowStatus( CBasePlayer@ pPlayer )
 
 	// One line per call: the print buffer is 128 bytes and silently truncates.
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
-		"Type !warp <number> to travel to an unlocked mission.\n" );
+		"Travel with !warp <number or name>, or !warp <name> <part>.\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
 		"Mission 0 has no console in the portal room; !warp 0 is the only way there.\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
@@ -238,6 +245,54 @@ bool LocationInSeed( APLocation@ pLocation )
 bool LocationFound( APLocation@ pLocation )
 {
 	return g_CheckedLocations.exists( "" + pLocation.id );
+}
+
+/* Does this mission own that map? */
+bool ChapterHasMap( APChapter@ pChapter, const string& in szMap )
+{
+	for( uint i = 0; i < pChapter.maps.length(); ++i )
+	{
+		if( pChapter.maps[i] == szMap )
+			return true;
+	}
+
+	return false;
+}
+
+/*
+* Every location this mission has in this seed, already checked.
+*
+* False when it has none at all, which is both a mission excluded from the seed
+* and the state before the client has told us anything -- neither of which is
+* "nothing left to find here", however much the arithmetic agrees.
+*
+* Membership is by map rather than by a chapter field, because a location only
+* knows the map it is on. That is the same rule the mission's own maps list uses,
+* so a location cannot end up filed under a mission that does not own its map.
+*/
+bool ChapterAllFound( APChapter@ pChapter )
+{
+	if( pChapter is null )
+		return false;
+
+	uint uiInSeed = 0;
+
+	for( uint i = 0; i < g_Locations.length(); ++i )
+	{
+		APLocation@ pLocation = g_Locations[i];
+
+		if( !ChapterHasMap( pChapter, pLocation.map ) )
+			continue;
+		if( !LocationInSeed( pLocation ) )
+			continue;
+
+		if( !LocationFound( pLocation ) )
+			return false;
+
+		++uiInSeed;
+	}
+
+	return uiInSeed > 0;
 }
 
 /*
@@ -534,6 +589,141 @@ void FindLocation( CBasePlayer@ pPlayer, const string& in szQuery )
 	}
 }
 
+/* Digits, and at least one of them. */
+bool IsNumeric( const string& in szText )
+{
+	if( szText.Length() == 0 )
+		return false;
+
+	for( uint i = 0; i < szText.Length(); ++i )
+	{
+		string szChar = szText.SubString( i, 1 );
+		if( szChar < "0" || szChar > "9" )
+			return false;
+	}
+
+	return true;
+}
+
+/*
+* Index of the last space in a string, or -1.
+*
+* Written out rather than calling `RFind( " " )`, which is what broke
+* `!warp Insecurity 2`: it never found the space, so the part number stayed glued
+* to the name, nothing matched "insecurity 2", and the only way back to a part
+* you had already played was typing `ba_security2`. Its default start index is
+* String::INVALID_INDEX, and a reverse search beginning past the end of the
+* string finds nothing at all. A loop cannot be wrong about this.
+*/
+int LastSpace( const string& in szText )
+{
+	for( uint i = szText.Length(); i > 0; --i )
+	{
+		if( szText.SubString( i - 1, 1 ) == " " )
+			return int( i ) - 1;
+	}
+
+	return -1;
+}
+
+/*
+* Pull a trailing part number off a query.
+*
+* Returns the part (1-based, 0 for none) and writes what is left to `szName`.
+* Accepts the three ways people write it -- `insecurity 2`, `insecurity part 2`,
+* `insecurity p2` -- because all three are what someone types when the mission
+* list says "Part 2" and they want to go there.
+*
+* Anything else leaves the query alone, so a mission with a number in its name is
+* still reachable by name.
+*/
+int SplitPartSuffix( const string& in szQuery, string& out szName )
+{
+	szName = szQuery;
+
+	int iSplit = LastSpace( szQuery );
+	if( iSplit <= 0 )
+		return 0;
+
+	string szTail = szQuery.SubString( uint( iSplit ) + 1,
+	                                   szQuery.Length() - uint( iSplit ) - 1 );
+	int iPart = 0;
+
+	if( IsNumeric( szTail ) )
+	{
+		iPart = atoi( szTail );
+	}
+	else if( szTail.Length() > 1 && szTail.SubString( 0, 1 ) == "p"
+	         && IsNumeric( szTail.SubString( 1, szTail.Length() - 1 ) ) )
+	{
+		iPart = atoi( szTail.SubString( 1, szTail.Length() - 1 ) );
+	}
+	else
+	{
+		return 0;
+	}
+
+	if( iPart <= 0 )
+		return 0;
+
+	string szHead = APTrim( szQuery.SubString( 0, uint( iSplit ) ) );
+
+	// `insecurity part 2`: the number is off, now take the word that introduced
+	// it. Only when something is left over -- `!warp part 2` names no mission.
+	int iWord = LastSpace( szHead );
+	if( iWord > 0 )
+	{
+		string szLead = szHead.SubString( uint( iWord ) + 1,
+		                                  szHead.Length() - uint( iWord ) - 1 );
+		if( szLead == "part" || szLead == "pt" )
+			szHead = APTrim( szHead.SubString( 0, uint( iWord ) ) );
+	}
+
+	if( szHead.Length() == 0 )
+		return 0;
+
+	szName = szHead;
+	return iPart;
+}
+
+/*
+* Mission indices whose name matches, appended to `matches`.
+*
+* An exact name wins outright and alone. Without that a mission whose whole name
+* is the beginning of another's could never be reached by name at all: naming it
+* exactly would still be two matches, and the answer would be to be more
+* specific when you already had been.
+*/
+void MatchChapters( const string& in szWanted, array<int>@ matches )
+{
+	if( szWanted.Length() == 0 )
+		return;
+
+	for( uint i = 0; i < g_Chapters.length(); ++i )
+	{
+		string szChapter = g_Chapters[i].name;
+		szChapter.ToLowercase();
+
+		if( szChapter == szWanted )
+		{
+			matches.insertLast( int( i ) );
+			return;
+		}
+	}
+
+	for( uint i = 0; i < g_Chapters.length(); ++i )
+	{
+		string szChapter = g_Chapters[i].name;
+		szChapter.ToLowercase();
+
+		// Find returns String::INVALID_INDEX, unsigned; as an int a miss is
+		// negative.
+		int iAt = szChapter.Find( szWanted );
+		if( iAt >= 0 )
+			matches.insertLast( int( i ) );
+	}
+}
+
 /*
 * `!warp office` as well as `!warp 3`.
 *
@@ -541,35 +731,35 @@ void FindLocation( CBasePlayer@ pPlayer, const string& in szQuery )
 * way `!tracker` matches, because remembering that Office Complex is 3 is a
 * worse ask than typing "office" -- and with 40 missions across four campaigns,
 * the numbers are no longer memorable at all.
+*
+* Four spellings, in the order they are tried:
+*
+*   !warp 3                  mission index
+*   !warp ba_security2       a map, exactly
+*   !warp insecurity         a mission by name, to its first part
+*   !warp insecurity 2       a named mission's part (also `part 2`, `p2`)
 */
 void WarpToQuery( CBasePlayer@ pPlayer, const string& in szQuery )
 {
-	if( szQuery.Length() == 0 )
+	// Trimmed before anything looks at it: a trailing space is invisible to
+	// whoever typed it, and would otherwise be the difference between a query
+	// that matches and one that does not.
+	string szWanted = APTrim( szQuery );
+
+	if( szWanted.Length() == 0 )
 	{
 		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] Usage: !warp <number or mission name>\n" );
+			"[AP] Usage: !warp <number, mission name, or \"mission 2\" for a part>\n" );
 		return;
 	}
 
 	// A plain number is an index and nothing else.
-	bool bNumeric = true;
-	for( uint i = 0; i < szQuery.Length(); ++i )
+	if( IsNumeric( szWanted ) )
 	{
-		string szChar = szQuery.SubString( i, 1 );
-		if( szChar < "0" || szChar > "9" )
-		{
-			bNumeric = false;
-			break;
-		}
-	}
-
-	if( bNumeric )
-	{
-		WarpToChapter( pPlayer, atoi( szQuery ) );
+		WarpToChapter( pPlayer, atoi( szWanted ) );
 		return;
 	}
 
-	string szWanted = szQuery;
 	szWanted.ToLowercase();
 
 	// A map name outright: `!warp hl_c11_a3`.
@@ -588,41 +778,35 @@ void WarpToQuery( CBasePlayer@ pPlayer, const string& in szQuery )
 		}
 	}
 
-	// `!warp surface tension 3` -- a mission and a part of it. Split the trailing
-	// number off and match the rest as a name.
+	array<int> matches;
 	int iPart = 0;
-	int iSplit = szWanted.RFind( " " );
-	if( iSplit > 0 )
+
+	// The whole query as a name first, trailing number and all. Three missions
+	// are called "They Hunger: Episode 1", 2 and 3, so a query ending in a digit
+	// is at least as likely to be a name as a name plus a part -- and taking the
+	// digit off first turns `!warp they hunger: episode 2` into three matches and
+	// a request to be more specific.
+	MatchChapters( szWanted, matches );
+
+	// Only now `!warp surface tension 3` -- a mission and a part of it. Nothing
+	// is called that, which is exactly why splitting is safe here.
+	if( matches.length() == 0 )
 	{
-		string szTail = szWanted.SubString( iSplit + 1, szWanted.Length() - iSplit - 1 );
-		bool bTailNumeric = szTail.Length() > 0;
-		for( uint i = 0; i < szTail.Length(); ++i )
+		string szName;
+		int iSuffix = SplitPartSuffix( szWanted, szName );
+
+		if( iSuffix > 0 )
 		{
-			string szChar = szTail.SubString( i, 1 );
-			if( szChar < "0" || szChar > "9" )
+			MatchChapters( szName, matches );
+
+			// Kept only if the shorter name actually found something, so a query
+			// that matches nothing either way still reports what was typed.
+			if( matches.length() > 0 )
 			{
-				bTailNumeric = false;
-				break;
+				iPart = iSuffix;
+				szWanted = szName;
 			}
 		}
-
-		if( bTailNumeric )
-		{
-			iPart = atoi( szTail );
-			szWanted = szWanted.SubString( 0, iSplit );
-		}
-	}
-
-	array<int> matches;
-	for( uint i = 0; i < g_Chapters.length(); ++i )
-	{
-		string szName = g_Chapters[i].name;
-		szName.ToLowercase();
-		// Find returns String::INVALID_INDEX, unsigned; as an int a miss is
-		// negative.
-		int iAt = szName.Find( szWanted );
-		if( iAt >= 0 )
-			matches.insertLast( int( i ) );
 	}
 
 	if( matches.length() == 0 )
