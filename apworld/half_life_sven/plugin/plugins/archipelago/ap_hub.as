@@ -62,7 +62,21 @@ void ShowStatus( CBasePlayer@ pPlayer )
 		if( g_State.ChapterExcluded( pChapter.key ) )
 			szStatus = "not in this seed";
 		else if( pChapter.isGoal )
-			szStatus = g_State.GoalOpen( pChapter.key ) ? "OPEN" : "sealed (finish more missions)";
+		{
+			if( g_State.GoalOpen( pChapter.key ) )
+				szStatus = "OPEN";
+			else
+			{
+				szStatus = "sealed (finish more missions";
+				// A paired finale is the tail of one particular mission, and
+				// counting alone will never open it. Naming that mission saves a
+				// player finishing everything else first and wondering why.
+				APChapter@ pPaired = ChapterByKey( pChapter.requiresChapter );
+				if( pPaired !is null && !g_State.ChapterExcluded( pPaired.key ) )
+					szStatus += ", including " + pPaired.name;
+				szStatus += ")";
+			}
+		}
 		else
 			szStatus = g_State.ChapterUnlocked( pChapter.key ) ? "unlocked" : "locked";
 
@@ -797,6 +811,11 @@ void PerformLevelChange()
 
 	string szMap = g_szPendingLevel;
 	g_szPendingLevel = "";
+
+	// We are leaving under our own steam -- `!hub`, `!warp`, a portal button --
+	// so a mission waiting to be credited when its map ended is not owed one.
+	// Walking out of the outro is leaving it, however far in you got.
+	ClearPendingFinale();
 	// Survives until MapChange sees the transition, which is how a mission we
 	// walked out of is told apart from one the campaign ended for us.
 	g_bSelfChange = true;
@@ -821,6 +840,84 @@ void SetPendingHubReturn( bool bPending )
 
 	pFile.Write( bPending ? "1\n" : "\n" );
 	pFile.Close();
+}
+
+/*
+* Remember that a mission is being played out and owes us a completion.
+*
+* Only missions marked `complete_on_endgame` in checkdata.txt use this, which is
+* one today: Blue Shift's outro. It is a single map that ends in a `game_end`,
+* so neither of the plugin's usual moments works -- arriving is not finishing it
+* and there is no changelevel to observe -- and the next map load is the first
+* thing that happens once it really is over.
+*
+* Written to disk for the same reason as the hub return: the globals do not
+* survive the map ending.
+*/
+void SetPendingFinale( const string& in szChapter )
+{
+	File@ pFile = g_FileSystem.OpenFile( AP_PENDING_FINALE, OpenFile::WRITE );
+
+	if( pFile is null || !pFile.IsOpen() )
+		return;
+
+	pFile.Write( szChapter + "\n" );
+	pFile.Close();
+}
+
+void ClearPendingFinale()
+{
+	SetPendingFinale( "" );
+}
+
+/*
+* Credit a mission the last map was still playing out, if there was one.
+*
+* Called from MapStart before the new map arms anything of its own. Nothing
+* happens in the ordinary case, where MapChange already saw the transition and
+* cleared this on its way through CompleteChapter.
+*/
+void ConsumePendingFinale()
+{
+	File@ pFile = g_FileSystem.OpenFile( AP_PENDING_FINALE, OpenFile::READ );
+
+	if( pFile is null || !pFile.IsOpen() )
+		return;
+
+	string szLine;
+	if( !pFile.EOFReached() )
+		pFile.ReadLine( szLine );
+	pFile.Close();
+
+	string szChapter = APTrim( szLine );
+	if( szChapter.Length() == 0 )
+		return;
+
+	ClearPendingFinale();
+
+	APChapter@ pChapter = ChapterByKey( szChapter );
+	if( pChapter is null )
+		return;
+
+	// SendCheck refuses to fire while `g_bMissionActive` is false, which is right
+	// everywhere else -- it is what stops a map we are only passing through from
+	// sending its checks -- but this is a mission we genuinely played, being
+	// credited from wherever the endgame dropped us. Without this its "Complete"
+	// location is silently never sent, and `accessibility: full` means the seed
+	// then holds a check nobody can ever collect.
+	bool bWasActive = g_bMissionActive;
+	g_bMissionActive = true;
+	CompleteChapter( pChapter );
+	g_bMissionActive = bWasActive;
+
+	// The endgame hands the server back to its map cycle, which knows nothing
+	// about any of this. Wherever that left us, the hub is where the run
+	// continues from.
+	if( g_szCurrentMap != HUB_MAP )
+	{
+		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, "[AP] Returning to the hub...\n" );
+		g_Scheduler.SetTimeout( "ReturnToHub", 3.0f );
+	}
 }
 
 bool ConsumePendingHubReturn()

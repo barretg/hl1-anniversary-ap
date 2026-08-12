@@ -28,9 +28,10 @@ OUT_PATH = (
 )
 
 # 2 added the campaign records, the console table, and a seventh field on `C`.
-# All three are additive: a plugin reading the older format ignores what it does
-# not recognise and behaves exactly as it did.
-FORMAT_VERSION = 2
+# 3 added the eighth and ninth: the mission a finale is paired with, and whether
+# finishing waits for the map to end. All of it is additive: a plugin reading the
+# older format ignores what it does not recognise and behaves exactly as it did.
+FORMAT_VERSION = 3
 
 
 def render(campaign: dict) -> str:
@@ -39,7 +40,8 @@ def render(campaign: dict) -> str:
         "# Record types:",
         "#   V|<format version>",
         "#   M|<key>|<name>|<goal chapter>  a campaign",
-        "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<campaign key>",
+        "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<campaign key>"
+        "|<requires chapter>|<complete on endgame>",
         "#   P|<console>|<chapter key>      hub console button -> the mission it enters",
         "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
@@ -59,13 +61,15 @@ def render(campaign: dict) -> str:
 
     for chapter in campaign["chapters"]:
         lines.append(
-            "C|{index}|{key}|{name}|{maps}|{goal}|{campaign}".format(
+            "C|{index}|{key}|{name}|{maps}|{goal}|{campaign}|{requires}|{endgame}".format(
                 index=chapter["index"],
                 key=chapter["key"],
                 name=chapter["name"],
                 maps=",".join(chapter["maps"]),
                 goal=1 if chapter["is_goal"] else 0,
                 campaign=chapter.get("campaign", ""),
+                requires=chapter.get("requires_chapter", ""),
+                endgame=1 if chapter.get("complete_on_endgame") else 0,
             )
         )
 

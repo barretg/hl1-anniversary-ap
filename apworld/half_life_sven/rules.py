@@ -19,7 +19,12 @@ from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState
 
-from .data import REQUIREMENT_GROUPS, mission_complete_event
+from .data import (
+    GOAL_PREREQUISITES,
+    REQUIREMENT_GROUPS,
+    chapter_cleared_event,
+    mission_complete_event,
+)
 from .options import LogicDifficulty
 
 if TYPE_CHECKING:
@@ -101,6 +106,15 @@ def chapter_entry_rule(
         conditions.append(
             lambda state, name=event, count=required: state.has(name, player, count)
         )
+
+        # Some finales are the tail of one particular mission rather than a
+        # mission in their own right, and open only once that one is cleared --
+        # Blue Shift's outro after Power Struggle. Skipped if the seed left the
+        # paired mission out, which would otherwise seal the campaign forever.
+        prerequisite = GOAL_PREREQUISITES.get(chapter["key"], "")
+        if prerequisite and prerequisite not in world.excluded_chapters:
+            cleared = chapter_cleared_event(prerequisite)
+            conditions.append(lambda state, name=cleared: state.has(name, player))
     else:
         unlock = world.unlock_item_for_chapter[chapter["key"]]
         conditions.append(lambda state, name=unlock: state.has(name, player))

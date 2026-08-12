@@ -27,7 +27,9 @@ from campaign_layout import (
     CLASSNAME_TO_ITEM,
     DEFAULT_CAMPAIGN,
     ENABLED_LOCATION_TYPES,
+    ENDGAME_CHAPTERS,
     GOAL_CHAPTERS,
+    GOAL_REQUIRES,
     IGNORED_MONSTERS,
     ITEM_ID_BASE,
     KILL_MILESTONE_FRACTIONS,
@@ -586,6 +588,8 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 "option": campaign.option,
                 "missions_option": campaign.missions_option,
                 "goal_chapter": campaign.goal_chapter,
+                # The one mission its finale is never opened without, or "".
+                "goal_requires": campaign.goal_requires,
                 # "" where the campaign has no scene-setting mission to drop.
                 "intro_chapter": campaign.intro_chapter,
                 "chapters": [key for key, _, _ in campaign.chapters],
@@ -612,6 +616,12 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 "campaign": chapter["campaign"],
                 "is_goal": chapter["key"] in GOAL_CHAPTERS,
                 "gates": CHAPTER_GATES.get(chapter["key"], {}),
+                # A mission that must be cleared before this one opens, on top
+                # of whatever unlocks it. "" for all but a paired finale.
+                "requires_chapter": GOAL_REQUIRES.get(chapter["key"], ""),
+                # True where finishing means the last map *ended*, not that the
+                # player arrived on it.
+                "complete_on_endgame": chapter["key"] in ENDGAME_CHAPTERS,
             }
             for chapter in chapters
         ],

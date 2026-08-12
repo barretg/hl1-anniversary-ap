@@ -54,6 +54,17 @@ that have never run in-game at all.
   and confirm chat says that campaign is complete, the client logs how many are
   left, and the slot is **not** marked goal-complete. Only the last one should
   send `CLIENT_GOAL`.
+- **Blue Shift's finale is the pair.** With Power Struggle unfinished, `!ap`
+  should read `sealed (finish more missions, including Power Struggle)` however
+  many other missions are done, and its console should refuse. Clear Power
+  Struggle and it opens.
+- **A Leap Of Faith is credited when it ends, not when it loads.** Warp in and
+  confirm nothing is sent on arrival -- the campaign used to be won by
+  connecting, because the outro is one map and arriving on a finale's last map
+  is normally the only moment there is. Watch it through to the credits: the
+  completion, the goal and the trip back to the hub should all land after the
+  map's `game_end`, from the next map load if the server cycled somewhere else.
+  Leaving early with `!hub` or `!warp` must credit nothing.
 - **The counts stay separate.** With `missions_required: 1` and
   `opposing_force_missions_required: 9`, one Half-Life mission opens Nihilanth
   and does nothing at all for Worlds Collide.

@@ -99,6 +99,15 @@ CAMPAIGN_MISSION_OPTIONS: dict[str, str] = {
 }
 
 GOAL_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if c["is_goal"]]
+
+# Finale -> the one mission it is paired with, where a campaign has such a pair.
+#
+# Blue Shift is the case: A Leap Of Faith is the escape cutscene rather than a
+# level, so clearing it only counts once Power Struggle is behind you. Its
+# `missions_required` still applies; this is on top of it.
+GOAL_PREREQUISITES: dict[str, str] = {
+    c["key"]: c["requires_chapter"] for c in CHAPTERS if c.get("requires_chapter")
+}
 UNLOCKABLE_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if not c["is_goal"]]
 
 CHAPTERS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in CHAPTERS}
@@ -161,6 +170,7 @@ CHARGER_TRIGGER = "charger"
 
 MISSION_COMPLETE = "Mission Complete"
 VICTORY = "Victory"
+CLEARED = "Cleared"
 
 
 def mission_complete_event(campaign_key: str) -> str:
@@ -171,7 +181,19 @@ def victory_event(campaign_key: str) -> str:
     return f"{VICTORY} ({CAMPAIGNS_BY_KEY[campaign_key]['name']})"
 
 
+def chapter_cleared_event(chapter_key: str) -> str:
+    """Finishing one *named* mission.
+
+    The per-campaign counter cannot express this: it is a count, and a finale
+    paired with a particular mission has to ask for that one. Only the missions
+    in GOAL_PREREQUISITES get one, so this is one extra event in a Blue Shift
+    seed and none anywhere else.
+    """
+    return f"{CHAPTERS_BY_KEY[chapter_key]['name']} {CLEARED}"
+
+
 EVENT_ITEM_NAMES: frozenset[str] = frozenset(
     [mission_complete_event(c["key"]) for c in CAMPAIGNS]
     + [victory_event(c["key"]) for c in CAMPAIGNS]
+    + [chapter_cleared_event(key) for key in GOAL_PREREQUISITES.values()]
 )

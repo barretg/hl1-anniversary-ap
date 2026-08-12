@@ -231,6 +231,11 @@ void CompleteChapter( APChapter@ pChapter )
 	if( pChapter is null )
 		return;
 
+	// Whatever route got us here, nothing is owed any more. A mission armed to
+	// be credited when its map ended must not be credited twice if MapChange saw
+	// it leave after all.
+	ClearPendingFinale();
+
 	for( uint i = 0; i < g_Locations.length(); ++i )
 	{
 		APLocation@ pLocation = g_Locations[i];

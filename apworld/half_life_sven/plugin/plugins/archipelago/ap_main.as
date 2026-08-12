@@ -174,6 +174,11 @@ void MapStart()
 
 	BridgeHello();
 
+	// A mission that ends rather than travels was being played when the last map
+	// stopped, so it is finished now. Consumed before anything else, and before
+	// this map has a chance to arm it again.
+	ConsumePendingFinale();
+
 	// A mission finished on the way here and the campaign carried us into the
 	// next one. Nothing on this map counts; go back to the hub.
 	if( ConsumePendingHubReturn() )
@@ -216,8 +221,19 @@ void MapStart()
 		// again (hl_c18 for Half-Life, and the same shape in the others) -- so
 		// MapChange can never see it finish. Arriving on a finale's last map is
 		// therefore what counts as finishing that campaign.
+		//
+		// Except where the mission *is* that last map. Blue Shift's finale is one
+		// map, `ba_outro`, so arriving on it was the whole mission and the
+		// campaign was won by connecting. Those are armed instead: whichever
+		// comes first, MapChange seeing us leave or the next map loading after
+		// the endgame stopped this one, credits it then.
 		if( g_CurrentChapter.isGoal && g_szCurrentMap == g_CurrentChapter.LastMap() )
-			CompleteChapter( g_CurrentChapter );
+		{
+			if( g_CurrentChapter.completeOnEndgame )
+				SetPendingFinale( g_CurrentChapter.key );
+			else
+				CompleteChapter( g_CurrentChapter );
+		}
 	}
 }
 

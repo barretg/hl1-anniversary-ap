@@ -98,6 +98,20 @@ class Campaign:
     script_weapons: bool = False
     # Mission entry gates, as `{chapter key: {"strict": [group, ...]}}`.
     gates: dict[str, dict[str, list[str]]] = field(default_factory=dict)
+    # One mission this campaign's finale is not unsealed without, whatever
+    # `missions_required` says. For a finale that is really the tail of the
+    # mission before it: Blue Shift ends on an outro you watch, so clearing it
+    # only means something once Power Struggle is behind you.
+    goal_requires: str = ""
+    # Missions that are only finished when their last map *ends*, rather than
+    # when the player arrives on it.
+    #
+    # A finale normally ends in a `game_end` that never changes level, so
+    # arriving on its last map is the only moment the plugin can see -- fine for
+    # a multi-map finale, wrong for a one-map one, where arriving is the whole
+    # mission. Blue Shift's `ba_outro` is the case that broke: connecting to it
+    # cleared the campaign before a second of it had played.
+    endgame_chapters: list[str] = field(default_factory=list)
 
 
 HALF_LIFE = Campaign(
@@ -339,6 +353,12 @@ BLUE_SHIFT = Campaign(
     # Freight, Focal Point, Power Struggle, A Leap Of Faith.
     consoles=[None] + [f"bs_ch{n:02d}" for n in range(1, 7)],
     goal_chapter="bs_leap_of_faith",
+    # A Leap Of Faith is the escape cutscene, not a level: Barney is teleported
+    # through three scenes and the credits roll. Clearing it on its own says
+    # nothing, so Blue Shift's goal is the pair -- Power Struggle finished, then
+    # the outro watched through to its `game_end`.
+    goal_requires="bs_power_struggle",
+    endgame_chapters=["bs_leap_of_faith"],
     # The tram ride again, from the other end of the shift.
     intro_chapter="bs_living_quarters",
     # Barney swings the same crowbar Gordon does.
@@ -453,6 +473,17 @@ CAMPAIGN_OF_CHAPTER: dict[str, str] = {
 }
 
 GOAL_CHAPTERS: dict[str, str] = {c.goal_chapter: c.key for c in CAMPAIGNS}
+
+# Finale -> the one mission that must be cleared before it opens, for the
+# campaigns that pair the two. Absent everywhere else.
+GOAL_REQUIRES: dict[str, str] = {
+    c.goal_chapter: c.goal_requires for c in CAMPAIGNS if c.goal_requires
+}
+
+# Missions credited when their last map ends rather than when it loads.
+ENDGAME_CHAPTERS: set[str] = {
+    key for campaign in CAMPAIGNS for key in campaign.endgame_chapters
+}
 
 # The scene-setting mission of each campaign that has one, dropped together by
 # `exclude_intro_missions`.

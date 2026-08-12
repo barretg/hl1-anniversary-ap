@@ -2,59 +2,59 @@
 # Record types:
 #   V|<format version>
 #   M|<key>|<name>|<goal chapter>  a campaign
-#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<campaign key>
+#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<campaign key>|<requires chapter>|<complete on endgame>
 #   P|<console>|<chapter key>      hub console button -> the mission it enters
 #   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
 #   R|<classname>|<campaign,...>   grantable only on those campaigns' maps
 #   D|<data version>               must match the client's, or ids differ
-V|2
+V|3
 D|13d591d76c0d
 M|half_life|Half-Life|nihilanth
 M|opposing_force|Opposing Force|of_worlds_collide
 M|blue_shift|Blue Shift|bs_leap_of_faith
 M|they_hunger|They Hunger|th_episode_3
-C|0|black_mesa_inbound|Black Mesa Inbound|hl_c00|0|half_life
-C|1|anomalous_materials|Anomalous Materials|hl_c01_a1,hl_c01_a2|0|half_life
-C|2|unforeseen_consequences|Unforeseen Consequences|hl_c02_a1,hl_c02_a2|0|half_life
-C|3|office_complex|Office Complex|hl_c03|0|half_life
-C|4|weve_got_hostiles|We've Got Hostiles|hl_c04|0|half_life
-C|5|blast_pit|Blast Pit|hl_c05_a1,hl_c05_a2,hl_c05_a3|0|half_life
-C|6|power_up|Power Up|hl_c06|0|half_life
-C|7|on_a_rail|On A Rail|hl_c07_a1,hl_c07_a2|0|half_life
-C|8|apprehension|Apprehension|hl_c08_a1,hl_c08_a2|0|half_life
-C|9|residue_processing|Residue Processing|hl_c09|0|half_life
-C|10|questionable_ethics|Questionable Ethics|hl_c10|0|half_life
-C|11|surface_tension|Surface Tension|hl_c11_a1,hl_c11_a2,hl_c11_a3,hl_c11_a4,hl_c11_a5|0|half_life
-C|12|forget_about_freeman|Forget About Freeman|hl_c12|0|half_life
-C|13|lambda_core|Lambda Core|hl_c13_a1,hl_c13_a2,hl_c13_a3,hl_c13_a4|0|half_life
-C|14|xen|Xen|hl_c14|0|half_life
-C|15|gonarchs_lair|Gonarch's Lair|hl_c15|0|half_life
-C|16|interloper|Interloper|hl_c16_a1,hl_c16_a2,hl_c16_a3,hl_c16_a4|0|half_life
-C|17|nihilanth|Nihilanth|hl_c17,hl_c18|1|half_life
-C|18|of_incoming|Incoming|of0a0|0|opposing_force
-C|19|of_welcome_to_black_mesa|Welcome To Black Mesa|of1a1,of1a2|0|opposing_force
-C|20|of_we_are_pulling_out|We Are Pulling Out|of1a3,of1a4,of1a4b|0|opposing_force
-C|21|of_missing_in_action|Missing In Action|of1a5,of1a5b,of1a6|0|opposing_force
-C|22|of_friendly_fire|Friendly Fire|of2a1,of2a1b,of2a2|0|opposing_force
-C|23|of_we_are_not_alone|We Are Not Alone|of2a4,of2a5,of2a6|0|opposing_force
-C|24|of_crush_depth|Crush Depth|of3a1,of3a2|0|opposing_force
-C|25|of_vicarious_reality|Vicarious Reality|of3a4,of3a5,of3a6|0|opposing_force
-C|26|of_pit_worms_nest|Pit Worm's Nest|of4a1,of4a2,of4a3,of4a4|0|opposing_force
-C|27|of_foxtrot_uniform|Foxtrot Uniform|of5a1,of5a2,of5a3,of5a4|0|opposing_force
-C|28|of_the_package|The Package|of6a1,of6a2,of6a3|0|opposing_force
-C|29|of_worlds_collide|Worlds Collide|of6a4,of6a4b,of6a5|1|opposing_force
-C|30|bs_living_quarters|Living Quarters Outbound|ba_tram1,ba_tram2,ba_tram3|0|blue_shift
-C|31|bs_insecurity|Insecurity|ba_security1,ba_security2,ba_maint,ba_elevator|0|blue_shift
-C|32|bs_duty_calls|Duty Calls|ba_canal1,ba_canal1b,ba_canal2,ba_canal3|0|blue_shift
-C|33|bs_captive_freight|Captive Freight|ba_yard1,ba_yard2,ba_yard3,ba_yard3a,ba_yard3b,ba_yard4,ba_yard4a,ba_yard5,ba_yard5a|0|blue_shift
-C|34|bs_focal_point|Focal Point|ba_teleport1,ba_xen1,ba_xen2,ba_xen3,ba_xen4,ba_xen5,ba_xen6|0|blue_shift
-C|35|bs_power_struggle|Power Struggle|ba_teleport2,ba_power1,ba_power2|0|blue_shift
-C|36|bs_leap_of_faith|A Leap Of Faith|ba_outro|1|blue_shift
-C|37|th_episode_1|They Hunger: Episode 1|th_ep1_00,th_ep1_01,th_ep1_02,th_ep1_03,th_ep1_04,th_ep1_05|0|they_hunger
-C|38|th_episode_2|They Hunger: Episode 2|th_ep2_00,th_ep2_01,th_ep2_02,th_ep2_03,th_ep2_04|0|they_hunger
-C|39|th_episode_3|They Hunger: Episode 3|th_ep3_00,th_ep3_01,th_ep3_02,th_ep3_03,th_ep3_04,th_ep3_05,th_ep3_06,th_ep3_07|1|they_hunger
+C|0|black_mesa_inbound|Black Mesa Inbound|hl_c00|0|half_life||0
+C|1|anomalous_materials|Anomalous Materials|hl_c01_a1,hl_c01_a2|0|half_life||0
+C|2|unforeseen_consequences|Unforeseen Consequences|hl_c02_a1,hl_c02_a2|0|half_life||0
+C|3|office_complex|Office Complex|hl_c03|0|half_life||0
+C|4|weve_got_hostiles|We've Got Hostiles|hl_c04|0|half_life||0
+C|5|blast_pit|Blast Pit|hl_c05_a1,hl_c05_a2,hl_c05_a3|0|half_life||0
+C|6|power_up|Power Up|hl_c06|0|half_life||0
+C|7|on_a_rail|On A Rail|hl_c07_a1,hl_c07_a2|0|half_life||0
+C|8|apprehension|Apprehension|hl_c08_a1,hl_c08_a2|0|half_life||0
+C|9|residue_processing|Residue Processing|hl_c09|0|half_life||0
+C|10|questionable_ethics|Questionable Ethics|hl_c10|0|half_life||0
+C|11|surface_tension|Surface Tension|hl_c11_a1,hl_c11_a2,hl_c11_a3,hl_c11_a4,hl_c11_a5|0|half_life||0
+C|12|forget_about_freeman|Forget About Freeman|hl_c12|0|half_life||0
+C|13|lambda_core|Lambda Core|hl_c13_a1,hl_c13_a2,hl_c13_a3,hl_c13_a4|0|half_life||0
+C|14|xen|Xen|hl_c14|0|half_life||0
+C|15|gonarchs_lair|Gonarch's Lair|hl_c15|0|half_life||0
+C|16|interloper|Interloper|hl_c16_a1,hl_c16_a2,hl_c16_a3,hl_c16_a4|0|half_life||0
+C|17|nihilanth|Nihilanth|hl_c17,hl_c18|1|half_life||0
+C|18|of_incoming|Incoming|of0a0|0|opposing_force||0
+C|19|of_welcome_to_black_mesa|Welcome To Black Mesa|of1a1,of1a2|0|opposing_force||0
+C|20|of_we_are_pulling_out|We Are Pulling Out|of1a3,of1a4,of1a4b|0|opposing_force||0
+C|21|of_missing_in_action|Missing In Action|of1a5,of1a5b,of1a6|0|opposing_force||0
+C|22|of_friendly_fire|Friendly Fire|of2a1,of2a1b,of2a2|0|opposing_force||0
+C|23|of_we_are_not_alone|We Are Not Alone|of2a4,of2a5,of2a6|0|opposing_force||0
+C|24|of_crush_depth|Crush Depth|of3a1,of3a2|0|opposing_force||0
+C|25|of_vicarious_reality|Vicarious Reality|of3a4,of3a5,of3a6|0|opposing_force||0
+C|26|of_pit_worms_nest|Pit Worm's Nest|of4a1,of4a2,of4a3,of4a4|0|opposing_force||0
+C|27|of_foxtrot_uniform|Foxtrot Uniform|of5a1,of5a2,of5a3,of5a4|0|opposing_force||0
+C|28|of_the_package|The Package|of6a1,of6a2,of6a3|0|opposing_force||0
+C|29|of_worlds_collide|Worlds Collide|of6a4,of6a4b,of6a5|1|opposing_force||0
+C|30|bs_living_quarters|Living Quarters Outbound|ba_tram1,ba_tram2,ba_tram3|0|blue_shift||0
+C|31|bs_insecurity|Insecurity|ba_security1,ba_security2,ba_maint,ba_elevator|0|blue_shift||0
+C|32|bs_duty_calls|Duty Calls|ba_canal1,ba_canal1b,ba_canal2,ba_canal3|0|blue_shift||0
+C|33|bs_captive_freight|Captive Freight|ba_yard1,ba_yard2,ba_yard3,ba_yard3a,ba_yard3b,ba_yard4,ba_yard4a,ba_yard5,ba_yard5a|0|blue_shift||0
+C|34|bs_focal_point|Focal Point|ba_teleport1,ba_xen1,ba_xen2,ba_xen3,ba_xen4,ba_xen5,ba_xen6|0|blue_shift||0
+C|35|bs_power_struggle|Power Struggle|ba_teleport2,ba_power1,ba_power2|0|blue_shift||0
+C|36|bs_leap_of_faith|A Leap Of Faith|ba_outro|1|blue_shift|bs_power_struggle|1
+C|37|th_episode_1|They Hunger: Episode 1|th_ep1_00,th_ep1_01,th_ep1_02,th_ep1_03,th_ep1_04,th_ep1_05|0|they_hunger||0
+C|38|th_episode_2|They Hunger: Episode 2|th_ep2_00,th_ep2_01,th_ep2_02,th_ep2_03,th_ep2_04|0|they_hunger||0
+C|39|th_episode_3|They Hunger: Episode 3|th_ep3_00,th_ep3_01,th_ep3_02,th_ep3_03,th_ep3_04,th_ep3_05,th_ep3_06,th_ep3_07|1|they_hunger||0
 P|hl_ch1|anomalous_materials
 P|hl_ch10|questionable_ethics
 P|hl_ch11|surface_tension

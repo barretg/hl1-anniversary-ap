@@ -14,7 +14,12 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .data import mission_complete_event, victory_event
+from .data import (
+    GOAL_PREREQUISITES,
+    chapter_cleared_event,
+    mission_complete_event,
+    victory_event,
+)
 from .locations import HalfLifeSvenLocation, locations_by_map
 from .rules import chapter_entry_rule, location_rule
 
@@ -88,3 +93,13 @@ def add_event(world: "HalfLifeSvenWorld", region: Region, chapter: dict) -> None
     )
     location.place_locked_item(world.create_item(name))
     region.locations.append(location)
+
+    # A mission a finale is paired with grants a second event naming it, because
+    # the counter above cannot say *which* missions were finished. Only Blue
+    # Shift's Power Struggle has one today.
+    if chapter["key"] in GOAL_PREREQUISITES.values():
+        named = HalfLifeSvenLocation(
+            world.player, f"{chapter['name']} - Cleared", None, region
+        )
+        named.place_locked_item(world.create_item(chapter_cleared_event(chapter["key"])))
+        region.locations.append(named)

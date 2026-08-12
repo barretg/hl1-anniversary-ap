@@ -751,3 +751,61 @@ def test_a_campaign_survives_excluding_its_intro(campaign: dict) -> None:
         assert startable, (
             f"{entry['key']} has no legal start once its intro is excluded"
         )
+
+
+def test_a_paired_finale_names_a_mission_of_its_own_campaign(campaign: dict) -> None:
+    """`goal_requires` has to be a real mission the same campaign contains.
+
+    A finale waiting on something outside its campaign, or on a key that no
+    longer exists, would be sealed for the whole run with nothing the player
+    could do about it.
+    """
+    for entry in campaign["campaigns"]:
+        paired = entry.get("goal_requires")
+        if not paired:
+            continue
+        assert paired in entry["chapters"], (
+            f"{entry['key']}'s finale waits on {paired}, which is not one of its missions"
+        )
+        assert paired != entry["goal_chapter"], "a finale cannot wait on itself"
+        assert paired != entry.get("intro_chapter"), (
+            "a finale must not wait on the intro, which `exclude_intro_missions` drops"
+        )
+
+
+def test_the_paired_mission_reaches_the_chapters(campaign: dict) -> None:
+    """The pairing is carried per chapter as well, which is what both halves read."""
+    by_key = {c["key"]: c for c in campaign["chapters"]}
+    for entry in campaign["campaigns"]:
+        paired = entry.get("goal_requires", "")
+        assert by_key[entry["goal_chapter"]].get("requires_chapter", "") == paired
+
+
+def test_endgame_missions_are_one_map_finales(campaign: dict) -> None:
+    """Waiting for the map to end is for a mission that *is* its last map.
+
+    Anywhere else the ordinary rules already fire at the right moment, and
+    arming the marker would only add a way to miss a completion.
+    """
+    for chapter in campaign["chapters"]:
+        if not chapter.get("complete_on_endgame"):
+            continue
+        assert chapter["is_goal"], f"{chapter['key']} is not a finale"
+        assert len(chapter["maps"]) == 1, (
+            f"{chapter['key']} has more than one map, so arriving on its last is"
+            " already a fair reading of finishing it"
+        )
+
+
+def test_checkdata_carries_the_pairing_and_the_endgame_flag(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """The plugin reads these off the `C` record, so they have to survive the trip."""
+    records = {parts[2]: parts for parts in checkdata if parts[0] == "C"}
+    assert records, "no chapter records in checkdata.txt"
+
+    for chapter in campaign["chapters"]:
+        parts = records[chapter["key"]]
+        assert len(parts) >= 9, f"{chapter['key']} is missing the new fields"
+        assert parts[7] == chapter.get("requires_chapter", "")
+        assert parts[8] == ("1" if chapter.get("complete_on_endgame") else "0")

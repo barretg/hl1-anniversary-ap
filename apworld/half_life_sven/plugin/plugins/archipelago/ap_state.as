@@ -14,6 +14,11 @@ const string AP_OUT = AP_DIR + "ap_out.txt";
 // because the whole point is to survive the map change that is about to happen.
 const string AP_PENDING = AP_DIR + "ap_pending.txt";
 
+// "this mission is being played out, credit it once its map ends". Also a file,
+// and for a sharper version of the same reason: the map it belongs to ends with
+// a `game_end` and the plugin's globals do not outlive that.
+const string AP_PENDING_FINALE = AP_DIR + "ap_finale.txt";
+
 // How much DeathLink amnesty is left. Also a file, and for the same reason: the
 // allowance is spent across a whole run, not a single map.
 const string AP_AMNESTY = AP_DIR + "ap_amnesty.txt";
@@ -39,6 +44,18 @@ class APChapter
 	// Which campaign this mission belongs to. Empty when talking to a data file
 	// generated before there was more than one.
 	string campaign;
+	// A mission that has to be finished before this one opens, on top of
+	// whatever else unlocks it. Only a finale paired with the mission before it
+	// has one -- Blue Shift's outro after Power Struggle -- and it is empty
+	// everywhere else, including in an older data file.
+	string requiresChapter;
+	// True when finishing this mission means its last map *ended*, rather than
+	// that the player arrived on it.
+	//
+	// Arrival is the only moment a one-map finale would otherwise offer, since a
+	// campaign's last map ends with `game_end` and never changes level: that is
+	// what credited Blue Shift the instant a player connected to `ba_outro`.
+	bool completeOnEndgame = false;
 
 	string FirstMap() const { return maps[0]; }
 	string LastMap() const { return maps[maps.length() - 1]; }
@@ -407,6 +424,10 @@ void LoadCheckData()
 			// Appended after the fact, so an older data file simply has none.
 			if( parts.length() >= 7 )
 				chapter.campaign = parts[6];
+			if( parts.length() >= 8 )
+				chapter.requiresChapter = parts[7];
+			if( parts.length() >= 9 )
+				chapter.completeOnEndgame = parts[8] == "1";
 			g_Chapters.insertLast( @chapter );
 		}
 		else if( parts[0] == "M" && parts.length() >= 3 )

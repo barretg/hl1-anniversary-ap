@@ -241,6 +241,16 @@ class HalfLifeSvenContext(SuperContext):
         self.goal_chapters: set[str] = {
             c["key"] for c in self.campaign["chapters"] if c["is_goal"]
         }
+        # Finale -> the one mission it is paired with. Blue Shift's outro is the
+        # tail of Power Struggle rather than a mission of its own, so its finale
+        # stays sealed until that one is cleared however high its count runs.
+        # Read from the campaign data rather than slot data, so a seed generated
+        # before the pairing existed simply has none.
+        self.goal_prerequisite: dict[str, str] = {
+            c["key"]: c["requires_chapter"]
+            for c in self.campaign["chapters"]
+            if c.get("requires_chapter")
+        }
         # How many of its own missions each finale is waiting on. Filled from slot
         # data; the settings are per campaign and independent.
         self.missions_required_for: dict[str, int] = {}
@@ -565,6 +575,12 @@ class HalfLifeSvenContext(SuperContext):
                 return entry["chapter"]
         return ""
 
+    def chapter_name(self, chapter_key: str) -> str:
+        for entry in self.campaign["chapters"]:
+            if entry["key"] == chapter_key:
+                return entry["name"]
+        return chapter_key
+
     def is_mission_complete(self, location_id: int) -> bool:
         for entry in self.campaign["locations"]:
             if entry["id"] == location_id:
@@ -592,11 +608,22 @@ class HalfLifeSvenContext(SuperContext):
         """Is this campaign's finale unsealed?
 
         Counted within the campaign, because the settings are per campaign:
-        Opposing Force missions do nothing for Nihilanth.
+        Opposing Force missions do nothing for Nihilanth. A finale paired with
+        one particular mission also waits for that one by name, unless the seed
+        left it out -- in which case waiting would seal the campaign forever.
         """
         campaign_key = self.campaign_of_chapter.get(chapter_key, "")
         required = self.missions_required_for.get(campaign_key, self.missions_required)
-        return self.completed_in(campaign_key) >= required
+        if self.completed_in(campaign_key) < required:
+            return False
+        return self.goal_prerequisite_met(chapter_key)
+
+    def goal_prerequisite_met(self, chapter_key: str) -> bool:
+        """Has the mission this finale is paired with been cleared?"""
+        paired = self.goal_prerequisite.get(chapter_key, "")
+        if not paired or paired in self.excluded_chapters:
+            return True
+        return paired in self.completed_missions
 
     @property
     def open_goal_chapters(self) -> set[str]:
@@ -645,11 +672,17 @@ class HalfLifeSvenContext(SuperContext):
                 required = self.missions_required_for.get(
                     campaign_key, self.missions_required
                 )
-                status = (
-                    "complete" if chapter["key"] in self.completed_missions
-                    else "OPEN" if self.goal_chapter_open(chapter["key"])
-                    else f"sealed ({done}/{required})"
-                )
+                paired = self.goal_prerequisite.get(chapter["key"], "")
+                if chapter["key"] in self.completed_missions:
+                    status = "complete"
+                elif self.goal_chapter_open(chapter["key"]):
+                    status = "OPEN"
+                elif done < required:
+                    status = f"sealed ({done}/{required})"
+                else:
+                    # The count is met and it is still shut, so say what is left
+                    # rather than showing a full bar next to a sealed mission.
+                    status = f"sealed (finish {self.chapter_name(paired)})"
             elif chapter["key"] in self.completed_missions:
                 status = "complete"
             elif chapter["key"] in self.unlocked_chapters:

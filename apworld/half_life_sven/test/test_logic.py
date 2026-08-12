@@ -459,3 +459,46 @@ class TestLooseLogic(StartingMissionMixin, HalfLifeSvenTestBase):
         state.collect(world.create_item(unlock_item_for_chapter["surface_tension"]), True)
 
         self.assertTrue(self.can_reach_entrance("Enter Surface Tension", state))
+
+
+class TestPairedFinale(StartingMissionMixin, HalfLifeSvenTestBase):
+    """Blue Shift's finale is the tail of Power Struggle, not a mission of its own.
+
+    A Leap Of Faith is the escape cutscene: watching it means nothing until the
+    mission it follows is behind you, so its entrance asks for that mission by
+    name on top of `blue_shift_missions_required`.
+    """
+
+    options = {
+        "include_half_life": False,
+        "include_blue_shift": True,
+        "blue_shift_missions_required": 1,
+        "logic_difficulty": "loose",
+    }
+
+    def test_the_count_alone_does_not_open_it(self) -> None:
+        from ..data import chapter_cleared_event, mission_complete_event
+
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_state(self.multiworld)
+        # Far more missions than the one it asks for, and none of them the one.
+        for _ in range(6):
+            state.collect(world.create_item(mission_complete_event("blue_shift")), True)
+        state.sweep_for_advancements()
+        self.assertFalse(self.can_reach_entrance("Enter A Leap Of Faith", state))
+
+        state.collect(
+            world.create_item(chapter_cleared_event("bs_power_struggle")), True
+        )
+        state.sweep_for_advancements()
+        self.assertTrue(self.can_reach_entrance("Enter A Leap Of Faith", state))
+
+    def test_clearing_power_struggle_grants_the_event(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertIn("Power Struggle - Cleared", names)
+
+    def test_the_seed_is_still_winnable(self) -> None:
+        state = self.multiworld.get_all_state(False)
+        self.assertTrue(self.multiworld.completion_condition[self.player](state))

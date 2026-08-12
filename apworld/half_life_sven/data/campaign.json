@@ -7,6 +7,7 @@
    "option": "include_half_life",
    "missions_option": "missions_required",
    "goal_chapter": "nihilanth",
+   "goal_requires": "",
    "intro_chapter": "black_mesa_inbound",
    "chapters": [
     "black_mesa_inbound",
@@ -59,6 +60,7 @@
    "option": "include_opposing_force",
    "missions_option": "opposing_force_missions_required",
    "goal_chapter": "of_worlds_collide",
+   "goal_requires": "",
    "intro_chapter": "of_incoming",
    "chapters": [
     "of_incoming",
@@ -101,6 +103,7 @@
    "option": "include_blue_shift",
    "missions_option": "blue_shift_missions_required",
    "goal_chapter": "bs_leap_of_faith",
+   "goal_requires": "bs_power_struggle",
    "intro_chapter": "bs_living_quarters",
    "chapters": [
     "bs_living_quarters",
@@ -131,6 +134,7 @@
    "option": "include_they_hunger",
    "missions_option": "they_hunger_missions_required",
    "goal_chapter": "th_episode_3",
+   "goal_requires": "",
    "intro_chapter": "",
    "chapters": [
     "th_episode_1",
@@ -165,7 +169,9 @@
    "index": 0,
    "campaign": "half_life",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "anomalous_materials",
@@ -177,7 +183,9 @@
    "index": 1,
    "campaign": "half_life",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "unforeseen_consequences",
@@ -189,7 +197,9 @@
    "index": 2,
    "campaign": "half_life",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "office_complex",
@@ -200,7 +210,9 @@
    "index": 3,
    "campaign": "half_life",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "weve_got_hostiles",
@@ -215,7 +227,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "blast_pit",
@@ -232,7 +246,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "power_up",
@@ -247,7 +263,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "on_a_rail",
@@ -263,7 +281,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "apprehension",
@@ -279,7 +299,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "residue_processing",
@@ -294,7 +316,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "questionable_ethics",
@@ -309,7 +333,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "surface_tension",
@@ -328,7 +354,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "forget_about_freeman",
@@ -343,7 +371,9 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "lambda_core",
@@ -361,7 +391,9 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "xen",
@@ -381,7 +413,9 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "gonarchs_lair",
@@ -401,7 +435,9 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "interloper",
@@ -424,7 +460,9 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "nihilanth",
@@ -445,7 +483,9 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_incoming",
@@ -456,7 +496,9 @@
    "index": 18,
    "campaign": "opposing_force",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_welcome_to_black_mesa",
@@ -468,7 +510,9 @@
    "index": 19,
    "campaign": "opposing_force",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_we_are_pulling_out",
@@ -481,7 +525,9 @@
    "index": 20,
    "campaign": "opposing_force",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_missing_in_action",
@@ -498,7 +544,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_friendly_fire",
@@ -515,7 +563,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_we_are_not_alone",
@@ -532,7 +582,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_crush_depth",
@@ -548,7 +600,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_vicarious_reality",
@@ -565,7 +619,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_pit_worms_nest",
@@ -583,7 +639,9 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_foxtrot_uniform",
@@ -601,7 +659,9 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_the_package",
@@ -618,7 +678,9 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "of_worlds_collide",
@@ -635,7 +697,9 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_living_quarters",
@@ -648,7 +712,9 @@
    "index": 30,
    "campaign": "blue_shift",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_insecurity",
@@ -662,7 +728,9 @@
    "index": 31,
    "campaign": "blue_shift",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_duty_calls",
@@ -676,7 +744,9 @@
    "index": 32,
    "campaign": "blue_shift",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_captive_freight",
@@ -699,7 +769,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_focal_point",
@@ -720,7 +792,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_power_struggle",
@@ -737,7 +811,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "bs_leap_of_faith",
@@ -752,7 +828,9 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "requires_chapter": "bs_power_struggle",
+   "complete_on_endgame": true
   },
   {
    "key": "th_episode_1",
@@ -768,7 +846,9 @@
    "index": 37,
    "campaign": "they_hunger",
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "th_episode_2",
@@ -787,7 +867,9 @@
     "strict": [
      "ranged_they_hunger"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   },
   {
    "key": "th_episode_3",
@@ -809,7 +891,9 @@
     "strict": [
      "ranged_they_hunger"
     ]
-   }
+   },
+   "requires_chapter": "",
+   "complete_on_endgame": false
   }
  ],
  "items": [
