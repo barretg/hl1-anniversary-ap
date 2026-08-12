@@ -275,11 +275,11 @@ BLUE_SHIFT = Campaign(
     },
 )
 
-# Three consoles, three episodes, and no gates: They Hunger's logic and check
-# placement have not had a pass yet, so it ships as the plain shape every
-# campaign gets for free (a check per map, per mission, per charger and per
-# weapon) and nothing bespoke. `th_escape` is a standalone bonus map rather than
-# part of any episode, so it is left out.
+# Three consoles, three episodes. Its check placement is still the plain shape
+# every campaign gets for free -- a check per map, per mission, per charger and
+# per weapon -- and the only logic it asserts is that you do not walk into
+# Episode 2 or 3 with nothing but a melee weapon. `th_escape` is a standalone
+# bonus map rather than part of any episode, so it is left out.
 THEY_HUNGER = Campaign(
     key="they_hunger",
     name="They Hunger",
@@ -339,6 +339,14 @@ THEY_HUNGER = Campaign(
         "Crowbar": ["weapon_crowbar"],
         "Pipe Wrench": ["weapon_pipewrench"],
         "Spanner": ["weapon_spanner"],
+    },
+    # Episode 1 is where you find your first guns, so it stays enterable with a
+    # melee weapon and is the only episode that can be handed out at the start.
+    # Everything after it expects you to be armed with something that shoots --
+    # its own or another campaign's, since this group covers both.
+    gates={
+        "th_episode_2": {"strict": ["ranged_they_hunger"]},
+        "th_episode_3": {"strict": ["ranged_they_hunger"]},
     },
 )
 
@@ -514,6 +522,24 @@ HEAVY_WEAPONS = [
     "Sniper Rifle",
 ]
 
+# The same question asked inside They Hunger, where its own guns count.
+#
+# It needs a group of its own because its weapons are script-registered and
+# cannot be carried anywhere else: putting a tommy gun in `ranged` would let
+# strict logic send you into We've Got Hostiles holding something the engine will
+# not give you there. Half-Life's and Opposing Force's weapons are built into the
+# game, so they work here as well and are included.
+RANGED_WEAPONS_THEY_HUNGER = RANGED_WEAPONS + [
+    "Colt 1911",
+    "Taurus",
+    "Sawed-Off Shotgun",
+    "Grease Gun",
+    "Tommy Gun",
+    "M14",
+    "M16A1",
+    "Tesla Gun",
+]
+
 EXPLOSIVES = ["RPG", "Hand Grenade", "Satchel Charge", "Tripmine", "Spore Launcher"]
 
 # Usable while swimming -- the crowbar is, but ichthyosaurs realistically are not
@@ -550,6 +576,7 @@ NOTABLE_MONSTERS: dict[str, tuple[str, str | None]] = {
 # so a group of one is how "this exact weapon" is expressed.
 REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "ranged": RANGED_WEAPONS,
+    "ranged_they_hunger": RANGED_WEAPONS_THEY_HUNGER,
     "heavy": HEAVY_WEAPONS,
     "explosives": EXPLOSIVES,
     "underwater": UNDERWATER_WEAPONS,

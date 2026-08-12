@@ -62,6 +62,19 @@ across and add this block to `svencoop/default_plugins.txt` yourself:
 
 You should see `[AP] Connected to the multiworld.` in the game chat.
 
+## Universal Tracker
+
+If you have the [Universal Tracker](https://archipelago.miraheze.org/wiki/Universal_Tracker)
+apworld installed, this client grows a **Tracker** tab showing which locations
+are in logic right now. Nothing to configure: the client uses Universal Tracker's
+window when it finds it and its own when it does not.
+
+Two of this world's decisions are rolled at generation rather than derived from
+your YAML — which mission each campaign opens with, and what the run starts you
+holding — so the world hands the real seed's answers back to the tracker rather
+than letting it roll its own. Without that its view would drift from the server's
+by a whole starting mission.
+
 ## Client commands
 
 | Command | Effect |
@@ -147,10 +160,10 @@ swing a shovel in Episode 1 and a wrench in Black Mesa.
 `they_hunger_missions_required` do the same for theirs. Finishing Opposing Force
 missions does nothing for Nihilanth.
 
-They Hunger is the rough one. Its logic has not had a pass: no weapon gates on
-its episodes, so strict logic may expect you to walk into one with whatever you
-are holding, and it has three chargers in the whole campaign, so almost all of
-its checks come from reaching maps.
+They Hunger is the thin one. Under strict logic its Episode 1 is enterable with a
+melee weapon and Episodes 2 and 3 expect a gun, its own or one that travels; its
+check placement has had no pass yet, and with three chargers in the whole
+campaign almost all of its checks come from reaching maps.
 
 ## Playing the randomizer
 

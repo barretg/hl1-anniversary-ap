@@ -18,15 +18,24 @@
 */
 void ShowHelp( CBasePlayer@ pPlayer )
 {
+	// One call per line. The engine's client print buffer is 128 bytes, so the
+	// whole list in a single call came out cut off partway through the third
+	// command and the rest was simply lost.
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK, "[AP] Commands:\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-		"[AP] Commands:\n"
-		"  !ap            list missions and what is unlocked\n"
-		"  !tracker [map] locations found and still out there, to console\n"
-		"  !find [text]   point at the nearest check, or one you name\n"
-		"  !warp <number> travel to an unlocked mission\n"
-		"  !hub           return to the campaign portal\n"
-		"  !help          this list\n"
-		"You can also press a mission console's button in the hub.\n" );
+		"  !ap  list missions and what is unlocked\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"  !tracker [text]  locations found and missing, to console\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"  !find [text]  point at the nearest check, or one you name\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"  !warp <number>  travel to an unlocked mission\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"  !hub  return to the campaign portal\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"  !help  this list\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"Or press a mission console's button in the hub.\n" );
 }
 
 void ShowStatus( CBasePlayer@ pPlayer )
@@ -71,8 +80,10 @@ void ShowStatus( CBasePlayer@ pPlayer )
 			"  " + ( i < 10 ? " " : "" ) + i + ". " + pChapter.name + "  [" + szStatus + "]\n" );
 	}
 
+	// One line per call: the print buffer is 128 bytes and silently truncates.
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
-		"Type !warp <number> to travel to an unlocked mission.\n"
+		"Type !warp <number> to travel to an unlocked mission.\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
 		"Mission 0 has no console in the portal room; !warp 0 is the only way there.\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"[AP] Mission list printed to your console (~).\n" );
@@ -295,16 +306,26 @@ void DescribeLocation( CBasePlayer@ pPlayer, APLocation@ pLocation )
 {
 	string szPrefix = LocationFound( pLocation ) ? "[found] " : "";
 
+	// A line at a time. The engine's print buffer is 128 bytes and truncates
+	// without saying so, and a location name plus a bearing is well past it.
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] " + szPrefix + pLocation.name + "\n" );
+
 	// Somewhere else entirely: say where, and how to get there.
 	if( pLocation.map != g_szCurrentMap )
 	{
 		APChapter@ pChapter = ChapterForMap( pLocation.map );
-		string szWhere = pLocation.map;
-		if( pChapter !is null )
-			szWhere = pChapter.name + ", on " + pLocation.map + " (!warp " + pChapter.index + ")";
+		if( pChapter is null )
+		{
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+				"[AP] It is on " + pLocation.map + ".\n" );
+			return;
+		}
 
 		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] " + szPrefix + pLocation.name + " is in " + szWhere + ".\n" );
+			"[AP] In " + pChapter.name + ", on " + pLocation.map + ".\n" );
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] Get there with !warp " + pChapter.index + "\n" );
 		return;
 	}
 
@@ -313,15 +334,14 @@ void DescribeLocation( CBasePlayer@ pPlayer, APLocation@ pLocation )
 		// Reaching a map is not a place you can be pointed at; you are already
 		// standing in the answer.
 		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] " + szPrefix + pLocation.name + " is this map itself -- keep going.\n" );
+			"[AP] That is this map itself -- keep going.\n" );
 		return;
 	}
 
 	int iDistance = int( ( pLocation.position - pPlayer.pev.origin ).Length() );
 
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-		"[AP] " + szPrefix + pLocation.name + ": about " + iDistance + " units "
-		+ BearingTo( pPlayer, pLocation.position )
+		"[AP] About " + iDistance + " units " + BearingTo( pPlayer, pLocation.position )
 		+ HeightTo( pPlayer, pLocation.position ) + ".\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"[AP] " + SightTo( pPlayer, pLocation.position ) + "\n" );

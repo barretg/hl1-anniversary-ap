@@ -21,6 +21,21 @@ from CommonClient import (
 )
 from NetUtils import ClientStatus
 
+# Universal Tracker, if the player has its apworld installed. Inheriting from its
+# context is what puts the Tracker tab in this client's window; without it this is
+# the ordinary CommonContext and nothing changes.
+#
+# The world's `interpret_slot_data` is the other half: our starting missions and
+# starting weapon are rolled rather than derived, so UT has to be handed the
+# seed's real answers or its logic view drifts from the server's.
+try:
+    from worlds.tracker.TrackerClient import TrackerGameContext as SuperContext
+
+    TRACKER_LOADED = True
+except ModuleNotFoundError:
+    SuperContext = CommonContext
+    TRACKER_LOADED = False
+
 from .. import plugin
 from . import settings
 from .bridge import Bridge, find_store_dir, is_game_dir
@@ -179,10 +194,13 @@ class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
         return True
 
 
-class HalfLifeSvenContext(CommonContext):
+class HalfLifeSvenContext(SuperContext):
     game = GAME_NAME
     command_processor = HalfLifeSvenCommandProcessor
     items_handling = 0b111  # everything, including our own placements
+    # Universal Tracker's context adds a "Tracker" tag; this client is a game
+    # client and must not claim to be a tracker to the server.
+    tags = {"AP"}
 
     def __init__(
         self, server_address: str | None, password: str | None, game_dir: str = ""
@@ -382,6 +400,10 @@ class HalfLifeSvenContext(CommonContext):
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict) -> None:
+        # Universal Tracker does its work in here when its context is the base,
+        # so it has to see every packet. Harmless otherwise.
+        super().on_package(cmd, args)
+
         if cmd == "Connected":
             slot_data = args.get("slot_data", {})
             self.missions_required = slot_data.get(
@@ -627,6 +649,17 @@ class HalfLifeSvenContext(CommonContext):
                 status = "locked"
             logger.info(f"  {chapter['index']:2d}. {chapter['name']:26} [{status}]")
 
+    def make_gui(self):
+        """Name the window for this game rather than "Archipelago Text Client".
+
+        `super()` rather than `kvui.GameManager` on purpose: when Universal
+        Tracker is installed this inherits its UI, which is what carries the
+        Tracker tab.
+        """
+        ui = super().make_gui()
+        ui.base_title = f"Archipelago {GAME_NAME} Client"
+        return ui
+
     def on_deathlink(self, data: dict) -> None:
         # CommonContext calls this for DeathLink bounces too; the Bounced handler
         # above already queued it, so there is nothing extra to do here.
@@ -829,6 +862,12 @@ async def main(args) -> None:
     ctx = HalfLifeSvenContext(args.connect, args.password, args.gamedir)
 
     ctx.server_task = asyncio.create_task(server_loop(ctx), name="ServerLoop")
+
+    # Universal Tracker builds its own copy of the multiworld before the UI comes
+    # up; without this its tab exists but has nothing in it.
+    if TRACKER_LOADED:
+        ctx.run_generator()
+
     if gui_enabled:
         ctx.run_gui()
     ctx.run_cli()

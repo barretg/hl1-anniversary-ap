@@ -69,8 +69,10 @@ void CheckDataVersion( const string& in szClientVersion )
 	if( bMismatch )
 	{
 		APLog( "DATA MISMATCH: plugin " + g_szDataVersion + ", client " + szClientVersion );
+		// Two calls: 128 bytes is the print buffer, and this pair is over it.
 		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
-			"[AP] Plugin and apworld versions do not match. Checks are paused.\n"
+			"[AP] Plugin and apworld versions do not match. Checks are paused.\n" );
+		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
 			"[AP] Reinstall the plugin with /install, or regenerate your seed.\n" );
 	}
 	else

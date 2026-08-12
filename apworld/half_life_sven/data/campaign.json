@@ -742,7 +742,11 @@
    "index": 35,
    "campaign": "they_hunger",
    "is_goal": false,
-   "gates": {}
+   "gates": {
+    "strict": [
+     "ranged_they_hunger"
+    ]
+   }
   },
   {
    "key": "th_episode_3",
@@ -760,7 +764,11 @@
    "index": 36,
    "campaign": "they_hunger",
    "is_goal": true,
-   "gates": {}
+   "gates": {
+    "strict": [
+     "ranged_they_hunger"
+    ]
+   }
   }
  ],
  "items": [
@@ -6547,6 +6555,32 @@
    "Displacer Cannon",
    "Spore Launcher",
    "Minigun"
+  ],
+  "ranged_they_hunger": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Shotgun",
+   "Crossbow",
+   "RPG",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Hivehand",
+   "Snarks",
+   "Desert Eagle",
+   "SAW",
+   "Sniper Rifle",
+   "Displacer Cannon",
+   "Spore Launcher",
+   "Minigun",
+   "Colt 1911",
+   "Taurus",
+   "Sawed-Off Shotgun",
+   "Grease Gun",
+   "Tommy Gun",
+   "M14",
+   "M16A1",
+   "Tesla Gun"
   ],
   "heavy": [
    "RPG",

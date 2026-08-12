@@ -119,6 +119,19 @@ If it is missing, the plugin is not registered or `checkdata.txt` is not in
 campaigns, which the data file always describes in full; a seed that leaves some
 out says so through `excluded`, not by shrinking this file.
 
+### 1a. Chat output is not truncated
+
+The engine's client print buffer is **128 bytes** and cuts a longer message off
+without a word, which is why every multi-line message is now one call per line.
+Run `!help` and count: eight lines, ending with "Or press a mission console's
+button in the hub." Anything ending mid-word means a print grew past the limit
+again.
+
+Worth the same glance at `!find` on a location with a long name, since
+"They Hunger: Episode 1 - Health Charger 1 (Part 2)" plus a bearing is well over
+128 on its own. It prints the name, the bearing and the line of sight as three
+separate messages for exactly that reason.
+
 ### 2. The bridge round-trips
 
 With the client connected, confirm `ap_in.txt` appears in the store folder and

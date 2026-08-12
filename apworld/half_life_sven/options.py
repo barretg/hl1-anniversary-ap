@@ -154,10 +154,14 @@ class IncludeTheyHunger(Toggle):
     3 missions across 19 maps, ending at Episode 3, and nine weapons of its own
     from the tommy gun to the tesla gun.
 
-    Its logic has not had a pass yet: there are no weapon gates on its episodes,
-    so strict logic may expect you to walk into one with whatever you happen to
-    hold. It also has only three chargers in the whole campaign, so chargesanity
-    barely touches it and almost all of its checks come from reaching maps.
+    Under strict logic, Episode 1 is enterable with a melee weapon and everything
+    after it expects a gun -- its own or one that travels, since Half-Life's and
+    Opposing Force's work here too. Loose logic drops that as it drops every
+    weapon gate.
+
+    Its check placement has not had a pass yet. It has only three chargers in the
+    whole campaign, so chargesanity barely touches it and almost all of its checks
+    come from reaching maps.
     """
 
     display_name = "Include They Hunger"

@@ -505,22 +505,61 @@ def test_script_registered_weapons_are_restricted_to_their_campaign(
         assert restricted[classname] == ["they_hunger"], classname
 
 
-def test_restricted_weapons_are_absent_from_every_logic_group(campaign: dict) -> None:
+def test_a_group_holding_a_restricted_weapon_only_gates_its_own_campaign(
+    campaign: dict,
+) -> None:
     """A weapon you cannot carry into a mission cannot satisfy its gate.
 
-    Counting a tommy gun as "you have a gun" would let strict logic expect you to
-    enter We've Got Hostiles holding something the engine will not give you there.
+    They Hunger's guns are real logic inside They Hunger and useless outside it,
+    so they live in a group of their own that only its episodes name. Putting one
+    in plain `ranged` would let strict logic expect you to enter We've Got
+    Hostiles holding a tommy gun the engine will not give you there.
     """
-    restricted = set(campaign["restricted_classnames"])
-    grouped = {
-        name for names in campaign["requirement_groups"].values() for name in names
-    }
+    restricted = campaign["restricted_classnames"]
+    campaign_of = {c["key"]: c["campaign"] for c in campaign["chapters"]}
 
+    # Group -> the campaigns whose weapons in it cannot travel.
+    confined: dict[str, set[str]] = {}
     for entry in campaign["items"]:
         if entry.get("group") != "weapon":
             continue
-        if set(entry["classnames"]) & restricted:
-            assert entry["name"] not in grouped, entry["name"]
+        owners = {
+            owner
+            for classname in entry["classnames"]
+            for owner in restricted.get(classname, ())
+        }
+        if not owners:
+            continue
+        for group, members in campaign["requirement_groups"].items():
+            if entry["name"] in members:
+                confined.setdefault(group, set()).update(owners)
+
+    assert confined, "expected at least one campaign-confined group"
+
+    for chapter in campaign["chapters"]:
+        for group in chapter["gates"].get("strict", []):
+            if group in confined:
+                assert campaign_of[chapter["key"]] in confined[group], (
+                    f"{chapter['key']} gates on {group}, which counts weapons it "
+                    f"cannot be given"
+                )
+
+
+def test_they_hunger_expects_a_gun_after_its_first_episode(campaign: dict) -> None:
+    """Its own or another campaign's, but not a melee weapon alone."""
+    gates = {c["key"]: c["gates"] for c in campaign["chapters"]}
+
+    assert not gates["th_episode_1"].get("strict")
+    for key in ("th_episode_2", "th_episode_3"):
+        assert gates[key]["strict"] == ["ranged_they_hunger"], key
+
+    group = campaign["requirement_groups"]["ranged_they_hunger"]
+    # Both halves: its own guns, and the ones that travel.
+    assert "Tommy Gun" in group
+    assert "Shotgun" in group
+    # And never a melee weapon, which is the whole point of the gate.
+    for melee in ("Spanner", "Pipe Wrench", "Crowbar"):
+        assert melee not in group
 
 
 def test_a_script_registered_melee_starter_belongs_to_its_own_campaign(

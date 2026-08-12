@@ -149,11 +149,39 @@ class HalfLifeSvenWorld(World):
 
     # -- generation ------------------------------------------------------
 
+    @property
+    def tracker_passthrough(self) -> dict[str, Any] | None:
+        """The real seed's slot data, when Universal Tracker is re-generating.
+
+        UT runs this world's generation locally to work out what is in logic, but
+        two of our decisions are rolled rather than derived -- which mission each
+        campaign opens with, and which melee weapon the run starts with -- so a
+        local roll would disagree with the server about both. `interpret_slot_data`
+        hands the real answers back and UT re-runs generation with them here.
+        """
+        return getattr(self.multiworld, "re_gen_passthrough", {}).get(self.game)
+
+    def interpret_slot_data(self, slot_data: dict[str, Any]) -> dict[str, Any]:
+        """Universal Tracker's hook. Returning it asks UT to generate again.
+
+        Everything it needs is already in slot data, because the client needed it
+        too: which campaigns are in, which missions were handed out at the start,
+        what the run opened with, and what each finale is waiting on.
+        """
+        return slot_data
+
     def generate_early(self) -> None:
+        passthrough = self.tracker_passthrough
+
         self.included_campaigns = [
             campaign["key"] for campaign in CAMPAIGNS
             if getattr(self.options, CAMPAIGN_OPTIONS[campaign["key"]])
         ]
+        if passthrough and passthrough.get("campaigns"):
+            self.included_campaigns = [
+                key for key in (c["key"] for c in CAMPAIGNS)
+                if key in set(passthrough["campaigns"])
+            ]
         # A seed has to contain something. Rather than refuse to generate, fall
         # back to the campaign this world started life as.
         if not self.included_campaigns:
@@ -170,6 +198,13 @@ class HalfLifeSvenWorld(World):
             self.excluded_chapters.add(INTRO_CHAPTER)
         if not self.options.chargesanity:
             self.excluded_triggers.add(CHARGER_TRIGGER)
+
+        # Both sets come straight from the seed under the tracker: it may be
+        # working without the YAML, in which case its options are defaults and
+        # would give it a different set of locations than the server has.
+        if passthrough:
+            self.excluded_chapters = set(passthrough.get("excluded_chapters", ()))
+            self.excluded_triggers = set(passthrough.get("excluded_triggers", ()))
 
         self.choose_starting_weapons()
 
@@ -209,8 +244,18 @@ class HalfLifeSvenWorld(World):
             ]
             if not chapters:
                 continue  # every mission of it was excluded some other way
-            candidates = [c for c in chapters if chapter_is_startable(self, c)]
-            starting = self.random.choice(candidates or chapters)
+
+            # Under the tracker, the mission the *server* handed out, not a fresh
+            # roll: opening the wrong one would put the whole run's logic one
+            # mission out of step.
+            starting = None
+            if passthrough:
+                given = set(passthrough.get("starting_chapters", ()))
+                starting = next((c for c in chapters if c["key"] in given), None)
+            if starting is None:
+                candidates = [c for c in chapters if chapter_is_startable(self, c)]
+                starting = self.random.choice(candidates or chapters)
+
             self.starting_chapters.add(starting["key"])
             self.multiworld.push_precollected(
                 self.create_item(unlock_item_for_chapter[starting["key"]])
@@ -219,7 +264,13 @@ class HalfLifeSvenWorld(World):
         # Each campaign's own setting, clamped to the missions it actually has in
         # this seed: excluding Black Mesa Inbound leaves Half-Life one short, and
         # asking for more than exist would seal a finale permanently.
+        given = (passthrough or {}).get("campaign_missions_required", {})
         for campaign_key in self.included_campaigns:
+            if campaign_key in given:
+                # The server's number. A tracker running without the YAML would
+                # otherwise use the option default and seal a finale too long.
+                self.missions_required_for[campaign_key] = int(given[campaign_key])
+                continue
             option = getattr(self.options, CAMPAIGN_MISSION_OPTIONS[campaign_key])
             available = len([
                 chapter for chapter in self.included_chapters
@@ -244,6 +295,22 @@ class HalfLifeSvenWorld(World):
             self.included_campaigns,
             allow_restricted=bool(self.options.allow_restricted_starting_weapon),
         )
+
+        # Under Universal Tracker, what the run actually opened with. A fresh roll
+        # would take a different weapon out of the pool than the server did.
+        passthrough = self.tracker_passthrough
+        if passthrough and passthrough.get("starting_weapons"):
+            self.starting_weapons = list(passthrough["starting_weapons"])
+            held = set(self.starting_weapons)
+            self.starting_melee_item = next(
+                (
+                    name for name, classnames in candidates.items()
+                    if name in weapon_items and held.issuperset(classnames)
+                ),
+                "",
+            )
+            return
+
         if not self.options.random_starting_weapon or not candidates:
             self.starting_weapons = list(STARTING_WEAPONS)
             return
@@ -340,6 +407,11 @@ class HalfLifeSvenWorld(World):
             # the in-game list says "not in this seed" rather than showing a
             # mission that stays locked forever with no explanation.
             "excluded_chapters": sorted(self.excluded_chapters),
+            # Whole categories of check the YAML switched off, by trigger type.
+            # The client does not need it, but Universal Tracker does: it may be
+            # working without the YAML, and would otherwise expect chargers a
+            # `chargesanity: false` seed does not contain.
+            "excluded_triggers": sorted(self.excluded_triggers),
             # What the run opens with, and what the game must therefore never
             # take away. Per seed since `random_starting_weapon`, so the plugin
             # is told rather than reading the static list in checkdata.txt.
