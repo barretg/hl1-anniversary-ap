@@ -165,6 +165,12 @@ than by handing over a pickup: with it received, duck-jump should long jump. Wit
 `shuffle_longjump: true` and the item not yet received, it should not — including
 on a map whose own .cfg hands one out.
 
+The case that matters most is a map change. Long jump once, legitimately or from
+a .cfg, then cross a map boundary with the item locked: the jump must be gone on
+the far side. The player's flag is reset by the new map but the physics key the
+engine actually reads is not, so this is where the module used to become
+permanent.
+
 
 Generate with `trap_percentage: 100` for a seed that is nothing but traps.
 

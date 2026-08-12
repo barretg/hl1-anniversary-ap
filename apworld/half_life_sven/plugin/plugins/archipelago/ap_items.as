@@ -177,17 +177,29 @@ void ApplyLoadout( CBasePlayer@ pPlayer )
 * Also the only way to take the module away again -- it is not an inventory item,
 * so StripDisallowed cannot see it, and a campaign .cfg that hands one out would
 * otherwise stick for the rest of the run.
+*
+* Both halves are checked before either is skipped, because they do not live for
+* the same length of time. m_fLongJump belongs to the player entity and is gone
+* the moment a map changes; the physics key buffer belongs to the client
+* connection and survives it. So after every level change the two disagree --
+* flag false, "slj" still 1 -- and a guard that trusted the flag alone concluded
+* there was nothing to do while the player carried on long jumping for the rest
+* of the run.
 */
 void SetLongJump( CBasePlayer@ pPlayer, bool bEnabled )
 {
-	if( pPlayer.m_fLongJump == bEnabled )
+	string szWanted = bEnabled ? "1" : "0";
+
+	KeyValueBuffer@ pPhysics = g_EngineFuncs.GetPhysicsKeyBuffer( pPlayer.edict() );
+	bool bPhysicsAgrees = pPhysics is null || pPhysics.GetValue( "slj" ) == szWanted;
+
+	if( pPlayer.m_fLongJump == bEnabled && bPhysicsAgrees )
 		return;
 
 	pPlayer.m_fLongJump = bEnabled;
 
-	KeyValueBuffer@ pPhysics = g_EngineFuncs.GetPhysicsKeyBuffer( pPlayer.edict() );
 	if( pPhysics !is null )
-		pPhysics.SetValue( "slj", bEnabled ? "1" : "0" );
+		pPhysics.SetValue( "slj", szWanted );
 }
 
 /*
