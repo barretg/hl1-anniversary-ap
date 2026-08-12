@@ -141,12 +141,6 @@ void MapInit()
 	// The map load wiped the scheduler, so the timers must be registered again.
 	g_bScheduled = false;
 	Initialise();
-
-	// Deliberately here and not in Initialise: MapInit is the only point at
-	// which precaching is safe, and a plugin reload mid-map must not do it.
-	// See PrecacheGrantables -- getting this wrong is heard by every client but
-	// the host as the wrong sound for everything.
-	PrecacheGrantables();
 }
 
 void MapStart()

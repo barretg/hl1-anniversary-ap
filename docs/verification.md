@@ -154,21 +154,6 @@ for the entire run; the same applies to `shuffle_longjump: false` and the module
 - Chargers in a mission you re-enter later do not resend.
 - Press use on ordinary buttons, doors and levers → no checks, no log spam.
 
-### 5bis. Precaching (needs a second machine)
-
-The one failure only a joining client can see. Host a listen server, have someone
-else join, and play a map with no weapons of its own (Anomalous Materials):
-
-- Receive a weapon that map does not contain. The **joining** player's sounds
-  must stay normal. Wrong sounds for everything means something is being
-  precached after clients connected — see `PrecacheGrantables` in ap_items.as.
-- Same test for a trap monster on a map with no scientists or headcrabs.
-- `[AP] precached N grantable classnames` should appear in the server console on
-  every map load, before any player spawns.
-
-Neither the host nor a solo player can reproduce this: on a listen server the
-client and the server share one resource table.
-
 ### 5c. Traps
 
 Generate with `trap_percentage: 100` for a seed that is nothing but traps.
