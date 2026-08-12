@@ -22,10 +22,7 @@ want Half-Life on its own, buy Half-Life.
 ## Why Sven Co-op rather than vanilla Half-Life
 
 Sven Co-op exposes a real server-plugin API (AngelScript) with the exact hooks
-this needs — `PickupObject::CanCollect`, `Game::MapChange`, `Player::PlayerSpawn`,
-`Monster::MonsterKilled` — plus sandboxed file I/O. That means no C++ engine fork
-and no DLL patching: the whole game-side integration is text files you can edit
-and reload. It also already ships the full campaign as co-op maps and a hub map
+this needs to function. It also already ships the full campaign as co-op maps and a hub map
 with a console per chapter. Vanilla Half-Life has a separate, engine-level effort
 at [GoldSRC-Archipelago/halflife-archipelago](https://github.com/GoldSRC-Archipelago/halflife-archipelago).
 
