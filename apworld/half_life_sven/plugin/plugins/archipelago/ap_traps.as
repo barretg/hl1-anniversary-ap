@@ -254,7 +254,7 @@ void SpringTrapNow( const string& in szName )
 	if( szName == "Scientist Trap" )
 		SpawnTrap( "monster_scientist", "Someone called for a science team." );
 	else if( szName == "Headcrab Trap" )
-		SpawnTrap( "monster_headcrab", "Headcrabs. Of course it is headcrabs." );
+		SpawnTrap( "monster_headcrab", "What remarkable specimen!" );
 	else if( szName == "Butterfingers Trap" )
 		Butterfingers();
 	else
