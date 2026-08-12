@@ -310,7 +310,7 @@ class TrapPercentage(Range):
     display_name = "Trap Percentage"
     range_start = 0
     range_end = 100
-    default = 0
+    default = 15
 
 
 @dataclass
