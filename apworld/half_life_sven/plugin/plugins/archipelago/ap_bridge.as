@@ -142,6 +142,7 @@ void BridgePoll()
 	dictionary items;
 	dictionary ungated;
 	dictionary goalsOpen;
+	array<string> starting;
 	bool bGoalOpen = false;
 	bool bConnected = false;
 	bool bDeathLink = false;
@@ -218,6 +219,16 @@ void BridgePoll()
 					ungated[ szClassname ] = true;
 			}
 		}
+		else if( szKey == "starting" )
+		{
+			array<string>@ names = szValue.Split( ";" );
+			for( uint i = 0; i < names.length(); ++i )
+			{
+				string szClassname = APTrim( names[i] );
+				if( szClassname.Length() > 0 )
+					starting.insertLast( szClassname );
+			}
+		}
 		else if( szKey == "now" )
 			g_flSnapshotNow = atof( szValue );
 		else if( szKey == "session" )
@@ -252,6 +263,15 @@ void BridgePoll()
 	g_State.excludedChapters = excluded;
 	g_State.unlockedItems = items;
 	g_UngatedClassnames = ungated;
+
+	// An empty list means the client has nothing to say about it, not that the
+	// player should be left with no melee weapon at all, so the data file's own
+	// `S` records stand.
+	if( starting.length() > 0 )
+		g_StartingWeapons = starting;
+	else
+		g_StartingWeapons = g_DefaultStartingWeapons;
+
 	g_State.goalsOpen = goalsOpen;
 	g_State.goalOpen = bGoalOpen;
 	g_State.connected = bConnected;

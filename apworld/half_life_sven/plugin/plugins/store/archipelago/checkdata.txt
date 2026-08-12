@@ -447,6 +447,7 @@ K|weapon_9mmAR|MP5
 K|weapon_9mmhandgun|Glock
 K|weapon_colt1911|Colt 1911
 K|weapon_crossbow|Crossbow
+K|weapon_crowbar|Crowbar
 K|weapon_displacer|Displacer Cannon
 K|weapon_eagle|Desert Eagle
 K|weapon_egon|Gluon Gun

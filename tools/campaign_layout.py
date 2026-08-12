@@ -59,7 +59,15 @@ class Campaign:
     goal_chapter: str
     # Weapons this campaign brings to the pool that no earlier one has. Shared
     # weapons (every campaign has a crowbar) are declared once, by Half-Life.
+    #
+    # Which campaigns a weapon is *available* in is not this: that is read out of
+    # the maps at build time, so an Opposing Force seed can still be given a
+    # shotgun even though Half-Life is the campaign that declared it.
     weapons: dict[str, list[str]] = field(default_factory=dict)
+    # What this campaign can hand you to swing at things with. One of these
+    # replaces the crowbar when `random_starting_weapon` is on, so every entry
+    # has to be a melee weapon the campaign's own maps actually contain.
+    melee: dict[str, list[str]] = field(default_factory=dict)
     # Mission entry gates, as `{chapter key: {"strict": [group, ...]}}`.
     gates: dict[str, dict[str, list[str]]] = field(default_factory=dict)
 
@@ -120,6 +128,7 @@ HALF_LIFE = Campaign(
         "Snarks": ["weapon_snark"],
         "Hand Grenade": ["weapon_handgrenade"],
     },
+    melee={"Crowbar": ["weapon_crowbar"]},
     gates={
         # From here on you are fighting armed marines, not headcrabs.
         "weve_got_hostiles": {"strict": ["ranged"]},
@@ -185,6 +194,10 @@ OPPOSING_FORCE = Campaign(
         "Pipe Wrench": ["weapon_pipewrench"],
         "Minigun": ["weapon_minigun"],
     },
+    melee={
+        "Pipe Wrench": ["weapon_pipewrench"],
+        "Combat Knife": ["weapon_knife"],
+    },
     gates={
         # Boot camp is a firing range and the first two missions are the escape
         # from it; the shooting starts once you are back in Black Mesa proper.
@@ -225,6 +238,8 @@ BLUE_SHIFT = Campaign(
     ],
     consoles=[f"bs_ch{n:02d}" for n in range(1, 7)],
     goal_chapter="bs_power_struggle",
+    # Barney swings the same crowbar Gordon does.
+    melee={"Crowbar": ["weapon_crowbar"]},
     gates={
         "bs_duty_calls": {"strict": ["ranged"]},
         "bs_captive_freight": {"strict": ["ranged"]},
@@ -264,6 +279,11 @@ THEY_HUNGER = Campaign(
         "M16A1": ["weapon_m16a1"],
         "Tesla Gun": ["weapon_teslagun"],
         "Spanner": ["weapon_spanner"],
+    },
+    melee={
+        "Spanner": ["weapon_spanner"],
+        # Its maps carry Opposing Force's wrench too, which is the same item.
+        "Pipe Wrench": ["weapon_pipewrench"],
     },
 )
 
@@ -315,11 +335,30 @@ WEAPON_CAMPAIGN: dict[str, str] = {
     for name in campaign.weapons
 }
 
-# Always granted, never randomised. Every campaign starts you with these.
+# What you start with when nothing randomises it: the crowbar, as it always was.
+# `random_starting_weapon` replaces the melee half with one of MELEE_STARTERS,
+# chosen per seed and sent through the snapshot rather than living here.
 STARTING_WEAPONS = ["weapon_crowbar", "weapon_medkit"]
 
-# Weapons that are a check but never an item. You start with a crowbar, but
-# walking up to the one Half-Life actually gives you is still a moment in the run.
+# Always yours whatever else changes.
+FIXED_STARTING_WEAPONS = ["weapon_medkit"]
+
+# Every melee weapon any campaign could open you with, as display name ->
+# classnames. Names that are also weapon items (the wrench, the knife, the
+# spanner) drop out of the pool for the seed that starts you with them.
+MELEE_STARTERS: dict[str, list[str]] = {
+    name: classnames
+    for campaign in CAMPAIGNS
+    for name, classnames in campaign.melee.items()
+}
+
+MELEE_CAMPAIGNS: dict[str, list[str]] = {}
+for _campaign in CAMPAIGNS:
+    for _name in _campaign.melee:
+        MELEE_CAMPAIGNS.setdefault(_name, []).append(_campaign.key)
+
+# Weapons that are a check but never an item. Walking up to the one the campaign
+# actually gives you is a moment in the run whether or not you started with it.
 UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
     "Crowbar": ["weapon_crowbar"],
 }
@@ -330,9 +369,14 @@ OPTIONAL_ITEMS: dict[str, list[str]] = {
     "Long Jump Module": ["item_longjump"],
 }
 
+# The crowbar is in here despite never being an item, and that is what stops you
+# picking one up in a seed that started you with a wrench instead: the classname
+# is gated on an item name the pool never contains, so it is refused unless it is
+# also one of the seed's starting weapons -- and starting weapons are checked
+# first. In a seed that does start you with a crowbar, nothing changes.
 CLASSNAME_TO_ITEM: dict[str, str] = {
     classname: item
-    for table in (WEAPON_ITEMS, OPTIONAL_ITEMS)
+    for table in (WEAPON_ITEMS, OPTIONAL_ITEMS, UNRANDOMISED_WEAPON_LOCATIONS)
     for item, classnames in table.items()
     for classname in classnames
 }

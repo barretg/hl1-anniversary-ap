@@ -178,6 +178,23 @@ class IncludeBlackMesaInbound(DefaultOnToggle):
     display_name = "Include Black Mesa Inbound"
 
 
+class RandomStartingWeapon(Toggle):
+    """Start with a random melee weapon instead of the crowbar.
+
+    Picked from the campaigns in your seed, so an Opposing Force run can open
+    with its pipe wrench or combat knife and They Hunger with its spanner. With
+    only Half-Life or Blue Shift enabled there is nothing but the crowbar to pick,
+    and the setting changes nothing.
+
+    Whatever it lands on replaces the crowbar completely: the crowbar is then
+    refused for the rest of the run the way any ungranted weapon is, and if the
+    weapon it chose was an item that item leaves the pool. You always keep the
+    medkit.
+    """
+
+    display_name = "Random Starting Weapon"
+
+
 class ShuffleHevSuit(Toggle):
     """Shuffle the HEV suit into the item pool.
 
@@ -257,6 +274,7 @@ class HalfLifeSvenOptions(PerGameCommonOptions):
     logic_difficulty: LogicDifficulty
     include_black_mesa_inbound: IncludeBlackMesaInbound
     chargesanity: Chargesanity
+    random_starting_weapon: RandomStartingWeapon
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
     trap_percentage: TrapPercentage

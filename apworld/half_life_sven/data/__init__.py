@@ -51,6 +51,33 @@ DEFAULT_CAMPAIGN: str = CAMPAIGNS[0]["key"]
 
 CAMPAIGN_OPTIONS: dict[str, str] = {c["key"]: c["option"] for c in CAMPAIGNS}
 
+# Melee weapons each campaign could open a run with, as display name ->
+# classnames. `random_starting_weapon` picks one from the campaigns in the seed,
+# which is how you end up starting an Opposing Force run with a pipe wrench.
+MELEE_STARTERS: dict[str, dict[str, list[str]]] = {
+    c["key"]: c.get("melee", {}) for c in CAMPAIGNS
+}
+
+# Whatever else changes, you always get the medkit. The melee half is the part a
+# seed may replace, so it is not in here.
+FIXED_STARTING_WEAPONS: list[str] = [
+    classname for classname in STARTING_WEAPONS
+    if classname not in {
+        name
+        for melee in MELEE_STARTERS.values()
+        for classnames in melee.values()
+        for name in classnames
+    }
+]
+
+
+def melee_starters_for(campaign_keys: list[str]) -> dict[str, list[str]]:
+    """Every melee weapon the campaigns in a seed could start you with."""
+    starters: dict[str, list[str]] = {}
+    for key in campaign_keys:
+        starters.update(MELEE_STARTERS.get(key, {}))
+    return starters
+
 # Each campaign's own `missions_required`. Independent settings, so a seed with
 # several campaigns has several of these and none of them affect each other.
 CAMPAIGN_MISSION_OPTIONS: dict[str, str] = {

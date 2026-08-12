@@ -28,9 +28,11 @@ from .data import (
     CHAPTERS,
     CHARGER_TRIGGER,
     DEFAULT_CAMPAIGN,
+    FIXED_STARTING_WEAPONS,
     INTRO_CHAPTER,
     OPTIONAL_ITEM_NAMES,
     STARTING_WEAPONS,
+    melee_starters_for,
     victory_event,
 )
 from .items import (
@@ -39,6 +41,7 @@ from .items import (
     filler_items,
     filler_weights,
     item_campaign,
+    item_campaigns,
     item_name_groups,
     item_name_to_id,
     optional_items,
@@ -137,6 +140,12 @@ class HalfLifeSvenWorld(World):
         # `missions_required` clamped to each campaign's own size, since a
         # campaign cannot ask for more missions than it has.
         self.missions_required_for: dict[str, int] = {}
+        # Classnames granted from the first spawn and never taken away. The
+        # melee half is chosen per seed when `random_starting_weapon` is on.
+        self.starting_weapons: list[str] = list(STARTING_WEAPONS)
+        # The item name of that melee weapon, when it has one. It leaves the pool:
+        # you cannot be sent a wrench you are already holding.
+        self.starting_melee_item: str = ""
 
     # -- generation ------------------------------------------------------
 
@@ -162,12 +171,22 @@ class HalfLifeSvenWorld(World):
         if not self.options.chargesanity:
             self.excluded_triggers.add(CHARGER_TRIGGER)
 
+        self.choose_starting_weapons()
+
         # Weapons come from the campaigns in the seed. Everything they bring goes
         # into one pool, so an Opposing Force seed with Half-Life enabled can hand
         # you a displacer in Black Mesa and a crossbow on Gene Worm.
+        #
+        # Membership is "does any campaign in this seed actually contain one",
+        # not "which campaign declared it". Half-Life declares the shotgun and
+        # Opposing Force is full of them, so attributing it to Half-Life alone
+        # left an Opposing Force seed with shotguns and no shotgun item, which
+        # meant every one of them refused for the whole run.
         self.available_item_names = {
             name for name in weapon_items
-            if item_campaign.get(name, DEFAULT_CAMPAIGN) in self.included_campaigns
+            if set(item_campaigns.get(name, [item_campaign.get(name, DEFAULT_CAMPAIGN)]))
+            & set(self.included_campaigns)
+            and name != self.starting_melee_item
         }
         for name in optional_items:
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
@@ -207,6 +226,30 @@ class HalfLifeSvenWorld(World):
                 if chapter["campaign"] == campaign_key and not chapter["is_goal"]
             ])
             self.missions_required_for[campaign_key] = min(option.value, available)
+
+    def choose_starting_weapons(self) -> None:
+        """Decide what the run opens with.
+
+        The medkit always, plus one melee weapon. Left alone that is the crowbar,
+        exactly as before; with `random_starting_weapon` it is any melee weapon
+        the seed's campaigns could hand out, so an Opposing Force run can open on
+        a pipe wrench and a They Hunger run on a spanner.
+
+        Whatever it lands on replaces the crowbar rather than joining it. The
+        crowbar is gated on an item name the pool never contains, so the moment it
+        stops being a starting weapon it is refused like any other ungranted
+        weapon, and a wrench start means a wrench for the whole run.
+        """
+        candidates = melee_starters_for(self.included_campaigns)
+        if not self.options.random_starting_weapon or not candidates:
+            self.starting_weapons = list(STARTING_WEAPONS)
+            return
+
+        name = self.random.choice(sorted(candidates))
+        self.starting_weapons = list(candidates[name]) + list(FIXED_STARTING_WEAPONS)
+        # Only if it is an item at all: nothing ever sends you a crowbar.
+        if name in weapon_items:
+            self.starting_melee_item = name
 
     @property
     def included_chapters(self) -> list[dict[str, Any]]:
@@ -294,7 +337,10 @@ class HalfLifeSvenWorld(World):
             # the in-game list says "not in this seed" rather than showing a
             # mission that stays locked forever with no explanation.
             "excluded_chapters": sorted(self.excluded_chapters),
-            "starting_weapons": STARTING_WEAPONS,
+            # What the run opens with, and what the game must therefore never
+            # take away. Per seed since `random_starting_weapon`, so the plugin
+            # is told rather than reading the static list in checkdata.txt.
+            "starting_weapons": list(self.starting_weapons),
             "death_link": bool(self.options.death_link),
             "death_link_amnesty": self.options.death_link_amnesty.value,
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),

@@ -188,6 +188,33 @@ class LocationBuilder:
         raise RuntimeError(f"could not make {name!r} unique")
 
 
+def campaigns_holding(
+    chapters: list[dict], entities: dict[str, list[dict[str, str]]],
+    classnames: list[str],
+) -> list[str]:
+    """Every campaign whose maps actually contain one of these classnames.
+
+    Read from the BSPs rather than taken from whichever campaign declared the
+    item, because they are not the same question. Half-Life declares the shotgun,
+    but Opposing Force and Blue Shift are full of them -- and attributing the item
+    to Half-Life alone left an Opposing Force seed with shotguns it could never be
+    given the item for, so they sat in the levels permanently refused.
+    """
+    wanted = set(classnames)
+    found: list[str] = []
+
+    for chapter in chapters:
+        campaign = chapter["campaign"]
+        if campaign in found:
+            continue
+        for map_name in chapter["maps"]:
+            if any(e.get("classname", "") in wanted for e in entities[map_name]):
+                found.append(campaign)
+                break
+
+    return found
+
+
 def earliest_map_with(
     chapters: list[dict], entities: dict[str, list[dict[str, str]]],
     classnames: list[str],
@@ -400,7 +427,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                  "map": chapter["maps"][-1]},
             )
 
-    items = build_items(chapters, registry)
+    items = build_items(chapters, entities, registry)
 
     return {
         "data_version": registry.fingerprint(),
@@ -412,6 +439,9 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 "missions_option": campaign.missions_option,
                 "goal_chapter": campaign.goal_chapter,
                 "chapters": [key for key, _, _ in campaign.chapters],
+                # Melee weapons this campaign could open a run with, when
+                # `random_starting_weapon` is on.
+                "melee": campaign.melee,
                 # Portal console targetname -> the mission its button enters.
                 # A table rather than a rule, because the hub numbers its
                 # consoles differently in every campaign.
@@ -442,7 +472,10 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     }
 
 
-def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
+def build_items(
+    chapters: list[dict], entities: dict[str, list[dict[str, str]]],
+    registry: IdRegistry,
+) -> list[dict]:
     items: list[dict] = []
 
     def add(name: str, classification: str, **extra) -> None:
@@ -465,8 +498,9 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
             campaign=chapter["campaign"],
         )
 
-    # Weapons carry the campaign that introduced them so a seed can leave out the
-    # ones no enabled campaign has any use for.
+    # `campaign` is who introduced the weapon; `campaigns` is everywhere it can
+    # actually be found, which is what decides whether a seed needs the item. The
+    # two differ for every weapon more than one campaign ships.
     for name, classnames in WEAPON_ITEMS.items():
         add(
             name,
@@ -474,6 +508,8 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
             group="weapon",
             classnames=classnames,
             campaign=WEAPON_CAMPAIGN[name],
+            campaigns=campaigns_holding(chapters, entities, classnames)
+            or [WEAPON_CAMPAIGN[name]],
         )
 
     for name, classnames in OPTIONAL_ITEMS.items():

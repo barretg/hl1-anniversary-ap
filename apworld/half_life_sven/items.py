@@ -40,6 +40,14 @@ item_campaign: dict[str, str] = {
     entry["name"]: entry["campaign"] for entry in ITEMS if "campaign" in entry
 }
 
+# Item name -> every campaign whose maps actually contain it, which is the
+# question that decides whether a seed needs the item at all. Half-Life declares
+# the shotgun but Opposing Force is full of them, so an Opposing Force seed needs
+# the Shotgun item even with Half-Life switched off.
+item_campaigns: dict[str, list[str]] = {
+    entry["name"]: entry["campaigns"] for entry in ITEMS if "campaigns" in entry
+}
+
 item_name_groups: dict[str, set[str]] = {
     "Weapons": set(weapon_items),
     "Mission Unlocks": set(chapter_unlock_items),

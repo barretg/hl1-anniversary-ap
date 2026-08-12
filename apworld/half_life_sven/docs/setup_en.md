@@ -119,6 +119,16 @@ its checks come from reaching maps.
 You start with the crowbar, the medkit, and **one random mission unlock per
 campaign in the seed**.
 
+**`random_starting_weapon`** swaps the crowbar for a random melee weapon from the
+campaigns you enabled: Opposing Force's pipe wrench or combat knife, They
+Hunger's spanner, or the crowbar anyway. With only Half-Life or Blue Shift on
+there is nothing else to pick and the setting changes nothing.
+
+Whatever it lands on replaces the crowbar rather than joining it. Crowbars are
+then refused for the rest of the run the way any ungranted weapon is, and if the
+weapon it chose was an item, that item leaves the pool — nobody is going to send
+you a wrench you are already holding. The medkit is yours either way.
+
 Walk up to a chapter's console in the portal room and press either button. The
 plugin rewires the consoles: one press travels to that mission if you have its
 unlock, or tells you it is locked.

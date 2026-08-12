@@ -41,11 +41,17 @@ The Sven Co-op campaign portal becomes a hub. Every mission is sealed until its
 unlock item arrives from the multiworld, and each campaign in the seed begins
 with exactly one random mission open — so no two runs start in the same place.
 
-Every weapon except the crowbar is also an item. Weapons lying in the levels can
-still be walked over (that is what sends the check), but Gordon will not pick one
-up until the multiworld has granted it, and the campaign's own per-map loadouts
-are stripped to match. A shotgun found in Office Complex is worth nothing until
-somebody, somewhere, sends you the Shotgun.
+Every weapon except the one you start with is also an item. Weapons lying in the
+levels can still be walked over (that is what sends the check), but Gordon will
+not pick one up until the multiworld has granted it, and the campaign's own
+per-map loadouts are stripped to match. A shotgun found in Office Complex is
+worth nothing until somebody, somewhere, sends you the Shotgun.
+
+That starting weapon is the crowbar unless `random_starting_weapon` is on, in
+which case it is any melee weapon your campaigns could hand out — Opposing
+Force's pipe wrench or combat knife, They Hunger's spanner. It replaces the
+crowbar outright, so a wrench start means the crowbars in the levels are refused
+like everything else.
 
 A campaign's final mission is not unlocked by an item at all. Nihilanth opens once
 you have completed a configurable number of other Half-Life missions, and every

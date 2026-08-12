@@ -97,6 +97,17 @@ def test_snapshot_carries_excluded_missions(bridge: Bridge) -> None:
     assert "excluded=black_mesa_inbound" in bridge.in_path.read_text(encoding="utf-8")
 
 
+def test_snapshot_carries_the_starting_weapons(bridge: Bridge) -> None:
+    """Per seed since `random_starting_weapon`, so the file's list is a default."""
+    snapshot(bridge)
+    assert "starting=\n" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, starting=["weapon_pipewrench", "weapon_medkit"]) is True
+    text = bridge.in_path.read_text(encoding="utf-8")
+    # Not sorted: this is the seed's list, and the melee weapon comes first.
+    assert "starting=weapon_pipewrench;weapon_medkit" in text
+
+
 def test_snapshot_carries_open_finales_per_campaign(bridge: Bridge) -> None:
     """A seed has one finale per campaign and they unseal independently."""
     snapshot(bridge)

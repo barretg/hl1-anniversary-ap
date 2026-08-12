@@ -51,6 +51,20 @@ that have never run in-game at all.
   and does nothing at all for Worlds Collide.
 - **A campaign left out of the seed** shows every one of its missions as "not in
   this seed" in `!ap`, and its consoles refuse with that message.
+- **Shared weapons still arrive without Half-Life.** On an Opposing Force only
+  seed, receive the Shotgun and confirm you can pick one up. Attributing shared
+  weapons to whichever campaign declared them left this seed with shotguns and no
+  shotgun item, so every one of them was refused for the whole run.
+
+With `random_starting_weapon: true` and Opposing Force or They Hunger enabled:
+
+- **You spawn holding the rolled weapon**, not a crowbar, and it is the same
+  weapon after a map change and after dying.
+- **Crowbars are refused.** Walk over one: the `First Crowbar` check still sends,
+  the weapon is not kept. That is the point of the swap.
+- **The rolled weapon never arrives as an item**, because it left the pool.
+- With only Half-Life or Blue Shift enabled it is always the crowbar, and the
+  seed is indistinguishable from one with the option off.
 
 ### 1. The plugin loads
 

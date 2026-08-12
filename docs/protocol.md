@@ -99,6 +99,7 @@ goals_open=nihilanth
 excluded=black_mesa_inbound
 items=RPG;Shotgun
 ungated=item_longjump
+starting=weapon_crowbar;weapon_medkit
 now=1786000000
 event=4|ITEM|Ammo Cache|1786000000
 event=5|DEATHLINK|PlayerTwo~a gargantua|1786000001
@@ -135,6 +136,19 @@ Reporting the module as owned instead granted it from the first spawn of the run
 
 An older client sends no `ungated` line, which parses as an empty list and
 reproduces the previous behaviour exactly.
+
+`starting` is the classnames the run opens with and the plugin must never take
+away, which `random_starting_weapon` turns into a per-seed answer: the melee half
+can be a pipe wrench or a spanner rather than the crowbar. It overrides the `S`
+records in `checkdata.txt`, which are the default rather than the truth. An empty
+list means the client has nothing to say and the file's records stand — never
+"start with nothing", since taking a player's only melee weapon away is not a
+state the bridge should be able to express.
+
+Starting weapons are checked before gates, which is what lets the crowbar be both
+a starting weapon and a `K` record: by default it is yours, and in a seed that
+started you with something else the gate refuses it, because no item named
+"Crowbar" is ever in a pool.
 
 `now` is the client's wall clock at write time. Event freshness is judged by
 comparing an event's timestamp against `now` from the same snapshot, so the two

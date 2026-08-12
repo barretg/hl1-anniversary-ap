@@ -233,6 +233,12 @@ class HalfLifeSvenContext(CommonContext):
         # gates classnames, and it has to stop gating these entirely rather than
         # treat them as owned.
         self.ungated_classnames: set[str] = unshuffled_vanilla_classnames()
+        # What the run opens with. Per seed since `random_starting_weapon`, so it
+        # comes from slot data; the campaign data's list is the fallback for a
+        # seed generated before that existed.
+        self.starting_weapons: list[str] = list(
+            self.campaign.get("starting_weapons", ())
+        )
         self.completed_missions: set[str] = set()
         # Kept as the fallback for a seed generated before campaigns existed,
         # whose slot data carries one number and one goal.
@@ -407,6 +413,9 @@ class HalfLifeSvenContext(CommonContext):
             }
             self.always_unlocked = unshuffled_grants(unshuffled)
             self.ungated_classnames = unshuffled_vanilla_classnames(unshuffled)
+            self.starting_weapons = list(
+                slot_data.get("starting_weapons", self.starting_weapons)
+            )
             self.death_link_enabled = bool(slot_data.get("death_link", False))
             self.death_link_amnesty = int(
                 slot_data.get("death_link_amnesty", self.death_link_amnesty)
@@ -771,6 +780,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
                 death_link_amnesty=ctx.death_link_amnesty,
                 excluded=sorted(ctx.excluded_chapters),
                 ungated=sorted(ctx.ungated_classnames),
+                starting=list(ctx.starting_weapons),
                 data_version=ctx.data_version,
                 force=True,
             )
@@ -804,6 +814,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         death_link_amnesty=ctx.death_link_amnesty,
         excluded=sorted(ctx.excluded_chapters),
         ungated=sorted(ctx.ungated_classnames),
+        starting=list(ctx.starting_weapons),
         data_version=ctx.data_version,
     )
 

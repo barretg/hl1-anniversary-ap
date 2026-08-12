@@ -11,6 +11,7 @@ from ..data import (
     CHAPTERS,
     CHAPTERS_BY_KEY,
     LOCATIONS,
+    MELEE_STARTERS,
     UNLOCKABLE_CHAPTERS,
     unlockable_chapters_of,
 )
@@ -342,6 +343,66 @@ class TestOpposingForceOnly(StartingMissionMixin, HalfLifeSvenTestBase):
         self.assertEqual(
             [c["key"] for c in world.goal_chapters], ["of_worlds_collide"]
         )
+
+
+class TestRandomStartingWeapon(StartingMissionMixin, HalfLifeSvenTestBase):
+    options = {
+        "include_half_life": True,
+        "include_opposing_force": True,
+        "include_they_hunger": True,
+        "random_starting_weapon": True,
+    }
+
+    def test_it_starts_with_exactly_one_melee_weapon_and_the_medkit(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        melee = {
+            classname
+            for campaign in ("half_life", "opposing_force", "they_hunger")
+            for classnames in MELEE_STARTERS[campaign].values()
+            for classname in classnames
+        }
+
+        self.assertIn("weapon_medkit", world.starting_weapons)
+        chosen = [c for c in world.starting_weapons if c in melee]
+        self.assertEqual(len(chosen), 1, world.starting_weapons)
+
+    def test_the_chosen_weapon_is_not_also_in_the_pool(self) -> None:
+        """You cannot be sent a wrench you are already holding."""
+        world = self.multiworld.worlds[self.player]
+        if not world.starting_melee_item:
+            self.skipTest("this seed rolled the crowbar, which is never an item")
+
+        pool = {item.name for item in self.multiworld.itempool if item.player == self.player}
+        self.assertNotIn(world.starting_melee_item, pool)
+        self.assertNotIn(world.starting_melee_item, world.available_item_names)
+
+
+class TestStartingWeaponLeftAlone(StartingMissionMixin, HalfLifeSvenTestBase):
+    options = {"include_opposing_force": True, "random_starting_weapon": False}
+
+    def test_it_is_still_the_crowbar(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(world.starting_weapons, ["weapon_crowbar", "weapon_medkit"])
+        self.assertEqual(world.starting_melee_item, "")
+
+    def test_the_wrench_is_a_normal_item(self) -> None:
+        pool = {item.name for item in self.multiworld.itempool if item.player == self.player}
+        self.assertIn("Pipe Wrench", pool)
+
+
+class TestSharedWeaponsWithoutHalfLife(HalfLifeSvenTestBase):
+    """A weapon Half-Life declared but another campaign is full of."""
+
+    options = {"include_half_life": False, "include_opposing_force": True}
+
+    def test_the_shotgun_is_still_an_item(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        for name in ("Shotgun", "MP5", "RPG"):
+            self.assertIn(name, world.available_item_names)
+
+    def test_weapons_no_campaign_holds_are_left_out(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertNotIn("Tommy Gun", world.available_item_names)
 
 
 class TestNoCampaignsEnabled(StartingMissionMixin, HalfLifeSvenTestBase):

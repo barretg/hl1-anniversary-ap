@@ -191,19 +191,38 @@ def test_checkdata_has_every_chapter(campaign: dict, checkdata: list[list[str]])
 def test_checkdata_locked_classnames_map_to_real_items(
     campaign: dict, checkdata: list[list[str]]
 ) -> None:
+    """Every gate names an item that can arrive, bar the deliberate exception.
+
+    The crowbar is gated on an item name the pool never contains, which is what
+    makes a `random_starting_weapon` seed able to take it away: see
+    `test_the_crowbar_is_gated_but_starts_unlocked`.
+    """
+    from campaign_layout import UNRANDOMISED_WEAPON_LOCATIONS
+
     names = {item["name"] for item in campaign["items"]}
+    unreachable = set(UNRANDOMISED_WEAPON_LOCATIONS)
     locked = [(r[1], r[2]) for r in checkdata if r[0] == "K"]
     assert locked
     for classname, item_name in locked:
-        assert item_name in names, classname
+        assert item_name in names or item_name in unreachable, classname
 
 
-def test_crowbar_is_never_randomised(checkdata: list[list[str]]) -> None:
+def test_the_crowbar_is_gated_but_starts_unlocked(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """Both, and that pair is the mechanism rather than a contradiction.
+
+    Starting weapons are checked before gates, so by default the crowbar is
+    yours. A seed that starts you with a wrench instead simply leaves it out of
+    the starting list, and the gate then refuses it for the rest of the run
+    because no item named "Crowbar" is ever in the pool.
+    """
     starting = {r[1] for r in checkdata if r[0] == "S"}
-    locked = {r[1] for r in checkdata if r[0] == "K"}
+    locked = {r[1]: r[2] for r in checkdata if r[0] == "K"}
 
     assert "weapon_crowbar" in starting
-    assert "weapon_crowbar" not in locked
+    assert locked.get("weapon_crowbar") == "Crowbar"
+    assert "Crowbar" not in {item["name"] for item in campaign["items"]}
 
 
 def test_every_map_has_a_reached_location(campaign: dict) -> None:
@@ -377,3 +396,50 @@ def test_optional_equipment_is_gated_by_classname(
             continue
         for classname in entry["classnames"]:
             assert classname in gated, classname
+
+
+def test_melee_starters_exist_in_their_campaigns_maps(campaign: dict) -> None:
+    """`random_starting_weapon` picks from these, so they have to be real.
+
+    A campaign that could open you with a weapon its own maps never contain would
+    be handing out something the engine may not have loaded.
+    """
+    maps_by_campaign: dict[str, set[str]] = {}
+    for chapter in campaign["chapters"]:
+        maps_by_campaign.setdefault(chapter["campaign"], set()).update(chapter["maps"])
+
+    weapon_maps = {
+        classname: {
+            entry["map"] for entry in campaign["locations"]
+            if entry["trigger"]["type"] == "weapon_pickup"
+            and classname in entry["trigger"]["classnames"]
+        }
+        for entry in campaign["campaigns"]
+        for classnames in entry["melee"].values()
+        for classname in classnames
+    }
+
+    for entry in campaign["campaigns"]:
+        assert entry["melee"], entry["key"]
+        for name, classnames in entry["melee"].items():
+            anchored = set().union(*(weapon_maps[c] for c in classnames))
+            assert anchored & maps_by_campaign[entry["key"]], f"{entry['key']}: {name}"
+
+
+def test_shared_weapons_are_available_in_every_campaign_holding_them(
+    campaign: dict,
+) -> None:
+    """Attributing a weapon to one campaign stranded it in the others.
+
+    The shotgun is Half-Life's by declaration and everywhere by placement, so a
+    seed without Half-Life still needs the item or every shotgun in it is refused
+    for the whole run.
+    """
+    by_name = {entry["name"]: entry for entry in campaign["items"]}
+
+    shotgun = by_name["Shotgun"]
+    assert {"opposing_force", "blue_shift"} <= set(shotgun["campaigns"])
+    # And a weapon only one campaign ships stays that campaign's alone.
+    assert by_name["Displacer Cannon"]["campaigns"] == ["opposing_force"]
+    # They Hunger carries Opposing Force's wrench, so it needs that item too.
+    assert "they_hunger" in by_name["Pipe Wrench"]["campaigns"]

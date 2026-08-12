@@ -181,6 +181,7 @@ class Bridge:
         excluded: list[str] | None = None,
         ungated: list[str] | None = None,
         goals_open: list[str] | None = None,
+        starting: list[str] | None = None,
         death_link_amnesty: int = 0,
         data_version: str = "",
         force: bool = False,
@@ -218,6 +219,11 @@ class Bridge:
             # gating them and calling them owned: the game keeps its own schedule
             # for these, handing them out and taking them back as it always did.
             "ungated=" + ";".join(sorted(ungated or ())),
+            # What this seed opens the run with, which `random_starting_weapon`
+            # makes a per-seed answer rather than the fixed pair in checkdata.txt.
+            # Order is not sorted: it is the seed's list, and an empty one means
+            # "use the file", not "start with nothing".
+            "starting=" + ";".join(starting or ()),
         ]
         body = "\n".join(lines)
         pending = tuple(sorted(self._pending))

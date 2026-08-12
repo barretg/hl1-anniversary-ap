@@ -144,8 +144,21 @@ dictionary g_PortalConsoles;
 
 // classname -> AP item name; a pickup of this classname is refused until owned.
 dictionary g_LockedClassnames;
-// classnames always granted regardless of the multiworld.
+/*
+* Classnames always granted regardless of the multiworld, and never stripped.
+*
+* Loaded from the `S` records as a default, then replaced by whatever the client
+* sends in the snapshot: `random_starting_weapon` makes this a per-seed answer,
+* so a run can open on Opposing Force's pipe wrench or They Hunger's spanner
+* instead of the crowbar. An empty list from the client means "keep the file's",
+* never "start with nothing" -- taking the melee weapon away from a player who
+* has no other is not a state this should be able to reach.
+*/
 array<string> g_StartingWeapons;
+
+// The `S` records, kept so a snapshot that carries no starting weapons can fall
+// back to them without re-reading the file.
+array<string> g_DefaultStartingWeapons;
 
 /*
 * Classnames this seed does not gate at all, sent by the client.
@@ -330,6 +343,7 @@ void LoadCheckData()
 	g_Locations.resize( 0 );
 	g_LockedClassnames.deleteAll();
 	g_StartingWeapons.resize( 0 );
+	g_DefaultStartingWeapons.resize( 0 );
 	g_CampaignNames.deleteAll();
 	g_PortalConsoles.deleteAll();
 
@@ -392,6 +406,7 @@ void LoadCheckData()
 		else if( parts[0] == "S" )
 		{
 			g_StartingWeapons.insertLast( parts[1] );
+			g_DefaultStartingWeapons.insertLast( parts[1] );
 		}
 		else if( parts[0] == "D" )
 		{
