@@ -123,7 +123,9 @@ The world generates against Archipelago 0.6.7 (verified across
 and long jump module shuffled). The bridge protocol and the data consistency
 between the two halves are covered by tests.
 
-The AngelScript plugin has **not yet been run in-game**.
-[docs/verification.md](docs/verification.md) lists what has been verified, and
+The AngelScript plugin has been tested in-game but requires further stress testing. Please ping @xLander in discord with any bugs.
+[docs/verification.md](docs/verification.md) lists what has been verified (but it's kinda outdated, haha), and
 gives an ordered in-game checklist that calls out the two assumptions most likely
 to need adjusting.
+
+
