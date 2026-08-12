@@ -188,9 +188,10 @@ void MapStart()
 
 		RegisterMapReached();
 
-		// The final mission ends on hl_c18, which finishes with a game_end and
-		// never changes level again -- so MapChange can never see it finish.
-		// Arriving on the goal mission's last map means Nihilanth is dead.
+		// A campaign's last map finishes with a game_end and never changes level
+		// again (hl_c18 for Half-Life, and the same shape in the others) -- so
+		// MapChange can never see it finish. Arriving on a finale's last map is
+		// therefore what counts as finishing that campaign.
 		if( g_CurrentChapter.isGoal && g_szCurrentMap == g_CurrentChapter.LastMap() )
 			CompleteChapter( g_CurrentChapter );
 	}

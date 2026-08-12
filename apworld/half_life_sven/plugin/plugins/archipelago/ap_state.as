@@ -36,6 +36,9 @@ class APChapter
 	string name;
 	array<string> maps;
 	bool isGoal;
+	// Which campaign this mission belongs to. Empty when talking to a data file
+	// generated before there was more than one.
+	string campaign;
 
 	string FirstMap() const { return maps[0]; }
 	string LastMap() const { return maps[maps.length() - 1]; }
@@ -71,6 +74,11 @@ class APState
 	// unlock these, so the list says so instead of implying a key exists.
 	dictionary excludedChapters;
 	dictionary unlockedItems;     // AP item name -> true
+	// Finales that are unsealed, by chapter key. One per campaign, because each
+	// campaign's `missions_required` is its own setting and its own count.
+	dictionary goalsOpen;
+	// The same answer as one bool, for a client too old to send the list. True
+	// only when every finale in the seed is open.
 	bool goalOpen = false;
 	bool connected = false;
 	bool deathLink = false;
@@ -93,6 +101,22 @@ class APState
 	{
 		return unlockedItems.exists( szItem );
 	}
+
+	/*
+	* Is this campaign's finale unsealed?
+	*
+	* The per-chapter list when the client sends one, which it always does from
+	* the version that understands more than one campaign. `goalOpen` is the
+	* fallback, and it is deliberately the *all* of them rather than the any: an
+	* older client cannot say which finale it means, and opening the wrong one
+	* early is worse than opening the right one late.
+	*/
+	bool GoalOpen( const string& in szChapter ) const
+	{
+		if( goalsOpen.getSize() > 0 )
+			return goalsOpen.exists( szChapter );
+		return goalOpen;
+	}
 }
 
 // --- globals --------------------------------------------------------------
@@ -105,6 +129,18 @@ array<APLocation@> g_Locations;
 // seed's do and every check we send would land on the wrong location.
 string g_szDataVersion;
 bool g_bDataMismatch = false;
+
+/*
+* Campaign key -> display name, and hub console -> the mission its button enters.
+*
+* The console table is generated rather than derived, because the campaign portal
+* numbers its consoles differently in every campaign: Half-Life's are unpadded
+* and start at 1 (its mission 0 has no console at all), Opposing Force's are
+* zero padded and skip 06 entirely, and the rest run 01 upward. Working that out
+* from a targetname is how you send a player to the wrong mission.
+*/
+dictionary g_CampaignNames;
+dictionary g_PortalConsoles;
 
 // classname -> AP item name; a pickup of this classname is refused until owned.
 dictionary g_LockedClassnames;
@@ -240,6 +276,25 @@ bool CheckDataLoaded()
 	return g_Chapters.length() > 0 && g_StartingWeapons.length() > 0;
 }
 
+/*
+* How many campaigns this *seed* contains, which is not how many the data file
+* knows about: checkdata.txt always lists all four, and a seed switches the ones
+* it left out off by excluding every mission in them.
+*/
+uint IncludedCampaignCount()
+{
+	dictionary seen;
+
+	for( uint i = 0; i < g_Chapters.length(); ++i )
+	{
+		APChapter@ pChapter = g_Chapters[i];
+		if( !g_State.ChapterExcluded( pChapter.key ) )
+			seen[ pChapter.campaign ] = true;
+	}
+
+	return seen.getSize();
+}
+
 APChapter@ ChapterByKey( const string& in szKey )
 {
 	for( uint i = 0; i < g_Chapters.length(); ++i )
@@ -261,7 +316,7 @@ bool ChapterPlayable( APChapter@ pChapter )
 	if( pChapter is null )
 		return false;
 	if( pChapter.isGoal )
-		return g_State.goalOpen;
+		return g_State.GoalOpen( pChapter.key );
 	return g_State.ChapterUnlocked( pChapter.key );
 }
 
@@ -275,6 +330,8 @@ void LoadCheckData()
 	g_Locations.resize( 0 );
 	g_LockedClassnames.deleteAll();
 	g_StartingWeapons.resize( 0 );
+	g_CampaignNames.deleteAll();
+	g_PortalConsoles.deleteAll();
 
 	File@ pFile = g_FileSystem.OpenFile( AP_CHECKDATA, OpenFile::READ );
 
@@ -304,7 +361,18 @@ void LoadCheckData()
 			chapter.name = parts[3];
 			chapter.maps = parts[4].Split( "," );
 			chapter.isGoal = parts[5] == "1";
+			// Appended after the fact, so an older data file simply has none.
+			if( parts.length() >= 7 )
+				chapter.campaign = parts[6];
 			g_Chapters.insertLast( @chapter );
+		}
+		else if( parts[0] == "M" && parts.length() >= 3 )
+		{
+			g_CampaignNames[ parts[1] ] = parts[2];
+		}
+		else if( parts[0] == "P" && parts.length() >= 3 )
+		{
+			g_PortalConsoles[ parts[1] ] = parts[2];
 		}
 		else if( parts[0] == "L" && parts.length() >= 6 )
 		{

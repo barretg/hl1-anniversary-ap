@@ -181,7 +181,7 @@ void RegisterMapReached()
 
 /*
 * The mission is over. Sends the completion check and tells the client, which is
-* what advances the `missions_required` count that opens Nihilanth.
+* what advances the `missions_required` count that opens its campaign's finale.
 */
 void CompleteChapter( APChapter@ pChapter )
 {
@@ -199,9 +199,17 @@ void CompleteChapter( APChapter@ pChapter )
 
 	if( pChapter.isGoal )
 	{
+		// One campaign's finale. Whether that wins the *seed* depends on the
+		// other campaigns in it, which only the client knows, so this reports
+		// the finale and lets the client decide what it amounts to.
 		BridgeSend( "GOAL|" + pChapter.key );
+
+		string szCampaign;
+		if( !g_CampaignNames.get( pChapter.campaign, szCampaign ) )
+			szCampaign = pChapter.name;
+
 		g_PlayerFuncs.ClientPrintAll(
-			HUD_PRINTTALK, "[AP] Nihilanth is dead. Goal complete!\n" );
+			HUD_PRINTTALK, "[AP] " + szCampaign + " complete!\n" );
 	}
 	else
 	{

@@ -19,11 +19,14 @@ from pathlib import Path
 
 from bsp_entities import load_map
 from campaign_layout import (
+    CAMPAIGNS,
+    CAMPAIGN_OF_CHAPTER,
     CHAPTERS,
     CHARGER_CLASSNAMES,
     CLASSNAME_TO_ITEM,
+    DEFAULT_CAMPAIGN,
     ENABLED_LOCATION_TYPES,
-    GOAL_CHAPTER,
+    GOAL_CHAPTERS,
     IGNORED_MONSTERS,
     ITEM_ID_BASE,
     KILL_MILESTONE_FRACTIONS,
@@ -34,6 +37,7 @@ from campaign_layout import (
     REQUIREMENT_GROUPS,
     UNRANDOMISED_WEAPON_LOCATIONS,
     STARTING_WEAPONS,
+    WEAPON_CAMPAIGN,
     WEAPON_ITEMS,
     CHAPTER_GATES,
 )
@@ -132,7 +136,15 @@ def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
         # A campaign-wide location: its identity is the weapon, not where the
         # earliest copy happens to sit. Anchoring the key to the map would
         # renumber it if a nearer pickup were ever found.
-        return f"*|*|{kind}|{','.join(sorted(trigger['classnames']))}"
+        #
+        # Half-Life's spelling of this key predates the other campaigns and is
+        # kept exactly as it was, so its ids do not move. Every other campaign
+        # scopes the key to itself, since each one gets its own "first shotgun".
+        weapon = ",".join(sorted(trigger["classnames"]))
+        campaign = CAMPAIGN_OF_CHAPTER.get(chapter_key, DEFAULT_CAMPAIGN)
+        if campaign == DEFAULT_CAMPAIGN:
+            return f"*|*|{kind}|{weapon}"
+        return f"{campaign}|*|{kind}|{weapon}"
     else:
         arg = ""
     return f"{chapter_key}|{map_name}|{kind}|{arg}"
@@ -184,14 +196,23 @@ def earliest_map_with(
     wanted = set(classnames)
     for chapter in chapters:
         for map_name in chapter["maps"]:
-            if any(e["classname"] in wanted for e in entities[map_name]):
+            if any(e.get("classname", "") in wanted for e in entities[map_name]):
                 return chapter, map_name
     return None
 
 
 def build(maps_dir: Path, registry: IdRegistry) -> dict:
+    # `index` stays global across every campaign, because it is what `!warp <n>`
+    # takes in game and a number has to mean one mission whichever campaigns a
+    # seed contains. Half-Life is first, so its numbering is unchanged.
     chapters = [
-        {"key": key, "name": name, "maps": maps, "index": index}
+        {
+            "key": key,
+            "name": name,
+            "maps": maps,
+            "index": index,
+            "campaign": CAMPAIGN_OF_CHAPTER[key],
+        }
         for index, (key, name, maps) in enumerate(CHAPTERS)
     ]
 
@@ -230,11 +251,18 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # BSP and the running game both know, so ids are keyed to it.
             if "charger" in enabled:
                 for classname, display in CHARGER_CLASSNAMES.items():
-                    chargers = sorted(
-                        (e for e in ents
-                         if e["classname"] == classname and brush_model_index(e) >= 0),
-                        key=brush_model_index,
-                    )
+                    # Keyed by brush model, which also de-duplicates: a couple of
+                    # maps carry two entity blocks pointing at the same brush, and
+                    # the running game cannot tell those apart either -- one
+                    # `+use` is one charger, so they have to be one check.
+                    by_model = {}
+                    for entity in ents:
+                        if entity.get("classname", "") != classname:
+                            continue
+                        if brush_model_index(entity) < 0:
+                            continue
+                        by_model.setdefault(entity["model"], entity)
+                    chargers = sorted(by_model.values(), key=brush_model_index)
                     for number, entity in enumerate(chargers, start=1):
                         count = f" {number}" if len(chargers) > 1 else ""
                         builder.add(
@@ -249,9 +277,9 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # check -- collecting any instance of it fires the check once.
             if "pickup" in enabled:
                 pickups = sorted({
-                    e["classname"] for e in ents
-                    if e["classname"].startswith("weapon_")
-                    or e["classname"] in ("item_suit", "item_longjump")
+                    e.get("classname", "") for e in ents
+                    if e.get("classname", "").startswith("weapon_")
+                    or e.get("classname", "") in ("item_suit", "item_longjump")
                 })
                 for classname in pickups:
                     builder.add(
@@ -264,7 +292,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # First kill of each notable monster actually placed in the map.
             if "kill" in enabled:
                 present = sorted({
-                    e["classname"] for e in ents if e["classname"] in NOTABLE_MONSTERS
+                    e.get("classname", "") for e in ents if e.get("classname", "") in NOTABLE_MONSTERS
                 })
                 for classname in present:
                     display, requirement = NOTABLE_MONSTERS[classname]
@@ -292,15 +320,15 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
 
                 hostiles = [
                     e for e in ents
-                    if e["classname"].startswith("monster_")
-                    and e["classname"] not in IGNORED_MONSTERS
+                    if e.get("classname", "").startswith("monster_")
+                    and e.get("classname", "") not in IGNORED_MONSTERS
                 ]
 
                 if "pickup" in enabled:
                     for classname, display in SUPPLY_CLASSNAMES.items():
                         if by_map[map_name] >= MIN_LOCATIONS_PER_MAP:
                             break
-                        if any(e["classname"] == classname for e in ents):
+                        if any(e.get("classname", "") == classname for e in ents):
                             builder.add(
                                 chapter,
                                 map_name,
@@ -330,22 +358,36 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     # "anywhere": finding a shotgun six missions later is not the moment the
     # check is about, and the per-map `pickup` type that fired on every copy is
     # what read as noise. The crowbar is here too even though you start with one.
+    # Anchored per campaign, not once across all of them. A seed that leaves
+    # Half-Life out would otherwise lose every check for a weapon the other
+    # campaigns share with it, because the only anchor sat in a map it does not
+    # contain. Each campaign gets its own "first shotgun" instead.
     if "weapon_pickup" in enabled:
-        for item_name, classnames in {
-            **WEAPON_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
-        }.items():
-            anchor = earliest_map_with(chapters, entities, classnames)
-            if anchor is None:
-                continue  # nothing placed in any map; the check could never fire
-            chapter, map_name = anchor
-            builder.add(
-                chapter,
-                map_name,
-                f"First {item_name}",
-                {"type": "weapon_pickup", "map": map_name,
-                 "classnames": list(classnames)},
-                prefixed=False,
-            )
+        for campaign in CAMPAIGNS:
+            campaign_chapters = [c for c in chapters if c["campaign"] == campaign.key]
+            for item_name, classnames in {
+                **WEAPON_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
+            }.items():
+                anchor = earliest_map_with(campaign_chapters, entities, classnames)
+                if anchor is None:
+                    continue  # not placed in this campaign; the check could never fire
+                chapter, map_name = anchor
+                # Half-Life's names predate the other campaigns and stay as they
+                # were; the rest say which campaign they belong to, since "First
+                # Shotgun" now exists in more than one.
+                label = (
+                    f"First {item_name}"
+                    if campaign.key == DEFAULT_CAMPAIGN
+                    else f"{campaign.name} - First {item_name}"
+                )
+                builder.add(
+                    chapter,
+                    map_name,
+                    label,
+                    {"type": "weapon_pickup", "map": map_name,
+                     "classnames": list(classnames)},
+                    prefixed=False,
+                )
 
     # Chapter completion always comes last so it reads last in the list.
     if "chapter_complete" in enabled:
@@ -362,13 +404,33 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
 
     return {
         "data_version": registry.fingerprint(),
+        "campaigns": [
+            {
+                "key": campaign.key,
+                "name": campaign.name,
+                "option": campaign.option,
+                "missions_option": campaign.missions_option,
+                "goal_chapter": campaign.goal_chapter,
+                "chapters": [key for key, _, _ in campaign.chapters],
+                # Portal console targetname -> the mission its button enters.
+                # A table rather than a rule, because the hub numbers its
+                # consoles differently in every campaign.
+                "consoles": {
+                    console: key
+                    for console, (key, _, _) in zip(campaign.consoles, campaign.chapters)
+                    if console is not None
+                },
+            }
+            for campaign in CAMPAIGNS
+        ],
         "chapters": [
             {
                 "key": chapter["key"],
                 "name": chapter["name"],
                 "maps": chapter["maps"],
                 "index": chapter["index"],
-                "is_goal": chapter["key"] == GOAL_CHAPTER,
+                "campaign": chapter["campaign"],
+                "is_goal": chapter["key"] in GOAL_CHAPTERS,
                 "gates": CHAPTER_GATES.get(chapter["key"], {}),
             }
             for chapter in chapters
@@ -393,17 +455,26 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
         })
 
     for chapter in chapters:
-        if chapter["key"] == GOAL_CHAPTER:
+        if chapter["key"] in GOAL_CHAPTERS:
             continue  # opened by mission count, never by an item
         add(
             f"{chapter['name']} Unlock",
             "progression",
             group="chapter",
             chapter=chapter["key"],
+            campaign=chapter["campaign"],
         )
 
+    # Weapons carry the campaign that introduced them so a seed can leave out the
+    # ones no enabled campaign has any use for.
     for name, classnames in WEAPON_ITEMS.items():
-        add(name, "progression", group="weapon", classnames=classnames)
+        add(
+            name,
+            "progression",
+            group="weapon",
+            classnames=classnames,
+            campaign=WEAPON_CAMPAIGN[name],
+        )
 
     for name, classnames in OPTIONAL_ITEMS.items():
         add(name, "progression", group="optional", classnames=classnames)

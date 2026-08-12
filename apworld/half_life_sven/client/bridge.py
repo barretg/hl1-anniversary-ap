@@ -180,6 +180,7 @@ class Bridge:
         death_link: bool,
         excluded: list[str] | None = None,
         ungated: list[str] | None = None,
+        goals_open: list[str] | None = None,
         death_link_amnesty: int = 0,
         data_version: str = "",
         force: bool = False,
@@ -203,6 +204,10 @@ class Bridge:
             # Counted down by the plugin, not here: the death message has to name
             # the remaining allowance at the moment of the death.
             f"death_link_amnesty={max(0, int(death_link_amnesty))}",
+            # Finales that are unsealed, one per campaign. `goal_open` above is
+            # the same answer collapsed into one bool for a plugin too old to read
+            # this, and it is only true when every one of them is open.
+            "goals_open=" + ",".join(sorted(goals_open or ())),
             "chapters=" + ",".join(sorted(chapters)),
             # Missions the seed left out. Distinct from "locked": no item will
             # ever unlock these, and the game should say so rather than leaving

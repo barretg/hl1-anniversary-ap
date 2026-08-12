@@ -1,9 +1,13 @@
-"""Archipelago world for the Half-Life campaign as shipped in Sven Co-op.
+"""Archipelago world for the single-player campaigns shipped in Sven Co-op.
 
-The Sven Co-op campaign portal (`-sp_campaign_portal`) is the hub. Each Half-Life
-mission is locked until its unlock item arrives, weapons must be received before
-they can be picked up, and the Nihilanth mission opens once enough other missions
-are finished.
+The Sven Co-op campaign portal (`-sp_campaign_portal`) is the hub, and it fronts
+four campaigns: Half-Life, Opposing Force, Blue Shift and They Hunger. A YAML
+toggle decides which of them a seed contains.
+
+Within each, a mission is locked until its unlock item arrives and weapons must
+be received before they can be picked up. Every enabled campaign hands you one of
+its missions at the start, and every enabled campaign's finale is a goal: the
+seed is won when all of them are done.
 """
 
 from __future__ import annotations
@@ -18,19 +22,23 @@ from worlds.LauncherComponents import Component, Type, components, launch_subpro
 from .client.settings import SETTINGS_KEY
 
 from .data import (
+    CAMPAIGNS,
+    CAMPAIGN_MISSION_OPTIONS,
+    CAMPAIGN_OPTIONS,
     CHAPTERS,
     CHARGER_TRIGGER,
-    GOAL_CHAPTER,
+    DEFAULT_CAMPAIGN,
     INTRO_CHAPTER,
     OPTIONAL_ITEM_NAMES,
     STARTING_WEAPONS,
-    VICTORY,
+    victory_event,
 )
 from .items import (
     HalfLifeSvenItem,
     create_item,
     filler_items,
     filler_weights,
+    item_campaign,
     item_name_groups,
     item_name_to_id,
     optional_items,
@@ -117,22 +125,50 @@ class HalfLifeSvenWorld(World):
         # Items that exist in *this* slot's pool. Logic groups are filtered
         # against it so a rule never asks for an item nobody will ever receive.
         self.available_item_names: set[str] = set()
-        self.starting_chapter: str = ""
+        # Campaigns this seed contains, in campaign.json order.
+        self.included_campaigns: list[str] = []
+        # One mission per enabled campaign, open from the first spawn.
+        self.starting_chapters: set[str] = set()
         # Missions left out of this seed: no regions, no checks, no unlock item,
         # and they do not count toward `missions_required`.
         self.excluded_chapters: set[str] = set()
         # Whole categories of check switched off in the YAML, by trigger type.
         self.excluded_triggers: set[str] = set()
+        # `missions_required` clamped to each campaign's own size, since a
+        # campaign cannot ask for more missions than it has.
+        self.missions_required_for: dict[str, int] = {}
 
     # -- generation ------------------------------------------------------
 
     def generate_early(self) -> None:
+        self.included_campaigns = [
+            campaign["key"] for campaign in CAMPAIGNS
+            if getattr(self.options, CAMPAIGN_OPTIONS[campaign["key"]])
+        ]
+        # A seed has to contain something. Rather than refuse to generate, fall
+        # back to the campaign this world started life as.
+        if not self.included_campaigns:
+            self.included_campaigns = [DEFAULT_CAMPAIGN]
+
+        # A campaign that is switched off is excluded mission by mission, which
+        # is machinery that already exists end to end: no regions, no checks, no
+        # unlock items, and the game reports "not in this seed" at its consoles.
+        for chapter in CHAPTERS:
+            if chapter["campaign"] not in self.included_campaigns:
+                self.excluded_chapters.add(chapter["key"])
+
         if not self.options.include_black_mesa_inbound:
             self.excluded_chapters.add(INTRO_CHAPTER)
         if not self.options.chargesanity:
             self.excluded_triggers.add(CHARGER_TRIGGER)
 
-        self.available_item_names = set(weapon_items)
+        # Weapons come from the campaigns in the seed. Everything they bring goes
+        # into one pool, so an Opposing Force seed with Half-Life enabled can hand
+        # you a displacer in Black Mesa and a crossbow on Gene Worm.
+        self.available_item_names = {
+            name for name in weapon_items
+            if item_campaign.get(name, DEFAULT_CAMPAIGN) in self.included_campaigns
+        }
         for name in optional_items:
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
                 self.available_item_names.add(name)
@@ -142,30 +178,45 @@ class HalfLifeSvenWorld(World):
             if chapter["key"] in unlock_item_for_chapter
         )
 
-        # Exactly one mission is playable from the word go, and it has to be one
-        # that a player with nothing but a crowbar can actually walk into. Picking
-        # a gated mission (anything from We've Got Hostiles on, under strict logic)
-        # leaves sphere one empty and fill has nowhere to put its first item.
-        candidates = [
-            chapter for chapter in self.included_chapters
-            if not chapter["is_goal"] and chapter_is_startable(self, chapter)
-        ]
-        fallback = [c for c in self.included_chapters if not c["is_goal"]]
-        starting = self.random.choice(candidates or fallback)
-        self.starting_chapter = starting["key"]
-        self.multiworld.push_precollected(
-            self.create_item(unlock_item_for_chapter[self.starting_chapter])
-        )
+        # Every campaign in the seed opens with one of its own missions playable,
+        # and each has to be one a player with nothing but a crowbar can actually
+        # walk into. Picking a gated mission (anything from We've Got Hostiles on,
+        # under strict logic) leaves sphere one empty and fill has nowhere to put
+        # its first item.
+        for campaign_key in self.included_campaigns:
+            chapters = [
+                chapter for chapter in self.included_chapters
+                if chapter["campaign"] == campaign_key and not chapter["is_goal"]
+            ]
+            if not chapters:
+                continue  # every mission of it was excluded some other way
+            candidates = [c for c in chapters if chapter_is_startable(self, c)]
+            starting = self.random.choice(candidates or chapters)
+            self.starting_chapters.add(starting["key"])
+            self.multiworld.push_precollected(
+                self.create_item(unlock_item_for_chapter[starting["key"]])
+            )
 
-        # `missions_required` cannot exceed the number of missions in the seed.
-        unlockable = len([c for c in self.included_chapters if not c["is_goal"]])
-        if self.options.missions_required.value > unlockable:
-            self.options.missions_required.value = unlockable
+        # Each campaign's own setting, clamped to the missions it actually has in
+        # this seed: excluding Black Mesa Inbound leaves Half-Life one short, and
+        # asking for more than exist would seal a finale permanently.
+        for campaign_key in self.included_campaigns:
+            option = getattr(self.options, CAMPAIGN_MISSION_OPTIONS[campaign_key])
+            available = len([
+                chapter for chapter in self.included_chapters
+                if chapter["campaign"] == campaign_key and not chapter["is_goal"]
+            ])
+            self.missions_required_for[campaign_key] = min(option.value, available)
 
     @property
     def included_chapters(self) -> list[dict[str, Any]]:
         """Every mission this seed actually contains, goal mission included."""
         return [c for c in CHAPTERS if c["key"] not in self.excluded_chapters]
+
+    @property
+    def goal_chapters(self) -> list[dict[str, Any]]:
+        """The finale of each campaign in the seed. Every one has to be cleared."""
+        return [c for c in self.included_chapters if c["is_goal"]]
 
     def create_regions(self) -> None:
         create_regions(self)
@@ -176,8 +227,11 @@ class HalfLifeSvenWorld(World):
     def create_items(self) -> None:
         pool: list[HalfLifeSvenItem] = []
 
+        starting_unlocks = {
+            unlock_item_for_chapter[key] for key in self.starting_chapters
+        }
         for name in sorted(self.available_item_names):
-            if name == unlock_item_for_chapter.get(self.starting_chapter):
+            if name in starting_unlocks:
                 continue  # already in the starting inventory
             pool.append(self.create_item(name))
 
@@ -206,9 +260,13 @@ class HalfLifeSvenWorld(World):
 
     def set_rules(self) -> None:
         # Entrance rules are attached in `create_regions`; only the win condition
-        # is left, and it is simply "hold the Victory event".
-        self.multiworld.completion_condition[self.player] = (
-            lambda state: state.has(VICTORY, self.player)
+        # is left. Every campaign in the seed has to be finished, so it is one
+        # Victory event per campaign rather than a single shared one -- with one
+        # name held four times, any finale would end the run.
+        player = self.player
+        victories = [victory_event(c["campaign"]) for c in self.goal_chapters]
+        self.multiworld.completion_condition[player] = (
+            lambda state, names=victories: all(state.has(name, player) for name in names)
         )
 
     # -- runtime ---------------------------------------------------------
@@ -217,9 +275,21 @@ class HalfLifeSvenWorld(World):
         """Everything the client needs to drive the game without shipping its own
         copy of the seed's settings."""
         return {
-            "missions_required": self.options.missions_required.value,
-            "goal_chapter": GOAL_CHAPTER["key"],
-            "starting_chapter": self.starting_chapter,
+            # Kept for a client older than multi-campaign seeds: it reads a single
+            # number and a single goal, which is exactly Half-Life's pair.
+            "missions_required": self.missions_required_for.get(
+                DEFAULT_CAMPAIGN, self.options.missions_required.value
+            ),
+            "goal_chapter": next(
+                (c["key"] for c in self.goal_chapters if c["campaign"] == DEFAULT_CAMPAIGN),
+                self.goal_chapters[0]["key"] if self.goal_chapters else "",
+            ),
+            "campaigns": list(self.included_campaigns),
+            # What each campaign's finale is waiting on. The client counts
+            # completions per campaign and tells the game which finales are open.
+            "campaign_missions_required": dict(self.missions_required_for),
+            "goal_chapters": sorted(c["key"] for c in self.goal_chapters),
+            "starting_chapters": sorted(self.starting_chapters),
             # Missions that are not in this seed. The client tells the plugin, so
             # the in-game list says "not in this seed" rather than showing a
             # mission that stays locked forever with no explanation.

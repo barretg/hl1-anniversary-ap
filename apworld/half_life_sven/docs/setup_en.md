@@ -76,9 +76,48 @@ You should see `[AP] Connected to the multiworld.` in the game chat.
 | `/deathlink` | toggle DeathLink |
 | `/amnesty <n>` | show or change the DeathLink amnesty for this session |
 
+## Campaigns
+
+Sven Co-op ships four single-player conversions and the campaign portal fronts
+all of them. Each is a YAML toggle:
+
+| Option | Campaign | Missions | Finale |
+| --- | --- | --- | --- |
+| `include_half_life` | Half-Life | 18 | Nihilanth |
+| `include_opposing_force` | Opposing Force | 10 | Worlds Collide |
+| `include_blue_shift` | Blue Shift | 6 | Power Struggle |
+| `include_they_hunger` | They Hunger | 3 | Episode 3 |
+
+Only Half-Life is on by default, so a YAML written before this existed generates
+exactly the seed it always did. Switch every campaign off and Half-Life comes
+back on regardless, because a seed has to contain something.
+
+Enabling more than one changes the run in three ways:
+
+- **Every campaign hands you one of its own missions at the start.** Four
+  campaigns means four missions open from the first spawn, not one.
+- **Every campaign's finale is a goal.** The seed is won when all of them are
+  done, and the client says how many are left as each falls.
+- **Weapons go into one shared pool.** Opposing Force's displacer and sniper
+  rifle and They Hunger's tommy gun and tesla gun turn up in Black Mesa, and
+  Half-Life's crossbow and Tau cannon turn up in theirs. Blue Shift brings no
+  weapons of its own, so it gains the most from having company.
+
+**Missions Required is per campaign and the settings are independent.**
+`missions_required` is Half-Life's and opens Nihilanth;
+`opposing_force_missions_required`, `blue_shift_missions_required` and
+`they_hunger_missions_required` do the same for theirs. Finishing Opposing Force
+missions does nothing for Nihilanth.
+
+They Hunger is the rough one. Its logic has not had a pass: no weapon gates on
+its episodes, so strict logic may expect you to walk into one with whatever you
+are holding, and it has three chargers in the whole campaign, so almost all of
+its checks come from reaching maps.
+
 ## Playing the randomizer
 
-You start with the crowbar, the medkit, and **one random mission unlock**.
+You start with the crowbar, the medkit, and **one random mission unlock per
+campaign in the seed**.
 
 Walk up to a chapter's console in the portal room and press either button. The
 plugin rewires the consoles: one press travels to that mission if you have its
@@ -110,9 +149,11 @@ allowed to keep it. You cannot hold it until the multiworld gives you that weapo
 The campaign's own per-map loadouts are stripped for the same reason.
 
 **Chargers are checks.** Every health charger and HEV charge panel sends a check
-the first time someone presses use on it, even an empty one. That is 107 of the
-173 locations; `chargesanity: false` in your YAML removes them all for a much
-shorter run.
+the first time someone presses use on it, even an empty one. That is 107 of
+Half-Life's 173 locations, and 143 of the 353 across all four campaigns;
+`chargesanity: false` in your YAML removes them all for a much shorter run. The
+other campaigns have far fewer: 23 in Opposing Force, 12 in Blue Shift, 3 in the
+whole of They Hunger.
 
 **The HEV suit is armour, not the suit.** With `shuffle_hev_suit: true` you keep
 the suit and its HUD from the start — you would not be able to switch weapons
@@ -130,8 +171,10 @@ That is the one place the two pieces of optional equipment differ. An unshuffled
 HEV suit is granted from the start, because the item is the only thing that ever
 turns armour on and nothing in the campaign would.
 
-**Nihilanth is not unlocked by an item.** It opens once you have completed
-`missions_required` missions (set in your YAML; the default is all 17 others).
+**A finale is not unlocked by an item.** Each campaign's last mission opens once
+you have completed that campaign's own `missions_required` count, set in your
+YAML and defaulting to all of them. Every finale in the seed has to be cleared to
+win it.
 
 ## DeathLink
 

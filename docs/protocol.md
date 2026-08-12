@@ -95,6 +95,7 @@ goal_open=0
 death_link=1
 death_link_amnesty=4
 chapters=blast_pit,office_complex
+goals_open=nihilanth
 excluded=black_mesa_inbound
 items=RPG;Shotgun
 ungated=item_longjump
@@ -108,7 +109,20 @@ semicolon separated because item names may legitimately contain commas.
 
 `excluded` is the missions the seed left out. It is not the same as "locked": no
 item will ever unlock them, so the game reports "not in this seed" rather than
-leaving the player waiting for a key that does not exist.
+leaving the player waiting for a key that does not exist. A campaign switched off
+in the YAML arrives as every one of its missions listed here, which is why
+campaign toggles needed no plugin changes at all.
+
+`goals_open` is the finales that are unsealed, one per campaign. Each campaign
+has its own `missions_required` setting and its own count, so they open
+independently; `goal_open` above is the same answer collapsed into one bool for a
+plugin that predates the list, and it is deliberately true only when *every*
+finale is open, since an older plugin cannot tell which one is meant and opening
+the wrong one early is worse than opening the right one late.
+
+The plugin reports a finished finale as `GOAL|<chapter key>` but never decides
+what it amounts to: only the client knows which other campaigns are in the seed,
+so it is the client that holds back `CLIENT_GOAL` until all of them are done.
 
 `ungated` is classnames, not item names, and it is the seed saying "this one is
 not mine". The plugin neither grants nor removes them and lets their pickups be
@@ -153,8 +167,10 @@ Pipe-delimited so AngelScript can parse it with a single `string.Split("|")`.
 
 | Record | Fields |
 | --- | --- |
-| `V` | format version |
-| `C` | index, key, name, comma-separated maps, is_goal |
+| `V` | format version (2 since campaigns; `M`, `P` and `C`'s last field are the additions, and all three are ignored harmlessly by an older plugin) |
+| `M` | campaign key, name, goal chapter |
+| `C` | index, key, name, comma-separated maps, is_goal, campaign key |
+| `P` | hub console targetname, the chapter its button enters |
 | `L` | id, map, trigger type, trigger arg, name |
 | | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79`; `weapon_pickup` carries the comma-separated classnames |
 | `K` | classname, item name — pickup refused until that item is held |
@@ -164,10 +180,23 @@ Every `L` record carries a map, but `weapon_pickup` is the one type the plugin
 does **not** filter by it: that field is only where the apworld anchors the
 check's logic, and the plugin matches on classname anywhere in the campaign.
 
-A seed does not necessarily contain every location in this file — `chargesanity`
-and `include_black_mesa_inbound` can drop whole groups. The plugin still fires
-them; the client drops any check that is not in its slot's location list rather
-than reporting a location the seed has never heard of.
+`P` is a table rather than a rule because the hub numbers its consoles
+differently in each campaign it fronts: Half-Life's are unpadded and start at
+`hl_ch1` (its mission 0 has no console), Opposing Force's are zero padded and
+skip `of_ch06` entirely, Blue Shift runs `bs_ch01`-`bs_ch06` and They Hunger
+`th_ep01`-`th_ep03`. Deriving the mission from the digits in a targetname was
+correct for Half-Life alone and would silently send an Opposing Force player one
+mission past the console they pressed.
+
+`index` stays global across every campaign, because it is what `!warp <n>` takes
+in game and a number has to mean one mission whichever campaigns a seed contains.
+Half-Life is first, so its numbering is unchanged.
+
+A seed does not necessarily contain every location in this file — `chargesanity`,
+`include_black_mesa_inbound` and the campaign toggles can drop whole groups, and
+the file always describes all four campaigns whether or not a seed uses them. The
+plugin still fires them; the client drops any check that is not in its slot's
+location list rather than reporting a location the seed has never heard of.
 
 `tests/test_campaign_data.py` fails if this file and `campaign.json` disagree, so
 regenerate after any data change:

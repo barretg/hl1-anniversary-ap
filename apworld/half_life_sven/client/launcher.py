@@ -202,7 +202,20 @@ class HalfLifeSvenContext(CommonContext):
         self.location_name_by_id = {
             entry["id"]: entry["name"] for entry in self.campaign["locations"]
         }
-        self.goal_chapter = next(c["key"] for c in self.campaign["chapters"] if c["is_goal"])
+        self.campaign_of_chapter = {
+            c["key"]: c.get("campaign", "") for c in self.campaign["chapters"]
+        }
+        self.campaign_names = {
+            c["key"]: c["name"] for c in self.campaign.get("campaigns", ())
+        }
+        # Every campaign's finale. A seed contains one per campaign it includes,
+        # and the run is won only when all of them are done.
+        self.goal_chapters: set[str] = {
+            c["key"] for c in self.campaign["chapters"] if c["is_goal"]
+        }
+        # How many of its own missions each finale is waiting on. Filled from slot
+        # data; the settings are per campaign and independent.
+        self.missions_required_for: dict[str, int] = {}
         # Fingerprint of the id map this apworld was built from. The plugin
         # compares it against its own and pauses checks if they disagree.
         self.data_version = str(self.campaign.get("data_version", ""))
@@ -221,6 +234,8 @@ class HalfLifeSvenContext(CommonContext):
         # treat them as owned.
         self.ungated_classnames: set[str] = unshuffled_vanilla_classnames()
         self.completed_missions: set[str] = set()
+        # Kept as the fallback for a seed generated before campaigns existed,
+        # whose slot data carries one number and one goal.
         self.missions_required = len(
             [c for c in self.campaign["chapters"] if not c["is_goal"]]
         )
@@ -364,8 +379,25 @@ class HalfLifeSvenContext(CommonContext):
             self.missions_required = slot_data.get(
                 "missions_required", self.missions_required
             )
-            self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
             self.excluded_chapters = set(slot_data.get("excluded_chapters", ()))
+
+            # Which campaigns are in the seed, what each finale is waiting on, and
+            # which missions those finales are. A seed generated before campaigns
+            # existed carries none of this, so it falls back to the single goal
+            # and single number it does carry.
+            self.goal_chapters = set(
+                slot_data.get("goal_chapters", ())
+                or ({slot_data["goal_chapter"]} if "goal_chapter" in slot_data else set())
+            ) or self.goal_chapters
+            self.missions_required_for = {
+                key: int(value)
+                for key, value in slot_data.get("campaign_missions_required", {}).items()
+            }
+            if not self.missions_required_for:
+                self.missions_required_for = {
+                    self.campaign_of_chapter.get(key, ""): self.missions_required
+                    for key in self.goal_chapters
+                }
             # Absent from slot data reads as "not shuffled". Either way the item
             # is never sent, so the game has to be told; what differs is what it
             # is told. See `unshuffled_grants` and `unshuffled_vanilla_classnames`.
@@ -389,10 +421,17 @@ class HalfLifeSvenContext(CommonContext):
                 if self.is_mission_complete(location_id)
             } - {""}
 
-            logger.info(
-                f"Connected. {self.missions_required} missions needed to open the "
-                f"final mission."
-            )
+            for campaign_key in sorted(self.missions_required_for):
+                name = self.campaign_names.get(campaign_key, campaign_key or "?")
+                logger.info(
+                    f"Connected. {name}: {self.missions_required_for[campaign_key]} "
+                    f"missions needed to open its final mission."
+                )
+            if len(self.goal_chapters) > 1:
+                logger.info(
+                    f"This seed is won by finishing all {len(self.goal_chapters)} "
+                    f"campaigns."
+                )
             self.print_in_game_commands()
 
         elif cmd == "ReceivedItems":
@@ -500,9 +539,46 @@ class HalfLifeSvenContext(CommonContext):
         """
         return self.unlocked_items | self.always_unlocked
 
+    def completed_in(self, campaign_key: str) -> int:
+        """Missions of one campaign that are finished, its own finale aside."""
+        return len([
+            key for key in self.completed_missions
+            if self.campaign_of_chapter.get(key, "") == campaign_key
+            and key not in self.goal_chapters
+        ])
+
+    def goal_chapter_open(self, chapter_key: str) -> bool:
+        """Is this campaign's finale unsealed?
+
+        Counted within the campaign, because the settings are per campaign:
+        Opposing Force missions do nothing for Nihilanth.
+        """
+        campaign_key = self.campaign_of_chapter.get(chapter_key, "")
+        required = self.missions_required_for.get(campaign_key, self.missions_required)
+        return self.completed_in(campaign_key) >= required
+
+    @property
+    def open_goal_chapters(self) -> set[str]:
+        return {
+            key for key in self.goal_chapters
+            if key not in self.excluded_chapters and self.goal_chapter_open(key)
+        }
+
     @property
     def goal_open(self) -> bool:
-        return len(self.completed_missions - {self.goal_chapter}) >= self.missions_required
+        """Kept for the snapshot's older `goal_open` field, which is one bool.
+
+        True only when every finale in the seed is open, so a plugin too old to
+        read the per-campaign list never unseals one early.
+        """
+        wanted = self.goal_chapters - self.excluded_chapters
+        return bool(wanted) and self.open_goal_chapters == wanted
+
+    @property
+    def run_complete(self) -> bool:
+        """Every campaign in the seed finished. This is what wins the slot."""
+        wanted = self.goal_chapters - self.excluded_chapters
+        return bool(wanted) and wanted <= self.completed_missions
 
     @staticmethod
     def print_in_game_commands() -> None:
@@ -513,12 +589,24 @@ class HalfLifeSvenContext(CommonContext):
         logger.info("Or walk up to a mission console in the hub and press its button.")
 
     def print_missions(self) -> None:
+        shown_campaign = ""
         for chapter in self.campaign["chapters"]:
+            campaign_key = chapter.get("campaign", "")
+            if campaign_key != shown_campaign and campaign_key in self.missions_required_for:
+                shown_campaign = campaign_key
+                logger.info(f"{self.campaign_names.get(campaign_key, campaign_key)}:")
+
             if chapter["key"] in self.excluded_chapters:
                 status = "not in this seed"
             elif chapter["is_goal"]:
-                status = "OPEN" if self.goal_open else (
-                    f"sealed ({len(self.completed_missions)}/{self.missions_required})"
+                done = self.completed_in(campaign_key)
+                required = self.missions_required_for.get(
+                    campaign_key, self.missions_required
+                )
+                status = (
+                    "complete" if chapter["key"] in self.completed_missions
+                    else "OPEN" if self.goal_chapter_open(chapter["key"])
+                    else f"sealed ({done}/{required})"
                 )
             elif chapter["key"] in self.completed_missions:
                 status = "complete"
@@ -626,7 +714,20 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         elif event.kind == "COMPLETE":
             ctx.completed_missions.add(event.arg)
         elif event.kind == "GOAL":
-            if not ctx.goal_sent and ctx.server and not ctx.server.socket.closed:
+            # One campaign's finale, not necessarily the run. The game reports
+            # each as it falls; the slot is only won once every campaign in the
+            # seed has had its own, so the decision is made here rather than in
+            # the plugin, which knows nothing about the others.
+            ctx.completed_missions.add(event.arg)
+            name = ctx.campaign_names.get(ctx.campaign_of_chapter.get(event.arg, ""), "")
+            if not ctx.run_complete:
+                remaining = sorted(
+                    (ctx.goal_chapters - ctx.excluded_chapters) - ctx.completed_missions
+                )
+                logger.info(
+                    f"{name or event.arg} finished. {len(remaining)} campaign(s) to go."
+                )
+            elif not ctx.goal_sent and ctx.server and not ctx.server.socket.closed:
                 ctx.goal_sent = True
                 await ctx.send_msgs(
                     [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
@@ -665,6 +766,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
                 chapters=sorted(ctx.unlocked_chapters),
                 items=sorted(ctx.held_item_names),
                 goal_open=ctx.goal_open,
+                goals_open=sorted(ctx.open_goal_chapters),
                 death_link=ctx.death_link_enabled,
                 death_link_amnesty=ctx.death_link_amnesty,
                 excluded=sorted(ctx.excluded_chapters),
@@ -697,6 +799,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         chapters=sorted(ctx.unlocked_chapters),
         items=sorted(ctx.held_item_names),
         goal_open=ctx.goal_open,
+        goals_open=sorted(ctx.open_goal_chapters),
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
         excluded=sorted(ctx.excluded_chapters),

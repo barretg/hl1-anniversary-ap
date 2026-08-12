@@ -141,6 +141,7 @@ void BridgePoll()
 	dictionary excluded;
 	dictionary items;
 	dictionary ungated;
+	dictionary goalsOpen;
 	bool bGoalOpen = false;
 	bool bConnected = false;
 	bool bDeathLink = false;
@@ -170,6 +171,18 @@ void BridgePoll()
 				string szChapter = APTrim( keys[i] );
 				if( szChapter.Length() > 0 )
 					chapters[ szChapter ] = true;
+			}
+		}
+		else if( szKey == "goals_open" )
+		{
+			// One entry per campaign whose finale is unsealed. `goal_open` below
+			// is the same thing collapsed to a bool for an older plugin.
+			array<string>@ keys = szValue.Split( "," );
+			for( uint i = 0; i < keys.length(); ++i )
+			{
+				string szChapter = APTrim( keys[i] );
+				if( szChapter.Length() > 0 )
+					goalsOpen[ szChapter ] = true;
 			}
 		}
 		else if( szKey == "excluded" )
@@ -239,6 +252,7 @@ void BridgePoll()
 	g_State.excludedChapters = excluded;
 	g_State.unlockedItems = items;
 	g_UngatedClassnames = ungated;
+	g_State.goalsOpen = goalsOpen;
 	g_State.goalOpen = bGoalOpen;
 	g_State.connected = bConnected;
 	g_State.deathLink = bDeathLink;

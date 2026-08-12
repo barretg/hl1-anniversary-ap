@@ -7,12 +7,18 @@ Run these from an Archipelago source checkout:
 """
 
 from . import HalfLifeSvenTestBase
-from ..data import CHAPTERS, CHAPTERS_BY_KEY, LOCATIONS, UNLOCKABLE_CHAPTERS
+from ..data import (
+    CHAPTERS,
+    CHAPTERS_BY_KEY,
+    LOCATIONS,
+    UNLOCKABLE_CHAPTERS,
+    unlockable_chapters_of,
+)
 from ..items import chapter_unlock_items, unlock_item_for_chapter
 
 
 class StartingMissionMixin:
-    """The starting mission must be enterable with nothing but its unlock.
+    """Every starting mission must be enterable with nothing but its unlock.
 
     Every location sits behind a mission entrance, so a gated starting mission
     means an empty sphere one and a fill failure. Asserted for each option set,
@@ -20,17 +26,22 @@ class StartingMissionMixin:
     suit and long jump module are shuffled.
     """
 
-    def test_the_starting_mission_is_reachable_from_nothing(self) -> None:
+    def test_the_starting_missions_are_reachable_from_nothing(self) -> None:
         world = self.multiworld.worlds[self.player]
-        chapter = CHAPTERS_BY_KEY[world.starting_chapter]
-
         state = self.multiworld.get_state(self.multiworld)
 
-        self.assertTrue(
-            self.can_reach_entrance(f"Enter {chapter['name']}", state),
-            f"{chapter['name']} was handed out as the starting mission but cannot "
-            f"be entered with only its unlock item",
-        )
+        for key in world.starting_chapters:
+            chapter = CHAPTERS_BY_KEY[key]
+            self.assertTrue(
+                self.can_reach_entrance(f"Enter {chapter['name']}", state),
+                f"{chapter['name']} was handed out as a starting mission but "
+                f"cannot be entered with only its unlock item",
+            )
+
+    def test_every_included_campaign_starts_somewhere(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        started = {CHAPTERS_BY_KEY[key]["campaign"] for key in world.starting_chapters}
+        self.assertEqual(started, set(world.included_campaigns))
 
     def test_something_is_reachable_at_the_start(self) -> None:
         state = self.multiworld.get_state(self.multiworld)
@@ -44,12 +55,13 @@ class StartingMissionMixin:
 class TestDefaults(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {}
 
-    def test_exactly_one_mission_is_precollected(self) -> None:
+    def test_one_mission_per_campaign_is_precollected(self) -> None:
+        world = self.multiworld.worlds[self.player]
         precollected = [
             item for item in self.multiworld.precollected_items[self.player]
             if item.name in chapter_unlock_items
         ]
-        self.assertEqual(len(precollected), 1)
+        self.assertEqual(len(precollected), len(world.included_campaigns))
 
     def test_precollected_unlock_is_not_also_in_the_pool(self) -> None:
         starting = {
@@ -59,9 +71,18 @@ class TestDefaults(StartingMissionMixin, HalfLifeSvenTestBase):
         for name in starting & set(chapter_unlock_items):
             self.assertNotIn(name, pool)
 
-    def test_goal_mission_has_no_unlock_item(self) -> None:
-        goal = next(chapter for chapter in CHAPTERS if chapter["is_goal"])
-        self.assertNotIn(goal["key"], unlock_item_for_chapter)
+    def test_goal_missions_have_no_unlock_item(self) -> None:
+        for chapter in CHAPTERS:
+            if chapter["is_goal"]:
+                self.assertNotIn(chapter["key"], unlock_item_for_chapter)
+
+    def test_only_half_life_is_enabled_by_default(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(world.included_campaigns, ["half_life"])
+        # And nothing from another campaign leaked into the pool.
+        pool = {item.name for item in self.multiworld.itempool if item.player == self.player}
+        self.assertNotIn("Displacer Cannon", pool)
+        self.assertNotIn("Tommy Gun", pool)
 
     def test_crowbar_is_not_an_item(self) -> None:
         names = self.multiworld.worlds[self.player].item_name_to_id
@@ -71,7 +92,8 @@ class TestDefaults(StartingMissionMixin, HalfLifeSvenTestBase):
         """With the default missions_required, holding one mission short fails."""
         world = self.multiworld.worlds[self.player]
         self.assertEqual(
-            world.options.missions_required.value, len(UNLOCKABLE_CHAPTERS)
+            world.options.missions_required.value,
+            len(unlockable_chapters_of("half_life")),
         )
 
         state = self.multiworld.get_all_state(False)
@@ -164,8 +186,9 @@ class TestTraps(HalfLifeSvenTestBase):
         self.assertEqual(len(progression), len(self.available_progression()))
 
     def available_progression(self) -> set:
-        return self.multiworld.worlds[self.player].available_item_names - {
-            unlock_item_for_chapter[self.multiworld.worlds[self.player].starting_chapter]
+        world = self.multiworld.worlds[self.player]
+        return world.available_item_names - {
+            unlock_item_for_chapter[key] for key in world.starting_chapters
         }
 
 
@@ -244,12 +267,125 @@ class TestBlackMesaInboundExcluded(StartingMissionMixin, HalfLifeSvenTestBase):
     def test_missions_required_drops_by_one(self) -> None:
         world = self.multiworld.worlds[self.player]
         self.assertEqual(
-            world.options.missions_required.value, len(UNLOCKABLE_CHAPTERS) - 1
+            world.missions_required_for["half_life"],
+            len(unlockable_chapters_of("half_life")) - 1,
         )
 
     def test_the_goal_is_still_reachable(self) -> None:
         state = self.multiworld.get_all_state(False)
         self.assertTrue(self.multiworld.completion_condition[self.player](state))
+
+
+class TestEveryCampaign(StartingMissionMixin, HalfLifeSvenTestBase):
+    options = {
+        "include_half_life": True,
+        "include_opposing_force": True,
+        "include_blue_shift": True,
+        "include_they_hunger": True,
+    }
+
+    def test_all_four_are_in_the_seed(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(
+            world.included_campaigns,
+            ["half_life", "opposing_force", "blue_shift", "they_hunger"],
+        )
+
+    def test_every_campaign_contributes_its_weapons(self) -> None:
+        pool = {item.name for item in self.multiworld.itempool if item.player == self.player}
+        precollected = {
+            item.name for item in self.multiworld.precollected_items[self.player]
+        }
+        held = pool | precollected
+        for name in ("Shotgun", "Displacer Cannon", "Tommy Gun"):
+            self.assertIn(name, held)
+
+    def test_winning_needs_all_four_finales(self) -> None:
+        """One campaign cleared is not the seed cleared."""
+        from ..data import victory_event
+
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        self.assertTrue(self.multiworld.completion_condition[self.player](state))
+
+        for campaign in world.included_campaigns:
+            short = self.multiworld.get_all_state(False)
+            short.remove(world.create_item(victory_event(campaign)))
+            self.assertFalse(
+                self.multiworld.completion_condition[self.player](short),
+                f"the seed was won without finishing {campaign}",
+            )
+
+
+class TestOpposingForceOnly(StartingMissionMixin, HalfLifeSvenTestBase):
+    options = {
+        "include_half_life": False,
+        "include_opposing_force": True,
+    }
+
+    def test_no_half_life_missions_are_in_the_seed(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertFalse([n for n in names if n.startswith("Office Complex")])
+        self.assertTrue([n for n in names if n.startswith("Boot Camp")])
+
+    def test_it_keeps_its_own_weapon_checks(self) -> None:
+        """A shared weapon's only check used to sit in a Half-Life map."""
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertIn("Opposing Force - First Shotgun", names)
+
+    def test_its_finale_is_the_only_goal(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(
+            [c["key"] for c in world.goal_chapters], ["of_worlds_collide"]
+        )
+
+
+class TestNoCampaignsEnabled(StartingMissionMixin, HalfLifeSvenTestBase):
+    """A YAML can switch everything off; a seed still has to contain something."""
+
+    options = {
+        "include_half_life": False,
+        "include_opposing_force": False,
+        "include_blue_shift": False,
+        "include_they_hunger": False,
+    }
+
+    def test_it_falls_back_to_half_life(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(world.included_campaigns, ["half_life"])
+
+
+class TestIndependentMissionCounts(HalfLifeSvenTestBase):
+    """Each campaign's finale answers to its own setting and no other."""
+
+    options = {
+        "include_half_life": True,
+        "include_opposing_force": True,
+        "missions_required": 1,
+        "opposing_force_missions_required": 9,
+    }
+
+    def test_each_campaign_keeps_its_own_number(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(world.missions_required_for["half_life"], 1)
+        self.assertEqual(world.missions_required_for["opposing_force"], 9)
+
+    def test_finishing_one_campaign_does_not_open_the_other(self) -> None:
+        from ..data import mission_complete_event
+
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_state(self.multiworld)
+        # Nine Half-Life missions is more than enough for Nihilanth and nothing
+        # at all for Worlds Collide.
+        for _ in range(9):
+            state.collect(world.create_item(mission_complete_event("half_life")), True)
+        state.sweep_for_advancements()
+
+        self.assertFalse(self.can_reach_entrance("Enter Worlds Collide", state))
 
 
 class TestLooseLogic(StartingMissionMixin, HalfLifeSvenTestBase):

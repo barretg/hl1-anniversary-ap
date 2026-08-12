@@ -8,7 +8,8 @@
 | Data consistency (`campaign.json` ↔ `checkdata.txt`) | `pytest tests/test_campaign_data.py` | passing |
 | World generation, AP 0.6.7 | `ArchipelagoGenerate` on real seeds | passing |
 | Option matrix | `missions_required` 1 / 8 / 17, strict + loose, suit and long jump on and off, 3-slot multiworld | passing |
-| AngelScript plugin | — | **not yet run in-game** |
+| Campaign matrix | all four enabled, Opposing Force alone, They Hunger alone, every campaign switched off, and a pre-campaign YAML | passing |
+| AngelScript plugin | — | **multi-campaign half not yet run in-game** |
 
 The location and item tables are derived from the shipped `.bsp` files rather
 than written by hand, so "does this entity exist in this map" is verified by
@@ -20,16 +21,49 @@ The AngelScript half has been written against the API as documented and as used
 by Sven Co-op's own shipped scripts, but has not been executed. Work through this
 in order — each step depends on the one above it.
 
+### 0. Campaigns, first
+
+Everything below assumes a Half-Life seed, which is still the default. Do these
+first on a seed with **all four campaigns enabled**, because they are the parts
+that have never run in-game at all.
+
+- **The consoles go where they say.** This is the one with a real chance of being
+  wrong: the hub's numbering is inconsistent and Opposing Force's skips `of_ch06`,
+  so the mapping is a generated table. Press each Opposing Force console in turn
+  and confirm the mission you arrive in is the one you pressed, not the next one
+  along. Blue Shift and They Hunger too, though their numbering is unbroken. If a
+  console is off by one, the fix is one line of `consoles=` in
+  `tools/campaign_layout.py` followed by a regenerate.
+- **Four missions are open at the start**, one per campaign, and `!ap` lists all
+  37 missions grouped under campaign headings.
+- **Weapons cross over.** This is the untested engine question: receive an
+  Opposing Force weapon (displacer, sniper rifle, spore launcher) while standing
+  in a Half-Life map and confirm it arrives, draws, and fires rather than erroring
+  or dropping the server. If a weapon does not exist outside its own campaign's
+  maps, the plugin will need to precache it at map start. Test the reverse too: a
+  crossbow or Tau cannon on `of1a1`, and a tommy gun in Black Mesa.
+- **A finale ends its campaign, not the run.** Finish one campaign's last mission
+  and confirm chat says that campaign is complete, the client logs how many are
+  left, and the slot is **not** marked goal-complete. Only the last one should
+  send `CLIENT_GOAL`.
+- **The counts stay separate.** With `missions_required: 1` and
+  `opposing_force_missions_required: 9`, one Half-Life mission opens Nihilanth
+  and does nothing at all for Worlds Collide.
+- **A campaign left out of the seed** shows every one of its missions as "not in
+  this seed" in `!ap`, and its consoles refuse with that message.
+
 ### 1. The plugin loads
 
 Start a listen server on `-sp_campaign_portal` and check the server console for:
 
 ```
-[AP] loaded 18 chapters, 174 locations
+[AP] loaded 37 chapters, 353 locations
 ```
 
 If it is missing, the plugin is not registered or `checkdata.txt` is not in
-`svencoop/scripts/plugins/store/archipelago/`.
+`svencoop/scripts/plugins/store/archipelago/`. The counts are for all four
+campaigns, which the data file always describes in full; a seed that leaves some
+out says so through `excluded`, not by shrinking this file.
 
 ### 2. The bridge round-trips
 

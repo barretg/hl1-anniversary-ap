@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState
 
-from .data import MISSION_COMPLETE, REQUIREMENT_GROUPS
+from .data import REQUIREMENT_GROUPS, mission_complete_event
 from .options import LogicDifficulty
 
 if TYPE_CHECKING:
@@ -93,9 +93,13 @@ def chapter_entry_rule(
             conditions.append(lambda state, name=item_name: state.has(name, player))
 
     if chapter["is_goal"]:
-        required = world.options.missions_required.value
+        # This campaign's own count, from this campaign's own setting. Missions
+        # finished elsewhere in the seed do nothing for it.
+        campaign = chapter["campaign"]
+        required = world.missions_required_for[campaign]
+        event = mission_complete_event(campaign)
         conditions.append(
-            lambda state: state.has(MISSION_COMPLETE, player, required)
+            lambda state, name=event, count=required: state.has(name, player, count)
         )
     else:
         unlock = world.unlock_item_for_chapter[chapter["key"]]

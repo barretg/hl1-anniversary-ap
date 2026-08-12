@@ -97,6 +97,22 @@ def test_snapshot_carries_excluded_missions(bridge: Bridge) -> None:
     assert "excluded=black_mesa_inbound" in bridge.in_path.read_text(encoding="utf-8")
 
 
+def test_snapshot_carries_open_finales_per_campaign(bridge: Bridge) -> None:
+    """A seed has one finale per campaign and they unseal independently."""
+    snapshot(bridge)
+    assert "goals_open=\n" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, goals_open=["nihilanth"]) is True
+    assert "goals_open=nihilanth" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, goals_open=["of_worlds_collide", "nihilanth"]) is True
+    text = bridge.in_path.read_text(encoding="utf-8")
+    assert "goals_open=nihilanth,of_worlds_collide" in text
+    # `goal_open` stays a separate field: it is the collapsed answer for a plugin
+    # that predates the list.
+    assert "goal_open=0" in text
+
+
 def test_snapshot_carries_ungated_classnames(bridge: Bridge) -> None:
     """"Not gated at all" has to be distinguishable from "gated and owned"."""
     snapshot(bridge)

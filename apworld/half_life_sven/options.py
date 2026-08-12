@@ -12,23 +12,72 @@ from Options import (
     Toggle,
 )
 
-from .data import UNLOCKABLE_CHAPTERS
+from .data import unlockable_chapters_of
 
-MAX_MISSIONS = len(UNLOCKABLE_CHAPTERS)
+# Each campaign's own ceiling: its missions, minus the finale that no number of
+# them can be spent on.
+_MAX = {
+    key: len(unlockable_chapters_of(key))
+    for key in ("half_life", "opposing_force", "blue_shift", "they_hunger")
+}
+
+MAX_MISSIONS = _MAX["half_life"]
 
 
 class MissionsRequired(Range):
-    """How many missions must be completed before the Nihilanth mission opens.
+    """How many Half-Life missions open Nihilanth.
 
     Nihilanth is never unlocked by an item -- it becomes available once this many
-    other missions have been finished. The default is every other mission in the
-    campaign.
+    other Half-Life missions have been finished. The default is every one of them.
+
+    Each campaign has its own version of this setting and they are completely
+    independent: Opposing Force progress does nothing for Nihilanth, and
+    Half-Life progress does nothing for Worlds Collide.
     """
 
     display_name = "Missions Required"
     range_start = 1
-    range_end = MAX_MISSIONS
-    default = MAX_MISSIONS
+    range_end = _MAX["half_life"]
+    default = _MAX["half_life"]
+
+
+class OpposingForceMissionsRequired(Range):
+    """How many Opposing Force missions open Worlds Collide.
+
+    Independent of every other campaign's setting. Ignored unless Opposing Force
+    is in the seed.
+    """
+
+    display_name = "Opposing Force Missions Required"
+    range_start = 1
+    range_end = _MAX["opposing_force"]
+    default = _MAX["opposing_force"]
+
+
+class BlueShiftMissionsRequired(Range):
+    """How many Blue Shift missions open Power Struggle.
+
+    Independent of every other campaign's setting. Ignored unless Blue Shift is
+    in the seed.
+    """
+
+    display_name = "Blue Shift Missions Required"
+    range_start = 1
+    range_end = _MAX["blue_shift"]
+    default = _MAX["blue_shift"]
+
+
+class TheyHungerMissionsRequired(Range):
+    """How many They Hunger episodes open Episode 3.
+
+    Independent of every other campaign's setting. Ignored unless They Hunger is
+    in the seed. There are only two other episodes, so this is 1 or 2.
+    """
+
+    display_name = "They Hunger Missions Required"
+    range_start = 1
+    range_end = _MAX["they_hunger"]
+    default = _MAX["they_hunger"]
 
 
 class LogicDifficulty(Choice):
@@ -64,6 +113,54 @@ class Chargesanity(DefaultOnToggle):
     """
 
     display_name = "Chargesanity"
+
+
+class IncludeHalfLife(DefaultOnToggle):
+    """Include the Half-Life campaign in the seed.
+
+    18 missions, ending at Nihilanth. Turn every campaign off and this one comes
+    back on regardless, because a seed has to contain something.
+    """
+
+    display_name = "Include Half-Life"
+
+
+class IncludeOpposingForce(Toggle):
+    """Include the Opposing Force campaign in the seed.
+
+    10 missions, ending at Worlds Collide, and nine weapons Half-Life does not
+    have: the SAW, the sniper rifle, the displacer, the spore launcher, the
+    barnacle grapple and the rest. They join one shared pool, so enabling this
+    puts Opposing Force weapons in Half-Life's missions and the other way round.
+    """
+
+    display_name = "Include Opposing Force"
+
+
+class IncludeBlueShift(Toggle):
+    """Include the Blue Shift campaign in the seed.
+
+    6 missions, ending at Power Struggle. It brings no weapons of its own -- in
+    Sven Co-op it uses Half-Life's, down to the crowbar -- so it is the campaign
+    that most wants another one enabled alongside it for variety.
+    """
+
+    display_name = "Include Blue Shift"
+
+
+class IncludeTheyHunger(Toggle):
+    """Include the They Hunger campaign in the seed.
+
+    3 missions across 19 maps, ending at Episode 3, and nine weapons of its own
+    from the tommy gun to the tesla gun.
+
+    Its logic has not had a pass yet: there are no weapon gates on its episodes,
+    so strict logic may expect you to walk into one with whatever you happen to
+    hold. It also has only three chargers in the whole campaign, so chargesanity
+    barely touches it and almost all of its checks come from reaching maps.
+    """
+
+    display_name = "Include They Hunger"
 
 
 class IncludeBlackMesaInbound(DefaultOnToggle):
@@ -149,7 +246,14 @@ class TrapPercentage(Range):
 
 @dataclass
 class HalfLifeSvenOptions(PerGameCommonOptions):
+    include_half_life: IncludeHalfLife
+    include_opposing_force: IncludeOpposingForce
+    include_blue_shift: IncludeBlueShift
+    include_they_hunger: IncludeTheyHunger
     missions_required: MissionsRequired
+    opposing_force_missions_required: OpposingForceMissionsRequired
+    blue_shift_missions_required: BlueShiftMissionsRequired
+    they_hunger_missions_required: TheyHungerMissionsRequired
     logic_difficulty: LogicDifficulty
     include_black_mesa_inbound: IncludeBlackMesaInbound
     chargesanity: Chargesanity

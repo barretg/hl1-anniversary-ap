@@ -61,16 +61,52 @@ def test_item_and_location_id_spaces_do_not_overlap(campaign: dict) -> None:
     assert not item_ids & location_ids
 
 
-def test_exactly_one_goal_chapter(campaign: dict) -> None:
-    assert sum(1 for chapter in campaign["chapters"] if chapter["is_goal"]) == 1
+def test_exactly_one_goal_chapter_per_campaign(campaign: dict) -> None:
+    """Each campaign ends in its own finale, and each finale is a goal."""
+    goals = {c["key"] for c in campaign["chapters"] if c["is_goal"]}
+    declared = {c["goal_chapter"] for c in campaign["campaigns"]}
+    assert goals == declared
+    assert len(goals) == len(campaign["campaigns"])
 
 
-def test_goal_chapter_has_no_unlock_item(campaign: dict) -> None:
-    goal = next(c["key"] for c in campaign["chapters"] if c["is_goal"])
+def test_goal_chapters_have_no_unlock_item(campaign: dict) -> None:
+    goals = {c["key"] for c in campaign["chapters"] if c["is_goal"]}
     chapter_items = [i for i in campaign["items"] if i.get("group") == "chapter"]
-    assert goal not in {item["chapter"] for item in chapter_items}
+    assert not goals & {item["chapter"] for item in chapter_items}
     # Every other chapter does have one.
-    assert len(chapter_items) == len(campaign["chapters"]) - 1
+    assert len(chapter_items) == len(campaign["chapters"]) - len(goals)
+
+
+def test_every_chapter_belongs_to_a_declared_campaign(campaign: dict) -> None:
+    keys = {c["key"] for c in campaign["campaigns"]}
+    listed = {k for c in campaign["campaigns"] for k in c["chapters"]}
+    assert listed == {c["key"] for c in campaign["chapters"]}
+    for chapter in campaign["chapters"]:
+        assert chapter["campaign"] in keys, chapter["key"]
+
+
+def test_portal_consoles_point_at_chapters_of_their_own_campaign(
+    campaign: dict,
+) -> None:
+    """The plugin warps on a console press, so a wrong entry is a wrong mission."""
+    campaign_of = {c["key"]: c["campaign"] for c in campaign["chapters"]}
+    seen: set[str] = set()
+
+    for entry in campaign["campaigns"]:
+        for console, chapter_key in entry["consoles"].items():
+            assert chapter_key in campaign_of, console
+            assert campaign_of[chapter_key] == entry["key"], console
+            # One console cannot open two missions.
+            assert console not in seen, console
+            seen.add(console)
+
+        # Consoles are positional: the Nth console is the Nth mission.
+        ordered = [
+            key for key in entry["chapters"]
+            if key in set(entry["consoles"].values())
+        ]
+        by_console = [entry["consoles"][c] for c in sorted(entry["consoles"])]
+        assert sorted(by_console) == sorted(ordered), entry["key"]
 
 
 def test_every_chapter_has_a_completion_location(campaign: dict) -> None:
@@ -241,33 +277,34 @@ def test_checkdata_charger_args_are_classname_and_model(
     assert generated == expected, "run: python tools/gen_checkdata.py"
 
 
-def test_every_weapon_has_exactly_one_first_pickup(campaign: dict) -> None:
-    """One check per weapon, at its vanilla first location -- not one per copy."""
-    from campaign_layout import UNRANDOMISED_WEAPON_LOCATIONS, WEAPON_ITEMS
+def test_every_weapon_has_one_first_pickup_per_campaign(campaign: dict) -> None:
+    """One check per weapon per campaign, at that campaign's earliest copy.
 
-    expected_items = {**WEAPON_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS}
-    weapon_locations = [
-        entry for entry in campaign["locations"]
-        if entry["trigger"]["type"] == "weapon_pickup"
-    ]
-    assert len(weapon_locations) == len(expected_items)
+    Not one across the whole seed: a campaign that ships a shotgun has a "first
+    shotgun" of its own, or leaving Half-Life out would strand the check in a map
+    the seed does not contain.
+    """
+    campaign_of = {c["key"]: c["campaign"] for c in campaign["chapters"]}
+    seen: set[tuple[str, str]] = set()
 
-    covered = {
-        classname
-        for entry in weapon_locations
-        for classname in entry["trigger"]["classnames"]
-    }
-    assert covered == {c for classnames in expected_items.values() for c in classnames}
+    for entry in campaign["locations"]:
+        if entry["trigger"]["type"] != "weapon_pickup":
+            continue
+        key = (campaign_of[entry["chapter"]], ",".join(sorted(entry["trigger"]["classnames"])))
+        assert key not in seen, entry["name"]
+        seen.add(key)
 
 
 def test_the_crowbar_is_a_location_but_never_an_item(campaign: dict) -> None:
-    """You start with one; finding Half-Life's own is still worth a check."""
+    """You start with one; finding the campaign's own is still worth a check."""
     names = [
         entry["name"] for entry in campaign["locations"]
         if entry["trigger"]["type"] == "weapon_pickup"
         and "weapon_crowbar" in entry["trigger"]["classnames"]
     ]
-    assert names == ["First Crowbar"]
+    # Half-Life's keeps its original wording; the rest name their campaign.
+    assert "First Crowbar" in names
+    assert len(names) == len(set(names))
     assert "Crowbar" not in {item["name"] for item in campaign["items"]}
 
 

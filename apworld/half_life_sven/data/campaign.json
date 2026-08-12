@@ -1,5 +1,124 @@
 {
- "data_version": "84cc1d64f70e",
+ "data_version": "2f192633545d",
+ "campaigns": [
+  {
+   "key": "half_life",
+   "name": "Half-Life",
+   "option": "include_half_life",
+   "missions_option": "missions_required",
+   "goal_chapter": "nihilanth",
+   "chapters": [
+    "black_mesa_inbound",
+    "anomalous_materials",
+    "unforeseen_consequences",
+    "office_complex",
+    "weve_got_hostiles",
+    "blast_pit",
+    "power_up",
+    "on_a_rail",
+    "apprehension",
+    "residue_processing",
+    "questionable_ethics",
+    "surface_tension",
+    "forget_about_freeman",
+    "lambda_core",
+    "xen",
+    "gonarchs_lair",
+    "interloper",
+    "nihilanth"
+   ],
+   "consoles": {
+    "hl_ch1": "anomalous_materials",
+    "hl_ch2": "unforeseen_consequences",
+    "hl_ch3": "office_complex",
+    "hl_ch4": "weve_got_hostiles",
+    "hl_ch5": "blast_pit",
+    "hl_ch6": "power_up",
+    "hl_ch7": "on_a_rail",
+    "hl_ch8": "apprehension",
+    "hl_ch9": "residue_processing",
+    "hl_ch10": "questionable_ethics",
+    "hl_ch11": "surface_tension",
+    "hl_ch12": "forget_about_freeman",
+    "hl_ch13": "lambda_core",
+    "hl_ch14": "xen",
+    "hl_ch15": "gonarchs_lair",
+    "hl_ch16": "interloper",
+    "hl_ch17": "nihilanth"
+   }
+  },
+  {
+   "key": "opposing_force",
+   "name": "Opposing Force",
+   "option": "include_opposing_force",
+   "missions_option": "opposing_force_missions_required",
+   "goal_chapter": "of_worlds_collide",
+   "chapters": [
+    "of_boot_camp",
+    "of_welcome_to_black_mesa",
+    "of_we_are_not_alone",
+    "of_missing_in_action",
+    "of_friendly_fire",
+    "of_we_are_pulling_out",
+    "of_crush_depth",
+    "of_vicarious_reality",
+    "of_pit_worms_nest",
+    "of_worlds_collide"
+   ],
+   "consoles": {
+    "of_ch01": "of_boot_camp",
+    "of_ch02": "of_welcome_to_black_mesa",
+    "of_ch03": "of_we_are_not_alone",
+    "of_ch04": "of_missing_in_action",
+    "of_ch05": "of_friendly_fire",
+    "of_ch07": "of_we_are_pulling_out",
+    "of_ch08": "of_crush_depth",
+    "of_ch09": "of_vicarious_reality",
+    "of_ch10": "of_pit_worms_nest",
+    "of_ch11": "of_worlds_collide"
+   }
+  },
+  {
+   "key": "blue_shift",
+   "name": "Blue Shift",
+   "option": "include_blue_shift",
+   "missions_option": "blue_shift_missions_required",
+   "goal_chapter": "bs_power_struggle",
+   "chapters": [
+    "bs_living_quarters",
+    "bs_insecurity",
+    "bs_duty_calls",
+    "bs_captive_freight",
+    "bs_focal_point",
+    "bs_power_struggle"
+   ],
+   "consoles": {
+    "bs_ch01": "bs_living_quarters",
+    "bs_ch02": "bs_insecurity",
+    "bs_ch03": "bs_duty_calls",
+    "bs_ch04": "bs_captive_freight",
+    "bs_ch05": "bs_focal_point",
+    "bs_ch06": "bs_power_struggle"
+   }
+  },
+  {
+   "key": "they_hunger",
+   "name": "They Hunger",
+   "option": "include_they_hunger",
+   "missions_option": "they_hunger_missions_required",
+   "goal_chapter": "th_episode_3",
+   "chapters": [
+    "th_episode_1",
+    "th_episode_2",
+    "th_episode_3"
+   ],
+   "consoles": {
+    "th_ep01": "th_episode_1",
+    "th_ep02": "th_episode_2",
+    "th_ep03": "th_episode_3"
+   }
+  }
+ ],
  "chapters": [
   {
    "key": "black_mesa_inbound",
@@ -8,6 +127,7 @@
     "hl_c00"
    ],
    "index": 0,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {}
   },
@@ -19,6 +139,7 @@
     "hl_c01_a2"
    ],
    "index": 1,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {}
   },
@@ -30,6 +151,7 @@
     "hl_c02_a2"
    ],
    "index": 2,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {}
   },
@@ -40,6 +162,7 @@
     "hl_c03"
    ],
    "index": 3,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {}
   },
@@ -50,6 +173,7 @@
     "hl_c04"
    ],
    "index": 4,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -66,6 +190,7 @@
     "hl_c05_a3"
    ],
    "index": 5,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -80,6 +205,7 @@
     "hl_c06"
    ],
    "index": 6,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -95,6 +221,7 @@
     "hl_c07_a2"
    ],
    "index": 7,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -110,6 +237,7 @@
     "hl_c08_a2"
    ],
    "index": 8,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -124,6 +252,7 @@
     "hl_c09"
    ],
    "index": 9,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -138,6 +267,7 @@
     "hl_c10"
    ],
    "index": 10,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -156,6 +286,7 @@
     "hl_c11_a5"
    ],
    "index": 11,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -170,6 +301,7 @@
     "hl_c12"
    ],
    "index": 12,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -187,6 +319,7 @@
     "hl_c13_a4"
    ],
    "index": 13,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -201,6 +334,7 @@
     "hl_c14"
    ],
    "index": 14,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -220,6 +354,7 @@
     "hl_c15"
    ],
    "index": 15,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -242,6 +377,7 @@
     "hl_c16_a4"
    ],
    "index": 16,
+   "campaign": "half_life",
    "is_goal": false,
    "gates": {
     "strict": [
@@ -262,6 +398,7 @@
     "hl_c18"
    ],
    "index": 17,
+   "campaign": "half_life",
    "is_goal": true,
    "gates": {
     "strict": [
@@ -273,6 +410,328 @@
      "suit"
     ]
    }
+  },
+  {
+   "key": "of_boot_camp",
+   "name": "Boot Camp",
+   "maps": [
+    "of0a0"
+   ],
+   "index": 18,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "of_welcome_to_black_mesa",
+   "name": "Welcome To Black Mesa",
+   "maps": [
+    "of1a1",
+    "of1a2"
+   ],
+   "index": 19,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "of_we_are_not_alone",
+   "name": "We Are Not Alone",
+   "maps": [
+    "of1a3",
+    "of1a4",
+    "of1a4b"
+   ],
+   "index": 20,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "of_missing_in_action",
+   "name": "Missing In Action",
+   "maps": [
+    "of1a5",
+    "of1a5b",
+    "of1a6"
+   ],
+   "index": 21,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "of_friendly_fire",
+   "name": "Friendly Fire",
+   "maps": [
+    "of2a1",
+    "of2a1b",
+    "of2a2"
+   ],
+   "index": 22,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "of_we_are_pulling_out",
+   "name": "We Are Pulling Out",
+   "maps": [
+    "of2a4",
+    "of2a5",
+    "of2a6"
+   ],
+   "index": 23,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "of_crush_depth",
+   "name": "Crush Depth",
+   "maps": [
+    "of3a1",
+    "of3a2"
+   ],
+   "index": 24,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "of_vicarious_reality",
+   "name": "Vicarious Reality",
+   "maps": [
+    "of3a4",
+    "of3a5",
+    "of3a6"
+   ],
+   "index": 25,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "of_pit_worms_nest",
+   "name": "Pit Worm's Nest",
+   "maps": [
+    "of4a1",
+    "of4a2",
+    "of4a3",
+    "of4a4"
+   ],
+   "index": 26,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ]
+   }
+  },
+  {
+   "key": "of_worlds_collide",
+   "name": "Worlds Collide",
+   "maps": [
+    "of5a1",
+    "of5a2",
+    "of5a3",
+    "of5a4",
+    "of6a1",
+    "of6a2",
+    "of6a3",
+    "of6a4",
+    "of6a4b",
+    "of6a5"
+   ],
+   "index": 27,
+   "campaign": "opposing_force",
+   "is_goal": true,
+   "gates": {
+    "strict": [
+     "heavy"
+    ]
+   }
+  },
+  {
+   "key": "bs_living_quarters",
+   "name": "Living Quarters Outbound",
+   "maps": [
+    "ba_tram1",
+    "ba_tram2",
+    "ba_tram3"
+   ],
+   "index": 28,
+   "campaign": "blue_shift",
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "bs_insecurity",
+   "name": "Insecurity",
+   "maps": [
+    "ba_security1",
+    "ba_security2",
+    "ba_maint",
+    "ba_elevator"
+   ],
+   "index": 29,
+   "campaign": "blue_shift",
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "bs_duty_calls",
+   "name": "Duty Calls",
+   "maps": [
+    "ba_canal1",
+    "ba_canal1b",
+    "ba_canal2",
+    "ba_canal3"
+   ],
+   "index": 30,
+   "campaign": "blue_shift",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "bs_captive_freight",
+   "name": "Captive Freight",
+   "maps": [
+    "ba_yard1",
+    "ba_yard2",
+    "ba_yard3",
+    "ba_yard3a",
+    "ba_yard3b",
+    "ba_yard4",
+    "ba_yard4a",
+    "ba_yard5",
+    "ba_yard5a"
+   ],
+   "index": 31,
+   "campaign": "blue_shift",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "bs_focal_point",
+   "name": "Focal Point",
+   "maps": [
+    "ba_teleport1",
+    "ba_xen1",
+    "ba_xen2",
+    "ba_xen3",
+    "ba_xen4",
+    "ba_xen5",
+    "ba_xen6"
+   ],
+   "index": 32,
+   "campaign": "blue_shift",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "bs_power_struggle",
+   "name": "Power Struggle",
+   "maps": [
+    "ba_teleport2",
+    "ba_power1",
+    "ba_power2",
+    "ba_outro"
+   ],
+   "index": 33,
+   "campaign": "blue_shift",
+   "is_goal": true,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "th_episode_1",
+   "name": "They Hunger: Episode 1",
+   "maps": [
+    "th_ep1_00",
+    "th_ep1_01",
+    "th_ep1_02",
+    "th_ep1_03",
+    "th_ep1_04",
+    "th_ep1_05"
+   ],
+   "index": 34,
+   "campaign": "they_hunger",
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "th_episode_2",
+   "name": "They Hunger: Episode 2",
+   "maps": [
+    "th_ep2_00",
+    "th_ep2_01",
+    "th_ep2_02",
+    "th_ep2_03",
+    "th_ep2_04"
+   ],
+   "index": 35,
+   "campaign": "they_hunger",
+   "is_goal": false,
+   "gates": {}
+  },
+  {
+   "key": "th_episode_3",
+   "name": "They Hunger: Episode 3",
+   "maps": [
+    "th_ep3_00",
+    "th_ep3_01",
+    "th_ep3_02",
+    "th_ep3_03",
+    "th_ep3_04",
+    "th_ep3_05",
+    "th_ep3_06",
+    "th_ep3_07"
+   ],
+   "index": 36,
+   "campaign": "they_hunger",
+   "is_goal": true,
+   "gates": {}
   }
  ],
  "items": [
@@ -281,119 +740,264 @@
    "name": "Black Mesa Inbound Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "black_mesa_inbound"
+   "chapter": "black_mesa_inbound",
+   "campaign": "half_life"
   },
   {
    "id": 7710001,
    "name": "Anomalous Materials Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "anomalous_materials"
+   "chapter": "anomalous_materials",
+   "campaign": "half_life"
   },
   {
    "id": 7710002,
    "name": "Unforeseen Consequences Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "unforeseen_consequences"
+   "chapter": "unforeseen_consequences",
+   "campaign": "half_life"
   },
   {
    "id": 7710003,
    "name": "Office Complex Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "office_complex"
+   "chapter": "office_complex",
+   "campaign": "half_life"
   },
   {
    "id": 7710004,
    "name": "We've Got Hostiles Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "weve_got_hostiles"
+   "chapter": "weve_got_hostiles",
+   "campaign": "half_life"
   },
   {
    "id": 7710005,
    "name": "Blast Pit Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "blast_pit"
+   "chapter": "blast_pit",
+   "campaign": "half_life"
   },
   {
    "id": 7710006,
    "name": "Power Up Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "power_up"
+   "chapter": "power_up",
+   "campaign": "half_life"
   },
   {
    "id": 7710007,
    "name": "On A Rail Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "on_a_rail"
+   "chapter": "on_a_rail",
+   "campaign": "half_life"
   },
   {
    "id": 7710008,
    "name": "Apprehension Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "apprehension"
+   "chapter": "apprehension",
+   "campaign": "half_life"
   },
   {
    "id": 7710009,
    "name": "Residue Processing Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "residue_processing"
+   "chapter": "residue_processing",
+   "campaign": "half_life"
   },
   {
    "id": 7710010,
    "name": "Questionable Ethics Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "questionable_ethics"
+   "chapter": "questionable_ethics",
+   "campaign": "half_life"
   },
   {
    "id": 7710011,
    "name": "Surface Tension Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "surface_tension"
+   "chapter": "surface_tension",
+   "campaign": "half_life"
   },
   {
    "id": 7710012,
    "name": "Forget About Freeman Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "forget_about_freeman"
+   "chapter": "forget_about_freeman",
+   "campaign": "half_life"
   },
   {
    "id": 7710013,
    "name": "Lambda Core Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "lambda_core"
+   "chapter": "lambda_core",
+   "campaign": "half_life"
   },
   {
    "id": 7710014,
    "name": "Xen Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "xen"
+   "chapter": "xen",
+   "campaign": "half_life"
   },
   {
    "id": 7710015,
    "name": "Gonarch's Lair Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "gonarchs_lair"
+   "chapter": "gonarchs_lair",
+   "campaign": "half_life"
   },
   {
    "id": 7710016,
    "name": "Interloper Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "interloper"
+   "chapter": "interloper",
+   "campaign": "half_life"
+  },
+  {
+   "id": 7710039,
+   "name": "Boot Camp Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_boot_camp",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710040,
+   "name": "Welcome To Black Mesa Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_welcome_to_black_mesa",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710041,
+   "name": "We Are Not Alone Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_we_are_not_alone",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710042,
+   "name": "Missing In Action Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_missing_in_action",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710043,
+   "name": "Friendly Fire Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_friendly_fire",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710044,
+   "name": "We Are Pulling Out Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_we_are_pulling_out",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710045,
+   "name": "Crush Depth Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_crush_depth",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710046,
+   "name": "Vicarious Reality Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_vicarious_reality",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710047,
+   "name": "Pit Worm's Nest Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_pit_worms_nest",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710048,
+   "name": "Living Quarters Outbound Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "bs_living_quarters",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7710049,
+   "name": "Insecurity Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "bs_insecurity",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7710050,
+   "name": "Duty Calls Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "bs_duty_calls",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7710051,
+   "name": "Captive Freight Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "bs_captive_freight",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7710052,
+   "name": "Focal Point Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "bs_focal_point",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7710053,
+   "name": "They Hunger: Episode 1 Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "th_episode_1",
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710054,
+   "name": "They Hunger: Episode 2 Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "th_episode_2",
+   "campaign": "they_hunger"
   },
   {
    "id": 7710017,
@@ -403,7 +1007,8 @@
    "classnames": [
     "weapon_glock",
     "weapon_9mmhandgun"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710018,
@@ -412,7 +1017,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_357"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710019,
@@ -422,7 +1028,8 @@
    "classnames": [
     "weapon_9mmAR",
     "weapon_m16"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710020,
@@ -431,7 +1038,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_shotgun"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710021,
@@ -440,7 +1048,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_crossbow"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710022,
@@ -449,7 +1058,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_rpg"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710023,
@@ -458,7 +1068,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_gauss"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710024,
@@ -467,7 +1078,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_egon"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710025,
@@ -476,7 +1088,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_hornetgun"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710026,
@@ -485,7 +1098,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_satchel"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710027,
@@ -494,7 +1108,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_tripmine"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710028,
@@ -503,7 +1118,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_snark"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7710029,
@@ -512,7 +1128,189 @@
    "group": "weapon",
    "classnames": [
     "weapon_handgrenade"
-   ]
+   ],
+   "campaign": "half_life"
+  },
+  {
+   "id": 7710055,
+   "name": "Desert Eagle",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_eagle"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710056,
+   "name": "SAW",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_m249",
+    "weapon_saw"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710057,
+   "name": "Sniper Rifle",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_sniperrifle"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710058,
+   "name": "Displacer Cannon",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_displacer"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710059,
+   "name": "Spore Launcher",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_sporelauncher"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710060,
+   "name": "Barnacle Grapple",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_grapple"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710061,
+   "name": "Combat Knife",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_knife"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710062,
+   "name": "Pipe Wrench",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_pipewrench"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710063,
+   "name": "Minigun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_minigun"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710064,
+   "name": "Colt 1911",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_colt1911"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710065,
+   "name": "Taurus",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_th_taurus"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710066,
+   "name": "Sawed-Off Shotgun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_sawedoff"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710067,
+   "name": "Grease Gun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_greasegun"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710068,
+   "name": "Tommy Gun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_tommygun"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710069,
+   "name": "M14",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_m14"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710070,
+   "name": "M16A1",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_m16a1"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710071,
+   "name": "Tesla Gun",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_teslagun"
+   ],
+   "campaign": "they_hunger"
+  },
+  {
+   "id": 7710072,
+   "name": "Spanner",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_spanner"
+   ],
+   "campaign": "they_hunger"
   },
   {
    "id": 7710030,
@@ -2230,6 +3028,1278 @@
    }
   },
   {
+   "id": 7720174,
+   "name": "Boot Camp - Reached",
+   "chapter": "of_boot_camp",
+   "map": "of0a0",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of0a0"
+   }
+  },
+  {
+   "id": 7720175,
+   "name": "Welcome To Black Mesa - Part 1 Reached",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a1"
+   }
+  },
+  {
+   "id": 7720176,
+   "name": "Welcome To Black Mesa - Health Charger (Part 1)",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a1",
+    "classname": "func_healthcharger",
+    "model": "*108"
+   }
+  },
+  {
+   "id": 7720177,
+   "name": "Welcome To Black Mesa - Part 2 Reached",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a2"
+   }
+  },
+  {
+   "id": 7720178,
+   "name": "We Are Not Alone - Part 1 Reached",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a3"
+   }
+  },
+  {
+   "id": 7720179,
+   "name": "We Are Not Alone - Part 2 Reached",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a4"
+   }
+  },
+  {
+   "id": 7720180,
+   "name": "We Are Not Alone - Health Charger (Part 2)",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a4",
+    "classname": "func_healthcharger",
+    "model": "*20"
+   }
+  },
+  {
+   "id": 7720181,
+   "name": "We Are Not Alone - Part 3 Reached",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a4b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a4b"
+   }
+  },
+  {
+   "id": 7720182,
+   "name": "Missing In Action - Part 1 Reached",
+   "chapter": "of_missing_in_action",
+   "map": "of1a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a5"
+   }
+  },
+  {
+   "id": 7720183,
+   "name": "Missing In Action - Part 2 Reached",
+   "chapter": "of_missing_in_action",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a5b"
+   }
+  },
+  {
+   "id": 7720184,
+   "name": "Missing In Action - HEV Charger (Part 2)",
+   "chapter": "of_missing_in_action",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a5b",
+    "classname": "func_recharge",
+    "model": "*70"
+   }
+  },
+  {
+   "id": 7720185,
+   "name": "Missing In Action - Part 3 Reached",
+   "chapter": "of_missing_in_action",
+   "map": "of1a6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a6"
+   }
+  },
+  {
+   "id": 7720186,
+   "name": "Missing In Action - Health Charger (Part 3)",
+   "chapter": "of_missing_in_action",
+   "map": "of1a6",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a6",
+    "classname": "func_healthcharger",
+    "model": "*62"
+   }
+  },
+  {
+   "id": 7720187,
+   "name": "Friendly Fire - Part 1 Reached",
+   "chapter": "of_friendly_fire",
+   "map": "of2a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a1"
+   }
+  },
+  {
+   "id": 7720188,
+   "name": "Friendly Fire - Health Charger (Part 1)",
+   "chapter": "of_friendly_fire",
+   "map": "of2a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of2a1",
+    "classname": "func_healthcharger",
+    "model": "*122"
+   }
+  },
+  {
+   "id": 7720189,
+   "name": "Friendly Fire - Part 2 Reached",
+   "chapter": "of_friendly_fire",
+   "map": "of2a1b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a1b"
+   }
+  },
+  {
+   "id": 7720190,
+   "name": "Friendly Fire - Part 3 Reached",
+   "chapter": "of_friendly_fire",
+   "map": "of2a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a2"
+   }
+  },
+  {
+   "id": 7720191,
+   "name": "We Are Pulling Out - Part 1 Reached",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a4"
+   }
+  },
+  {
+   "id": 7720192,
+   "name": "We Are Pulling Out - Part 2 Reached",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a5"
+   }
+  },
+  {
+   "id": 7720193,
+   "name": "We Are Pulling Out - Part 3 Reached",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a6"
+   }
+  },
+  {
+   "id": 7720194,
+   "name": "We Are Pulling Out - HEV Charger (Part 3)",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a6",
+   "trigger": {
+    "type": "charger",
+    "map": "of2a6",
+    "classname": "func_recharge",
+    "model": "*232"
+   }
+  },
+  {
+   "id": 7720195,
+   "name": "Crush Depth - Part 1 Reached",
+   "chapter": "of_crush_depth",
+   "map": "of3a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a1"
+   }
+  },
+  {
+   "id": 7720196,
+   "name": "Crush Depth - Health Charger (Part 1)",
+   "chapter": "of_crush_depth",
+   "map": "of3a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a1",
+    "classname": "func_healthcharger",
+    "model": "*57"
+   }
+  },
+  {
+   "id": 7720197,
+   "name": "Crush Depth - HEV Charger (Part 1)",
+   "chapter": "of_crush_depth",
+   "map": "of3a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a1",
+    "classname": "func_recharge",
+    "model": "*58"
+   }
+  },
+  {
+   "id": 7720198,
+   "name": "Crush Depth - Part 2 Reached",
+   "chapter": "of_crush_depth",
+   "map": "of3a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a2"
+   }
+  },
+  {
+   "id": 7720199,
+   "name": "Crush Depth - Health Charger (Part 2)",
+   "chapter": "of_crush_depth",
+   "map": "of3a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a2",
+    "classname": "func_healthcharger",
+    "model": "*39"
+   }
+  },
+  {
+   "id": 7720200,
+   "name": "Vicarious Reality - Part 1 Reached",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a4"
+   }
+  },
+  {
+   "id": 7720201,
+   "name": "Vicarious Reality - Health Charger (Part 1)",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a4",
+    "classname": "func_healthcharger",
+    "model": "*266"
+   }
+  },
+  {
+   "id": 7720202,
+   "name": "Vicarious Reality - HEV Charger (Part 1)",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a4",
+    "classname": "func_recharge",
+    "model": "*267"
+   }
+  },
+  {
+   "id": 7720203,
+   "name": "Vicarious Reality - Part 2 Reached",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a5"
+   }
+  },
+  {
+   "id": 7720204,
+   "name": "Vicarious Reality - HEV Charger (Part 2)",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a5",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a5",
+    "classname": "func_recharge",
+    "model": "*218"
+   }
+  },
+  {
+   "id": 7720205,
+   "name": "Vicarious Reality - Part 3 Reached",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a6"
+   }
+  },
+  {
+   "id": 7720206,
+   "name": "Pit Worm's Nest - Part 1 Reached",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a1"
+   }
+  },
+  {
+   "id": 7720207,
+   "name": "Pit Worm's Nest - Part 2 Reached",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a2"
+   }
+  },
+  {
+   "id": 7720208,
+   "name": "Pit Worm's Nest - Health Charger 1 (Part 2)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "model": "*75"
+   }
+  },
+  {
+   "id": 7720209,
+   "name": "Pit Worm's Nest - Health Charger 2 (Part 2)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "model": "*76"
+   }
+  },
+  {
+   "id": 7720210,
+   "name": "Pit Worm's Nest - Health Charger 3 (Part 2)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "model": "*202"
+   }
+  },
+  {
+   "id": 7720211,
+   "name": "Pit Worm's Nest - Health Charger 4 (Part 2)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "model": "*203"
+   }
+  },
+  {
+   "id": 7720212,
+   "name": "Pit Worm's Nest - Part 3 Reached",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a3"
+   }
+  },
+  {
+   "id": 7720213,
+   "name": "Pit Worm's Nest - Health Charger 1 (Part 3)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a3",
+    "classname": "func_healthcharger",
+    "model": "*137"
+   }
+  },
+  {
+   "id": 7720214,
+   "name": "Pit Worm's Nest - Health Charger 2 (Part 3)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a3",
+    "classname": "func_healthcharger",
+    "model": "*138"
+   }
+  },
+  {
+   "id": 7720215,
+   "name": "Pit Worm's Nest - Health Charger 3 (Part 3)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a3",
+    "classname": "func_healthcharger",
+    "model": "*191"
+   }
+  },
+  {
+   "id": 7720216,
+   "name": "Pit Worm's Nest - Part 4 Reached",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a4"
+   }
+  },
+  {
+   "id": 7720217,
+   "name": "Worlds Collide - Part 1 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of5a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a1"
+   }
+  },
+  {
+   "id": 7720218,
+   "name": "Worlds Collide - Part 2 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of5a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a2"
+   }
+  },
+  {
+   "id": 7720219,
+   "name": "Worlds Collide - Part 3 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of5a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a3"
+   }
+  },
+  {
+   "id": 7720220,
+   "name": "Worlds Collide - Part 4 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of5a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a4"
+   }
+  },
+  {
+   "id": 7720221,
+   "name": "Worlds Collide - Health Charger (Part 4)",
+   "chapter": "of_worlds_collide",
+   "map": "of5a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of5a4",
+    "classname": "func_healthcharger",
+    "model": "*73"
+   }
+  },
+  {
+   "id": 7720222,
+   "name": "Worlds Collide - HEV Charger (Part 4)",
+   "chapter": "of_worlds_collide",
+   "map": "of5a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of5a4",
+    "classname": "func_recharge",
+    "model": "*74"
+   }
+  },
+  {
+   "id": 7720223,
+   "name": "Worlds Collide - Part 5 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of6a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a1"
+   }
+  },
+  {
+   "id": 7720224,
+   "name": "Worlds Collide - Part 6 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of6a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a2"
+   }
+  },
+  {
+   "id": 7720225,
+   "name": "Worlds Collide - Part 7 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of6a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a3"
+   }
+  },
+  {
+   "id": 7720226,
+   "name": "Worlds Collide - Part 8 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of6a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a4"
+   }
+  },
+  {
+   "id": 7720227,
+   "name": "Worlds Collide - Part 9 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a4b"
+   }
+  },
+  {
+   "id": 7720228,
+   "name": "Worlds Collide - Health Charger (Part 9)",
+   "chapter": "of_worlds_collide",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a4b",
+    "classname": "func_healthcharger",
+    "model": "*109"
+   }
+  },
+  {
+   "id": 7720229,
+   "name": "Worlds Collide - HEV Charger (Part 9)",
+   "chapter": "of_worlds_collide",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a4b",
+    "classname": "func_recharge",
+    "model": "*110"
+   }
+  },
+  {
+   "id": 7720230,
+   "name": "Worlds Collide - Part 10 Reached",
+   "chapter": "of_worlds_collide",
+   "map": "of6a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a5"
+   }
+  },
+  {
+   "id": 7720231,
+   "name": "Living Quarters Outbound - Part 1 Reached",
+   "chapter": "bs_living_quarters",
+   "map": "ba_tram1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_tram1"
+   }
+  },
+  {
+   "id": 7720232,
+   "name": "Living Quarters Outbound - Part 2 Reached",
+   "chapter": "bs_living_quarters",
+   "map": "ba_tram2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_tram2"
+   }
+  },
+  {
+   "id": 7720233,
+   "name": "Living Quarters Outbound - Part 3 Reached",
+   "chapter": "bs_living_quarters",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_tram3"
+   }
+  },
+  {
+   "id": 7720234,
+   "name": "Insecurity - Part 1 Reached",
+   "chapter": "bs_insecurity",
+   "map": "ba_security1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_security1"
+   }
+  },
+  {
+   "id": 7720235,
+   "name": "Insecurity - Part 2 Reached",
+   "chapter": "bs_insecurity",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_security2"
+   }
+  },
+  {
+   "id": 7720236,
+   "name": "Insecurity - Health Charger (Part 2)",
+   "chapter": "bs_insecurity",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_security2",
+    "classname": "func_healthcharger",
+    "model": "*14"
+   }
+  },
+  {
+   "id": 7720237,
+   "name": "Insecurity - Part 3 Reached",
+   "chapter": "bs_insecurity",
+   "map": "ba_maint",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_maint"
+   }
+  },
+  {
+   "id": 7720238,
+   "name": "Insecurity - Part 4 Reached",
+   "chapter": "bs_insecurity",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_elevator"
+   }
+  },
+  {
+   "id": 7720239,
+   "name": "Duty Calls - Part 1 Reached",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal1"
+   }
+  },
+  {
+   "id": 7720240,
+   "name": "Duty Calls - Health Charger (Part 1)",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal1",
+    "classname": "func_healthcharger",
+    "model": "*196"
+   }
+  },
+  {
+   "id": 7720241,
+   "name": "Duty Calls - Part 2 Reached",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal1b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal1b"
+   }
+  },
+  {
+   "id": 7720242,
+   "name": "Duty Calls - Part 3 Reached",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal2"
+   }
+  },
+  {
+   "id": 7720243,
+   "name": "Duty Calls - Health Charger (Part 3)",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal2",
+    "classname": "func_healthcharger",
+    "model": "*110"
+   }
+  },
+  {
+   "id": 7720244,
+   "name": "Duty Calls - Part 4 Reached",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal3"
+   }
+  },
+  {
+   "id": 7720245,
+   "name": "Duty Calls - Health Charger (Part 4)",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal3",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal3",
+    "classname": "func_healthcharger",
+    "model": "*117"
+   }
+  },
+  {
+   "id": 7720246,
+   "name": "Captive Freight - Part 1 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard1"
+   }
+  },
+  {
+   "id": 7720247,
+   "name": "Captive Freight - Part 2 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard2"
+   }
+  },
+  {
+   "id": 7720248,
+   "name": "Captive Freight - Part 3 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard3"
+   }
+  },
+  {
+   "id": 7720249,
+   "name": "Captive Freight - Part 4 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard3a",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard3a"
+   }
+  },
+  {
+   "id": 7720250,
+   "name": "Captive Freight - Health Charger (Part 4)",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard3a",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_yard3a",
+    "classname": "func_healthcharger",
+    "model": "*39"
+   }
+  },
+  {
+   "id": 7720251,
+   "name": "Captive Freight - Part 5 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard3b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard3b"
+   }
+  },
+  {
+   "id": 7720252,
+   "name": "Captive Freight - Part 6 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard4"
+   }
+  },
+  {
+   "id": 7720253,
+   "name": "Captive Freight - Part 7 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard4a",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard4a"
+   }
+  },
+  {
+   "id": 7720254,
+   "name": "Captive Freight - Part 8 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard5"
+   }
+  },
+  {
+   "id": 7720255,
+   "name": "Captive Freight - Part 9 Reached",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard5a",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard5a"
+   }
+  },
+  {
+   "id": 7720256,
+   "name": "Focal Point - Part 1 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_teleport1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_teleport1"
+   }
+  },
+  {
+   "id": 7720257,
+   "name": "Focal Point - Health Charger (Part 1)",
+   "chapter": "bs_focal_point",
+   "map": "ba_teleport1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_teleport1",
+    "classname": "func_healthcharger",
+    "model": "*156"
+   }
+  },
+  {
+   "id": 7720258,
+   "name": "Focal Point - Part 2 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen1"
+   }
+  },
+  {
+   "id": 7720259,
+   "name": "Focal Point - Part 3 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen2"
+   }
+  },
+  {
+   "id": 7720260,
+   "name": "Focal Point - Part 4 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen3"
+   }
+  },
+  {
+   "id": 7720261,
+   "name": "Focal Point - Part 5 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen4"
+   }
+  },
+  {
+   "id": 7720262,
+   "name": "Focal Point - Part 6 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen5"
+   }
+  },
+  {
+   "id": 7720263,
+   "name": "Focal Point - Part 7 Reached",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen6"
+   }
+  },
+  {
+   "id": 7720264,
+   "name": "Power Struggle - Part 1 Reached",
+   "chapter": "bs_power_struggle",
+   "map": "ba_teleport2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_teleport2"
+   }
+  },
+  {
+   "id": 7720265,
+   "name": "Power Struggle - Health Charger (Part 1)",
+   "chapter": "bs_power_struggle",
+   "map": "ba_teleport2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_teleport2",
+    "classname": "func_healthcharger",
+    "model": "*151"
+   }
+  },
+  {
+   "id": 7720266,
+   "name": "Power Struggle - Part 2 Reached",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_power1"
+   }
+  },
+  {
+   "id": 7720267,
+   "name": "Power Struggle - Health Charger 1 (Part 2)",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power1",
+    "classname": "func_healthcharger",
+    "model": "*133"
+   }
+  },
+  {
+   "id": 7720268,
+   "name": "Power Struggle - Health Charger 2 (Part 2)",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power1",
+    "classname": "func_healthcharger",
+    "model": "*228"
+   }
+  },
+  {
+   "id": 7720269,
+   "name": "Power Struggle - Part 3 Reached",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_power2"
+   }
+  },
+  {
+   "id": 7720270,
+   "name": "Power Struggle - Health Charger 1 (Part 3)",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power2",
+    "classname": "func_healthcharger",
+    "model": "*112"
+   }
+  },
+  {
+   "id": 7720271,
+   "name": "Power Struggle - Health Charger 2 (Part 3)",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power2",
+    "classname": "func_healthcharger",
+    "model": "*197"
+   }
+  },
+  {
+   "id": 7720272,
+   "name": "Power Struggle - Part 4 Reached",
+   "chapter": "bs_power_struggle",
+   "map": "ba_outro",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_outro"
+   }
+  },
+  {
+   "id": 7720273,
+   "name": "They Hunger: Episode 1 - Part 1 Reached",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_00",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep1_00"
+   }
+  },
+  {
+   "id": 7720274,
+   "name": "They Hunger: Episode 1 - Part 2 Reached",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_01",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep1_01"
+   }
+  },
+  {
+   "id": 7720275,
+   "name": "They Hunger: Episode 1 - Part 3 Reached",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_02",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep1_02"
+   }
+  },
+  {
+   "id": 7720276,
+   "name": "They Hunger: Episode 1 - Part 4 Reached",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_03",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep1_03"
+   }
+  },
+  {
+   "id": 7720277,
+   "name": "They Hunger: Episode 1 - Part 5 Reached",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_04",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep1_04"
+   }
+  },
+  {
+   "id": 7720278,
+   "name": "They Hunger: Episode 1 - Part 6 Reached",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_05",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep1_05"
+   }
+  },
+  {
+   "id": 7720279,
+   "name": "They Hunger: Episode 2 - Part 1 Reached",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_00",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep2_00"
+   }
+  },
+  {
+   "id": 7720280,
+   "name": "They Hunger: Episode 2 - Part 2 Reached",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_01",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep2_01"
+   }
+  },
+  {
+   "id": 7720281,
+   "name": "They Hunger: Episode 2 - Part 3 Reached",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_02",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep2_02"
+   }
+  },
+  {
+   "id": 7720282,
+   "name": "They Hunger: Episode 2 - Part 4 Reached",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_03",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep2_03"
+   }
+  },
+  {
+   "id": 7720283,
+   "name": "They Hunger: Episode 2 - Part 5 Reached",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_04",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep2_04"
+   }
+  },
+  {
+   "id": 7720284,
+   "name": "They Hunger: Episode 3 - Part 1 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_00",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_00"
+   }
+  },
+  {
+   "id": 7720285,
+   "name": "They Hunger: Episode 3 - Health Charger 1 (Part 1)",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_00",
+   "trigger": {
+    "type": "charger",
+    "map": "th_ep3_00",
+    "classname": "func_healthcharger",
+    "model": "*273"
+   }
+  },
+  {
+   "id": 7720286,
+   "name": "They Hunger: Episode 3 - Health Charger 2 (Part 1)",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_00",
+   "trigger": {
+    "type": "charger",
+    "map": "th_ep3_00",
+    "classname": "func_healthcharger",
+    "model": "*471"
+   }
+  },
+  {
+   "id": 7720287,
+   "name": "They Hunger: Episode 3 - Part 2 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_01",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_01"
+   }
+  },
+  {
+   "id": 7720288,
+   "name": "They Hunger: Episode 3 - Part 3 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_02",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_02"
+   }
+  },
+  {
+   "id": 7720289,
+   "name": "They Hunger: Episode 3 - Part 4 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_03",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_03"
+   }
+  },
+  {
+   "id": 7720290,
+   "name": "They Hunger: Episode 3 - Part 5 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_04",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_04"
+   }
+  },
+  {
+   "id": 7720291,
+   "name": "They Hunger: Episode 3 - Part 6 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_05",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_05"
+   }
+  },
+  {
+   "id": 7720292,
+   "name": "They Hunger: Episode 3 - Part 7 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_06",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_06"
+   }
+  },
+  {
+   "id": 7720293,
+   "name": "They Hunger: Episode 3 - Part 8 Reached",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_07",
+   "trigger": {
+    "type": "map_reached",
+    "map": "th_ep3_07"
+   }
+  },
+  {
    "id": 7720160,
    "name": "First Glock",
    "chapter": "unforeseen_consequences",
@@ -2408,6 +4478,531 @@
    "trigger": {
     "type": "weapon_pickup",
     "map": "hl_c02_a1",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
+   "id": 7720294,
+   "name": "Opposing Force - First Glock",
+   "chapter": "of_missing_in_action",
+   "map": "of1a5",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a5",
+    "classnames": [
+     "weapon_glock",
+     "weapon_9mmhandgun"
+    ]
+   }
+  },
+  {
+   "id": 7720295,
+   "name": "Opposing Force - First MP5",
+   "chapter": "of_friendly_fire",
+   "map": "of2a1b",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a1b",
+    "classnames": [
+     "weapon_9mmAR",
+     "weapon_m16"
+    ]
+   }
+  },
+  {
+   "id": 7720296,
+   "name": "Opposing Force - First Shotgun",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a3",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720297,
+   "name": "Opposing Force - First RPG",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a6",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a6",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720298,
+   "name": "Opposing Force - First Satchel Charge",
+   "chapter": "of_missing_in_action",
+   "map": "of1a6",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a6",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720299,
+   "name": "Opposing Force - First Tripmine",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a4",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a4",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   }
+  },
+  {
+   "id": 7720300,
+   "name": "Opposing Force - First Snarks",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a2",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720301,
+   "name": "Opposing Force - First Hand Grenade",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a4b",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a4b",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720302,
+   "name": "Opposing Force - First Desert Eagle",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a2",
+    "classnames": [
+     "weapon_eagle"
+    ]
+   }
+  },
+  {
+   "id": 7720303,
+   "name": "Opposing Force - First SAW",
+   "chapter": "of_worlds_collide",
+   "map": "of5a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of5a1",
+    "classnames": [
+     "weapon_m249",
+     "weapon_saw"
+    ]
+   }
+  },
+  {
+   "id": 7720304,
+   "name": "Opposing Force - First Sniper Rifle",
+   "chapter": "of_worlds_collide",
+   "map": "of5a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of5a1",
+    "classnames": [
+     "weapon_sniperrifle"
+    ]
+   }
+  },
+  {
+   "id": 7720305,
+   "name": "Opposing Force - First Displacer Cannon",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a5",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of3a5",
+    "classnames": [
+     "weapon_displacer"
+    ]
+   }
+  },
+  {
+   "id": 7720306,
+   "name": "Opposing Force - First Spore Launcher",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a2",
+    "classnames": [
+     "weapon_sporelauncher"
+    ]
+   }
+  },
+  {
+   "id": 7720307,
+   "name": "Opposing Force - First Barnacle Grapple",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a3",
+    "classnames": [
+     "weapon_grapple"
+    ]
+   }
+  },
+  {
+   "id": 7720308,
+   "name": "Opposing Force - First Combat Knife",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a6",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a6",
+    "classnames": [
+     "weapon_knife"
+    ]
+   }
+  },
+  {
+   "id": 7720309,
+   "name": "Opposing Force - First Pipe Wrench",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a1",
+    "classnames": [
+     "weapon_pipewrench"
+    ]
+   }
+  },
+  {
+   "id": 7720310,
+   "name": "Opposing Force - First Minigun",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a4",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a4",
+    "classnames": [
+     "weapon_minigun"
+    ]
+   }
+  },
+  {
+   "id": 7720311,
+   "name": "Opposing Force - First Crowbar",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a2",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
+   "id": 7720312,
+   "name": "Blue Shift - First Glock",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard3",
+    "classnames": [
+     "weapon_glock",
+     "weapon_9mmhandgun"
+    ]
+   }
+  },
+  {
+   "id": 7720313,
+   "name": "Blue Shift - First .357 Magnum",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard1",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720314,
+   "name": "Blue Shift - First MP5",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_power1",
+    "classnames": [
+     "weapon_9mmAR",
+     "weapon_m16"
+    ]
+   }
+  },
+  {
+   "id": 7720315,
+   "name": "Blue Shift - First Shotgun",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_canal2",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   }
+  },
+  {
+   "id": 7720316,
+   "name": "Blue Shift - First RPG",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard5",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard5",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   }
+  },
+  {
+   "id": 7720317,
+   "name": "Blue Shift - First Satchel Charge",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard1",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   }
+  },
+  {
+   "id": 7720318,
+   "name": "Blue Shift - First Snarks",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_xen2",
+    "classnames": [
+     "weapon_snark"
+    ]
+   }
+  },
+  {
+   "id": 7720319,
+   "name": "Blue Shift - First Hand Grenade",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard1",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720320,
+   "name": "Blue Shift - First Crowbar",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_canal1",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   }
+  },
+  {
+   "id": 7720321,
+   "name": "They Hunger - First .357 Magnum",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_02",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_02",
+    "classnames": [
+     "weapon_357"
+    ]
+   }
+  },
+  {
+   "id": 7720322,
+   "name": "They Hunger - First Hand Grenade",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_03",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_03",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   }
+  },
+  {
+   "id": 7720323,
+   "name": "They Hunger - First Pipe Wrench",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_01",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_01",
+    "classnames": [
+     "weapon_pipewrench"
+    ]
+   }
+  },
+  {
+   "id": 7720324,
+   "name": "They Hunger - First Colt 1911",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_01",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_01",
+    "classnames": [
+     "weapon_colt1911"
+    ]
+   }
+  },
+  {
+   "id": 7720325,
+   "name": "They Hunger - First Taurus",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_00",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep3_00",
+    "classnames": [
+     "weapon_th_taurus"
+    ]
+   }
+  },
+  {
+   "id": 7720326,
+   "name": "They Hunger - First Sawed-Off Shotgun",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_01",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_01",
+    "classnames": [
+     "weapon_sawedoff"
+    ]
+   }
+  },
+  {
+   "id": 7720327,
+   "name": "They Hunger - First Grease Gun",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_04",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep3_04",
+    "classnames": [
+     "weapon_greasegun"
+    ]
+   }
+  },
+  {
+   "id": 7720328,
+   "name": "They Hunger - First Tommy Gun",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_03",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_03",
+    "classnames": [
+     "weapon_tommygun"
+    ]
+   }
+  },
+  {
+   "id": 7720329,
+   "name": "They Hunger - First M14",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_01",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_01",
+    "classnames": [
+     "weapon_m14"
+    ]
+   }
+  },
+  {
+   "id": 7720330,
+   "name": "They Hunger - First M16A1",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_00",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep2_00",
+    "classnames": [
+     "weapon_m16a1"
+    ]
+   }
+  },
+  {
+   "id": 7720331,
+   "name": "They Hunger - First Tesla Gun",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_04",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_04",
+    "classnames": [
+     "weapon_teslagun"
+    ]
+   }
+  },
+  {
+   "id": 7720332,
+   "name": "They Hunger - First Spanner",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_00",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep2_00",
+    "classnames": [
+     "weapon_spanner"
+    ]
+   }
+  },
+  {
+   "id": 7720333,
+   "name": "They Hunger - First Crowbar",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_01",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "th_ep1_01",
     "classnames": [
      "weapon_crowbar"
     ]
@@ -2610,6 +5205,215 @@
     "chapter": "nihilanth",
     "map": "hl_c18"
    }
+  },
+  {
+   "id": 7720334,
+   "name": "Boot Camp - Complete",
+   "chapter": "of_boot_camp",
+   "map": "of0a0",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_boot_camp",
+    "map": "of0a0"
+   }
+  },
+  {
+   "id": 7720335,
+   "name": "Welcome To Black Mesa - Complete",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_welcome_to_black_mesa",
+    "map": "of1a2"
+   }
+  },
+  {
+   "id": 7720336,
+   "name": "We Are Not Alone - Complete",
+   "chapter": "of_we_are_not_alone",
+   "map": "of1a4b",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_we_are_not_alone",
+    "map": "of1a4b"
+   }
+  },
+  {
+   "id": 7720337,
+   "name": "Missing In Action - Complete",
+   "chapter": "of_missing_in_action",
+   "map": "of1a6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_missing_in_action",
+    "map": "of1a6"
+   }
+  },
+  {
+   "id": 7720338,
+   "name": "Friendly Fire - Complete",
+   "chapter": "of_friendly_fire",
+   "map": "of2a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_friendly_fire",
+    "map": "of2a2"
+   }
+  },
+  {
+   "id": 7720339,
+   "name": "We Are Pulling Out - Complete",
+   "chapter": "of_we_are_pulling_out",
+   "map": "of2a6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_we_are_pulling_out",
+    "map": "of2a6"
+   }
+  },
+  {
+   "id": 7720340,
+   "name": "Crush Depth - Complete",
+   "chapter": "of_crush_depth",
+   "map": "of3a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_crush_depth",
+    "map": "of3a2"
+   }
+  },
+  {
+   "id": 7720341,
+   "name": "Vicarious Reality - Complete",
+   "chapter": "of_vicarious_reality",
+   "map": "of3a6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_vicarious_reality",
+    "map": "of3a6"
+   }
+  },
+  {
+   "id": 7720342,
+   "name": "Pit Worm's Nest - Complete",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a4",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_pit_worms_nest",
+    "map": "of4a4"
+   }
+  },
+  {
+   "id": 7720343,
+   "name": "Worlds Collide - Complete",
+   "chapter": "of_worlds_collide",
+   "map": "of6a5",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_worlds_collide",
+    "map": "of6a5"
+   }
+  },
+  {
+   "id": 7720344,
+   "name": "Living Quarters Outbound - Complete",
+   "chapter": "bs_living_quarters",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_living_quarters",
+    "map": "ba_tram3"
+   }
+  },
+  {
+   "id": 7720345,
+   "name": "Insecurity - Complete",
+   "chapter": "bs_insecurity",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_insecurity",
+    "map": "ba_elevator"
+   }
+  },
+  {
+   "id": 7720346,
+   "name": "Duty Calls - Complete",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_duty_calls",
+    "map": "ba_canal3"
+   }
+  },
+  {
+   "id": 7720347,
+   "name": "Captive Freight - Complete",
+   "chapter": "bs_captive_freight",
+   "map": "ba_yard5a",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_captive_freight",
+    "map": "ba_yard5a"
+   }
+  },
+  {
+   "id": 7720348,
+   "name": "Focal Point - Complete",
+   "chapter": "bs_focal_point",
+   "map": "ba_xen6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_focal_point",
+    "map": "ba_xen6"
+   }
+  },
+  {
+   "id": 7720349,
+   "name": "Power Struggle - Complete",
+   "chapter": "bs_power_struggle",
+   "map": "ba_outro",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_power_struggle",
+    "map": "ba_outro"
+   }
+  },
+  {
+   "id": 7720350,
+   "name": "They Hunger: Episode 1 - Complete",
+   "chapter": "th_episode_1",
+   "map": "th_ep1_05",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "th_episode_1",
+    "map": "th_ep1_05"
+   }
+  },
+  {
+   "id": 7720351,
+   "name": "They Hunger: Episode 2 - Complete",
+   "chapter": "th_episode_2",
+   "map": "th_ep2_04",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "th_episode_2",
+    "map": "th_ep2_04"
+   }
+  },
+  {
+   "id": 7720352,
+   "name": "They Hunger: Episode 3 - Complete",
+   "chapter": "th_episode_3",
+   "map": "th_ep3_07",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "th_episode_3",
+    "map": "th_ep3_07"
+   }
   }
  ],
  "requirement_groups": {
@@ -2623,7 +5427,21 @@
    "Tau Cannon",
    "Gluon Gun",
    "Hivehand",
-   "Snarks"
+   "Snarks",
+   "Desert Eagle",
+   "SAW",
+   "Sniper Rifle",
+   "Displacer Cannon",
+   "Spore Launcher",
+   "Minigun",
+   "Colt 1911",
+   "Taurus",
+   "Sawed-Off Shotgun",
+   "Grease Gun",
+   "Tommy Gun",
+   "M14",
+   "M16A1",
+   "Tesla Gun"
   ],
   "heavy": [
    "RPG",
@@ -2632,13 +5450,22 @@
    "Crossbow",
    ".357 Magnum",
    "Shotgun",
-   "MP5"
+   "MP5",
+   "SAW",
+   "Displacer Cannon",
+   "Spore Launcher",
+   "Minigun",
+   "Sniper Rifle",
+   "Tesla Gun",
+   "M14",
+   "M16A1"
   ],
   "explosives": [
    "RPG",
    "Hand Grenade",
    "Satchel Charge",
-   "Tripmine"
+   "Tripmine",
+   "Spore Launcher"
   ],
   "underwater": [
    "Glock",
@@ -2647,7 +5474,10 @@
    "Crossbow",
    "Tau Cannon",
    "Gluon Gun",
-   "Hivehand"
+   "Hivehand",
+   "Desert Eagle",
+   "Colt 1911",
+   "Taurus"
   ],
   "tau_cannon": [
    "Tau Cannon"

@@ -36,10 +36,48 @@ LOCATIONS: list[dict[str, Any]] = CAMPAIGN["locations"]
 REQUIREMENT_GROUPS: dict[str, list[str]] = CAMPAIGN["requirement_groups"]
 STARTING_WEAPONS: list[str] = CAMPAIGN["starting_weapons"]
 
-GOAL_CHAPTER: dict[str, Any] = next(c for c in CHAPTERS if c["is_goal"])
+# --- Campaigns ------------------------------------------------------------
+#
+# Sven Co-op ships four single-player conversions behind one hub, and a YAML
+# toggle decides which of them a seed contains. Each is a self-contained run: its
+# own missions, its own starting mission, and its own finale, which is one of the
+# seed's goal conditions.
+
+CAMPAIGNS: list[dict[str, Any]] = CAMPAIGN["campaigns"]
+CAMPAIGNS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in CAMPAIGNS}
+
+# The one a seed falls back on when a YAML manages to switch everything off.
+DEFAULT_CAMPAIGN: str = CAMPAIGNS[0]["key"]
+
+CAMPAIGN_OPTIONS: dict[str, str] = {c["key"]: c["option"] for c in CAMPAIGNS}
+
+# Each campaign's own `missions_required`. Independent settings, so a seed with
+# several campaigns has several of these and none of them affect each other.
+CAMPAIGN_MISSION_OPTIONS: dict[str, str] = {
+    c["key"]: c["missions_option"] for c in CAMPAIGNS
+}
+
+GOAL_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if c["is_goal"]]
 UNLOCKABLE_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if not c["is_goal"]]
 
 CHAPTERS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in CHAPTERS}
+
+
+def chapters_of(campaign_key: str) -> list[dict[str, Any]]:
+    return [c for c in CHAPTERS if c["campaign"] == campaign_key]
+
+
+def unlockable_chapters_of(campaign_key: str) -> list[dict[str, Any]]:
+    """A campaign's missions minus its finale, which no item ever unlocks."""
+    return [c for c in chapters_of(campaign_key) if not c["is_goal"]]
+
+
+# The largest `missions_required` any single campaign could satisfy. The option's
+# range has to cover the biggest campaign; a value past the end of a smaller one
+# is clamped per campaign at generation time.
+MAX_MISSIONS_IN_A_CAMPAIGN: int = max(
+    len(unlockable_chapters_of(c["key"])) for c in CAMPAIGNS
+)
 
 # Mission 0, Black Mesa Inbound: the tram ride. It has no console in the campaign
 # portal, so `!warp 0` is the only way in, and it is the one mission a YAML can
@@ -63,5 +101,30 @@ VANILLA_WHEN_UNSHUFFLED = frozenset({"Long Jump Module"})
 # Trigger type of the health / HEV charger checks, switched off by `chargesanity`.
 CHARGER_TRIGGER = "charger"
 
+# --- Event items ----------------------------------------------------------
+#
+# One pair per campaign, because both are counted and the counts must not run
+# together. `missions_required` asks how much of *this* campaign you have
+# finished, so Opposing Force progress cannot unseal Nihilanth; and the win
+# condition asks for every enabled campaign's finale, which needs one name each
+# rather than one name held several times.
+#
+# Events carry no id and never reach the datapackage, so their names are free to
+# change without touching an existing seed.
+
 MISSION_COMPLETE = "Mission Complete"
 VICTORY = "Victory"
+
+
+def mission_complete_event(campaign_key: str) -> str:
+    return f"{CAMPAIGNS_BY_KEY[campaign_key]['name']} {MISSION_COMPLETE}"
+
+
+def victory_event(campaign_key: str) -> str:
+    return f"{VICTORY} ({CAMPAIGNS_BY_KEY[campaign_key]['name']})"
+
+
+EVENT_ITEM_NAMES: frozenset[str] = frozenset(
+    [mission_complete_event(c["key"]) for c in CAMPAIGNS]
+    + [victory_event(c["key"]) for c in CAMPAIGNS]
+)

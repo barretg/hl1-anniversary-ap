@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .data import MISSION_COMPLETE, VICTORY
+from .data import mission_complete_event, victory_event
 from .locations import HalfLifeSvenLocation, locations_by_map
 from .rules import chapter_entry_rule, location_rule
 
@@ -75,10 +75,14 @@ def create_regions(world: "HalfLifeSvenWorld") -> None:
 def add_event(world: "HalfLifeSvenWorld", region: Region, chapter: dict) -> None:
     """Finishing a mission grants an event item.
 
-    Non-goal missions grant `Mission Complete`, which is what `missions_required`
-    counts. The goal mission grants `Victory`.
+    Both are named for the campaign the mission belongs to. `missions_required`
+    is a separate setting per campaign, so its counter has to be separate too:
+    one shared `Mission Complete` would let a run of Opposing Force unseal
+    Nihilanth. The same goes for the finales, which are counted by name so that
+    clearing one campaign is not mistaken for clearing them all.
     """
-    name = VICTORY if chapter["is_goal"] else MISSION_COMPLETE
+    campaign = chapter["campaign"]
+    name = victory_event(campaign) if chapter["is_goal"] else mission_complete_event(campaign)
     location = HalfLifeSvenLocation(
         world.player, f"{chapter['name']} - Mission Cleared", None, region
     )

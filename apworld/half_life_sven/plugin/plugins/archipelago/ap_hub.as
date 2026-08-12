@@ -38,6 +38,9 @@ void ShowStatus( CBasePlayer@ pPlayer )
 			"Not connected -- start the Half-Life (Sven Co-op) Client.\n" );
 	}
 
+	string szShown;
+	bool bMultiCampaign = IncludedCampaignCount() > 1;
+
 	for( uint i = 0; i < g_Chapters.length(); ++i )
 	{
 		APChapter@ pChapter = g_Chapters[i];
@@ -46,9 +49,21 @@ void ShowStatus( CBasePlayer@ pPlayer )
 		if( g_State.ChapterExcluded( pChapter.key ) )
 			szStatus = "not in this seed";
 		else if( pChapter.isGoal )
-			szStatus = g_State.goalOpen ? "OPEN" : "sealed (finish more missions)";
+			szStatus = g_State.GoalOpen( pChapter.key ) ? "OPEN" : "sealed (finish more missions)";
 		else
 			szStatus = g_State.ChapterUnlocked( pChapter.key ) ? "unlocked" : "locked";
+
+		// A seed can hold several campaigns, so say which one a mission is from
+		// as the list moves from one to the next. Skipped entirely on a
+		// single-campaign seed, where the heading would just be noise.
+		if( bMultiCampaign && pChapter.campaign != szShown
+		    && !g_State.ChapterExcluded( pChapter.key ) )
+		{
+			szShown = pChapter.campaign;
+			string szName;
+			if( g_CampaignNames.get( szShown, szName ) )
+				g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE, "-- " + szName + "\n" );
+		}
 
 		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
 			"  " + ( i < 10 ? " " : "" ) + i + ". " + pChapter.name + "  [" + szStatus + "]\n" );
@@ -232,13 +247,19 @@ HookReturnCode MapChange( const string& in szNextMap )
 * for the button press ourselves and run the same warp `!warp` would, so there is
 * one route into a mission and one place that decides whether it is allowed.
 *
-* The console entities are named regularly -- `hl_ch<N>but1` / `hl_ch<N>but2`,
-* with `hl_ch<N>change` pointing at `hl_c<NN>` -- and portal N lines up exactly
-* with our chapter index N (hl_ch3 -> hl_c03 -> Office Complex). So the button's
-* targetname alone identifies the mission; nothing has to be read out of the map.
+* Every console is a pair of buttons named `<console>but1` / `<console>but2`, so
+* trimming the suffix off a targetname gives the console. Which mission that
+* console opens comes from a generated table (the `P` records in checkdata.txt)
+* rather than from arithmetic on the number in the name, because the hub numbers
+* its consoles differently in every campaign it fronts: Half-Life's are unpadded
+* and start at `hl_ch1`, Opposing Force's are zero padded and skip `of_ch06`
+* altogether, Blue Shift uses `bs_ch01`-`bs_ch06` and They Hunger `th_ep01`-`03`.
+* Deriving the mission from the digits was right for Half-Life alone and wrong
+* for Opposing Force in a way that would silently warp a player to the mission
+* after the one they pressed.
 *
-* Note the portal map has no console for chapter 0 (Black Mesa Inbound); reach it
-* with `!warp 0`.
+* Note the portal map has no console for Half-Life's mission 0 (Black Mesa
+* Inbound); reach it with `!warp 0`.
 */
 
 // Half-Life's use range is 64 units from the gun position; be a little generous.
@@ -253,27 +274,26 @@ dictionary g_flLastPortalUse;
 /* Chapter index behind a console button's targetname, or -1 if it is not one. */
 int PortalChapterIndex( const string& in szName )
 {
-	if( szName.Length() < 6 || szName.SubString( 0, 5 ) != "hl_ch" )
-		return -1;
-
+	// `hl_ch3but1` -> `hl_ch3`. Anything without the suffix is some other button.
 	int iBut = szName.Find( "but" );
-	if( iBut <= 5 )
+	if( iBut <= 0 )
 		return -1;
 
-	int iIndex = atoi( szName.SubString( 5, iBut - 5 ) );
-	if( iIndex < 0 || uint( iIndex ) >= g_Chapters.length() )
+	string szConsole = szName.SubString( 0, iBut );
+	string szChapter;
+	if( !g_PortalConsoles.get( szConsole, szChapter ) )
 		return -1;
 
-	// Guard against the naming assumption quietly drifting: portal N must point
-	// at the mission whose first map is hl_c<NN>.
-	string szExpected = "hl_c" + ( iIndex < 10 ? "0" : "" ) + iIndex;
-	if( g_Chapters[iIndex].FirstMap().SubString( 0, szExpected.Length() ) != szExpected )
+	for( uint i = 0; i < g_Chapters.length(); ++i )
 	{
-		APLog( "portal " + iIndex + " does not match chapter " + g_Chapters[iIndex].key );
-		return -1;
+		if( g_Chapters[i].key == szChapter )
+			return int( i );
 	}
 
-	return iIndex;
+	// The table named a mission this data file does not have, which means the two
+	// were generated from different sources. Say so rather than warp anywhere.
+	APLog( "console " + szConsole + " points at unknown chapter " + szChapter );
+	return -1;
 }
 
 /*

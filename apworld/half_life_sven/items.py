@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification
 
-from .data import ITEMS, MISSION_COMPLETE, VICTORY
+from .data import EVENT_ITEM_NAMES, ITEMS
 
 if TYPE_CHECKING:
     from . import HalfLifeSvenWorld
@@ -34,6 +34,12 @@ unlock_item_for_chapter: dict[str, str] = {
     entry["chapter"]: entry["name"] for entry in ITEMS if entry.get("group") == "chapter"
 }
 
+# Item name -> the campaign that brought it. Weapons and mission unlocks carry
+# one; filler and traps belong to no campaign and are always in the pool.
+item_campaign: dict[str, str] = {
+    entry["name"]: entry["campaign"] for entry in ITEMS if "campaign" in entry
+}
+
 item_name_groups: dict[str, set[str]] = {
     "Weapons": set(weapon_items),
     "Mission Unlocks": set(chapter_unlock_items),
@@ -42,8 +48,9 @@ item_name_groups: dict[str, set[str]] = {
     "Traps": set(trap_items),
 }
 
-# Events carry no id -- they exist only to express logic.
-EVENT_ITEMS = (MISSION_COMPLETE, VICTORY)
+# Events carry no id -- they exist only to express logic. There is a pair per
+# campaign, since both are counted and the counts must stay separate.
+EVENT_ITEMS = EVENT_ITEM_NAMES
 
 
 class HalfLifeSvenItem(Item):

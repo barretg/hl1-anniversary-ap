@@ -1,7 +1,8 @@
 # Half-Life (Sven Co-op) — Archipelago
 
-An Archipelago randomizer for the Half-Life campaign as shipped inside
-[Sven Co-op](https://store.steampowered.com/app/225840/Sven_Coop/). The campaign
+An Archipelago randomizer for the single-player campaigns shipped inside
+[Sven Co-op](https://store.steampowered.com/app/225840/Sven_Coop/): Half-Life,
+Opposing Force, Blue Shift and They Hunger, in any combination. The campaign
 portal map is the hub, every mission is locked behind a received item, and every
 weapon but the crowbar has to be found in the multiworld.
 
@@ -10,14 +11,33 @@ Player-facing docs: [setup guide](apworld/half_life_sven/docs/setup_en.md) ·
 
 ## A note on multiplayer
 
-Sven Co-op is a multiplayer game, and its version of the Half-Life campaign is
-built to be played co-operatively. Some of what it asks of you is there on purpose
-to keep it that way.
+Sven Co-op is a multiplayer game, and its versions of these campaigns are built to
+be played co-operatively. Some of what they ask of you is there on purpose to keep
+it that way.
 
 This randomizer is made for co-op lobbies. We do not endorse using it, or any
 convenience it adds, to work around Sven Co-op's multiplayer design or to treat
-the campaign as a free single-player Half-Life. Play it with other people. If you
+these campaigns as free single-player games. Play it with other people. If you
 want Half-Life on its own, buy Half-Life.
+
+## Campaigns
+
+| YAML option | Campaign | Missions | Maps | Finale |
+| --- | --- | --- | --- | --- |
+| `include_half_life` | Half-Life | 18 | 35 | Nihilanth |
+| `include_opposing_force` | Opposing Force | 10 | 34 | Worlds Collide |
+| `include_blue_shift` | Blue Shift | 6 | 31 | Power Struggle |
+| `include_they_hunger` | They Hunger | 3 | 19 | Episode 3 |
+
+Half-Life alone is the default, so an existing YAML generates the seed it always
+did. Each enabled campaign opens with one of its own missions, has its own
+independent `missions_required`, and contributes its finale as a goal: the seed is
+won when every one of them is cleared. Weapons pool across campaigns.
+
+The hub already has consoles for all four, so none of this needed a map edit. It
+numbers them inconsistently, though — Half-Life's are unpadded and start at
+`hl_ch1`, Opposing Force's are padded and skip `of_ch06` — so console-to-mission
+is a generated table (`P` records in `checkdata.txt`) rather than arithmetic.
 
 ## Why Sven Co-op rather than vanilla Half-Life
 
@@ -61,13 +81,19 @@ See [docs/protocol.md](docs/protocol.md).
 
 ## Locations
 
-Three kinds of location, 173 in total against at most 32 progression items:
+Three kinds of location, 353 across all four campaigns (173 of them Half-Life's)
+against at most 66 progression items:
 
 | Type | Count | Fires when |
 | --- | --- | --- |
-| `map_reached` / `chapter_complete` | 53 | you reach a map division, or finish a mission |
-| `charger` | 107 | you press use on a health or HEV wall unit |
-| `weapon_pickup` | 14 | you reach the weapon Half-Life would first have given you |
+| `map_reached` / `chapter_complete` | 156 | you reach a map division, or finish a mission |
+| `charger` | 143 | you press use on a health or HEV wall unit |
+| `weapon_pickup` | 54 | you reach the weapon that campaign would first have given you |
+
+Weapon checks are per campaign, not per seed: each campaign has its own "first
+shotgun" at its own earliest map. Anchoring them once across everything would
+have stranded every shared weapon's check in a Half-Life map, so a seed without
+Half-Life would have lost them.
 
 Chargers are identified by their brush model index (`func_recharge:*79`), which
 is the only per-entity identity the BSP and the running game agree on — they have
@@ -91,10 +117,15 @@ milestones, but too many of them read as arbitrary in play, so they are switched
 off via `ENABLED_LOCATION_TYPES` in `tools/campaign_layout.py` pending a pass to
 work out which ones actually earn a check.
 
-Editorial decisions that *cannot* be derived from the maps — mission grouping,
-which classnames map to which item, and the logic gates — live in one file,
+Editorial decisions that *cannot* be derived from the maps — which campaigns
+exist, mission grouping, console-to-mission, which classnames map to which item,
+and the logic gates — live in one file,
 [`tools/campaign_layout.py`](tools/campaign_layout.py). That is the file to edit
-when tuning logic.
+when tuning logic or adding a campaign.
+
+Chapter keys there are permanent: `data/ids.json` keys every location by chapter,
+so renaming one renumbers a location and breaks existing seeds. Names are free to
+change. Adding the three new campaigns appended 213 ids and moved none.
 
 ## Working on it
 
