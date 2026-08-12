@@ -251,6 +251,12 @@ class HalfLifeSvenContext(SuperContext):
             for c in self.campaign["chapters"]
             if c.get("requires_chapter")
         }
+        # The other end of that pairing: missions opened by their campaign's count
+        # rather than by an item, because they are the run-up to a finale rather
+        # than a mission anything could unlock separately.
+        self.goal_companions: set[str] = {
+            key for key in self.goal_prerequisite.values() if key
+        }
         # How many of its own missions each finale is waiting on. Filled from slot
         # data; the settings are per campaign and independent.
         self.missions_required_for: dict[str, int] = {}
@@ -604,19 +610,49 @@ class HalfLifeSvenContext(SuperContext):
             and key not in self.goal_chapters
         ])
 
+    def seal_open(self, campaign_key: str) -> bool:
+        """Has this campaign finished enough missions to open its ending?
+
+        Counted within the campaign, because the settings are per campaign:
+        Opposing Force missions do nothing for Nihilanth.
+        """
+        required = self.missions_required_for.get(campaign_key, self.missions_required)
+        return self.completed_in(campaign_key) >= required
+
     def goal_chapter_open(self, chapter_key: str) -> bool:
         """Is this campaign's finale unsealed?
 
-        Counted within the campaign, because the settings are per campaign:
-        Opposing Force missions do nothing for Nihilanth. A finale paired with
-        one particular mission also waits for that one by name, unless the seed
-        left it out -- in which case waiting would seal the campaign forever.
+        A finale paired with one particular mission also waits for that one by
+        name, unless the seed left it out -- in which case waiting would seal the
+        campaign forever.
         """
         campaign_key = self.campaign_of_chapter.get(chapter_key, "")
-        required = self.missions_required_for.get(campaign_key, self.missions_required)
-        if self.completed_in(campaign_key) < required:
+        if not self.seal_open(campaign_key):
             return False
         return self.goal_prerequisite_met(chapter_key)
+
+    def companion_open(self, chapter_key: str) -> bool:
+        """Is this mission's shared seal open?
+
+        The mission paired with a finale has no unlock item of its own: the pair
+        is one ending, and the campaign's count opens both. Kept separate from
+        `goal_chapter_open` because this half does not wait on itself.
+        """
+        return self.seal_open(self.campaign_of_chapter.get(chapter_key, ""))
+
+    @property
+    def open_chapters(self) -> set[str]:
+        """Every mission the game should let a player walk into.
+
+        Unlock items, plus any sealed companion whose count is met. The two are
+        combined rather than chosen between, so a seed rolled before the seal
+        moved -- which still has a Power Struggle unlock in its pool -- opens it
+        on the item exactly as it always did.
+        """
+        return self.unlocked_chapters | {
+            key for key in self.goal_companions
+            if key not in self.excluded_chapters and self.companion_open(key)
+        }
 
     def goal_prerequisite_met(self, chapter_key: str) -> bool:
         """Has the mission this finale is paired with been cleared?"""
@@ -685,6 +721,18 @@ class HalfLifeSvenContext(SuperContext):
                     status = f"sealed (finish {self.chapter_name(paired)})"
             elif chapter["key"] in self.completed_missions:
                 status = "complete"
+            elif chapter["key"] in self.goal_companions:
+                # Sealed by the count like the finale it leads into, so it is
+                # counted out rather than reported as locked -- there is no item
+                # coming for it and "locked" would send a player looking for one.
+                done = self.completed_in(campaign_key)
+                required = self.missions_required_for.get(
+                    campaign_key, self.missions_required
+                )
+                if chapter["key"] in self.open_chapters:
+                    status = "OPEN"
+                else:
+                    status = f"sealed ({done}/{required})"
             elif chapter["key"] in self.unlocked_chapters:
                 status = "unlocked"
             else:
@@ -849,7 +897,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
             logger.info(f"Game is on {event.arg}.")
             ctx.bridge.write_snapshot(
                 connected=ctx.server is not None,
-                chapters=sorted(ctx.unlocked_chapters),
+                chapters=sorted(ctx.open_chapters),
                 items=sorted(ctx.held_item_names),
                 goal_open=ctx.goal_open,
                 goals_open=sorted(ctx.open_goal_chapters),
@@ -885,7 +933,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
     # was momentarily unreadable.
     ctx.bridge.write_snapshot(
         connected=ctx.server is not None,
-        chapters=sorted(ctx.unlocked_chapters),
+        chapters=sorted(ctx.open_chapters),
         items=sorted(ctx.held_item_names),
         goal_open=ctx.goal_open,
         goals_open=sorted(ctx.open_goal_chapters),

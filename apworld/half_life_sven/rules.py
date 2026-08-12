@@ -3,7 +3,8 @@
 Two kinds of gate exist:
 
 * **Mission unlocks** -- entering a mission needs its unlock item, except for the
-  goal mission, which opens once `missions_required` other missions are done.
+  goal mission and any mission paired with it, which open once
+  `missions_required` other missions are done.
 * **Weapon gates** -- expressed as "any one of this group of weapons". They are
   attached either to a mission entrance (everything in the mission inherits it)
   or to an individual location, which is how a check that sits past the point
@@ -20,6 +21,7 @@ from typing import TYPE_CHECKING, Callable
 from BaseClasses import CollectionState
 
 from .data import (
+    GOAL_COMPANIONS,
     GOAL_PREREQUISITES,
     REQUIREMENT_GROUPS,
     chapter_cleared_event,
@@ -97,9 +99,12 @@ def chapter_entry_rule(
         if item_name in world.available_item_names:
             conditions.append(lambda state, name=item_name: state.has(name, player))
 
-    if chapter["is_goal"]:
-        # This campaign's own count, from this campaign's own setting. Missions
-        # finished elsewhere in the seed do nothing for it.
+    # The seal: this campaign's own count, from this campaign's own setting.
+    # Missions finished elsewhere in the seed do nothing for it. Both the finale
+    # and the mission paired with it sit behind the same one, because the pair is
+    # a single ending and an item that opened half of it early made a nonsense of
+    # the other half.
+    if chapter["is_goal"] or chapter["key"] in GOAL_COMPANIONS:
         campaign = chapter["campaign"]
         required = world.missions_required_for[campaign]
         event = mission_complete_event(campaign)
@@ -107,6 +112,7 @@ def chapter_entry_rule(
             lambda state, name=event, count=required: state.has(name, player, count)
         )
 
+    if chapter["is_goal"]:
         # Some finales are the tail of one particular mission rather than a
         # mission in their own right, and open only once that one is cleared --
         # Blue Shift's outro after Power Struggle. Skipped if the seed left the
@@ -115,7 +121,7 @@ def chapter_entry_rule(
         if prerequisite and prerequisite not in world.excluded_chapters:
             cleared = chapter_cleared_event(prerequisite)
             conditions.append(lambda state, name=cleared: state.has(name, player))
-    else:
+    elif chapter["key"] not in GOAL_COMPANIONS:
         unlock = world.unlock_item_for_chapter[chapter["key"]]
         conditions.append(lambda state, name=unlock: state.has(name, player))
 

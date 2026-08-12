@@ -84,8 +84,15 @@ void ShowStatus( CBasePlayer@ pPlayer )
 				szStatus += ")";
 			}
 		}
+		else if( g_State.ChapterUnlocked( pChapter.key ) )
+			szStatus = "unlocked";
+		// A mission some finale is paired with has no unlock item at all: it opens
+		// on the same count as the finale behind it. Calling that "locked" sends a
+		// player looking for an item nothing will ever send.
+		else if( ChapterIsSealed( pChapter.key ) )
+			szStatus = "sealed (finish more missions)";
 		else
-			szStatus = g_State.ChapterUnlocked( pChapter.key ) ? "unlocked" : "locked";
+			szStatus = "locked";
 
 		// A seed can hold several campaigns, so say which one a mission is from
 		// as the list moves from one to the next. Skipped entirely on a
@@ -245,6 +252,21 @@ bool LocationInSeed( APLocation@ pLocation )
 bool LocationFound( APLocation@ pLocation )
 {
 	return g_CheckedLocations.exists( "" + pLocation.id );
+}
+
+/*
+* Why a player cannot go somewhere yet.
+*
+* "Locked" means an item will open it, which is a lie about a mission sealed
+* behind its campaign's count -- there is no item, and telling someone to wait
+* for one leaves them waiting for the whole run.
+*/
+string LockedMessage( APChapter@ pChapter )
+{
+	if( ChapterIsSealed( pChapter.key ) )
+		return "[AP] " + pChapter.name + " is sealed until more missions are done.\n";
+
+	return "[AP] " + pChapter.name + " is still locked.\n";
 }
 
 /* Does this mission own that map? */
@@ -907,8 +929,7 @@ void WarpToMap( CBasePlayer@ pPlayer, APChapter@ pChapter, const string& in szMa
 
 	if( !ChapterPlayable( pChapter ) )
 	{
-		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] " + pChapter.name + " is still locked.\n" );
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK, LockedMessage( pChapter ) );
 		return;
 	}
 
@@ -947,8 +968,7 @@ void WarpToChapter( CBasePlayer@ pPlayer, int iIndex )
 
 	if( !ChapterPlayable( pChapter ) )
 	{
-		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] " + pChapter.name + " is still locked.\n" );
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK, LockedMessage( pChapter ) );
 		return;
 	}
 

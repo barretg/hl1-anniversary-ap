@@ -54,10 +54,14 @@ that have never run in-game at all.
   and confirm chat says that campaign is complete, the client logs how many are
   left, and the slot is **not** marked goal-complete. Only the last one should
   send `CLIENT_GOAL`.
-- **Blue Shift's finale is the pair.** With Power Struggle unfinished, `!ap`
-  should read `sealed (finish more missions, including Power Struggle)` however
-  many other missions are done, and its console should refuse. Clear Power
-  Struggle and it opens.
+- **Blue Shift's ending is sealed as a pair.** Power Struggle has no unlock item
+  at all: it opens on `blue_shift_missions_required` like the finale behind it.
+  Before the count is met, `!ap` should read `sealed (...)` for both and both
+  consoles should refuse, saying "sealed until more missions are done" rather
+  than "locked" -- there is no item coming. Meet the count and Power Struggle
+  opens; with it still unfinished, A Leap Of Faith should read
+  `sealed (finish more missions, including Power Struggle)` however many other
+  missions are done. Clear Power Struggle and it opens.
 - **A Leap Of Faith is credited when it ends, not when it loads.** Warp in and
   confirm nothing is sent on arrival -- the campaign used to be won by
   connecting, because the outro is one map and arriving on a finale's last map

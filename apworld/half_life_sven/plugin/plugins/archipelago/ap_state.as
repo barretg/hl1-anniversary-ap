@@ -369,6 +369,31 @@ APChapter@ ChapterForMap( const string& in szMap )
 	return null;
 }
 
+/*
+* Is this mission sealed alongside a finale rather than opened by an item?
+*
+* True for whichever mission a finale names as its prerequisite: the pair is one
+* ending, so the campaign's count opens both and no unlock item exists for
+* either. Read off the pairing already in checkdata.txt, so this needs nothing
+* new from the client and says "no" on data written before the pairing existed.
+*
+* Only a label. Whether it is actually open is the client's answer, sent in the
+* unlocked list like any other mission.
+*/
+bool ChapterIsSealed( const string& in szKey )
+{
+	if( szKey.Length() == 0 )
+		return false;
+
+	for( uint i = 0; i < g_Chapters.length(); ++i )
+	{
+		if( g_Chapters[i].requiresChapter == szKey )
+			return true;
+	}
+
+	return false;
+}
+
 bool ChapterPlayable( APChapter@ pChapter )
 {
 	if( pChapter is null )

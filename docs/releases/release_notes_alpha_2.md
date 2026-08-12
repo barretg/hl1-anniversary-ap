@@ -1,5 +1,6 @@
-## What's New
+# Half-Life (Sven Co-op) Archipelago Alpha v0.2
 
+## What's New
 * Added Blue Shift Campaign
   * NOTE: Host must own the game.
 * Added Opposing Force Campaign
@@ -21,3 +22,4 @@
 ## Known Issues
 * General instability: expect some crashing or other random issues
 * Sound cacheing bug: sometimes when another player joins the lobby, their sounds are all mixed up. This will self resolve once you get into a mission. I am under the impression that if they install the plugin too that helps, but I'm unsure. This one is kind of complicated to diagnose.
+* Occasional random weapon location checks sent out on the mission where they're found on loading/unloading that mission.

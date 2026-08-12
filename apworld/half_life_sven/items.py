@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Item, ItemClassification
 
-from .data import EVENT_ITEM_NAMES, ITEMS
+from .data import EVENT_ITEM_NAMES, GOAL_COMPANIONS, ITEMS
 
 if TYPE_CHECKING:
     from . import HalfLifeSvenWorld
@@ -30,8 +30,18 @@ weapon_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "weapon
 optional_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "optional"]
 
 # Chapter key -> the item that unlocks it.
+#
+# Missions sealed behind their campaign's count are left out: they are opened by
+# finishing missions, not by an item, and being absent here is what keeps their
+# unlock out of the pool entirely.
+#
+# The item itself stays defined in the data, id and all. Nothing creates one any
+# more, but a seed rolled before the seal moved still names it in its item list,
+# and an id that stops existing is a client that cannot read its own multiworld.
 unlock_item_for_chapter: dict[str, str] = {
-    entry["chapter"]: entry["name"] for entry in ITEMS if entry.get("group") == "chapter"
+    entry["chapter"]: entry["name"]
+    for entry in ITEMS
+    if entry.get("group") == "chapter" and entry["chapter"] not in GOAL_COMPANIONS
 }
 
 # Item name -> the campaign that brought it. Weapons and mission unlocks carry

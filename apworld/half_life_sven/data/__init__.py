@@ -108,7 +108,31 @@ GOAL_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if c["is_goal"]]
 GOAL_PREREQUISITES: dict[str, str] = {
     c["key"]: c["requires_chapter"] for c in CHAPTERS if c.get("requires_chapter")
 }
-UNLOCKABLE_CHAPTERS: list[dict[str, Any]] = [c for c in CHAPTERS if not c["is_goal"]]
+
+# Missions that share their finale's seal instead of having an unlock item.
+#
+# A paired finale is the tail of one mission rather than a level of its own, so
+# the two are really one ending: A Leap Of Faith is the escape cutscene at the
+# end of Power Struggle. Handing out a Power Struggle unlock made the pair
+# incoherent -- the item could open the run's last real mission long before the
+# count that seals the ending it leads into, or arrive after it and hold the
+# ending shut with nothing left to do about it.
+#
+# So the count opens the whole ending: the paired mission and, once it is
+# cleared, the finale behind it. That is what `missions_required` already claimed
+# to do -- "How many Blue Shift missions open Power Struggle" -- and now does.
+#
+# Derived from the pairing rather than declared, so any campaign that gains a
+# paired finale gets this for free, and campaign data written before the pairing
+# existed simply has none.
+GOAL_COMPANIONS: set[str] = {key for key in GOAL_PREREQUISITES.values() if key}
+
+# Missions an item can open: everything that is neither a finale nor sealed
+# alongside one. This is the list the unlock items are built from, so a mission
+# leaving it is a mission with no item anywhere in the pool.
+UNLOCKABLE_CHAPTERS: list[dict[str, Any]] = [
+    c for c in CHAPTERS if not c["is_goal"] and c["key"] not in GOAL_COMPANIONS
+]
 
 CHAPTERS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in CHAPTERS}
 
@@ -118,8 +142,17 @@ def chapters_of(campaign_key: str) -> list[dict[str, Any]]:
 
 
 def unlockable_chapters_of(campaign_key: str) -> list[dict[str, Any]]:
-    """A campaign's missions minus its finale, which no item ever unlocks."""
-    return [c for c in chapters_of(campaign_key) if not c["is_goal"]]
+    """A campaign's missions minus everything its seal opens.
+
+    Its finale, which no item ever unlocks, and the mission paired with that
+    finale, which is now behind the same count. Doubly the right list for
+    `missions_required`: these are the missions that can be finished *before* the
+    seal, so asking for more than there are here would seal a campaign forever.
+    """
+    return [
+        c for c in chapters_of(campaign_key)
+        if not c["is_goal"] and c["key"] not in GOAL_COMPANIONS
+    ]
 
 
 # The largest `missions_required` any single campaign could satisfy. The option's

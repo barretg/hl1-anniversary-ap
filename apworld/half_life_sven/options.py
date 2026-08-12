@@ -15,12 +15,18 @@ from Options import (
 
 from .data import unlockable_chapters_of
 
-# Each campaign's own ceiling: its missions, minus the finale that no number of
-# them can be spent on.
-_MAX = {
-    key: len(unlockable_chapters_of(key))
-    for key in ("half_life", "opposing_force", "blue_shift", "they_hunger")
-}
+_CAMPAIGN_KEYS = ("half_life", "opposing_force", "blue_shift", "they_hunger")
+
+# Each campaign's own ceiling: the missions that can be finished before its seal
+# opens. That is everything except the finale, and except any mission sealed
+# alongside the finale -- Blue Shift's Power Struggle, which this very count
+# opens, so it can never be one of the missions counted toward it.
+#
+# Blue Shift's ceiling is therefore 5 where it used to be 6. A Range refuses an
+# out-of-range value rather than clamping it, so a Blue Shift YAML that spells
+# out the old default of 6 has to be edited down. Deliberate: the alternative is
+# a setting that silently means something other than what it says.
+_MAX = {key: len(unlockable_chapters_of(key)) for key in _CAMPAIGN_KEYS}
 
 MAX_MISSIONS = _MAX["half_life"]
 
@@ -57,6 +63,11 @@ class OpposingForceMissionsRequired(Range):
 
 class BlueShiftMissionsRequired(Range):
     """How many Blue Shift missions open Power Struggle.
+
+    Power Struggle and the escape that follows it are the campaign's ending
+    rather than two more missions, so no item unlocks either: this count opens
+    Power Struggle, and clearing it opens A Leap Of Faith behind it. That leaves
+    five missions this can ask for, where it used to accept six.
 
     Independent of every other campaign's setting. Ignored unless Blue Shift is
     in the seed.

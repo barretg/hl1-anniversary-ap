@@ -29,6 +29,7 @@ from .data import (
     CHARGER_TRIGGER,
     DEFAULT_CAMPAIGN,
     FIXED_STARTING_WEAPONS,
+    GOAL_COMPANIONS,
     INTRO_CHAPTER,
     INTRO_CHAPTERS,
     OPTIONAL_ITEM_NAMES,
@@ -243,9 +244,13 @@ class HalfLifeSvenWorld(World):
         # under strict logic) leaves sphere one empty and fill has nowhere to put
         # its first item.
         for campaign_key in self.included_campaigns:
+            # Only missions an item can open. A mission sealed behind the
+            # campaign's count has no unlock item to precollect, and starting the
+            # run inside the ending would defeat the seal anyway.
             chapters = [
                 chapter for chapter in self.included_chapters
-                if chapter["campaign"] == campaign_key and not chapter["is_goal"]
+                if chapter["campaign"] == campaign_key
+                and chapter["key"] in unlock_item_for_chapter
             ]
             if not chapters:
                 continue  # every mission of it was excluded some other way
@@ -277,9 +282,15 @@ class HalfLifeSvenWorld(World):
                 self.missions_required_for[campaign_key] = int(given[campaign_key])
                 continue
             option = getattr(self.options, CAMPAIGN_MISSION_OPTIONS[campaign_key])
+            # Missions that can be finished *before* the seal, which is not the
+            # same as "missions that are not the finale": Blue Shift's Power
+            # Struggle is now behind the seal too, so asking for six would wait on
+            # a mission the count itself has to open first.
             available = len([
                 chapter for chapter in self.included_chapters
-                if chapter["campaign"] == campaign_key and not chapter["is_goal"]
+                if chapter["campaign"] == campaign_key
+                and not chapter["is_goal"]
+                and chapter["key"] not in GOAL_COMPANIONS
             ])
             self.missions_required_for[campaign_key] = min(option.value, available)
 

@@ -493,6 +493,33 @@ class TestPairedFinale(StartingMissionMixin, HalfLifeSvenTestBase):
         state.sweep_for_advancements()
         self.assertTrue(self.can_reach_entrance("Enter A Leap Of Faith", state))
 
+    def test_power_struggle_has_no_unlock_item(self) -> None:
+        """It shares the finale's seal, so nothing in any pool opens it."""
+        self.assertNotIn("bs_power_struggle", unlock_item_for_chapter)
+
+        pool = {
+            item.name for item in self.multiworld.itempool if item.player == self.player
+        }
+        starting = {
+            item.name for item in self.multiworld.precollected_items[self.player]
+        }
+        self.assertNotIn("Power Struggle Unlock", pool | starting)
+
+    def test_the_count_opens_power_struggle(self) -> None:
+        from ..data import mission_complete_event
+
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_state(self.multiworld)
+
+        # Nothing finished yet: sealed, however many unlock items are held.
+        self.assertFalse(self.can_reach_entrance("Enter Power Struggle", state))
+
+        # One mission is what this seed asks for, and it is all it asks for --
+        # no item, and no clearing of the mission it is paired with.
+        state.collect(world.create_item(mission_complete_event("blue_shift")), True)
+        state.sweep_for_advancements()
+        self.assertTrue(self.can_reach_entrance("Enter Power Struggle", state))
+
     def test_clearing_power_struggle_grants_the_event(self) -> None:
         names = {
             location.name for location in self.multiworld.get_locations(self.player)

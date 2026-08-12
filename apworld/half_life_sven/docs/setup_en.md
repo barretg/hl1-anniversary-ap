@@ -298,6 +298,12 @@ you have completed that campaign's own `missions_required` count, set in your
 YAML and defaulting to all of them. Every finale in the seed has to be cleared to
 win it.
 
+**Blue Shift seals two missions, not one.** A Leap Of Faith is the escape
+cutscene at the end of Power Struggle rather than a mission of its own, so the
+two are one ending and neither has an unlock item: the count opens Power
+Struggle, and clearing Power Struggle opens A Leap Of Faith behind it. That
+leaves five Blue Shift missions the count can ask for.
+
 ## DeathLink
 
 Any death gibs the entire Sven Co-op lobby, and if DeathLink is on it is also
