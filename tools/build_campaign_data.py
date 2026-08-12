@@ -15,6 +15,7 @@ import argparse
 import collections
 import hashlib
 import json
+import math
 from pathlib import Path
 
 from bsp_entities import brush_model_centres, load_map
@@ -68,6 +69,30 @@ def part_label(chapter_maps: list[str], map_name: str) -> str:
     if len(chapter_maps) == 1:
         return ""
     return f"Part {chapter_maps.index(map_name) + 1}"
+
+
+def spawn_point(ents: list[dict[str, str]]) -> tuple[float, float, float] | None:
+    """Where players arrive, for numbering things in the order they meet them."""
+    for classname in ("info_player_start", "info_player_deathmatch"):
+        for entity in ents:
+            if entity.get("classname", "") == classname and entity.get("origin"):
+                return entity_origin(entity["origin"])
+    return None
+
+
+# How much dearer a unit of height is than a unit of floor, for judging how far
+# away something really is. The same weighting `!find` uses in game: 800 units
+# across a floor is a walk, 800 units up is a hunt for the stairs.
+VERTICAL_PENALTY = 3.0
+
+
+def walk_score(
+    origin: tuple[float, float, float], target: tuple[float, float, float]
+) -> float:
+    dx = target[0] - origin[0]
+    dy = target[1] - origin[1]
+    dz = target[2] - origin[2]
+    return math.hypot(dx, dy) + VERTICAL_PENALTY * abs(dz)
 
 
 def entity_origin(raw: str) -> tuple[float, float, float]:
@@ -329,13 +354,31 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # for each. Only the offset copies carry it, so every id that existed
             # before this stays exactly where it was.
             if "charger" in enabled:
+                spawn = spawn_point(ents)
                 for classname, display in CHARGER_CLASSNAMES.items():
-                    chargers = sorted(
-                        (e for e in ents
-                         if e.get("classname", "") == classname
-                         and brush_model_index(e) >= 0),
-                        key=brush_model_index,
-                    )
+                    found = [
+                        e for e in ents
+                        if e.get("classname", "") == classname
+                        and brush_model_index(e) >= 0
+                    ]
+
+                    # Numbered by how far they are from where players arrive,
+                    # not by brush model index. The index is compile order and
+                    # means nothing in play: Office Complex's two nearest units
+                    # were numbered 5 and 6 because that is when the compiler
+                    # happened to emit them, which reads as a mistake.
+                    #
+                    # Only the display name depends on this. Location ids key on
+                    # `classname:model`, so renumbering moves no id.
+                    def charger_score(entity: dict[str, str]) -> tuple[float, int]:
+                        centre = centres[map_name].get(entity["model"])
+                        if spawn is None or centre is None:
+                            return (float(brush_model_index(entity)), 0)
+                        offset = entity_origin(entity.get("origin", ""))
+                        at = tuple(centre[i] + offset[i] for i in range(3))
+                        return (walk_score(spawn, at), brush_model_index(entity))
+
+                    chargers = sorted(found, key=charger_score)
                     shared = {
                         model for model in {e["model"] for e in chargers}
                         if len([e for e in chargers if e["model"] == model]) > 1

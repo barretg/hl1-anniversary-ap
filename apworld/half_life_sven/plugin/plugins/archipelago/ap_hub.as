@@ -270,6 +270,33 @@ string BearingTo( CBasePlayer@ pPlayer, const Vector& in vecTarget )
 	return "directly behind you";
 }
 
+/*
+* How far away something *really* is, for choosing the nearest one.
+*
+* Straight-line distance is a bad judge of that indoors. Height is the expensive
+* axis: 800 units across a floor is a walk, 800 units up is a hunt for the stairs
+* and usually a good deal of level in between. Ranking by the straight line put
+* Office Complex's shotgun -- 677 out but nearly 800 above -- ahead of two
+* chargers sitting on the player's own floor.
+*
+* So the flat distance, plus the height difference several times over. This is
+* only ever used to rank candidates; the distance reported to the player stays
+* the honest straight line.
+*/
+const float FIND_VERTICAL_PENALTY = 3.0f;
+
+float TravelScore( CBasePlayer@ pPlayer, const Vector& in vecTarget )
+{
+	Vector vecDelta = vecTarget - pPlayer.pev.origin;
+	Vector vecFlat( vecDelta.x, vecDelta.y, 0.0f );
+
+	float flRise = vecDelta.z;
+	if( flRise < 0 )
+		flRise = -flRise;
+
+	return vecFlat.Length() + FIND_VERTICAL_PENALTY * flRise;
+}
+
 string HeightTo( CBasePlayer@ pPlayer, const Vector& in vecTarget )
 {
 	float flRise = vecTarget.z - pPlayer.pev.origin.z;
@@ -403,11 +430,11 @@ void FindLocation( CBasePlayer@ pPlayer, const string& in szQuery )
 			if( !LocationInSeed( pLocation ) || LocationFound( pLocation ) )
 				continue;
 
-			float flDistance = ( pLocation.position - pPlayer.pev.origin ).Length();
-			if( pNearest is null || flDistance < flNearest )
+			float flScore = TravelScore( pPlayer, pLocation.position );
+			if( pNearest is null || flScore < flNearest )
 			{
 				@pNearest = pLocation;
-				flNearest = flDistance;
+				flNearest = flScore;
 			}
 		}
 

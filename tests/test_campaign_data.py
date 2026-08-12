@@ -716,3 +716,38 @@ def test_positions_are_inside_their_map(campaign: dict) -> None:
         if entry.get("position") == [0, 0, 0]
     ]
     assert not at_origin, at_origin
+
+
+def test_every_campaign_can_be_started_without_a_gun(campaign: dict) -> None:
+    """Each campaign needs a mission you may enter holding only a melee weapon.
+
+    The starting mission is picked from these. With none, generation falls back
+    to any mission at all and hands out one that logic then refuses to enter --
+    which is exactly what happened to Opposing Force once its every mission was
+    gated and `exclude_intro_missions` removed the one that was not.
+    """
+    gates = {c["key"]: c["gates"] for c in campaign["chapters"]}
+
+    for entry in campaign["campaigns"]:
+        startable = [
+            key for key in entry["chapters"]
+            if key != entry["goal_chapter"] and not gates[key].get("strict")
+        ]
+        assert startable, f"{entry['key']} has no mission enterable with melee alone"
+
+
+def test_a_campaign_survives_excluding_its_intro(campaign: dict) -> None:
+    """`exclude_intro_missions` must not take a campaign's only legal start."""
+    gates = {c["key"]: c["gates"] for c in campaign["chapters"]}
+
+    for entry in campaign["campaigns"]:
+        intro = entry.get("intro_chapter")
+        startable = [
+            key for key in entry["chapters"]
+            if key != entry["goal_chapter"]
+            and key != intro
+            and not gates[key].get("strict")
+        ]
+        assert startable, (
+            f"{entry['key']} has no legal start once its intro is excluded"
+        )

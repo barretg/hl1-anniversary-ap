@@ -110,8 +110,13 @@ Console spellings (`~`), which do the same work without opening chat:
 
 `!find`:
 
-- `!find` with no argument names the nearest unfound check on your map. Walk
-  toward it and run it again: the distance must fall. That is the whole test of
+- `!find` with no argument names the nearest unfound check on your map, where
+  "nearest" counts height several times over: something 800 units above you is a
+  hunt for the stairs, not a walk. Ranking by the straight line offered Office
+  Complex's shotgun (677 out, 791 up) ahead of two chargers on the player's own
+  floor. Stand at the Office Complex spawn and confirm it offers a charger rather
+  than the shotgun.
+- Walk toward whatever it named and run it again: the distance must fall. That is the whole test of
   whether the coordinates are right, and it is worth doing in one Half-Life map,
   one Opposing Force map and one They Hunger map, since the position comes from
   the BSP rather than anything the game tells us.

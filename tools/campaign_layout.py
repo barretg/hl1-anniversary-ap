@@ -283,10 +283,12 @@ OPPOSING_FORCE = Campaign(
         "Pipe Wrench": ["weapon_pipewrench"],
     },
     gates={
-        # Incoming is the crash and the walk out of it; the shooting starts once
-        # Shephard is on his feet in Black Mesa proper.
-        "of_welcome_to_black_mesa": {"strict": ["ranged"]},
-        "of_we_are_pulling_out": {"strict": ["ranged"]},
+        # Incoming, Welcome To Black Mesa and We Are Pulling Out are deliberately
+        # ungated, the way Half-Life's first few are. Every campaign needs a
+        # mission you can walk into with a melee weapon, or a seed that excludes
+        # its intro has nowhere legal to start it: this campaign had exactly one
+        # ungated mission, `exclude_intro_missions` took it, and the start fell
+        # back to a gated mission that logic then refused to enter.
         "of_missing_in_action": {"strict": ["ranged"]},
         "of_friendly_fire": {"strict": ["ranged"]},
         "of_we_are_not_alone": {"strict": ["ranged"]},
@@ -345,7 +347,9 @@ BLUE_SHIFT = Campaign(
     # security map, so the derived anchor landed in the yards instead.
     weapon_anchors={"Glock": "ba_security2"},
     gates={
-        "bs_duty_calls": {"strict": ["ranged"]},
+        # Insecurity and Duty Calls stay ungated for the same reason: Barney is
+        # armed with a crowbar and a borrowed pistol for the early shift, and a
+        # campaign needs more than one legal place to begin.
         "bs_captive_freight": {"strict": ["ranged"]},
         "bs_focal_point": {"strict": ["ranged"]},
         "bs_power_struggle": {"strict": ["ranged"]},

@@ -468,11 +468,7 @@
    "index": 19,
    "campaign": "opposing_force",
    "is_goal": false,
-   "gates": {
-    "strict": [
-     "ranged"
-    ]
-   }
+   "gates": {}
   },
   {
    "key": "of_we_are_pulling_out",
@@ -485,11 +481,7 @@
    "index": 20,
    "campaign": "opposing_force",
    "is_goal": false,
-   "gates": {
-    "strict": [
-     "ranged"
-    ]
-   }
+   "gates": {}
   },
   {
    "key": "of_missing_in_action",
@@ -684,11 +676,7 @@
    "index": 32,
    "campaign": "blue_shift",
    "is_goal": false,
-   "gates": {
-    "strict": [
-     "ranged"
-    ]
-   }
+   "gates": {}
   },
   {
    "key": "bs_captive_freight",
@@ -1715,25 +1703,8 @@
    ]
   },
   {
-   "id": 7720057,
-   "name": "Unforeseen Consequences - Health Charger 2 (Part 1)",
-   "chapter": "unforeseen_consequences",
-   "map": "hl_c02_a1",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c02_a1",
-    "classname": "func_healthcharger",
-    "model": "*277"
-   },
-   "position": [
-    2041,
-    3564,
-    848
-   ]
-  },
-  {
    "id": 7720058,
-   "name": "Unforeseen Consequences - Health Charger 3 (Part 1)",
+   "name": "Unforeseen Consequences - Health Charger 2 (Part 1)",
    "chapter": "unforeseen_consequences",
    "map": "hl_c02_a1",
    "trigger": {
@@ -1746,6 +1717,23 @@
     2153,
     1968,
     865
+   ]
+  },
+  {
+   "id": 7720057,
+   "name": "Unforeseen Consequences - Health Charger 3 (Part 1)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a1",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c02_a1",
+    "classname": "func_healthcharger",
+    "model": "*277"
+   },
+   "position": [
+    2041,
+    3564,
+    848
    ]
   },
   {
@@ -1776,8 +1764,25 @@
    ]
   },
   {
-   "id": 7720060,
+   "id": 7720062,
    "name": "Unforeseen Consequences - Health Charger 2 (Part 2)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c02_a2",
+    "classname": "func_healthcharger",
+    "model": "*85"
+   },
+   "position": [
+    -995,
+    -2504,
+    1372
+   ]
+  },
+  {
+   "id": 7720060,
+   "name": "Unforeseen Consequences - Health Charger 3 (Part 2)",
    "chapter": "unforeseen_consequences",
    "map": "hl_c02_a2",
    "trigger": {
@@ -1794,7 +1799,7 @@
   },
   {
    "id": 7720061,
-   "name": "Unforeseen Consequences - Health Charger 3 (Part 2)",
+   "name": "Unforeseen Consequences - Health Charger 4 (Part 2)",
    "chapter": "unforeseen_consequences",
    "map": "hl_c02_a2",
    "trigger": {
@@ -1810,42 +1815,8 @@
    ]
   },
   {
-   "id": 7720062,
-   "name": "Unforeseen Consequences - Health Charger 4 (Part 2)",
-   "chapter": "unforeseen_consequences",
-   "map": "hl_c02_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c02_a2",
-    "classname": "func_healthcharger",
-    "model": "*85"
-   },
-   "position": [
-    -995,
-    -2504,
-    1372
-   ]
-  },
-  {
-   "id": 7720063,
-   "name": "Unforeseen Consequences - Health Charger 5 (Part 2)",
-   "chapter": "unforeseen_consequences",
-   "map": "hl_c02_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c02_a2",
-    "classname": "func_healthcharger",
-    "model": "*161"
-   },
-   "position": [
-    1836,
-    -715,
-    -1142
-   ]
-  },
-  {
    "id": 7720064,
-   "name": "Unforeseen Consequences - Health Charger 6 (Part 2)",
+   "name": "Unforeseen Consequences - Health Charger 5 (Part 2)",
    "chapter": "unforeseen_consequences",
    "map": "hl_c02_a2",
    "trigger": {
@@ -1861,25 +1832,25 @@
    ]
   },
   {
-   "id": 7720065,
-   "name": "Unforeseen Consequences - Health Charger 7 (Part 2)",
+   "id": 7720063,
+   "name": "Unforeseen Consequences - Health Charger 6 (Part 2)",
    "chapter": "unforeseen_consequences",
    "map": "hl_c02_a2",
    "trigger": {
     "type": "charger",
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
-    "model": "*231"
+    "model": "*161"
    },
    "position": [
-    924,
-    265,
-    -1432
+    1836,
+    -715,
+    -1142
    ]
   },
   {
    "id": 7720066,
-   "name": "Unforeseen Consequences - Health Charger 8 (Part 2)",
+   "name": "Unforeseen Consequences - Health Charger 7 (Part 2)",
    "chapter": "unforeseen_consequences",
    "map": "hl_c02_a2",
    "trigger": {
@@ -1895,6 +1866,23 @@
    ]
   },
   {
+   "id": 7720065,
+   "name": "Unforeseen Consequences - Health Charger 8 (Part 2)",
+   "chapter": "unforeseen_consequences",
+   "map": "hl_c02_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c02_a2",
+    "classname": "func_healthcharger",
+    "model": "*231"
+   },
+   "position": [
+    924,
+    265,
+    -1432
+   ]
+  },
+  {
    "id": 7720005,
    "name": "Office Complex - Reached",
    "chapter": "office_complex",
@@ -1905,7 +1893,7 @@
    }
   },
   {
-   "id": 7720067,
+   "id": 7720071,
    "name": "Office Complex - Health Charger 1",
    "chapter": "office_complex",
    "map": "hl_c03",
@@ -1913,12 +1901,12 @@
     "type": "charger",
     "map": "hl_c03",
     "classname": "func_healthcharger",
-    "model": "*55"
+    "model": "*508"
    },
    "position": [
-    252,
-    -791,
-    -198
+    1039,
+    14,
+    -509
    ]
   },
   {
@@ -1939,7 +1927,7 @@
    ]
   },
   {
-   "id": 7720069,
+   "id": 7720072,
    "name": "Office Complex - Health Charger 3",
    "chapter": "office_complex",
    "map": "hl_c03",
@@ -1947,17 +1935,34 @@
     "type": "charger",
     "map": "hl_c03",
     "classname": "func_healthcharger",
-    "model": "*292"
+    "model": "*509"
    },
    "position": [
-    201,
-    1004,
-    116
+    -285,
+    -148,
+    -433
+   ]
+  },
+  {
+   "id": 7720067,
+   "name": "Office Complex - Health Charger 4",
+   "chapter": "office_complex",
+   "map": "hl_c03",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c03",
+    "classname": "func_healthcharger",
+    "model": "*55"
+   },
+   "position": [
+    252,
+    -791,
+    -198
    ]
   },
   {
    "id": 7720070,
-   "name": "Office Complex - Health Charger 4",
+   "name": "Office Complex - Health Charger 5",
    "chapter": "office_complex",
    "map": "hl_c03",
    "trigger": {
@@ -1973,24 +1978,7 @@
    ]
   },
   {
-   "id": 7720071,
-   "name": "Office Complex - Health Charger 5",
-   "chapter": "office_complex",
-   "map": "hl_c03",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c03",
-    "classname": "func_healthcharger",
-    "model": "*508"
-   },
-   "position": [
-    1039,
-    14,
-    -509
-   ]
-  },
-  {
-   "id": 7720072,
+   "id": 7720069,
    "name": "Office Complex - Health Charger 6",
    "chapter": "office_complex",
    "map": "hl_c03",
@@ -1998,12 +1986,12 @@
     "type": "charger",
     "map": "hl_c03",
     "classname": "func_healthcharger",
-    "model": "*509"
+    "model": "*292"
    },
    "position": [
-    -285,
-    -148,
-    -433
+    201,
+    1004,
+    116
    ]
   },
   {
@@ -2034,25 +2022,8 @@
    }
   },
   {
-   "id": 7720074,
-   "name": "We've Got Hostiles - Health Charger 1",
-   "chapter": "weve_got_hostiles",
-   "map": "hl_c04",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c04",
-    "classname": "func_healthcharger",
-    "model": "*58"
-   },
-   "position": [
-    -868,
-    -848,
-    56
-   ]
-  },
-  {
    "id": 7720075,
-   "name": "We've Got Hostiles - Health Charger 2",
+   "name": "We've Got Hostiles - Health Charger 1",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
@@ -2068,25 +2039,8 @@
    ]
   },
   {
-   "id": 7720076,
-   "name": "We've Got Hostiles - Health Charger 3",
-   "chapter": "weve_got_hostiles",
-   "map": "hl_c04",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c04",
-    "classname": "func_healthcharger",
-    "model": "*102"
-   },
-   "position": [
-    -1460,
-    -848,
-    56
-   ]
-  },
-  {
    "id": 7720077,
-   "name": "We've Got Hostiles - Health Charger 4",
+   "name": "We've Got Hostiles - Health Charger 2",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
@@ -2103,7 +2057,7 @@
   },
   {
    "id": 7720078,
-   "name": "We've Got Hostiles - Health Charger 5",
+   "name": "We've Got Hostiles - Health Charger 3",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
@@ -2116,6 +2070,40 @@
     1176,
     -356,
     -72
+   ]
+  },
+  {
+   "id": 7720074,
+   "name": "We've Got Hostiles - Health Charger 4",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c04",
+    "classname": "func_healthcharger",
+    "model": "*58"
+   },
+   "position": [
+    -868,
+    -848,
+    56
+   ]
+  },
+  {
+   "id": 7720076,
+   "name": "We've Got Hostiles - Health Charger 5",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c04",
+    "classname": "func_healthcharger",
+    "model": "*102"
+   },
+   "position": [
+    -1460,
+    -848,
+    56
    ]
   },
   {
@@ -2136,42 +2124,8 @@
    ]
   },
   {
-   "id": 7720080,
-   "name": "We've Got Hostiles - Health Charger 7",
-   "chapter": "weve_got_hostiles",
-   "map": "hl_c04",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c04",
-    "classname": "func_healthcharger",
-    "model": "*241"
-   },
-   "position": [
-    -1604,
-    -1952,
-    568
-   ]
-  },
-  {
-   "id": 7720081,
-   "name": "We've Got Hostiles - Health Charger 8",
-   "chapter": "weve_got_hostiles",
-   "map": "hl_c04",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c04",
-    "classname": "func_healthcharger",
-    "model": "*256"
-   },
-   "position": [
-    -720,
-    -2876,
-    696
-   ]
-  },
-  {
    "id": 7720082,
-   "name": "We've Got Hostiles - Health Charger 9",
+   "name": "We've Got Hostiles - Health Charger 7",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
@@ -2187,25 +2141,25 @@
    ]
   },
   {
-   "id": 7720083,
-   "name": "We've Got Hostiles - Health Charger 10",
+   "id": 7720080,
+   "name": "We've Got Hostiles - Health Charger 8",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
     "type": "charger",
     "map": "hl_c04",
     "classname": "func_healthcharger",
-    "model": "*258"
+    "model": "*241"
    },
    "position": [
-    -364,
-    -3656,
-    952
+    -1604,
+    -1952,
+    568
    ]
   },
   {
    "id": 7720084,
-   "name": "We've Got Hostiles - Health Charger 11",
+   "name": "We've Got Hostiles - Health Charger 9",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
@@ -2221,8 +2175,25 @@
    ]
   },
   {
+   "id": 7720081,
+   "name": "We've Got Hostiles - Health Charger 10",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c04",
+    "classname": "func_healthcharger",
+    "model": "*256"
+   },
+   "position": [
+    -720,
+    -2876,
+    696
+   ]
+  },
+  {
    "id": 7720085,
-   "name": "We've Got Hostiles - Health Charger 12",
+   "name": "We've Got Hostiles - Health Charger 11",
    "chapter": "weve_got_hostiles",
    "map": "hl_c04",
    "trigger": {
@@ -2235,6 +2206,23 @@
     -348,
     -1128,
     1336
+   ]
+  },
+  {
+   "id": 7720083,
+   "name": "We've Got Hostiles - Health Charger 12",
+   "chapter": "weve_got_hostiles",
+   "map": "hl_c04",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c04",
+    "classname": "func_healthcharger",
+    "model": "*258"
+   },
+   "position": [
+    -364,
+    -3656,
+    952
    ]
   },
   {
@@ -2343,8 +2331,25 @@
    }
   },
   {
-   "id": 7720091,
+   "id": 7720093,
    "name": "Blast Pit - Health Charger 1 (Part 2)",
+   "chapter": "blast_pit",
+   "map": "hl_c05_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c05_a2",
+    "classname": "func_healthcharger",
+    "model": "*164"
+   },
+   "position": [
+    1048,
+    3507,
+    -1852
+   ]
+  },
+  {
+   "id": 7720091,
+   "name": "Blast Pit - Health Charger 2 (Part 2)",
    "chapter": "blast_pit",
    "map": "hl_c05_a2",
    "trigger": {
@@ -2361,7 +2366,7 @@
   },
   {
    "id": 7720092,
-   "name": "Blast Pit - Health Charger 2 (Part 2)",
+   "name": "Blast Pit - Health Charger 3 (Part 2)",
    "chapter": "blast_pit",
    "map": "hl_c05_a2",
    "trigger": {
@@ -2374,23 +2379,6 @@
     1503,
     3760,
     -3820
-   ]
-  },
-  {
-   "id": 7720093,
-   "name": "Blast Pit - Health Charger 3 (Part 2)",
-   "chapter": "blast_pit",
-   "map": "hl_c05_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c05_a2",
-    "classname": "func_healthcharger",
-    "model": "*164"
-   },
-   "position": [
-    1048,
-    3507,
-    -1852
    ]
   },
   {
@@ -2465,25 +2453,8 @@
    }
   },
   {
-   "id": 7720097,
-   "name": "Power Up - Health Charger 1",
-   "chapter": "power_up",
-   "map": "hl_c06",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c06",
-    "classname": "func_healthcharger",
-    "model": "*53"
-   },
-   "position": [
-    -932,
-    1208,
-    -136
-   ]
-  },
-  {
    "id": 7720098,
-   "name": "Power Up - Health Charger 2",
+   "name": "Power Up - Health Charger 1",
    "chapter": "power_up",
    "map": "hl_c06",
    "trigger": {
@@ -2496,6 +2467,23 @@
     816,
     892,
     368
+   ]
+  },
+  {
+   "id": 7720097,
+   "name": "Power Up - Health Charger 2",
+   "chapter": "power_up",
+   "map": "hl_c06",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c06",
+    "classname": "func_healthcharger",
+    "model": "*53"
+   },
+   "position": [
+    -932,
+    1208,
+    -136
    ]
   },
   {
@@ -2638,8 +2626,25 @@
    }
   },
   {
-   "id": 7720106,
+   "id": 7720110,
    "name": "On A Rail - Health Charger 1 (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c07_a2",
+    "classname": "func_healthcharger",
+    "model": "*239"
+   },
+   "position": [
+    2504,
+    3280,
+    -248
+   ]
+  },
+  {
+   "id": 7720106,
+   "name": "On A Rail - Health Charger 2 (Part 2)",
    "chapter": "on_a_rail",
    "map": "hl_c07_a2",
    "trigger": {
@@ -2652,23 +2657,6 @@
     3000,
     1348,
     468
-   ]
-  },
-  {
-   "id": 7720107,
-   "name": "On A Rail - Health Charger 2 (Part 2)",
-   "chapter": "on_a_rail",
-   "map": "hl_c07_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c07_a2",
-    "classname": "func_healthcharger",
-    "model": "*79"
-   },
-   "position": [
-    -16,
-    -2448,
-    352
    ]
   },
   {
@@ -2689,8 +2677,25 @@
    ]
   },
   {
-   "id": 7720109,
+   "id": 7720107,
    "name": "On A Rail - Health Charger 4 (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c07_a2",
+    "classname": "func_healthcharger",
+    "model": "*79"
+   },
+   "position": [
+    -16,
+    -2448,
+    352
+   ]
+  },
+  {
+   "id": 7720109,
+   "name": "On A Rail - Health Charger 5 (Part 2)",
    "chapter": "on_a_rail",
    "map": "hl_c07_a2",
    "trigger": {
@@ -2706,42 +2711,8 @@
    ]
   },
   {
-   "id": 7720110,
-   "name": "On A Rail - Health Charger 5 (Part 2)",
-   "chapter": "on_a_rail",
-   "map": "hl_c07_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c07_a2",
-    "classname": "func_healthcharger",
-    "model": "*239"
-   },
-   "position": [
-    2504,
-    3280,
-    -248
-   ]
-  },
-  {
-   "id": 7720111,
-   "name": "On A Rail - HEV Charger 1 (Part 2)",
-   "chapter": "on_a_rail",
-   "map": "hl_c07_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c07_a2",
-    "classname": "func_recharge",
-    "model": "*147"
-   },
-   "position": [
-    -1248,
-    -2460,
-    -396
-   ]
-  },
-  {
    "id": 7720112,
-   "name": "On A Rail - HEV Charger 2 (Part 2)",
+   "name": "On A Rail - HEV Charger 1 (Part 2)",
    "chapter": "on_a_rail",
    "map": "hl_c07_a2",
    "trigger": {
@@ -2757,6 +2728,23 @@
    ]
   },
   {
+   "id": 7720111,
+   "name": "On A Rail - HEV Charger 2 (Part 2)",
+   "chapter": "on_a_rail",
+   "map": "hl_c07_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c07_a2",
+    "classname": "func_recharge",
+    "model": "*147"
+   },
+   "position": [
+    -1248,
+    -2460,
+    -396
+   ]
+  },
+  {
    "id": 7720013,
    "name": "Apprehension - Part 1 Reached",
    "chapter": "apprehension",
@@ -2767,25 +2755,8 @@
    }
   },
   {
-   "id": 7720113,
-   "name": "Apprehension - Health Charger 1 (Part 1)",
-   "chapter": "apprehension",
-   "map": "hl_c08_a1",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c08_a1",
-    "classname": "func_healthcharger",
-    "model": "*47"
-   },
-   "position": [
-    -920,
-    -1408,
-    -436
-   ]
-  },
-  {
    "id": 7720114,
-   "name": "Apprehension - Health Charger 2 (Part 1)",
+   "name": "Apprehension - Health Charger 1 (Part 1)",
    "chapter": "apprehension",
    "map": "hl_c08_a1",
    "trigger": {
@@ -2798,6 +2769,23 @@
     1040,
     376,
     -542
+   ]
+  },
+  {
+   "id": 7720113,
+   "name": "Apprehension - Health Charger 2 (Part 1)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a1",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c08_a1",
+    "classname": "func_healthcharger",
+    "model": "*47"
+   },
+   "position": [
+    -920,
+    -1408,
+    -436
    ]
   },
   {
@@ -2828,7 +2816,7 @@
    }
   },
   {
-   "id": 7720116,
+   "id": 7720119,
    "name": "Apprehension - Health Charger 1 (Part 2)",
    "chapter": "apprehension",
    "map": "hl_c08_a2",
@@ -2836,12 +2824,12 @@
     "type": "charger",
     "map": "hl_c08_a2",
     "classname": "func_healthcharger",
-    "model": "*142"
+    "model": "*203"
    },
    "position": [
-    -2604,
-    -1916,
-    2344
+    840,
+    1584,
+    2116
    ]
   },
   {
@@ -2862,8 +2850,25 @@
    ]
   },
   {
-   "id": 7720118,
+   "id": 7720116,
    "name": "Apprehension - Health Charger 3 (Part 2)",
+   "chapter": "apprehension",
+   "map": "hl_c08_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c08_a2",
+    "classname": "func_healthcharger",
+    "model": "*142"
+   },
+   "position": [
+    -2604,
+    -1916,
+    2344
+   ]
+  },
+  {
+   "id": 7720118,
+   "name": "Apprehension - Health Charger 4 (Part 2)",
    "chapter": "apprehension",
    "map": "hl_c08_a2",
    "trigger": {
@@ -2876,23 +2881,6 @@
     -4616,
     -1056,
     2344
-   ]
-  },
-  {
-   "id": 7720119,
-   "name": "Apprehension - Health Charger 4 (Part 2)",
-   "chapter": "apprehension",
-   "map": "hl_c08_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c08_a2",
-    "classname": "func_healthcharger",
-    "model": "*203"
-   },
-   "position": [
-    840,
-    1584,
-    2116
    ]
   },
   {
@@ -2940,59 +2928,8 @@
    }
   },
   {
-   "id": 7720122,
-   "name": "Residue Processing - Health Charger 1",
-   "chapter": "residue_processing",
-   "map": "hl_c09",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c09",
-    "classname": "func_healthcharger",
-    "model": "*85"
-   },
-   "position": [
-    -344,
-    1324,
-    -1480
-   ]
-  },
-  {
-   "id": 7720123,
-   "name": "Residue Processing - Health Charger 2",
-   "chapter": "residue_processing",
-   "map": "hl_c09",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c09",
-    "classname": "func_healthcharger",
-    "model": "*227"
-   },
-   "position": [
-    388,
-    2016,
-    72
-   ]
-  },
-  {
-   "id": 7720124,
-   "name": "Residue Processing - Health Charger 3",
-   "chapter": "residue_processing",
-   "map": "hl_c09",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c09",
-    "classname": "func_healthcharger",
-    "model": "*237"
-   },
-   "position": [
-    -700,
-    2216,
-    -216
-   ]
-  },
-  {
    "id": 7720125,
-   "name": "Residue Processing - Health Charger 4",
+   "name": "Residue Processing - Health Charger 1",
    "chapter": "residue_processing",
    "map": "hl_c09",
    "trigger": {
@@ -3009,7 +2946,7 @@
   },
   {
    "id": 7720126,
-   "name": "Residue Processing - Health Charger 5",
+   "name": "Residue Processing - Health Charger 2",
    "chapter": "residue_processing",
    "map": "hl_c09",
    "trigger": {
@@ -3022,6 +2959,57 @@
     -3204,
     2536,
     -696
+   ]
+  },
+  {
+   "id": 7720122,
+   "name": "Residue Processing - Health Charger 3",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c09",
+    "classname": "func_healthcharger",
+    "model": "*85"
+   },
+   "position": [
+    -344,
+    1324,
+    -1480
+   ]
+  },
+  {
+   "id": 7720124,
+   "name": "Residue Processing - Health Charger 4",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c09",
+    "classname": "func_healthcharger",
+    "model": "*237"
+   },
+   "position": [
+    -700,
+    2216,
+    -216
+   ]
+  },
+  {
+   "id": 7720123,
+   "name": "Residue Processing - Health Charger 5",
+   "chapter": "residue_processing",
+   "map": "hl_c09",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c09",
+    "classname": "func_healthcharger",
+    "model": "*227"
+   },
+   "position": [
+    388,
+    2016,
+    72
    ]
   },
   {
@@ -3052,7 +3040,7 @@
    }
   },
   {
-   "id": 7720128,
+   "id": 7720133,
    "name": "Questionable Ethics - Health Charger 1",
    "chapter": "questionable_ethics",
    "map": "hl_c10",
@@ -3060,68 +3048,17 @@
     "type": "charger",
     "map": "hl_c10",
     "classname": "func_healthcharger",
-    "model": "*35"
+    "model": "*121"
    },
    "position": [
-    -860,
-    944,
-    328
-   ]
-  },
-  {
-   "id": 7720129,
-   "name": "Questionable Ethics - Health Charger 2",
-   "chapter": "questionable_ethics",
-   "map": "hl_c10",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c10",
-    "classname": "func_healthcharger",
-    "model": "*36"
-   },
-   "position": [
-    -1412,
-    1728,
-    56
-   ]
-  },
-  {
-   "id": 7720130,
-   "name": "Questionable Ethics - Health Charger 3",
-   "chapter": "questionable_ethics",
-   "map": "hl_c10",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c10",
-    "classname": "func_healthcharger",
-    "model": "*37"
-   },
-   "position": [
-    -1012,
-    1776,
-    56
-   ]
-  },
-  {
-   "id": 7720131,
-   "name": "Questionable Ethics - Health Charger 4",
-   "chapter": "questionable_ethics",
-   "map": "hl_c10",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c10",
-    "classname": "func_healthcharger",
-    "model": "*105"
-   },
-   "position": [
-    1756,
-    416,
+    3688,
+    612,
     56
    ]
   },
   {
    "id": 7720132,
-   "name": "Questionable Ethics - Health Charger 5",
+   "name": "Questionable Ethics - Health Charger 2",
    "chapter": "questionable_ethics",
    "map": "hl_c10",
    "trigger": {
@@ -3137,7 +3074,58 @@
    ]
   },
   {
-   "id": 7720133,
+   "id": 7720131,
+   "name": "Questionable Ethics - Health Charger 3",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c10",
+    "classname": "func_healthcharger",
+    "model": "*105"
+   },
+   "position": [
+    1756,
+    416,
+    56
+   ]
+  },
+  {
+   "id": 7720130,
+   "name": "Questionable Ethics - Health Charger 4",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c10",
+    "classname": "func_healthcharger",
+    "model": "*37"
+   },
+   "position": [
+    -1012,
+    1776,
+    56
+   ]
+  },
+  {
+   "id": 7720129,
+   "name": "Questionable Ethics - Health Charger 5",
+   "chapter": "questionable_ethics",
+   "map": "hl_c10",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c10",
+    "classname": "func_healthcharger",
+    "model": "*36"
+   },
+   "position": [
+    -1412,
+    1728,
+    56
+   ]
+  },
+  {
+   "id": 7720128,
    "name": "Questionable Ethics - Health Charger 6",
    "chapter": "questionable_ethics",
    "map": "hl_c10",
@@ -3145,12 +3133,12 @@
     "type": "charger",
     "map": "hl_c10",
     "classname": "func_healthcharger",
-    "model": "*121"
+    "model": "*35"
    },
    "position": [
-    3688,
-    612,
-    56
+    -860,
+    944,
+    328
    ]
   },
   {
@@ -3225,25 +3213,8 @@
    }
   },
   {
-   "id": 7720137,
-   "name": "Surface Tension - Health Charger 1 (Part 2)",
-   "chapter": "surface_tension",
-   "map": "hl_c11_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c11_a2",
-    "classname": "func_healthcharger",
-    "model": "*17"
-   },
-   "position": [
-    600,
-    -596,
-    56
-   ]
-  },
-  {
    "id": 7720138,
-   "name": "Surface Tension - Health Charger 2 (Part 2)",
+   "name": "Surface Tension - Health Charger 1 (Part 2)",
    "chapter": "surface_tension",
    "map": "hl_c11_a2",
    "trigger": {
@@ -3255,6 +3226,23 @@
    "position": [
     600,
     -916,
+    56
+   ]
+  },
+  {
+   "id": 7720137,
+   "name": "Surface Tension - Health Charger 2 (Part 2)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c11_a2",
+    "classname": "func_healthcharger",
+    "model": "*17"
+   },
+   "position": [
+    600,
+    -596,
     56
    ]
   },
@@ -3323,7 +3311,7 @@
    }
   },
   {
-   "id": 7720141,
+   "id": 7720143,
    "name": "Surface Tension - Health Charger 1 (Part 5)",
    "chapter": "surface_tension",
    "map": "hl_c11_a5",
@@ -3331,12 +3319,12 @@
     "type": "charger",
     "map": "hl_c11_a5",
     "classname": "func_healthcharger",
-    "model": "*80"
+    "model": "*177"
    },
    "position": [
-    -344,
-    -5520,
-    -1472
+    -758,
+    -4172,
+    -1608
    ]
   },
   {
@@ -3357,25 +3345,8 @@
    ]
   },
   {
-   "id": 7720143,
-   "name": "Surface Tension - Health Charger 3 (Part 5)",
-   "chapter": "surface_tension",
-   "map": "hl_c11_a5",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c11_a5",
-    "classname": "func_healthcharger",
-    "model": "*177"
-   },
-   "position": [
-    -758,
-    -4172,
-    -1608
-   ]
-  },
-  {
    "id": 7720144,
-   "name": "Surface Tension - Health Charger 4 (Part 5)",
+   "name": "Surface Tension - Health Charger 3 (Part 5)",
    "chapter": "surface_tension",
    "map": "hl_c11_a5",
    "trigger": {
@@ -3388,6 +3359,23 @@
     -2464,
     -4076,
     -1480
+   ]
+  },
+  {
+   "id": 7720141,
+   "name": "Surface Tension - Health Charger 4 (Part 5)",
+   "chapter": "surface_tension",
+   "map": "hl_c11_a5",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c11_a5",
+    "classname": "func_healthcharger",
+    "model": "*80"
+   },
+   "position": [
+    -344,
+    -5520,
+    -1472
    ]
   },
   {
@@ -3479,25 +3467,8 @@
    ]
   },
   {
-   "id": 7720149,
-   "name": "Lambda Core - Health Charger 2 (Part 1)",
-   "chapter": "lambda_core",
-   "map": "hl_c13_a1",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c13_a1",
-    "classname": "func_healthcharger",
-    "model": "*22"
-   },
-   "position": [
-    780,
-    1664,
-    -72
-   ]
-  },
-  {
    "id": 7720150,
-   "name": "Lambda Core - Health Charger 3 (Part 1)",
+   "name": "Lambda Core - Health Charger 2 (Part 1)",
    "chapter": "lambda_core",
    "map": "hl_c13_a1",
    "trigger": {
@@ -3510,6 +3481,23 @@
     -2544,
     -364,
     -200
+   ]
+  },
+  {
+   "id": 7720149,
+   "name": "Lambda Core - Health Charger 3 (Part 1)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a1",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c13_a1",
+    "classname": "func_healthcharger",
+    "model": "*22"
+   },
+   "position": [
+    780,
+    1664,
+    -72
    ]
   },
   {
@@ -3574,25 +3562,8 @@
    ]
   },
   {
-   "id": 7720154,
-   "name": "Lambda Core - HEV Charger 1 (Part 2)",
-   "chapter": "lambda_core",
-   "map": "hl_c13_a2",
-   "trigger": {
-    "type": "charger",
-    "map": "hl_c13_a2",
-    "classname": "func_recharge",
-    "model": "*35"
-   },
-   "position": [
-    1322,
-    1968,
-    -584
-   ]
-  },
-  {
    "id": 7720155,
-   "name": "Lambda Core - HEV Charger 2 (Part 2)",
+   "name": "Lambda Core - HEV Charger 1 (Part 2)",
    "chapter": "lambda_core",
    "map": "hl_c13_a2",
    "trigger": {
@@ -3605,6 +3576,23 @@
     -1604,
     1712,
     -968
+   ]
+  },
+  {
+   "id": 7720154,
+   "name": "Lambda Core - HEV Charger 2 (Part 2)",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a2",
+   "trigger": {
+    "type": "charger",
+    "map": "hl_c13_a2",
+    "classname": "func_recharge",
+    "model": "*35"
+   },
+   "position": [
+    1322,
+    1968,
+    -584
    ]
   },
   {
@@ -4234,25 +4222,8 @@
    ]
   },
   {
-   "id": 7720210,
-   "name": "Pit Worm's Nest - Health Charger 3 (Part 2)",
-   "chapter": "of_pit_worms_nest",
-   "map": "of4a2",
-   "trigger": {
-    "type": "charger",
-    "map": "of4a2",
-    "classname": "func_healthcharger",
-    "model": "*202"
-   },
-   "position": [
-    544,
-    -1318,
-    1148
-   ]
-  },
-  {
    "id": 7720211,
-   "name": "Pit Worm's Nest - Health Charger 4 (Part 2)",
+   "name": "Pit Worm's Nest - Health Charger 3 (Part 2)",
    "chapter": "of_pit_worms_nest",
    "map": "of4a2",
    "trigger": {
@@ -4268,6 +4239,23 @@
    ]
   },
   {
+   "id": 7720210,
+   "name": "Pit Worm's Nest - Health Charger 4 (Part 2)",
+   "chapter": "of_pit_worms_nest",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "model": "*202"
+   },
+   "position": [
+    544,
+    -1318,
+    1148
+   ]
+  },
+  {
    "id": 7720212,
    "name": "Pit Worm's Nest - Part 3 Reached",
    "chapter": "of_pit_worms_nest",
@@ -4278,7 +4266,7 @@
    }
   },
   {
-   "id": 7720213,
+   "id": 7720215,
    "name": "Pit Worm's Nest - Health Charger 1 (Part 3)",
    "chapter": "of_pit_worms_nest",
    "map": "of4a3",
@@ -4286,12 +4274,12 @@
     "type": "charger",
     "map": "of4a3",
     "classname": "func_healthcharger",
-    "model": "*137"
+    "model": "*191"
    },
    "position": [
-    544,
-    -1318,
-    1148
+    176,
+    -2116,
+    356
    ]
   },
   {
@@ -4312,7 +4300,7 @@
    ]
   },
   {
-   "id": 7720215,
+   "id": 7720213,
    "name": "Pit Worm's Nest - Health Charger 3 (Part 3)",
    "chapter": "of_pit_worms_nest",
    "map": "of4a3",
@@ -4320,12 +4308,12 @@
     "type": "charger",
     "map": "of4a3",
     "classname": "func_healthcharger",
-    "model": "*191"
+    "model": "*137"
    },
    "position": [
-    176,
-    -2116,
-    356
+    544,
+    -1318,
+    1148
    ]
   },
   {
@@ -4604,25 +4592,8 @@
    }
   },
   {
-   "id": 7720240,
-   "name": "Duty Calls - Health Charger 1 (Part 1)",
-   "chapter": "bs_duty_calls",
-   "map": "ba_canal1",
-   "trigger": {
-    "type": "charger",
-    "map": "ba_canal1",
-    "classname": "func_healthcharger",
-    "model": "*196"
-   },
-   "position": [
-    1554,
-    16,
-    56
-   ]
-  },
-  {
    "id": 7720353,
-   "name": "Duty Calls - Health Charger 2 (Part 1)",
+   "name": "Duty Calls - Health Charger 1 (Part 1)",
    "chapter": "bs_duty_calls",
    "map": "ba_canal1",
    "trigger": {
@@ -4635,6 +4606,23 @@
    "position": [
     1554,
     96,
+    56
+   ]
+  },
+  {
+   "id": 7720240,
+   "name": "Duty Calls - Health Charger 2 (Part 1)",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal1",
+    "classname": "func_healthcharger",
+    "model": "*196"
+   },
+   "position": [
+    1554,
+    16,
     56
    ]
   },
@@ -4978,25 +4966,8 @@
    }
   },
   {
-   "id": 7720270,
-   "name": "Power Struggle - Health Charger 1 (Part 3)",
-   "chapter": "bs_power_struggle",
-   "map": "ba_power2",
-   "trigger": {
-    "type": "charger",
-    "map": "ba_power2",
-    "classname": "func_healthcharger",
-    "model": "*112"
-   },
-   "position": [
-    64,
-    -1240,
-    -356
-   ]
-  },
-  {
    "id": 7720271,
-   "name": "Power Struggle - Health Charger 2 (Part 3)",
+   "name": "Power Struggle - Health Charger 1 (Part 3)",
    "chapter": "bs_power_struggle",
    "map": "ba_power2",
    "trigger": {
@@ -5009,6 +4980,23 @@
     -1560,
     694,
     80
+   ]
+  },
+  {
+   "id": 7720270,
+   "name": "Power Struggle - Health Charger 2 (Part 3)",
+   "chapter": "bs_power_struggle",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power2",
+    "classname": "func_healthcharger",
+    "model": "*112"
+   },
+   "position": [
+    64,
+    -1240,
+    -356
    ]
   },
   {
