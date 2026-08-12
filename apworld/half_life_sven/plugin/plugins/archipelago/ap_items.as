@@ -342,6 +342,10 @@ void EnforceLoadouts()
 	// Shares the timer rather than adding another: both are "look at the world
 	// once a second and fix what the hooks missed".
 	SweepWeaponPickups();
+
+	// Same bargain again: the trap queue is asking "is there anywhere to put one
+	// yet", which is a question about the world once a second.
+	ProcessTrapQueue();
 }
 
 /*

@@ -7,7 +7,9 @@
 * and the suit hands the weapon back half a minute later.
 *
 * Delivered as one-shot `TRAP` events, so they fire once and never replay on a
-* map load or a reconnect.
+* map load or a reconnect. Because they only ever fire once, a trap that arrives
+* while there is nobody to spring it on is simply gone -- which is what the queue
+* below exists to prevent.
 */
 
 // Four of whatever is being spawned, arranged around each player.
@@ -114,7 +116,140 @@ void ClearWithheldWeapons( CBasePlayer@ pPlayer )
 	}
 }
 
+/*
+* How long a map has to have been settled before the queue drains onto it.
+*
+* Counted from the moment there is somewhere for a trap to land, not from the
+* map load: arriving is not the same as being on your feet in the level, and a
+* trap sprung during the loading screen is a trap nobody sees.
+*/
+const float TRAP_QUEUE_DELAY = 5.0f;
+
+// A ceiling on how much can pile up. Each spawn trap puts four monsters around
+// every player, so an unbounded queue draining at once is a server hitch at
+// best. Reaching this means several traps arrived during one loading screen,
+// which the delay alone should already have made unlikely.
+const uint TRAP_QUEUE_MAX = 12;
+
+// Traps that arrived with nowhere to land, oldest first. Deliberately a plain
+// global: it survives a map change, which is the entire point -- a trap received
+// on the way out of one level springs on the next one.
+array<string> g_QueuedTraps;
+
+// g_Engine.time at which this map became somewhere a trap could land, or 0 if it
+// is not somewhere right now. Reset on every map load, because g_Engine.time
+// restarts there and a stamp from the last map means nothing on this one.
+float g_flTrapGroundSince = 0.0f;
+
+/*
+* A trap has arrived. Hold it rather than spring it.
+*
+* Nothing is sprung from here even when the map is perfectly ready: the queue
+* drains on the sweep, so a trap that lands mid-level still waits out a tick or
+* two, and every trap goes through exactly one path.
+*/
 void SpringTrap( const string& in szName )
+{
+	if( !KnownTrap( szName ) )
+	{
+		// Not something we can ever spring, so queueing it would only leave it
+		// sitting there being retried forever.
+		APLog( "unknown trap: " + szName );
+		return;
+	}
+
+	if( g_QueuedTraps.length() >= TRAP_QUEUE_MAX )
+	{
+		APLog( "trap queue full, dropping: " + szName );
+		return;
+	}
+
+	g_QueuedTraps.insertLast( szName );
+}
+
+bool KnownTrap( const string& in szName )
+{
+	return szName == "Scientist Trap"
+	    || szName == "Headcrab Trap"
+	    || szName == "Butterfingers Trap";
+}
+
+/*
+* Is there anywhere for a trap to land right now?
+*
+* Two ways for the answer to be no. Nobody alive and out of observer mode is the
+* obvious one -- every trap here acts on living players, so with none the trap is
+* spent on nothing. A queued level change is the subtle one: the map is loaded
+* and people are standing on it, but they are about to be somewhere else, and
+* spawning a crowd of headcrabs into a level that is one breath from unloading
+* is the same waste as spawning them into a loading screen.
+*/
+bool TrapGroundReady()
+{
+	if( g_szPendingLevel.Length() > 0 )
+		return false;
+
+	for( int i = 1; i <= g_Engine.maxClients; ++i )
+	{
+		CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( i );
+
+		if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
+			continue;
+		if( pPlayer.GetObserver().IsObserver() )
+			continue;
+
+		return true;
+	}
+
+	return false;
+}
+
+/*
+* Drain the queue if the level has been standing still long enough.
+*
+* Called from the once-a-second sweep, so the real wait is TRAP_QUEUE_DELAY plus
+* up to a second. Anything that makes the ground unready -- a level change queued,
+* the last player dying -- puts the clock back to zero, so the countdown restarts
+* rather than resuming: five settled seconds, not five seconds in total.
+*/
+void ProcessTrapQueue()
+{
+	if( !TrapGroundReady() )
+	{
+		g_flTrapGroundSince = 0.0f;
+		return;
+	}
+
+	if( g_flTrapGroundSince == 0.0f )
+		g_flTrapGroundSince = g_Engine.time;
+
+	if( g_QueuedTraps.length() == 0 )
+		return;
+
+	if( g_Engine.time - g_flTrapGroundSince < TRAP_QUEUE_DELAY )
+		return;
+
+	// Taken as a copy and cleared first: springing a trap can print, spawn and
+	// schedule, and none of that should be able to see a half-drained queue.
+	array<string> pending = g_QueuedTraps;
+	g_QueuedTraps.resize( 0 );
+
+	for( uint i = 0; i < pending.length(); ++i )
+		SpringTrapNow( pending[i] );
+}
+
+/*
+* Forget that this map was ever settled.
+*
+* Called on map load. Only the clock is reset -- the queue itself is what carries
+* the held traps to the new map.
+*/
+void ResetTrapGround()
+{
+	g_flTrapGroundSince = 0.0f;
+}
+
+void SpringTrapNow( const string& in szName )
 {
 	if( szName == "Scientist Trap" )
 		SpawnTrap( "monster_scientist", "Someone called for a science team." );

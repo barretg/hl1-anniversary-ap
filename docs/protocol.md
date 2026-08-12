@@ -170,7 +170,7 @@ load is correctly recognised as stale rather than killing you on arrival.
 | Kind | Payload |
 | --- | --- |
 | `ITEM` | filler item name |
-| `TRAP` | trap name, sprung once on arrival |
+| `TRAP` | trap name, queued on arrival and sprung once the level has been settled for five seconds |
 | `DEATHLINK` | `<source>~<cause>` |
 | `CHAT` | a line of multiworld chat to print in game |
 

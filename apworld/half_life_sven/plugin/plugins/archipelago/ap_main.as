@@ -77,6 +77,9 @@ void Initialise()
 	g_SentChecks.deleteAll();
 	g_flLastPortalUse.deleteAll();
 	ClearWithheldWeapons();
+	// The queued traps themselves are kept -- carrying them here is the point --
+	// but this map has to earn its own settled seconds before they land.
+	ResetTrapGround();
 	// Force a full reparse of the snapshot.
 	g_szLastInput = "";
 	g_flDeathLinkImmuneUntil = 0.0f;
