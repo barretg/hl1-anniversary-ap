@@ -17,7 +17,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from bsp_entities import load_map
+from bsp_entities import brush_model_centres, load_map
 from campaign_layout import (
     CAMPAIGNS,
     CAMPAIGN_OF_CHAPTER,
@@ -67,6 +67,16 @@ def part_label(chapter_maps: list[str], map_name: str) -> str:
     if len(chapter_maps) == 1:
         return ""
     return f"Part {chapter_maps.index(map_name) + 1}"
+
+
+def entity_origin(raw: str) -> tuple[float, float, float]:
+    parts = raw.split()
+    if len(parts) != 3:
+        return (0.0, 0.0, 0.0)
+    try:
+        return (float(parts[0]), float(parts[1]), float(parts[2]))
+    except ValueError:
+        return (0.0, 0.0, 0.0)
 
 
 def normalise_origin(raw: str) -> str:
@@ -184,7 +194,8 @@ class LocationBuilder:
         self._used_names: set[str] = set()
 
     def add(self, chapter: dict, map_name: str, base_name: str, trigger: dict,
-            requires: str | None = None, prefixed: bool = True) -> dict:
+            requires: str | None = None, prefixed: bool = True,
+            position: tuple[float, float, float] | None = None) -> dict:
         # Campaign-wide locations skip the mission prefix: the mission is only
         # where logic hangs them, not where the player will find the thing.
         name = self._unique(f"{chapter['name']} - {base_name}" if prefixed else base_name)
@@ -198,6 +209,10 @@ class LocationBuilder:
         }
         if requires:
             location["requires"] = requires
+        # Where it is in the world, for `!find`. Whole units: the command is a
+        # compass, and nobody needs a check located to the nearest thousandth.
+        if position is not None:
+            location["position"] = [int(round(value)) for value in position]
         self.locations.append(location)
         return location
 
@@ -269,12 +284,16 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     ]
 
     entities: dict[str, list[dict[str, str]]] = {}
+    # `*N` -> bounding box centre, per map. The only way to place a brush entity,
+    # which is what every charger is.
+    centres: dict[str, dict[str, tuple[float, float, float]]] = {}
     for chapter in chapters:
         for map_name in chapter["maps"]:
             bsp = maps_dir / f"{map_name}.bsp"
             if not bsp.exists():
                 raise SystemExit(f"missing map: {bsp}")
             entities[map_name] = load_map(bsp)
+            centres[map_name] = brush_model_centres(bsp)
 
     builder = LocationBuilder(registry)
 
@@ -329,11 +348,22 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                         origin = normalise_origin(entity.get("origin", ""))
                         if entity["model"] in shared and origin:
                             trigger["origin"] = origin
+
+                        # The brush's own centre, shifted by whatever `origin`
+                        # the mapper gave the entity -- which is exactly how the
+                        # engine will place it.
+                        centre = centres[map_name].get(entity["model"])
+                        position = None
+                        if centre is not None:
+                            offset = entity_origin(entity.get("origin", ""))
+                            position = tuple(centre[i] + offset[i] for i in range(3))
+
                         builder.add(
                             chapter,
                             map_name,
                             f"{display}{count}{suffix}",
                             trigger,
+                            position=position,
                         )
 
             # Every distinct pickup classname present in the map becomes one
@@ -447,6 +477,15 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                     if campaign.key == DEFAULT_CAMPAIGN
                     else f"{campaign.name} - First {shown}"
                 )
+                # Where the earliest copy sits. There may be several in the map;
+                # the first is as good as any, and `!find` says "one of them".
+                wanted = set(classnames)
+                placed = next(
+                    (e for e in entities[map_name] if e.get("classname", "") in wanted),
+                    None,
+                )
+                position = entity_origin(placed.get("origin", "")) if placed else None
+
                 builder.add(
                     chapter,
                     map_name,
@@ -454,6 +493,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                     {"type": "weapon_pickup", "map": map_name,
                      "classnames": list(classnames)},
                     prefixed=False,
+                    position=position,
                 )
 
     # Chapter completion always comes last so it reads last in the list.

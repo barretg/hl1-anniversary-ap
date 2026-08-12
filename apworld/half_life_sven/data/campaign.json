@@ -1551,7 +1551,12 @@
     "map": "hl_c01_a1",
     "classname": "func_healthcharger",
     "model": "*28"
-   }
+   },
+   "position": [
+    -436,
+    604,
+    -168
+   ]
   },
   {
    "id": 7720054,
@@ -1563,7 +1568,12 @@
     "map": "hl_c01_a1",
     "classname": "func_healthcharger",
     "model": "*29"
-   }
+   },
+   "position": [
+    -324,
+    -992,
+    -151
+   ]
   },
   {
    "id": 7720055,
@@ -1575,7 +1585,12 @@
     "map": "hl_c01_a1",
     "classname": "func_healthcharger",
     "model": "*235"
-   }
+   },
+   "position": [
+    -3372,
+    1556,
+    -232
+   ]
   },
   {
    "id": 7720002,
@@ -1607,7 +1622,12 @@
     "map": "hl_c02_a1",
     "classname": "func_healthcharger",
     "model": "*119"
-   }
+   },
+   "position": [
+    -895,
+    4516,
+    784
+   ]
   },
   {
    "id": 7720057,
@@ -1619,7 +1639,12 @@
     "map": "hl_c02_a1",
     "classname": "func_healthcharger",
     "model": "*277"
-   }
+   },
+   "position": [
+    2041,
+    3564,
+    848
+   ]
   },
   {
    "id": 7720058,
@@ -1631,7 +1656,12 @@
     "map": "hl_c02_a1",
     "classname": "func_healthcharger",
     "model": "*278"
-   }
+   },
+   "position": [
+    2153,
+    1968,
+    865
+   ]
   },
   {
    "id": 7720004,
@@ -1653,7 +1683,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*1"
-   }
+   },
+   "position": [
+    -2455,
+    -2128,
+    1377
+   ]
   },
   {
    "id": 7720060,
@@ -1665,7 +1700,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*68"
-   }
+   },
+   "position": [
+    -1941,
+    -2940,
+    1520
+   ]
   },
   {
    "id": 7720061,
@@ -1677,7 +1717,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*84"
-   }
+   },
+   "position": [
+    -459,
+    -3204,
+    1352
+   ]
   },
   {
    "id": 7720062,
@@ -1689,7 +1734,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*85"
-   }
+   },
+   "position": [
+    -995,
+    -2504,
+    1372
+   ]
   },
   {
    "id": 7720063,
@@ -1701,7 +1751,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*161"
-   }
+   },
+   "position": [
+    1836,
+    -715,
+    -1142
+   ]
   },
   {
    "id": 7720064,
@@ -1713,7 +1768,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*170"
-   }
+   },
+   "position": [
+    1310,
+    -1443,
+    -927
+   ]
   },
   {
    "id": 7720065,
@@ -1725,7 +1785,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*231"
-   }
+   },
+   "position": [
+    924,
+    265,
+    -1432
+   ]
   },
   {
    "id": 7720066,
@@ -1737,7 +1802,12 @@
     "map": "hl_c02_a2",
     "classname": "func_healthcharger",
     "model": "*247"
-   }
+   },
+   "position": [
+    -1252,
+    913,
+    -1451
+   ]
   },
   {
    "id": 7720005,
@@ -1759,7 +1829,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*55"
-   }
+   },
+   "position": [
+    252,
+    -791,
+    -198
+   ]
   },
   {
    "id": 7720068,
@@ -1771,7 +1846,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*68"
-   }
+   },
+   "position": [
+    1855,
+    -452,
+    -197
+   ]
   },
   {
    "id": 7720069,
@@ -1783,7 +1863,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*292"
-   }
+   },
+   "position": [
+    201,
+    1004,
+    116
+   ]
   },
   {
    "id": 7720070,
@@ -1795,7 +1880,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*323"
-   }
+   },
+   "position": [
+    405,
+    1004,
+    125
+   ]
   },
   {
    "id": 7720071,
@@ -1807,7 +1897,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*508"
-   }
+   },
+   "position": [
+    1039,
+    14,
+    -509
+   ]
   },
   {
    "id": 7720072,
@@ -1819,7 +1914,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*509"
-   }
+   },
+   "position": [
+    -285,
+    -148,
+    -433
+   ]
   },
   {
    "id": 7720073,
@@ -1831,7 +1931,12 @@
     "map": "hl_c03",
     "classname": "func_healthcharger",
     "model": "*678"
-   }
+   },
+   "position": [
+    -1810,
+    -526,
+    56
+   ]
   },
   {
    "id": 7720006,
@@ -1853,7 +1958,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*58"
-   }
+   },
+   "position": [
+    -868,
+    -848,
+    56
+   ]
   },
   {
    "id": 7720075,
@@ -1865,7 +1975,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*59"
-   }
+   },
+   "position": [
+    4,
+    1200,
+    56
+   ]
   },
   {
    "id": 7720076,
@@ -1877,7 +1992,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*102"
-   }
+   },
+   "position": [
+    -1460,
+    -848,
+    56
+   ]
   },
   {
    "id": 7720077,
@@ -1889,7 +2009,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*103"
-   }
+   },
+   "position": [
+    360,
+    908,
+    56
+   ]
   },
   {
    "id": 7720078,
@@ -1901,7 +2026,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*158"
-   }
+   },
+   "position": [
+    1176,
+    -356,
+    -72
+   ]
   },
   {
    "id": 7720079,
@@ -1913,7 +2043,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*175"
-   }
+   },
+   "position": [
+    1644,
+    -592,
+    -72
+   ]
   },
   {
    "id": 7720080,
@@ -1925,7 +2060,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*241"
-   }
+   },
+   "position": [
+    -1604,
+    -1952,
+    568
+   ]
   },
   {
    "id": 7720081,
@@ -1937,7 +2077,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*256"
-   }
+   },
+   "position": [
+    -720,
+    -2876,
+    696
+   ]
   },
   {
    "id": 7720082,
@@ -1949,7 +2094,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*257"
-   }
+   },
+   "position": [
+    188,
+    -1028,
+    696
+   ]
   },
   {
    "id": 7720083,
@@ -1961,7 +2111,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*258"
-   }
+   },
+   "position": [
+    -364,
+    -3656,
+    952
+   ]
   },
   {
    "id": 7720084,
@@ -1973,7 +2128,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*280"
-   }
+   },
+   "position": [
+    1124,
+    -2696,
+    568
+   ]
   },
   {
    "id": 7720085,
@@ -1985,7 +2145,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*331"
-   }
+   },
+   "position": [
+    -348,
+    -1128,
+    1336
+   ]
   },
   {
    "id": 7720086,
@@ -1997,7 +2162,12 @@
     "map": "hl_c04",
     "classname": "func_healthcharger",
     "model": "*360"
-   }
+   },
+   "position": [
+    -8604,
+    -9096,
+    824
+   ]
   },
   {
    "id": 7720087,
@@ -2009,7 +2179,12 @@
     "map": "hl_c04",
     "classname": "func_recharge",
     "model": "*79"
-   }
+   },
+   "position": [
+    416,
+    908,
+    56
+   ]
   },
   {
    "id": 7720088,
@@ -2021,7 +2196,12 @@
     "map": "hl_c04",
     "classname": "func_recharge",
     "model": "*276"
-   }
+   },
+   "position": [
+    -1604,
+    -2008,
+    568
+   ]
   },
   {
    "id": 7720089,
@@ -2033,7 +2213,12 @@
     "map": "hl_c04",
     "classname": "func_recharge",
     "model": "*281"
-   }
+   },
+   "position": [
+    1124,
+    -2760,
+    568
+   ]
   },
   {
    "id": 7720090,
@@ -2045,7 +2230,12 @@
     "map": "hl_c04",
     "classname": "func_recharge",
     "model": "*335"
-   }
+   },
+   "position": [
+    -8604,
+    -9032,
+    824
+   ]
   },
   {
    "id": 7720007,
@@ -2077,7 +2267,12 @@
     "map": "hl_c05_a2",
     "classname": "func_healthcharger",
     "model": "*34"
-   }
+   },
+   "position": [
+    -2608,
+    6861,
+    -244
+   ]
   },
   {
    "id": 7720092,
@@ -2089,7 +2284,12 @@
     "map": "hl_c05_a2",
     "classname": "func_healthcharger",
     "model": "*141"
-   }
+   },
+   "position": [
+    1503,
+    3760,
+    -3820
+   ]
   },
   {
    "id": 7720093,
@@ -2101,7 +2301,12 @@
     "map": "hl_c05_a2",
     "classname": "func_healthcharger",
     "model": "*164"
-   }
+   },
+   "position": [
+    1048,
+    3507,
+    -1852
+   ]
   },
   {
    "id": 7720094,
@@ -2113,7 +2318,12 @@
     "map": "hl_c05_a2",
     "classname": "func_recharge",
     "model": "*35"
-   }
+   },
+   "position": [
+    -2552,
+    6861,
+    -244
+   ]
   },
   {
    "id": 7720009,
@@ -2135,7 +2345,12 @@
     "map": "hl_c05_a3",
     "classname": "func_healthcharger",
     "model": "*82"
-   }
+   },
+   "position": [
+    -1506,
+    -291,
+    -1658
+   ]
   },
   {
    "id": 7720096,
@@ -2147,7 +2362,12 @@
     "map": "hl_c05_a3",
     "classname": "func_recharge",
     "model": "*83"
-   }
+   },
+   "position": [
+    -1450,
+    -291,
+    -1658
+   ]
   },
   {
    "id": 7720010,
@@ -2169,7 +2389,12 @@
     "map": "hl_c06",
     "classname": "func_healthcharger",
     "model": "*53"
-   }
+   },
+   "position": [
+    -932,
+    1208,
+    -136
+   ]
   },
   {
    "id": 7720098,
@@ -2181,7 +2406,12 @@
     "map": "hl_c06",
     "classname": "func_healthcharger",
     "model": "*162"
-   }
+   },
+   "position": [
+    816,
+    892,
+    368
+   ]
   },
   {
    "id": 7720099,
@@ -2193,7 +2423,12 @@
     "map": "hl_c06",
     "classname": "func_healthcharger",
     "model": "*223"
-   }
+   },
+   "position": [
+    756,
+    1704,
+    216
+   ]
   },
   {
    "id": 7720100,
@@ -2205,7 +2440,12 @@
     "map": "hl_c06",
     "classname": "func_healthcharger",
     "model": "*224"
-   }
+   },
+   "position": [
+    692,
+    2672,
+    -264
+   ]
   },
   {
    "id": 7720101,
@@ -2217,7 +2457,12 @@
     "map": "hl_c06",
     "classname": "func_recharge",
     "model": "*81"
-   }
+   },
+   "position": [
+    -560,
+    252,
+    152
+   ]
   },
   {
    "id": 7720102,
@@ -2229,7 +2474,12 @@
     "map": "hl_c06",
     "classname": "func_recharge",
     "model": "*236"
-   }
+   },
+   "position": [
+    180,
+    2592,
+    440
+   ]
   },
   {
    "id": 7720011,
@@ -2251,7 +2501,12 @@
     "map": "hl_c07_a1",
     "classname": "func_healthcharger",
     "model": "*113"
-   }
+   },
+   "position": [
+    -2236,
+    -2060,
+    -1384
+   ]
   },
   {
    "id": 7720104,
@@ -2263,7 +2518,12 @@
     "map": "hl_c07_a1",
     "classname": "func_healthcharger",
     "model": "*132"
-   }
+   },
+   "position": [
+    84,
+    -484,
+    -1624
+   ]
   },
   {
    "id": 7720105,
@@ -2275,7 +2535,12 @@
     "map": "hl_c07_a1",
     "classname": "func_recharge",
     "model": "*93"
-   }
+   },
+   "position": [
+    -2136,
+    -1592,
+    -448
+   ]
   },
   {
    "id": 7720012,
@@ -2297,7 +2562,12 @@
     "map": "hl_c07_a2",
     "classname": "func_healthcharger",
     "model": "*41"
-   }
+   },
+   "position": [
+    3000,
+    1348,
+    468
+   ]
   },
   {
    "id": 7720107,
@@ -2309,7 +2579,12 @@
     "map": "hl_c07_a2",
     "classname": "func_healthcharger",
     "model": "*79"
-   }
+   },
+   "position": [
+    -16,
+    -2448,
+    352
+   ]
   },
   {
    "id": 7720108,
@@ -2321,7 +2596,12 @@
     "map": "hl_c07_a2",
     "classname": "func_healthcharger",
     "model": "*146"
-   }
+   },
+   "position": [
+    -156,
+    -2368,
+    -572
+   ]
   },
   {
    "id": 7720109,
@@ -2333,7 +2613,12 @@
     "map": "hl_c07_a2",
     "classname": "func_healthcharger",
     "model": "*150"
-   }
+   },
+   "position": [
+    -4336,
+    -2488,
+    -472
+   ]
   },
   {
    "id": 7720110,
@@ -2345,7 +2630,12 @@
     "map": "hl_c07_a2",
     "classname": "func_healthcharger",
     "model": "*239"
-   }
+   },
+   "position": [
+    2504,
+    3280,
+    -248
+   ]
   },
   {
    "id": 7720111,
@@ -2357,7 +2647,12 @@
     "map": "hl_c07_a2",
     "classname": "func_recharge",
     "model": "*147"
-   }
+   },
+   "position": [
+    -1248,
+    -2460,
+    -396
+   ]
   },
   {
    "id": 7720112,
@@ -2369,7 +2664,12 @@
     "map": "hl_c07_a2",
     "classname": "func_recharge",
     "model": "*220"
-   }
+   },
+   "position": [
+    312,
+    2964,
+    -572
+   ]
   },
   {
    "id": 7720013,
@@ -2391,7 +2691,12 @@
     "map": "hl_c08_a1",
     "classname": "func_healthcharger",
     "model": "*47"
-   }
+   },
+   "position": [
+    -920,
+    -1408,
+    -436
+   ]
   },
   {
    "id": 7720114,
@@ -2403,7 +2708,12 @@
     "map": "hl_c08_a1",
     "classname": "func_healthcharger",
     "model": "*125"
-   }
+   },
+   "position": [
+    1040,
+    376,
+    -542
+   ]
   },
   {
    "id": 7720115,
@@ -2415,7 +2725,12 @@
     "map": "hl_c08_a1",
     "classname": "func_recharge",
     "model": "*126"
-   }
+   },
+   "position": [
+    992,
+    376,
+    -542
+   ]
   },
   {
    "id": 7720014,
@@ -2437,7 +2752,12 @@
     "map": "hl_c08_a2",
     "classname": "func_healthcharger",
     "model": "*142"
-   }
+   },
+   "position": [
+    -2604,
+    -1916,
+    2344
+   ]
   },
   {
    "id": 7720117,
@@ -2449,7 +2769,12 @@
     "map": "hl_c08_a2",
     "classname": "func_healthcharger",
     "model": "*143"
-   }
+   },
+   "position": [
+    -1996,
+    -900,
+    2344
+   ]
   },
   {
    "id": 7720118,
@@ -2461,7 +2786,12 @@
     "map": "hl_c08_a2",
     "classname": "func_healthcharger",
     "model": "*144"
-   }
+   },
+   "position": [
+    -4616,
+    -1056,
+    2344
+   ]
   },
   {
    "id": 7720119,
@@ -2473,7 +2803,12 @@
     "map": "hl_c08_a2",
     "classname": "func_healthcharger",
     "model": "*203"
-   }
+   },
+   "position": [
+    840,
+    1584,
+    2116
+   ]
   },
   {
    "id": 7720120,
@@ -2485,7 +2820,12 @@
     "map": "hl_c08_a2",
     "classname": "func_recharge",
     "model": "*73"
-   }
+   },
+   "position": [
+    168,
+    1328,
+    2276
+   ]
   },
   {
    "id": 7720121,
@@ -2497,7 +2837,12 @@
     "map": "hl_c08_a2",
     "classname": "func_recharge",
     "model": "*141"
-   }
+   },
+   "position": [
+    -2668,
+    -1916,
+    2344
+   ]
   },
   {
    "id": 7720015,
@@ -2519,7 +2864,12 @@
     "map": "hl_c09",
     "classname": "func_healthcharger",
     "model": "*85"
-   }
+   },
+   "position": [
+    -344,
+    1324,
+    -1480
+   ]
   },
   {
    "id": 7720123,
@@ -2531,7 +2881,12 @@
     "map": "hl_c09",
     "classname": "func_healthcharger",
     "model": "*227"
-   }
+   },
+   "position": [
+    388,
+    2016,
+    72
+   ]
   },
   {
    "id": 7720124,
@@ -2543,7 +2898,12 @@
     "map": "hl_c09",
     "classname": "func_healthcharger",
     "model": "*237"
-   }
+   },
+   "position": [
+    -700,
+    2216,
+    -216
+   ]
   },
   {
    "id": 7720125,
@@ -2555,7 +2915,12 @@
     "map": "hl_c09",
     "classname": "func_healthcharger",
     "model": "*327"
-   }
+   },
+   "position": [
+    -3288,
+    1452,
+    -744
+   ]
   },
   {
    "id": 7720126,
@@ -2567,7 +2932,12 @@
     "map": "hl_c09",
     "classname": "func_healthcharger",
     "model": "*346"
-   }
+   },
+   "position": [
+    -3204,
+    2536,
+    -696
+   ]
   },
   {
    "id": 7720127,
@@ -2579,7 +2949,12 @@
     "map": "hl_c09",
     "classname": "func_recharge",
     "model": "*242"
-   }
+   },
+   "position": [
+    -680,
+    3004,
+    -216
+   ]
   },
   {
    "id": 7720016,
@@ -2601,7 +2976,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*35"
-   }
+   },
+   "position": [
+    -860,
+    944,
+    328
+   ]
   },
   {
    "id": 7720129,
@@ -2613,7 +2993,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*36"
-   }
+   },
+   "position": [
+    -1412,
+    1728,
+    56
+   ]
   },
   {
    "id": 7720130,
@@ -2625,7 +3010,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*37"
-   }
+   },
+   "position": [
+    -1012,
+    1776,
+    56
+   ]
   },
   {
    "id": 7720131,
@@ -2637,7 +3027,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*105"
-   }
+   },
+   "position": [
+    1756,
+    416,
+    56
+   ]
   },
   {
    "id": 7720132,
@@ -2649,7 +3044,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*113"
-   }
+   },
+   "position": [
+    1932,
+    832,
+    72
+   ]
   },
   {
    "id": 7720133,
@@ -2661,7 +3061,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*121"
-   }
+   },
+   "position": [
+    3688,
+    612,
+    56
+   ]
   },
   {
    "id": 7720134,
@@ -2673,7 +3078,12 @@
     "map": "hl_c10",
     "classname": "func_healthcharger",
     "model": "*213"
-   }
+   },
+   "position": [
+    -2416,
+    1788,
+    520
+   ]
   },
   {
    "id": 7720135,
@@ -2685,7 +3095,12 @@
     "map": "hl_c10",
     "classname": "func_recharge",
     "model": "*43"
-   }
+   },
+   "position": [
+    192,
+    -700,
+    184
+   ]
   },
   {
    "id": 7720017,
@@ -2707,7 +3122,12 @@
     "map": "hl_c11_a1",
     "classname": "func_healthcharger",
     "model": "*209"
-   }
+   },
+   "position": [
+    -5156,
+    888,
+    56
+   ]
   },
   {
    "id": 7720018,
@@ -2729,7 +3149,12 @@
     "map": "hl_c11_a2",
     "classname": "func_healthcharger",
     "model": "*17"
-   }
+   },
+   "position": [
+    600,
+    -596,
+    56
+   ]
   },
   {
    "id": 7720138,
@@ -2741,7 +3166,12 @@
     "map": "hl_c11_a2",
     "classname": "func_healthcharger",
     "model": "*18"
-   }
+   },
+   "position": [
+    600,
+    -916,
+    56
+   ]
   },
   {
    "id": 7720019,
@@ -2773,7 +3203,12 @@
     "map": "hl_c11_a4",
     "classname": "func_healthcharger",
     "model": "*112"
-   }
+   },
+   "position": [
+    -1540,
+    -72,
+    -1800
+   ]
   },
   {
    "id": 7720140,
@@ -2785,7 +3220,12 @@
     "map": "hl_c11_a4",
     "classname": "func_recharge",
     "model": "*111"
-   }
+   },
+   "position": [
+    -1540,
+    -120,
+    -1800
+   ]
   },
   {
    "id": 7720021,
@@ -2807,7 +3247,12 @@
     "map": "hl_c11_a5",
     "classname": "func_healthcharger",
     "model": "*80"
-   }
+   },
+   "position": [
+    -344,
+    -5520,
+    -1472
+   ]
   },
   {
    "id": 7720142,
@@ -2819,7 +3264,12 @@
     "map": "hl_c11_a5",
     "classname": "func_healthcharger",
     "model": "*176"
-   }
+   },
+   "position": [
+    -508,
+    -4788,
+    -1752
+   ]
   },
   {
    "id": 7720143,
@@ -2831,7 +3281,12 @@
     "map": "hl_c11_a5",
     "classname": "func_healthcharger",
     "model": "*177"
-   }
+   },
+   "position": [
+    -758,
+    -4172,
+    -1608
+   ]
   },
   {
    "id": 7720144,
@@ -2843,7 +3298,12 @@
     "map": "hl_c11_a5",
     "classname": "func_healthcharger",
     "model": "*182"
-   }
+   },
+   "position": [
+    -2464,
+    -4076,
+    -1480
+   ]
   },
   {
    "id": 7720022,
@@ -2865,7 +3325,12 @@
     "map": "hl_c12",
     "classname": "func_healthcharger",
     "model": "*72"
-   }
+   },
+   "position": [
+    -400,
+    -780,
+    676
+   ]
   },
   {
    "id": 7720146,
@@ -2877,7 +3342,12 @@
     "map": "hl_c12",
     "classname": "func_healthcharger",
     "model": "*154"
-   }
+   },
+   "position": [
+    -2672,
+    528,
+    840
+   ]
   },
   {
    "id": 7720147,
@@ -2889,7 +3359,12 @@
     "map": "hl_c12",
     "classname": "func_recharge",
     "model": "*153"
-   }
+   },
+   "position": [
+    -3244,
+    -2004,
+    -184
+   ]
   },
   {
    "id": 7720023,
@@ -2911,7 +3386,12 @@
     "map": "hl_c13_a1",
     "classname": "func_healthcharger",
     "model": "*7"
-   }
+   },
+   "position": [
+    832,
+    -68,
+    -200
+   ]
   },
   {
    "id": 7720149,
@@ -2923,7 +3403,12 @@
     "map": "hl_c13_a1",
     "classname": "func_healthcharger",
     "model": "*22"
-   }
+   },
+   "position": [
+    780,
+    1664,
+    -72
+   ]
   },
   {
    "id": 7720150,
@@ -2935,7 +3420,12 @@
     "map": "hl_c13_a1",
     "classname": "func_healthcharger",
     "model": "*96"
-   }
+   },
+   "position": [
+    -2544,
+    -364,
+    -200
+   ]
   },
   {
    "id": 7720151,
@@ -2947,7 +3437,12 @@
     "map": "hl_c13_a1",
     "classname": "func_recharge",
     "model": "*8"
-   }
+   },
+   "position": [
+    896,
+    -68,
+    -200
+   ]
   },
   {
    "id": 7720152,
@@ -2959,7 +3454,12 @@
     "map": "hl_c13_a1",
     "classname": "func_recharge",
     "model": "*97"
-   }
+   },
+   "position": [
+    -2480,
+    -364,
+    -200
+   ]
   },
   {
    "id": 7720024,
@@ -2981,7 +3481,12 @@
     "map": "hl_c13_a2",
     "classname": "func_healthcharger",
     "model": "*121"
-   }
+   },
+   "position": [
+    -1604,
+    1776,
+    -968
+   ]
   },
   {
    "id": 7720154,
@@ -2993,7 +3498,12 @@
     "map": "hl_c13_a2",
     "classname": "func_recharge",
     "model": "*35"
-   }
+   },
+   "position": [
+    1322,
+    1968,
+    -584
+   ]
   },
   {
    "id": 7720155,
@@ -3005,7 +3515,12 @@
     "map": "hl_c13_a2",
     "classname": "func_recharge",
     "model": "*122"
-   }
+   },
+   "position": [
+    -1604,
+    1712,
+    -968
+   ]
   },
   {
    "id": 7720025,
@@ -3027,7 +3542,12 @@
     "map": "hl_c13_a3",
     "classname": "func_healthcharger",
     "model": "*115"
-   }
+   },
+   "position": [
+    224,
+    348,
+    440
+   ]
   },
   {
    "id": 7720157,
@@ -3039,7 +3559,12 @@
     "map": "hl_c13_a3",
     "classname": "func_recharge",
     "model": "*150"
-   }
+   },
+   "position": [
+    -2998,
+    32,
+    56
+   ]
   },
   {
    "id": 7720026,
@@ -3061,7 +3586,12 @@
     "map": "hl_c13_a4",
     "classname": "func_healthcharger",
     "model": "*70"
-   }
+   },
+   "position": [
+    1700,
+    124,
+    -200
+   ]
   },
   {
    "id": 7720159,
@@ -3073,7 +3603,12 @@
     "map": "hl_c13_a4",
     "classname": "func_recharge",
     "model": "*69"
-   }
+   },
+   "position": [
+    1636,
+    124,
+    -200
+   ]
   },
   {
    "id": 7720027,
@@ -3185,7 +3720,12 @@
     "map": "of1a1",
     "classname": "func_healthcharger",
     "model": "*108"
-   }
+   },
+   "position": [
+    -584,
+    2980,
+    56
+   ]
   },
   {
    "id": 7720177,
@@ -3227,7 +3767,12 @@
     "map": "of1a4",
     "classname": "func_healthcharger",
     "model": "*20"
-   }
+   },
+   "position": [
+    -1232,
+    -572,
+    184
+   ]
   },
   {
    "id": 7720181,
@@ -3269,7 +3814,12 @@
     "map": "of1a5b",
     "classname": "func_recharge",
     "model": "*70"
-   }
+   },
+   "position": [
+    -1516,
+    -3216,
+    2264
+   ]
   },
   {
    "id": 7720185,
@@ -3291,7 +3841,12 @@
     "map": "of1a6",
     "classname": "func_healthcharger",
     "model": "*62"
-   }
+   },
+   "position": [
+    636,
+    -1584,
+    8
+   ]
   },
   {
    "id": 7720187,
@@ -3313,7 +3868,12 @@
     "map": "of2a1",
     "classname": "func_healthcharger",
     "model": "*122"
-   }
+   },
+   "position": [
+    500,
+    8,
+    -93
+   ]
   },
   {
    "id": 7720189,
@@ -3375,7 +3935,12 @@
     "map": "of2a6",
     "classname": "func_recharge",
     "model": "*232"
-   }
+   },
+   "position": [
+    -1230,
+    2205,
+    -556
+   ]
   },
   {
    "id": 7720195,
@@ -3397,7 +3962,12 @@
     "map": "of3a1",
     "classname": "func_healthcharger",
     "model": "*57"
-   }
+   },
+   "position": [
+    592,
+    1186,
+    -204
+   ]
   },
   {
    "id": 7720197,
@@ -3409,7 +3979,12 @@
     "map": "of3a1",
     "classname": "func_recharge",
     "model": "*58"
-   }
+   },
+   "position": [
+    544,
+    1186,
+    -204
+   ]
   },
   {
    "id": 7720198,
@@ -3431,7 +4006,12 @@
     "map": "of3a2",
     "classname": "func_healthcharger",
     "model": "*39"
-   }
+   },
+   "position": [
+    1204,
+    2614,
+    -3268
+   ]
   },
   {
    "id": 7720200,
@@ -3453,7 +4033,12 @@
     "map": "of3a4",
     "classname": "func_healthcharger",
     "model": "*266"
-   }
+   },
+   "position": [
+    -1636,
+    896,
+    -56
+   ]
   },
   {
    "id": 7720202,
@@ -3465,7 +4050,12 @@
     "map": "of3a4",
     "classname": "func_recharge",
     "model": "*267"
-   }
+   },
+   "position": [
+    -1636,
+    832,
+    -56
+   ]
   },
   {
    "id": 7720203,
@@ -3487,7 +4077,12 @@
     "map": "of3a5",
     "classname": "func_recharge",
     "model": "*218"
-   }
+   },
+   "position": [
+    -3228,
+    2340,
+    -56
+   ]
   },
   {
    "id": 7720205,
@@ -3529,7 +4124,12 @@
     "map": "of4a2",
     "classname": "func_healthcharger",
     "model": "*75"
-   }
+   },
+   "position": [
+    -2044,
+    2,
+    444
+   ]
   },
   {
    "id": 7720209,
@@ -3541,7 +4141,12 @@
     "map": "of4a2",
     "classname": "func_healthcharger",
     "model": "*76"
-   }
+   },
+   "position": [
+    -2044,
+    0,
+    513
+   ]
   },
   {
    "id": 7720210,
@@ -3553,7 +4158,12 @@
     "map": "of4a2",
     "classname": "func_healthcharger",
     "model": "*202"
-   }
+   },
+   "position": [
+    544,
+    -1318,
+    1148
+   ]
   },
   {
    "id": 7720211,
@@ -3565,7 +4175,12 @@
     "map": "of4a2",
     "classname": "func_healthcharger",
     "model": "*203"
-   }
+   },
+   "position": [
+    -544,
+    -1318,
+    1148
+   ]
   },
   {
    "id": 7720212,
@@ -3587,7 +4202,12 @@
     "map": "of4a3",
     "classname": "func_healthcharger",
     "model": "*137"
-   }
+   },
+   "position": [
+    544,
+    -1318,
+    1148
+   ]
   },
   {
    "id": 7720214,
@@ -3599,7 +4219,12 @@
     "map": "of4a3",
     "classname": "func_healthcharger",
     "model": "*138"
-   }
+   },
+   "position": [
+    -544,
+    -1318,
+    1148
+   ]
   },
   {
    "id": 7720215,
@@ -3611,7 +4236,12 @@
     "map": "of4a3",
     "classname": "func_healthcharger",
     "model": "*191"
-   }
+   },
+   "position": [
+    176,
+    -2116,
+    356
+   ]
   },
   {
    "id": 7720216,
@@ -3673,7 +4303,12 @@
     "map": "of5a4",
     "classname": "func_healthcharger",
     "model": "*73"
-   }
+   },
+   "position": [
+    -2624,
+    124,
+    -8
+   ]
   },
   {
    "id": 7720222,
@@ -3685,7 +4320,12 @@
     "map": "of5a4",
     "classname": "func_recharge",
     "model": "*74"
-   }
+   },
+   "position": [
+    -2576,
+    124,
+    -8
+   ]
   },
   {
    "id": 7720223,
@@ -3747,7 +4387,12 @@
     "map": "of6a4b",
     "classname": "func_healthcharger",
     "model": "*109"
-   }
+   },
+   "position": [
+    -1860,
+    -1088,
+    -488
+   ]
   },
   {
    "id": 7720229,
@@ -3759,7 +4404,12 @@
     "map": "of6a4b",
     "classname": "func_recharge",
     "model": "*110"
-   }
+   },
+   "position": [
+    -1860,
+    -1136,
+    -488
+   ]
   },
   {
    "id": 7720230,
@@ -3831,7 +4481,12 @@
     "map": "ba_security2",
     "classname": "func_healthcharger",
     "model": "*14"
-   }
+   },
+   "position": [
+    416,
+    1710,
+    244
+   ]
   },
   {
    "id": 7720237,
@@ -3873,7 +4528,12 @@
     "map": "ba_canal1",
     "classname": "func_healthcharger",
     "model": "*196"
-   }
+   },
+   "position": [
+    1554,
+    16,
+    56
+   ]
   },
   {
    "id": 7720353,
@@ -3886,7 +4546,12 @@
     "classname": "func_healthcharger",
     "model": "*196",
     "origin": "0 80 0"
-   }
+   },
+   "position": [
+    1554,
+    96,
+    56
+   ]
   },
   {
    "id": 7720241,
@@ -3918,7 +4583,12 @@
     "map": "ba_canal2",
     "classname": "func_healthcharger",
     "model": "*110"
-   }
+   },
+   "position": [
+    -360,
+    708,
+    452
+   ]
   },
   {
    "id": 7720244,
@@ -3940,7 +4610,12 @@
     "map": "ba_canal3",
     "classname": "func_healthcharger",
     "model": "*117"
-   }
+   },
+   "position": [
+    -832,
+    894,
+    312
+   ]
   },
   {
    "id": 7720246,
@@ -3992,7 +4667,12 @@
     "map": "ba_yard3a",
     "classname": "func_healthcharger",
     "model": "*39"
-   }
+   },
+   "position": [
+    -1188,
+    -1920,
+    -496
+   ]
   },
   {
    "id": 7720251,
@@ -4064,7 +4744,12 @@
     "map": "ba_teleport1",
     "classname": "func_healthcharger",
     "model": "*156"
-   }
+   },
+   "position": [
+    -616,
+    -792,
+    52
+   ]
   },
   {
    "id": 7720258,
@@ -4146,7 +4831,12 @@
     "map": "ba_teleport2",
     "classname": "func_healthcharger",
     "model": "*151"
-   }
+   },
+   "position": [
+    -616,
+    -792,
+    52
+   ]
   },
   {
    "id": 7720266,
@@ -4168,7 +4858,12 @@
     "map": "ba_power1",
     "classname": "func_healthcharger",
     "model": "*133"
-   }
+   },
+   "position": [
+    128,
+    -632,
+    -452
+   ]
   },
   {
    "id": 7720268,
@@ -4180,7 +4875,12 @@
     "map": "ba_power1",
     "classname": "func_healthcharger",
     "model": "*228"
-   }
+   },
+   "position": [
+    42,
+    120,
+    -196
+   ]
   },
   {
    "id": 7720269,
@@ -4202,7 +4902,12 @@
     "map": "ba_power2",
     "classname": "func_healthcharger",
     "model": "*112"
-   }
+   },
+   "position": [
+    64,
+    -1240,
+    -356
+   ]
   },
   {
    "id": 7720271,
@@ -4214,7 +4919,12 @@
     "map": "ba_power2",
     "classname": "func_healthcharger",
     "model": "*197"
-   }
+   },
+   "position": [
+    -1560,
+    694,
+    80
+   ]
   },
   {
    "id": 7720272,
@@ -4356,7 +5066,12 @@
     "map": "th_ep3_00",
     "classname": "func_healthcharger",
     "model": "*273"
-   }
+   },
+   "position": [
+    -1504,
+    -3468,
+    248
+   ]
   },
   {
    "id": 7720286,
@@ -4368,7 +5083,12 @@
     "map": "th_ep3_00",
     "classname": "func_healthcharger",
     "model": "*471"
-   }
+   },
+   "position": [
+    -1038,
+    -3732,
+    2488
+   ]
   },
   {
    "id": 7720287,
@@ -4452,7 +5172,12 @@
      "weapon_glock",
      "weapon_9mmhandgun"
     ]
-   }
+   },
+   "position": [
+    2221,
+    1976,
+    914
+   ]
   },
   {
    "id": 7720161,
@@ -4465,7 +5190,12 @@
     "classnames": [
      "weapon_357"
     ]
-   }
+   },
+   "position": [
+    -1439,
+    255,
+    -1034
+   ]
   },
   {
    "id": 7720162,
@@ -4479,7 +5209,12 @@
      "weapon_9mmAR",
      "weapon_m16"
     ]
-   }
+   },
+   "position": [
+    -888,
+    -1080,
+    64
+   ]
   },
   {
    "id": 7720163,
@@ -4492,7 +5227,12 @@
     "classnames": [
      "weapon_shotgun"
     ]
-   }
+   },
+   "position": [
+    1690,
+    -742,
+    255
+   ]
   },
   {
    "id": 7720164,
@@ -4505,7 +5245,12 @@
     "classnames": [
      "weapon_crossbow"
     ]
-   }
+   },
+   "position": [
+    1420,
+    288,
+    -588
+   ]
   },
   {
    "id": 7720165,
@@ -4518,7 +5263,12 @@
     "classnames": [
      "weapon_rpg"
     ]
-   }
+   },
+   "position": [
+    -2888,
+    -5008,
+    -1256
+   ]
   },
   {
    "id": 7720166,
@@ -4531,7 +5281,12 @@
     "classnames": [
      "weapon_gauss"
     ]
-   }
+   },
+   "position": [
+    -1184,
+    432,
+    464
+   ]
   },
   {
    "id": 7720167,
@@ -4544,7 +5299,12 @@
     "classnames": [
      "weapon_egon"
     ]
-   }
+   },
+   "position": [
+    -2534,
+    310,
+    -80
+   ]
   },
   {
    "id": 7720168,
@@ -4557,7 +5317,12 @@
     "classnames": [
      "weapon_hornetgun"
     ]
-   }
+   },
+   "position": [
+    96,
+    320,
+    -1117
+   ]
   },
   {
    "id": 7720169,
@@ -4570,7 +5335,12 @@
     "classnames": [
      "weapon_satchel"
     ]
-   }
+   },
+   "position": [
+    1384,
+    -2300,
+    -860
+   ]
   },
   {
    "id": 7720170,
@@ -4583,7 +5353,12 @@
     "classnames": [
      "weapon_tripmine"
     ]
-   }
+   },
+   "position": [
+    3060,
+    -1896,
+    -1780
+   ]
   },
   {
    "id": 7720171,
@@ -4596,7 +5371,12 @@
     "classnames": [
      "weapon_snark"
     ]
-   }
+   },
+   "position": [
+    -608,
+    144,
+    256
+   ]
   },
   {
    "id": 7720172,
@@ -4609,7 +5389,12 @@
     "classnames": [
      "weapon_handgrenade"
     ]
-   }
+   },
+   "position": [
+    -1815,
+    -2875,
+    1509
+   ]
   },
   {
    "id": 7720173,
@@ -4622,7 +5407,12 @@
     "classnames": [
      "weapon_crowbar"
     ]
-   }
+   },
+   "position": [
+    1678,
+    1943,
+    -129
+   ]
   },
   {
    "id": 7720294,
@@ -4636,7 +5426,12 @@
      "weapon_glock",
      "weapon_9mmhandgun"
     ]
-   }
+   },
+   "position": [
+    1824,
+    -3456,
+    1339
+   ]
   },
   {
    "id": 7720295,
@@ -4650,7 +5445,12 @@
      "weapon_9mmAR",
      "weapon_m16"
     ]
-   }
+   },
+   "position": [
+    -516,
+    2300,
+    -784
+   ]
   },
   {
    "id": 7720296,
@@ -4663,7 +5463,12 @@
     "classnames": [
      "weapon_shotgun"
     ]
-   }
+   },
+   "position": [
+    808,
+    -2584,
+    832
+   ]
   },
   {
    "id": 7720297,
@@ -4676,7 +5481,12 @@
     "classnames": [
      "weapon_rpg"
     ]
-   }
+   },
+   "position": [
+    2988,
+    3084,
+    -576
+   ]
   },
   {
    "id": 7720298,
@@ -4689,7 +5499,12 @@
     "classnames": [
      "weapon_satchel"
     ]
-   }
+   },
+   "position": [
+    232,
+    -1284,
+    8
+   ]
   },
   {
    "id": 7720299,
@@ -4702,7 +5517,12 @@
     "classnames": [
      "weapon_tripmine"
     ]
-   }
+   },
+   "position": [
+    64,
+    678,
+    22
+   ]
   },
   {
    "id": 7720300,
@@ -4715,7 +5535,12 @@
     "classnames": [
      "weapon_snark"
     ]
-   }
+   },
+   "position": [
+    -1768,
+    760,
+    417
+   ]
   },
   {
    "id": 7720301,
@@ -4728,7 +5553,12 @@
     "classnames": [
      "weapon_handgrenade"
     ]
-   }
+   },
+   "position": [
+    -544,
+    1856,
+    -976
+   ]
   },
   {
    "id": 7720302,
@@ -4741,7 +5571,12 @@
     "classnames": [
      "weapon_eagle"
     ]
-   }
+   },
+   "position": [
+    365,
+    -589,
+    -156
+   ]
   },
   {
    "id": 7720303,
@@ -4755,7 +5590,12 @@
      "weapon_m249",
      "weapon_saw"
     ]
-   }
+   },
+   "position": [
+    -869,
+    -151,
+    220
+   ]
   },
   {
    "id": 7720304,
@@ -4768,7 +5608,12 @@
     "classnames": [
      "weapon_sniperrifle"
     ]
-   }
+   },
+   "position": [
+    -640,
+    -1408,
+    136
+   ]
   },
   {
    "id": 7720305,
@@ -4781,7 +5626,12 @@
     "classnames": [
      "weapon_displacer"
     ]
-   }
+   },
+   "position": [
+    1414,
+    302,
+    240
+   ]
   },
   {
    "id": 7720306,
@@ -4794,7 +5644,12 @@
     "classnames": [
      "weapon_sporelauncher"
     ]
-   }
+   },
+   "position": [
+    -1624,
+    -432,
+    384
+   ]
   },
   {
    "id": 7720307,
@@ -4807,7 +5662,12 @@
     "classnames": [
      "weapon_grapple"
     ]
-   }
+   },
+   "position": [
+    -338,
+    -504,
+    337
+   ]
   },
   {
    "id": 7720309,
@@ -4820,7 +5680,12 @@
     "classnames": [
      "weapon_pipewrench"
     ]
-   }
+   },
+   "position": [
+    -1152,
+    -560,
+    -112
+   ]
   },
   {
    "id": 7720310,
@@ -4833,7 +5698,12 @@
     "classnames": [
      "weapon_minigun"
     ]
-   }
+   },
+   "position": [
+    83,
+    564,
+    6
+   ]
   },
   {
    "id": 7720311,
@@ -4846,7 +5716,12 @@
     "classnames": [
      "weapon_crowbar"
     ]
-   }
+   },
+   "position": [
+    549,
+    -2822,
+    68
+   ]
   },
   {
    "id": 7720312,
@@ -4860,7 +5735,12 @@
      "weapon_glock",
      "weapon_9mmhandgun"
     ]
-   }
+   },
+   "position": [
+    1344,
+    440,
+    -560
+   ]
   },
   {
    "id": 7720313,
@@ -4873,7 +5753,12 @@
     "classnames": [
      "weapon_357"
     ]
-   }
+   },
+   "position": [
+    -72,
+    -1765,
+    0
+   ]
   },
   {
    "id": 7720314,
@@ -4887,7 +5772,12 @@
      "weapon_9mmAR",
      "weapon_m16"
     ]
-   }
+   },
+   "position": [
+    -898,
+    -1882,
+    -112
+   ]
   },
   {
    "id": 7720315,
@@ -4900,7 +5790,12 @@
     "classnames": [
      "weapon_shotgun"
     ]
-   }
+   },
+   "position": [
+    400,
+    2184,
+    -88
+   ]
   },
   {
    "id": 7720316,
@@ -4913,7 +5808,12 @@
     "classnames": [
      "weapon_rpg"
     ]
-   }
+   },
+   "position": [
+    -344,
+    2000,
+    93
+   ]
   },
   {
    "id": 7720317,
@@ -4926,7 +5826,12 @@
     "classnames": [
      "weapon_satchel"
     ]
-   }
+   },
+   "position": [
+    -2662,
+    -1550,
+    92
+   ]
   },
   {
    "id": 7720318,
@@ -4939,7 +5844,12 @@
     "classnames": [
      "weapon_snark"
     ]
-   }
+   },
+   "position": [
+    1160,
+    3384,
+    -3576
+   ]
   },
   {
    "id": 7720319,
@@ -4952,7 +5862,12 @@
     "classnames": [
      "weapon_handgrenade"
     ]
-   }
+   },
+   "position": [
+    -2635,
+    -1550,
+    92
+   ]
   },
   {
    "id": 7720320,
@@ -4965,7 +5880,12 @@
     "classnames": [
      "weapon_crowbar"
     ]
-   }
+   },
+   "position": [
+    2080,
+    288,
+    56
+   ]
   },
   {
    "id": 7720321,
@@ -4978,7 +5898,12 @@
     "classnames": [
      "weapon_357"
     ]
-   }
+   },
+   "position": [
+    3484,
+    -1708,
+    193
+   ]
   },
   {
    "id": 7720322,
@@ -4991,7 +5916,12 @@
     "classnames": [
      "weapon_handgrenade"
     ]
-   }
+   },
+   "position": [
+    -4802,
+    1980,
+    -84
+   ]
   },
   {
    "id": 7720323,
@@ -5004,7 +5934,12 @@
     "classnames": [
      "weapon_pipewrench"
     ]
-   }
+   },
+   "position": [
+    -52,
+    -461,
+    -64
+   ]
   },
   {
    "id": 7720324,
@@ -5017,7 +5952,12 @@
     "classnames": [
      "weapon_colt1911"
     ]
-   }
+   },
+   "position": [
+    1628,
+    1848,
+    278
+   ]
   },
   {
    "id": 7720325,
@@ -5030,7 +5970,12 @@
     "classnames": [
      "weapon_th_taurus"
     ]
-   }
+   },
+   "position": [
+    -805,
+    -3630,
+    2608
+   ]
   },
   {
    "id": 7720326,
@@ -5043,7 +5988,12 @@
     "classnames": [
      "weapon_sawedoff"
     ]
-   }
+   },
+   "position": [
+    -715,
+    239,
+    264
+   ]
   },
   {
    "id": 7720327,
@@ -5056,7 +6006,12 @@
     "classnames": [
      "weapon_greasegun"
     ]
-   }
+   },
+   "position": [
+    -2124,
+    -802,
+    -976
+   ]
   },
   {
    "id": 7720328,
@@ -5069,7 +6024,12 @@
     "classnames": [
      "weapon_tommygun"
     ]
-   }
+   },
+   "position": [
+    1106,
+    750,
+    156
+   ]
   },
   {
    "id": 7720329,
@@ -5082,7 +6042,12 @@
     "classnames": [
      "weapon_m14"
     ]
-   }
+   },
+   "position": [
+    411,
+    -169,
+    -88
+   ]
   },
   {
    "id": 7720330,
@@ -5095,7 +6060,12 @@
     "classnames": [
      "weapon_m16a1"
     ]
-   }
+   },
+   "position": [
+    2652,
+    -206,
+    80
+   ]
   },
   {
    "id": 7720331,
@@ -5108,7 +6078,12 @@
     "classnames": [
      "weapon_teslagun"
     ]
-   }
+   },
+   "position": [
+    2637,
+    -4784,
+    -1216
+   ]
   },
   {
    "id": 7720332,
@@ -5121,7 +6096,12 @@
     "classnames": [
      "weapon_spanner"
     ]
-   }
+   },
+   "position": [
+    -1362,
+    200,
+    34
+   ]
   },
   {
    "id": 7720333,
@@ -5134,7 +6114,12 @@
     "classnames": [
      "weapon_crowbar"
     ]
-   }
+   },
+   "position": [
+    64,
+    344,
+    267
+   ]
   },
   {
    "id": 7720035,

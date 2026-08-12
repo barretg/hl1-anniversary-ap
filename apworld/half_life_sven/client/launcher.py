@@ -36,6 +36,7 @@ POLL_INTERVAL = 0.2
 IN_GAME_COMMANDS = (
     ("!ap", "list every mission and its unlock status"),
     ("!tracker [map]", "locations found and still out there, printed to console"),
+    ("!find [text]", "point at the nearest unfound check, or one you name"),
     ("!warp <number>", "travel to an unlocked mission"),
     ("!hub", "return to the campaign portal"),
     ("!help", "show these commands in game"),

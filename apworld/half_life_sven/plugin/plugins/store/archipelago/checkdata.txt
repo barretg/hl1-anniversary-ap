@@ -4,7 +4,7 @@
 #   M|<key>|<name>|<goal chapter>  a campaign
 #   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<campaign key>
 #   P|<console>|<chapter key>      hub console button -> the mission it enters
-#   L|<id>|<map>|<type>|<arg>|<name>
+#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
 #   R|<classname>|<campaign,...>   grantable only on those campaigns' maps
@@ -90,138 +90,138 @@ P|th_ep02|th_episode_2
 P|th_ep03|th_episode_3
 L|7720000|hl_c00|map_reached||Black Mesa Inbound - Reached
 L|7720001|hl_c01_a1|map_reached||Anomalous Materials - Part 1 Reached
-L|7720053|hl_c01_a1|charger|func_healthcharger:*28|Anomalous Materials - Health Charger 1 (Part 1)
-L|7720054|hl_c01_a1|charger|func_healthcharger:*29|Anomalous Materials - Health Charger 2 (Part 1)
-L|7720055|hl_c01_a1|charger|func_healthcharger:*235|Anomalous Materials - Health Charger 3 (Part 1)
+L|7720053|hl_c01_a1|charger|func_healthcharger:*28|Anomalous Materials - Health Charger 1 (Part 1)|-436 604 -168
+L|7720054|hl_c01_a1|charger|func_healthcharger:*29|Anomalous Materials - Health Charger 2 (Part 1)|-324 -992 -151
+L|7720055|hl_c01_a1|charger|func_healthcharger:*235|Anomalous Materials - Health Charger 3 (Part 1)|-3372 1556 -232
 L|7720002|hl_c01_a2|map_reached||Anomalous Materials - Part 2 Reached
 L|7720003|hl_c02_a1|map_reached||Unforeseen Consequences - Part 1 Reached
-L|7720056|hl_c02_a1|charger|func_healthcharger:*119|Unforeseen Consequences - Health Charger 1 (Part 1)
-L|7720057|hl_c02_a1|charger|func_healthcharger:*277|Unforeseen Consequences - Health Charger 2 (Part 1)
-L|7720058|hl_c02_a1|charger|func_healthcharger:*278|Unforeseen Consequences - Health Charger 3 (Part 1)
+L|7720056|hl_c02_a1|charger|func_healthcharger:*119|Unforeseen Consequences - Health Charger 1 (Part 1)|-895 4516 784
+L|7720057|hl_c02_a1|charger|func_healthcharger:*277|Unforeseen Consequences - Health Charger 2 (Part 1)|2041 3564 848
+L|7720058|hl_c02_a1|charger|func_healthcharger:*278|Unforeseen Consequences - Health Charger 3 (Part 1)|2153 1968 865
 L|7720004|hl_c02_a2|map_reached||Unforeseen Consequences - Part 2 Reached
-L|7720059|hl_c02_a2|charger|func_healthcharger:*1|Unforeseen Consequences - Health Charger 1 (Part 2)
-L|7720060|hl_c02_a2|charger|func_healthcharger:*68|Unforeseen Consequences - Health Charger 2 (Part 2)
-L|7720061|hl_c02_a2|charger|func_healthcharger:*84|Unforeseen Consequences - Health Charger 3 (Part 2)
-L|7720062|hl_c02_a2|charger|func_healthcharger:*85|Unforeseen Consequences - Health Charger 4 (Part 2)
-L|7720063|hl_c02_a2|charger|func_healthcharger:*161|Unforeseen Consequences - Health Charger 5 (Part 2)
-L|7720064|hl_c02_a2|charger|func_healthcharger:*170|Unforeseen Consequences - Health Charger 6 (Part 2)
-L|7720065|hl_c02_a2|charger|func_healthcharger:*231|Unforeseen Consequences - Health Charger 7 (Part 2)
-L|7720066|hl_c02_a2|charger|func_healthcharger:*247|Unforeseen Consequences - Health Charger 8 (Part 2)
+L|7720059|hl_c02_a2|charger|func_healthcharger:*1|Unforeseen Consequences - Health Charger 1 (Part 2)|-2455 -2128 1377
+L|7720060|hl_c02_a2|charger|func_healthcharger:*68|Unforeseen Consequences - Health Charger 2 (Part 2)|-1941 -2940 1520
+L|7720061|hl_c02_a2|charger|func_healthcharger:*84|Unforeseen Consequences - Health Charger 3 (Part 2)|-459 -3204 1352
+L|7720062|hl_c02_a2|charger|func_healthcharger:*85|Unforeseen Consequences - Health Charger 4 (Part 2)|-995 -2504 1372
+L|7720063|hl_c02_a2|charger|func_healthcharger:*161|Unforeseen Consequences - Health Charger 5 (Part 2)|1836 -715 -1142
+L|7720064|hl_c02_a2|charger|func_healthcharger:*170|Unforeseen Consequences - Health Charger 6 (Part 2)|1310 -1443 -927
+L|7720065|hl_c02_a2|charger|func_healthcharger:*231|Unforeseen Consequences - Health Charger 7 (Part 2)|924 265 -1432
+L|7720066|hl_c02_a2|charger|func_healthcharger:*247|Unforeseen Consequences - Health Charger 8 (Part 2)|-1252 913 -1451
 L|7720005|hl_c03|map_reached||Office Complex - Reached
-L|7720067|hl_c03|charger|func_healthcharger:*55|Office Complex - Health Charger 1
-L|7720068|hl_c03|charger|func_healthcharger:*68|Office Complex - Health Charger 2
-L|7720069|hl_c03|charger|func_healthcharger:*292|Office Complex - Health Charger 3
-L|7720070|hl_c03|charger|func_healthcharger:*323|Office Complex - Health Charger 4
-L|7720071|hl_c03|charger|func_healthcharger:*508|Office Complex - Health Charger 5
-L|7720072|hl_c03|charger|func_healthcharger:*509|Office Complex - Health Charger 6
-L|7720073|hl_c03|charger|func_healthcharger:*678|Office Complex - Health Charger 7
+L|7720067|hl_c03|charger|func_healthcharger:*55|Office Complex - Health Charger 1|252 -791 -198
+L|7720068|hl_c03|charger|func_healthcharger:*68|Office Complex - Health Charger 2|1855 -452 -197
+L|7720069|hl_c03|charger|func_healthcharger:*292|Office Complex - Health Charger 3|201 1004 116
+L|7720070|hl_c03|charger|func_healthcharger:*323|Office Complex - Health Charger 4|405 1004 125
+L|7720071|hl_c03|charger|func_healthcharger:*508|Office Complex - Health Charger 5|1039 14 -509
+L|7720072|hl_c03|charger|func_healthcharger:*509|Office Complex - Health Charger 6|-285 -148 -433
+L|7720073|hl_c03|charger|func_healthcharger:*678|Office Complex - Health Charger 7|-1810 -526 56
 L|7720006|hl_c04|map_reached||We've Got Hostiles - Reached
-L|7720074|hl_c04|charger|func_healthcharger:*58|We've Got Hostiles - Health Charger 1
-L|7720075|hl_c04|charger|func_healthcharger:*59|We've Got Hostiles - Health Charger 2
-L|7720076|hl_c04|charger|func_healthcharger:*102|We've Got Hostiles - Health Charger 3
-L|7720077|hl_c04|charger|func_healthcharger:*103|We've Got Hostiles - Health Charger 4
-L|7720078|hl_c04|charger|func_healthcharger:*158|We've Got Hostiles - Health Charger 5
-L|7720079|hl_c04|charger|func_healthcharger:*175|We've Got Hostiles - Health Charger 6
-L|7720080|hl_c04|charger|func_healthcharger:*241|We've Got Hostiles - Health Charger 7
-L|7720081|hl_c04|charger|func_healthcharger:*256|We've Got Hostiles - Health Charger 8
-L|7720082|hl_c04|charger|func_healthcharger:*257|We've Got Hostiles - Health Charger 9
-L|7720083|hl_c04|charger|func_healthcharger:*258|We've Got Hostiles - Health Charger 10
-L|7720084|hl_c04|charger|func_healthcharger:*280|We've Got Hostiles - Health Charger 11
-L|7720085|hl_c04|charger|func_healthcharger:*331|We've Got Hostiles - Health Charger 12
-L|7720086|hl_c04|charger|func_healthcharger:*360|We've Got Hostiles - Health Charger 13
-L|7720087|hl_c04|charger|func_recharge:*79|We've Got Hostiles - HEV Charger 1
-L|7720088|hl_c04|charger|func_recharge:*276|We've Got Hostiles - HEV Charger 2
-L|7720089|hl_c04|charger|func_recharge:*281|We've Got Hostiles - HEV Charger 3
-L|7720090|hl_c04|charger|func_recharge:*335|We've Got Hostiles - HEV Charger 4
+L|7720074|hl_c04|charger|func_healthcharger:*58|We've Got Hostiles - Health Charger 1|-868 -848 56
+L|7720075|hl_c04|charger|func_healthcharger:*59|We've Got Hostiles - Health Charger 2|4 1200 56
+L|7720076|hl_c04|charger|func_healthcharger:*102|We've Got Hostiles - Health Charger 3|-1460 -848 56
+L|7720077|hl_c04|charger|func_healthcharger:*103|We've Got Hostiles - Health Charger 4|360 908 56
+L|7720078|hl_c04|charger|func_healthcharger:*158|We've Got Hostiles - Health Charger 5|1176 -356 -72
+L|7720079|hl_c04|charger|func_healthcharger:*175|We've Got Hostiles - Health Charger 6|1644 -592 -72
+L|7720080|hl_c04|charger|func_healthcharger:*241|We've Got Hostiles - Health Charger 7|-1604 -1952 568
+L|7720081|hl_c04|charger|func_healthcharger:*256|We've Got Hostiles - Health Charger 8|-720 -2876 696
+L|7720082|hl_c04|charger|func_healthcharger:*257|We've Got Hostiles - Health Charger 9|188 -1028 696
+L|7720083|hl_c04|charger|func_healthcharger:*258|We've Got Hostiles - Health Charger 10|-364 -3656 952
+L|7720084|hl_c04|charger|func_healthcharger:*280|We've Got Hostiles - Health Charger 11|1124 -2696 568
+L|7720085|hl_c04|charger|func_healthcharger:*331|We've Got Hostiles - Health Charger 12|-348 -1128 1336
+L|7720086|hl_c04|charger|func_healthcharger:*360|We've Got Hostiles - Health Charger 13|-8604 -9096 824
+L|7720087|hl_c04|charger|func_recharge:*79|We've Got Hostiles - HEV Charger 1|416 908 56
+L|7720088|hl_c04|charger|func_recharge:*276|We've Got Hostiles - HEV Charger 2|-1604 -2008 568
+L|7720089|hl_c04|charger|func_recharge:*281|We've Got Hostiles - HEV Charger 3|1124 -2760 568
+L|7720090|hl_c04|charger|func_recharge:*335|We've Got Hostiles - HEV Charger 4|-8604 -9032 824
 L|7720007|hl_c05_a1|map_reached||Blast Pit - Part 1 Reached
 L|7720008|hl_c05_a2|map_reached||Blast Pit - Part 2 Reached
-L|7720091|hl_c05_a2|charger|func_healthcharger:*34|Blast Pit - Health Charger 1 (Part 2)
-L|7720092|hl_c05_a2|charger|func_healthcharger:*141|Blast Pit - Health Charger 2 (Part 2)
-L|7720093|hl_c05_a2|charger|func_healthcharger:*164|Blast Pit - Health Charger 3 (Part 2)
-L|7720094|hl_c05_a2|charger|func_recharge:*35|Blast Pit - HEV Charger (Part 2)
+L|7720091|hl_c05_a2|charger|func_healthcharger:*34|Blast Pit - Health Charger 1 (Part 2)|-2608 6861 -244
+L|7720092|hl_c05_a2|charger|func_healthcharger:*141|Blast Pit - Health Charger 2 (Part 2)|1503 3760 -3820
+L|7720093|hl_c05_a2|charger|func_healthcharger:*164|Blast Pit - Health Charger 3 (Part 2)|1048 3507 -1852
+L|7720094|hl_c05_a2|charger|func_recharge:*35|Blast Pit - HEV Charger (Part 2)|-2552 6861 -244
 L|7720009|hl_c05_a3|map_reached||Blast Pit - Part 3 Reached
-L|7720095|hl_c05_a3|charger|func_healthcharger:*82|Blast Pit - Health Charger (Part 3)
-L|7720096|hl_c05_a3|charger|func_recharge:*83|Blast Pit - HEV Charger (Part 3)
+L|7720095|hl_c05_a3|charger|func_healthcharger:*82|Blast Pit - Health Charger (Part 3)|-1506 -291 -1658
+L|7720096|hl_c05_a3|charger|func_recharge:*83|Blast Pit - HEV Charger (Part 3)|-1450 -291 -1658
 L|7720010|hl_c06|map_reached||Power Up - Reached
-L|7720097|hl_c06|charger|func_healthcharger:*53|Power Up - Health Charger 1
-L|7720098|hl_c06|charger|func_healthcharger:*162|Power Up - Health Charger 2
-L|7720099|hl_c06|charger|func_healthcharger:*223|Power Up - Health Charger 3
-L|7720100|hl_c06|charger|func_healthcharger:*224|Power Up - Health Charger 4
-L|7720101|hl_c06|charger|func_recharge:*81|Power Up - HEV Charger 1
-L|7720102|hl_c06|charger|func_recharge:*236|Power Up - HEV Charger 2
+L|7720097|hl_c06|charger|func_healthcharger:*53|Power Up - Health Charger 1|-932 1208 -136
+L|7720098|hl_c06|charger|func_healthcharger:*162|Power Up - Health Charger 2|816 892 368
+L|7720099|hl_c06|charger|func_healthcharger:*223|Power Up - Health Charger 3|756 1704 216
+L|7720100|hl_c06|charger|func_healthcharger:*224|Power Up - Health Charger 4|692 2672 -264
+L|7720101|hl_c06|charger|func_recharge:*81|Power Up - HEV Charger 1|-560 252 152
+L|7720102|hl_c06|charger|func_recharge:*236|Power Up - HEV Charger 2|180 2592 440
 L|7720011|hl_c07_a1|map_reached||On A Rail - Part 1 Reached
-L|7720103|hl_c07_a1|charger|func_healthcharger:*113|On A Rail - Health Charger 1 (Part 1)
-L|7720104|hl_c07_a1|charger|func_healthcharger:*132|On A Rail - Health Charger 2 (Part 1)
-L|7720105|hl_c07_a1|charger|func_recharge:*93|On A Rail - HEV Charger (Part 1)
+L|7720103|hl_c07_a1|charger|func_healthcharger:*113|On A Rail - Health Charger 1 (Part 1)|-2236 -2060 -1384
+L|7720104|hl_c07_a1|charger|func_healthcharger:*132|On A Rail - Health Charger 2 (Part 1)|84 -484 -1624
+L|7720105|hl_c07_a1|charger|func_recharge:*93|On A Rail - HEV Charger (Part 1)|-2136 -1592 -448
 L|7720012|hl_c07_a2|map_reached||On A Rail - Part 2 Reached
-L|7720106|hl_c07_a2|charger|func_healthcharger:*41|On A Rail - Health Charger 1 (Part 2)
-L|7720107|hl_c07_a2|charger|func_healthcharger:*79|On A Rail - Health Charger 2 (Part 2)
-L|7720108|hl_c07_a2|charger|func_healthcharger:*146|On A Rail - Health Charger 3 (Part 2)
-L|7720109|hl_c07_a2|charger|func_healthcharger:*150|On A Rail - Health Charger 4 (Part 2)
-L|7720110|hl_c07_a2|charger|func_healthcharger:*239|On A Rail - Health Charger 5 (Part 2)
-L|7720111|hl_c07_a2|charger|func_recharge:*147|On A Rail - HEV Charger 1 (Part 2)
-L|7720112|hl_c07_a2|charger|func_recharge:*220|On A Rail - HEV Charger 2 (Part 2)
+L|7720106|hl_c07_a2|charger|func_healthcharger:*41|On A Rail - Health Charger 1 (Part 2)|3000 1348 468
+L|7720107|hl_c07_a2|charger|func_healthcharger:*79|On A Rail - Health Charger 2 (Part 2)|-16 -2448 352
+L|7720108|hl_c07_a2|charger|func_healthcharger:*146|On A Rail - Health Charger 3 (Part 2)|-156 -2368 -572
+L|7720109|hl_c07_a2|charger|func_healthcharger:*150|On A Rail - Health Charger 4 (Part 2)|-4336 -2488 -472
+L|7720110|hl_c07_a2|charger|func_healthcharger:*239|On A Rail - Health Charger 5 (Part 2)|2504 3280 -248
+L|7720111|hl_c07_a2|charger|func_recharge:*147|On A Rail - HEV Charger 1 (Part 2)|-1248 -2460 -396
+L|7720112|hl_c07_a2|charger|func_recharge:*220|On A Rail - HEV Charger 2 (Part 2)|312 2964 -572
 L|7720013|hl_c08_a1|map_reached||Apprehension - Part 1 Reached
-L|7720113|hl_c08_a1|charger|func_healthcharger:*47|Apprehension - Health Charger 1 (Part 1)
-L|7720114|hl_c08_a1|charger|func_healthcharger:*125|Apprehension - Health Charger 2 (Part 1)
-L|7720115|hl_c08_a1|charger|func_recharge:*126|Apprehension - HEV Charger (Part 1)
+L|7720113|hl_c08_a1|charger|func_healthcharger:*47|Apprehension - Health Charger 1 (Part 1)|-920 -1408 -436
+L|7720114|hl_c08_a1|charger|func_healthcharger:*125|Apprehension - Health Charger 2 (Part 1)|1040 376 -542
+L|7720115|hl_c08_a1|charger|func_recharge:*126|Apprehension - HEV Charger (Part 1)|992 376 -542
 L|7720014|hl_c08_a2|map_reached||Apprehension - Part 2 Reached
-L|7720116|hl_c08_a2|charger|func_healthcharger:*142|Apprehension - Health Charger 1 (Part 2)
-L|7720117|hl_c08_a2|charger|func_healthcharger:*143|Apprehension - Health Charger 2 (Part 2)
-L|7720118|hl_c08_a2|charger|func_healthcharger:*144|Apprehension - Health Charger 3 (Part 2)
-L|7720119|hl_c08_a2|charger|func_healthcharger:*203|Apprehension - Health Charger 4 (Part 2)
-L|7720120|hl_c08_a2|charger|func_recharge:*73|Apprehension - HEV Charger 1 (Part 2)
-L|7720121|hl_c08_a2|charger|func_recharge:*141|Apprehension - HEV Charger 2 (Part 2)
+L|7720116|hl_c08_a2|charger|func_healthcharger:*142|Apprehension - Health Charger 1 (Part 2)|-2604 -1916 2344
+L|7720117|hl_c08_a2|charger|func_healthcharger:*143|Apprehension - Health Charger 2 (Part 2)|-1996 -900 2344
+L|7720118|hl_c08_a2|charger|func_healthcharger:*144|Apprehension - Health Charger 3 (Part 2)|-4616 -1056 2344
+L|7720119|hl_c08_a2|charger|func_healthcharger:*203|Apprehension - Health Charger 4 (Part 2)|840 1584 2116
+L|7720120|hl_c08_a2|charger|func_recharge:*73|Apprehension - HEV Charger 1 (Part 2)|168 1328 2276
+L|7720121|hl_c08_a2|charger|func_recharge:*141|Apprehension - HEV Charger 2 (Part 2)|-2668 -1916 2344
 L|7720015|hl_c09|map_reached||Residue Processing - Reached
-L|7720122|hl_c09|charger|func_healthcharger:*85|Residue Processing - Health Charger 1
-L|7720123|hl_c09|charger|func_healthcharger:*227|Residue Processing - Health Charger 2
-L|7720124|hl_c09|charger|func_healthcharger:*237|Residue Processing - Health Charger 3
-L|7720125|hl_c09|charger|func_healthcharger:*327|Residue Processing - Health Charger 4
-L|7720126|hl_c09|charger|func_healthcharger:*346|Residue Processing - Health Charger 5
-L|7720127|hl_c09|charger|func_recharge:*242|Residue Processing - HEV Charger
+L|7720122|hl_c09|charger|func_healthcharger:*85|Residue Processing - Health Charger 1|-344 1324 -1480
+L|7720123|hl_c09|charger|func_healthcharger:*227|Residue Processing - Health Charger 2|388 2016 72
+L|7720124|hl_c09|charger|func_healthcharger:*237|Residue Processing - Health Charger 3|-700 2216 -216
+L|7720125|hl_c09|charger|func_healthcharger:*327|Residue Processing - Health Charger 4|-3288 1452 -744
+L|7720126|hl_c09|charger|func_healthcharger:*346|Residue Processing - Health Charger 5|-3204 2536 -696
+L|7720127|hl_c09|charger|func_recharge:*242|Residue Processing - HEV Charger|-680 3004 -216
 L|7720016|hl_c10|map_reached||Questionable Ethics - Reached
-L|7720128|hl_c10|charger|func_healthcharger:*35|Questionable Ethics - Health Charger 1
-L|7720129|hl_c10|charger|func_healthcharger:*36|Questionable Ethics - Health Charger 2
-L|7720130|hl_c10|charger|func_healthcharger:*37|Questionable Ethics - Health Charger 3
-L|7720131|hl_c10|charger|func_healthcharger:*105|Questionable Ethics - Health Charger 4
-L|7720132|hl_c10|charger|func_healthcharger:*113|Questionable Ethics - Health Charger 5
-L|7720133|hl_c10|charger|func_healthcharger:*121|Questionable Ethics - Health Charger 6
-L|7720134|hl_c10|charger|func_healthcharger:*213|Questionable Ethics - Health Charger 7
-L|7720135|hl_c10|charger|func_recharge:*43|Questionable Ethics - HEV Charger
+L|7720128|hl_c10|charger|func_healthcharger:*35|Questionable Ethics - Health Charger 1|-860 944 328
+L|7720129|hl_c10|charger|func_healthcharger:*36|Questionable Ethics - Health Charger 2|-1412 1728 56
+L|7720130|hl_c10|charger|func_healthcharger:*37|Questionable Ethics - Health Charger 3|-1012 1776 56
+L|7720131|hl_c10|charger|func_healthcharger:*105|Questionable Ethics - Health Charger 4|1756 416 56
+L|7720132|hl_c10|charger|func_healthcharger:*113|Questionable Ethics - Health Charger 5|1932 832 72
+L|7720133|hl_c10|charger|func_healthcharger:*121|Questionable Ethics - Health Charger 6|3688 612 56
+L|7720134|hl_c10|charger|func_healthcharger:*213|Questionable Ethics - Health Charger 7|-2416 1788 520
+L|7720135|hl_c10|charger|func_recharge:*43|Questionable Ethics - HEV Charger|192 -700 184
 L|7720017|hl_c11_a1|map_reached||Surface Tension - Part 1 Reached
-L|7720136|hl_c11_a1|charger|func_healthcharger:*209|Surface Tension - Health Charger (Part 1)
+L|7720136|hl_c11_a1|charger|func_healthcharger:*209|Surface Tension - Health Charger (Part 1)|-5156 888 56
 L|7720018|hl_c11_a2|map_reached||Surface Tension - Part 2 Reached
-L|7720137|hl_c11_a2|charger|func_healthcharger:*17|Surface Tension - Health Charger 1 (Part 2)
-L|7720138|hl_c11_a2|charger|func_healthcharger:*18|Surface Tension - Health Charger 2 (Part 2)
+L|7720137|hl_c11_a2|charger|func_healthcharger:*17|Surface Tension - Health Charger 1 (Part 2)|600 -596 56
+L|7720138|hl_c11_a2|charger|func_healthcharger:*18|Surface Tension - Health Charger 2 (Part 2)|600 -916 56
 L|7720019|hl_c11_a3|map_reached||Surface Tension - Part 3 Reached
 L|7720020|hl_c11_a4|map_reached||Surface Tension - Part 4 Reached
-L|7720139|hl_c11_a4|charger|func_healthcharger:*112|Surface Tension - Health Charger (Part 4)
-L|7720140|hl_c11_a4|charger|func_recharge:*111|Surface Tension - HEV Charger (Part 4)
+L|7720139|hl_c11_a4|charger|func_healthcharger:*112|Surface Tension - Health Charger (Part 4)|-1540 -72 -1800
+L|7720140|hl_c11_a4|charger|func_recharge:*111|Surface Tension - HEV Charger (Part 4)|-1540 -120 -1800
 L|7720021|hl_c11_a5|map_reached||Surface Tension - Part 5 Reached
-L|7720141|hl_c11_a5|charger|func_healthcharger:*80|Surface Tension - Health Charger 1 (Part 5)
-L|7720142|hl_c11_a5|charger|func_healthcharger:*176|Surface Tension - Health Charger 2 (Part 5)
-L|7720143|hl_c11_a5|charger|func_healthcharger:*177|Surface Tension - Health Charger 3 (Part 5)
-L|7720144|hl_c11_a5|charger|func_healthcharger:*182|Surface Tension - Health Charger 4 (Part 5)
+L|7720141|hl_c11_a5|charger|func_healthcharger:*80|Surface Tension - Health Charger 1 (Part 5)|-344 -5520 -1472
+L|7720142|hl_c11_a5|charger|func_healthcharger:*176|Surface Tension - Health Charger 2 (Part 5)|-508 -4788 -1752
+L|7720143|hl_c11_a5|charger|func_healthcharger:*177|Surface Tension - Health Charger 3 (Part 5)|-758 -4172 -1608
+L|7720144|hl_c11_a5|charger|func_healthcharger:*182|Surface Tension - Health Charger 4 (Part 5)|-2464 -4076 -1480
 L|7720022|hl_c12|map_reached||Forget About Freeman - Reached
-L|7720145|hl_c12|charger|func_healthcharger:*72|Forget About Freeman - Health Charger 1
-L|7720146|hl_c12|charger|func_healthcharger:*154|Forget About Freeman - Health Charger 2
-L|7720147|hl_c12|charger|func_recharge:*153|Forget About Freeman - HEV Charger
+L|7720145|hl_c12|charger|func_healthcharger:*72|Forget About Freeman - Health Charger 1|-400 -780 676
+L|7720146|hl_c12|charger|func_healthcharger:*154|Forget About Freeman - Health Charger 2|-2672 528 840
+L|7720147|hl_c12|charger|func_recharge:*153|Forget About Freeman - HEV Charger|-3244 -2004 -184
 L|7720023|hl_c13_a1|map_reached||Lambda Core - Part 1 Reached
-L|7720148|hl_c13_a1|charger|func_healthcharger:*7|Lambda Core - Health Charger 1 (Part 1)
-L|7720149|hl_c13_a1|charger|func_healthcharger:*22|Lambda Core - Health Charger 2 (Part 1)
-L|7720150|hl_c13_a1|charger|func_healthcharger:*96|Lambda Core - Health Charger 3 (Part 1)
-L|7720151|hl_c13_a1|charger|func_recharge:*8|Lambda Core - HEV Charger 1 (Part 1)
-L|7720152|hl_c13_a1|charger|func_recharge:*97|Lambda Core - HEV Charger 2 (Part 1)
+L|7720148|hl_c13_a1|charger|func_healthcharger:*7|Lambda Core - Health Charger 1 (Part 1)|832 -68 -200
+L|7720149|hl_c13_a1|charger|func_healthcharger:*22|Lambda Core - Health Charger 2 (Part 1)|780 1664 -72
+L|7720150|hl_c13_a1|charger|func_healthcharger:*96|Lambda Core - Health Charger 3 (Part 1)|-2544 -364 -200
+L|7720151|hl_c13_a1|charger|func_recharge:*8|Lambda Core - HEV Charger 1 (Part 1)|896 -68 -200
+L|7720152|hl_c13_a1|charger|func_recharge:*97|Lambda Core - HEV Charger 2 (Part 1)|-2480 -364 -200
 L|7720024|hl_c13_a2|map_reached||Lambda Core - Part 2 Reached
-L|7720153|hl_c13_a2|charger|func_healthcharger:*121|Lambda Core - Health Charger (Part 2)
-L|7720154|hl_c13_a2|charger|func_recharge:*35|Lambda Core - HEV Charger 1 (Part 2)
-L|7720155|hl_c13_a2|charger|func_recharge:*122|Lambda Core - HEV Charger 2 (Part 2)
+L|7720153|hl_c13_a2|charger|func_healthcharger:*121|Lambda Core - Health Charger (Part 2)|-1604 1776 -968
+L|7720154|hl_c13_a2|charger|func_recharge:*35|Lambda Core - HEV Charger 1 (Part 2)|1322 1968 -584
+L|7720155|hl_c13_a2|charger|func_recharge:*122|Lambda Core - HEV Charger 2 (Part 2)|-1604 1712 -968
 L|7720025|hl_c13_a3|map_reached||Lambda Core - Part 3 Reached
-L|7720156|hl_c13_a3|charger|func_healthcharger:*115|Lambda Core - Health Charger (Part 3)
-L|7720157|hl_c13_a3|charger|func_recharge:*150|Lambda Core - HEV Charger (Part 3)
+L|7720156|hl_c13_a3|charger|func_healthcharger:*115|Lambda Core - Health Charger (Part 3)|224 348 440
+L|7720157|hl_c13_a3|charger|func_recharge:*150|Lambda Core - HEV Charger (Part 3)|-2998 32 56
 L|7720026|hl_c13_a4|map_reached||Lambda Core - Part 4 Reached
-L|7720158|hl_c13_a4|charger|func_healthcharger:*70|Lambda Core - Health Charger (Part 4)
-L|7720159|hl_c13_a4|charger|func_recharge:*69|Lambda Core - HEV Charger (Part 4)
+L|7720158|hl_c13_a4|charger|func_healthcharger:*70|Lambda Core - Health Charger (Part 4)|1700 124 -200
+L|7720159|hl_c13_a4|charger|func_recharge:*69|Lambda Core - HEV Charger (Part 4)|1636 124 -200
 L|7720027|hl_c14|map_reached||Xen - Reached
 L|7720028|hl_c15|map_reached||Gonarch's Lair - Reached
 L|7720029|hl_c16_a1|map_reached||Interloper - Part 1 Reached
@@ -232,89 +232,89 @@ L|7720033|hl_c17|map_reached||Nihilanth - Part 1 Reached
 L|7720034|hl_c18|map_reached||Nihilanth - Part 2 Reached
 L|7720174|of0a0|map_reached||Boot Camp - Reached
 L|7720175|of1a1|map_reached||Welcome To Black Mesa - Part 1 Reached
-L|7720176|of1a1|charger|func_healthcharger:*108|Welcome To Black Mesa - Health Charger (Part 1)
+L|7720176|of1a1|charger|func_healthcharger:*108|Welcome To Black Mesa - Health Charger (Part 1)|-584 2980 56
 L|7720177|of1a2|map_reached||Welcome To Black Mesa - Part 2 Reached
 L|7720178|of1a3|map_reached||We Are Not Alone - Part 1 Reached
 L|7720179|of1a4|map_reached||We Are Not Alone - Part 2 Reached
-L|7720180|of1a4|charger|func_healthcharger:*20|We Are Not Alone - Health Charger (Part 2)
+L|7720180|of1a4|charger|func_healthcharger:*20|We Are Not Alone - Health Charger (Part 2)|-1232 -572 184
 L|7720181|of1a4b|map_reached||We Are Not Alone - Part 3 Reached
 L|7720182|of1a5|map_reached||Missing In Action - Part 1 Reached
 L|7720183|of1a5b|map_reached||Missing In Action - Part 2 Reached
-L|7720184|of1a5b|charger|func_recharge:*70|Missing In Action - HEV Charger (Part 2)
+L|7720184|of1a5b|charger|func_recharge:*70|Missing In Action - HEV Charger (Part 2)|-1516 -3216 2264
 L|7720185|of1a6|map_reached||Missing In Action - Part 3 Reached
-L|7720186|of1a6|charger|func_healthcharger:*62|Missing In Action - Health Charger (Part 3)
+L|7720186|of1a6|charger|func_healthcharger:*62|Missing In Action - Health Charger (Part 3)|636 -1584 8
 L|7720187|of2a1|map_reached||Friendly Fire - Part 1 Reached
-L|7720188|of2a1|charger|func_healthcharger:*122|Friendly Fire - Health Charger (Part 1)
+L|7720188|of2a1|charger|func_healthcharger:*122|Friendly Fire - Health Charger (Part 1)|500 8 -93
 L|7720189|of2a1b|map_reached||Friendly Fire - Part 2 Reached
 L|7720190|of2a2|map_reached||Friendly Fire - Part 3 Reached
 L|7720191|of2a4|map_reached||We Are Pulling Out - Part 1 Reached
 L|7720192|of2a5|map_reached||We Are Pulling Out - Part 2 Reached
 L|7720193|of2a6|map_reached||We Are Pulling Out - Part 3 Reached
-L|7720194|of2a6|charger|func_recharge:*232|We Are Pulling Out - HEV Charger (Part 3)
+L|7720194|of2a6|charger|func_recharge:*232|We Are Pulling Out - HEV Charger (Part 3)|-1230 2205 -556
 L|7720195|of3a1|map_reached||Crush Depth - Part 1 Reached
-L|7720196|of3a1|charger|func_healthcharger:*57|Crush Depth - Health Charger (Part 1)
-L|7720197|of3a1|charger|func_recharge:*58|Crush Depth - HEV Charger (Part 1)
+L|7720196|of3a1|charger|func_healthcharger:*57|Crush Depth - Health Charger (Part 1)|592 1186 -204
+L|7720197|of3a1|charger|func_recharge:*58|Crush Depth - HEV Charger (Part 1)|544 1186 -204
 L|7720198|of3a2|map_reached||Crush Depth - Part 2 Reached
-L|7720199|of3a2|charger|func_healthcharger:*39|Crush Depth - Health Charger (Part 2)
+L|7720199|of3a2|charger|func_healthcharger:*39|Crush Depth - Health Charger (Part 2)|1204 2614 -3268
 L|7720200|of3a4|map_reached||Vicarious Reality - Part 1 Reached
-L|7720201|of3a4|charger|func_healthcharger:*266|Vicarious Reality - Health Charger (Part 1)
-L|7720202|of3a4|charger|func_recharge:*267|Vicarious Reality - HEV Charger (Part 1)
+L|7720201|of3a4|charger|func_healthcharger:*266|Vicarious Reality - Health Charger (Part 1)|-1636 896 -56
+L|7720202|of3a4|charger|func_recharge:*267|Vicarious Reality - HEV Charger (Part 1)|-1636 832 -56
 L|7720203|of3a5|map_reached||Vicarious Reality - Part 2 Reached
-L|7720204|of3a5|charger|func_recharge:*218|Vicarious Reality - HEV Charger (Part 2)
+L|7720204|of3a5|charger|func_recharge:*218|Vicarious Reality - HEV Charger (Part 2)|-3228 2340 -56
 L|7720205|of3a6|map_reached||Vicarious Reality - Part 3 Reached
 L|7720206|of4a1|map_reached||Pit Worm's Nest - Part 1 Reached
 L|7720207|of4a2|map_reached||Pit Worm's Nest - Part 2 Reached
-L|7720208|of4a2|charger|func_healthcharger:*75|Pit Worm's Nest - Health Charger 1 (Part 2)
-L|7720209|of4a2|charger|func_healthcharger:*76|Pit Worm's Nest - Health Charger 2 (Part 2)
-L|7720210|of4a2|charger|func_healthcharger:*202|Pit Worm's Nest - Health Charger 3 (Part 2)
-L|7720211|of4a2|charger|func_healthcharger:*203|Pit Worm's Nest - Health Charger 4 (Part 2)
+L|7720208|of4a2|charger|func_healthcharger:*75|Pit Worm's Nest - Health Charger 1 (Part 2)|-2044 2 444
+L|7720209|of4a2|charger|func_healthcharger:*76|Pit Worm's Nest - Health Charger 2 (Part 2)|-2044 0 513
+L|7720210|of4a2|charger|func_healthcharger:*202|Pit Worm's Nest - Health Charger 3 (Part 2)|544 -1318 1148
+L|7720211|of4a2|charger|func_healthcharger:*203|Pit Worm's Nest - Health Charger 4 (Part 2)|-544 -1318 1148
 L|7720212|of4a3|map_reached||Pit Worm's Nest - Part 3 Reached
-L|7720213|of4a3|charger|func_healthcharger:*137|Pit Worm's Nest - Health Charger 1 (Part 3)
-L|7720214|of4a3|charger|func_healthcharger:*138|Pit Worm's Nest - Health Charger 2 (Part 3)
-L|7720215|of4a3|charger|func_healthcharger:*191|Pit Worm's Nest - Health Charger 3 (Part 3)
+L|7720213|of4a3|charger|func_healthcharger:*137|Pit Worm's Nest - Health Charger 1 (Part 3)|544 -1318 1148
+L|7720214|of4a3|charger|func_healthcharger:*138|Pit Worm's Nest - Health Charger 2 (Part 3)|-544 -1318 1148
+L|7720215|of4a3|charger|func_healthcharger:*191|Pit Worm's Nest - Health Charger 3 (Part 3)|176 -2116 356
 L|7720216|of4a4|map_reached||Pit Worm's Nest - Part 4 Reached
 L|7720217|of5a1|map_reached||Worlds Collide - Part 1 Reached
 L|7720218|of5a2|map_reached||Worlds Collide - Part 2 Reached
 L|7720219|of5a3|map_reached||Worlds Collide - Part 3 Reached
 L|7720220|of5a4|map_reached||Worlds Collide - Part 4 Reached
-L|7720221|of5a4|charger|func_healthcharger:*73|Worlds Collide - Health Charger (Part 4)
-L|7720222|of5a4|charger|func_recharge:*74|Worlds Collide - HEV Charger (Part 4)
+L|7720221|of5a4|charger|func_healthcharger:*73|Worlds Collide - Health Charger (Part 4)|-2624 124 -8
+L|7720222|of5a4|charger|func_recharge:*74|Worlds Collide - HEV Charger (Part 4)|-2576 124 -8
 L|7720223|of6a1|map_reached||Worlds Collide - Part 5 Reached
 L|7720224|of6a2|map_reached||Worlds Collide - Part 6 Reached
 L|7720225|of6a3|map_reached||Worlds Collide - Part 7 Reached
 L|7720226|of6a4|map_reached||Worlds Collide - Part 8 Reached
 L|7720227|of6a4b|map_reached||Worlds Collide - Part 9 Reached
-L|7720228|of6a4b|charger|func_healthcharger:*109|Worlds Collide - Health Charger (Part 9)
-L|7720229|of6a4b|charger|func_recharge:*110|Worlds Collide - HEV Charger (Part 9)
+L|7720228|of6a4b|charger|func_healthcharger:*109|Worlds Collide - Health Charger (Part 9)|-1860 -1088 -488
+L|7720229|of6a4b|charger|func_recharge:*110|Worlds Collide - HEV Charger (Part 9)|-1860 -1136 -488
 L|7720230|of6a5|map_reached||Worlds Collide - Part 10 Reached
 L|7720231|ba_tram1|map_reached||Living Quarters Outbound - Part 1 Reached
 L|7720232|ba_tram2|map_reached||Living Quarters Outbound - Part 2 Reached
 L|7720233|ba_tram3|map_reached||Living Quarters Outbound - Part 3 Reached
 L|7720234|ba_security1|map_reached||Insecurity - Part 1 Reached
 L|7720235|ba_security2|map_reached||Insecurity - Part 2 Reached
-L|7720236|ba_security2|charger|func_healthcharger:*14|Insecurity - Health Charger (Part 2)
+L|7720236|ba_security2|charger|func_healthcharger:*14|Insecurity - Health Charger (Part 2)|416 1710 244
 L|7720237|ba_maint|map_reached||Insecurity - Part 3 Reached
 L|7720238|ba_elevator|map_reached||Insecurity - Part 4 Reached
 L|7720239|ba_canal1|map_reached||Duty Calls - Part 1 Reached
-L|7720240|ba_canal1|charger|func_healthcharger:*196|Duty Calls - Health Charger 1 (Part 1)
-L|7720353|ba_canal1|charger|func_healthcharger:*196@0 80 0|Duty Calls - Health Charger 2 (Part 1)
+L|7720240|ba_canal1|charger|func_healthcharger:*196|Duty Calls - Health Charger 1 (Part 1)|1554 16 56
+L|7720353|ba_canal1|charger|func_healthcharger:*196@0 80 0|Duty Calls - Health Charger 2 (Part 1)|1554 96 56
 L|7720241|ba_canal1b|map_reached||Duty Calls - Part 2 Reached
 L|7720242|ba_canal2|map_reached||Duty Calls - Part 3 Reached
-L|7720243|ba_canal2|charger|func_healthcharger:*110|Duty Calls - Health Charger (Part 3)
+L|7720243|ba_canal2|charger|func_healthcharger:*110|Duty Calls - Health Charger (Part 3)|-360 708 452
 L|7720244|ba_canal3|map_reached||Duty Calls - Part 4 Reached
-L|7720245|ba_canal3|charger|func_healthcharger:*117|Duty Calls - Health Charger (Part 4)
+L|7720245|ba_canal3|charger|func_healthcharger:*117|Duty Calls - Health Charger (Part 4)|-832 894 312
 L|7720246|ba_yard1|map_reached||Captive Freight - Part 1 Reached
 L|7720247|ba_yard2|map_reached||Captive Freight - Part 2 Reached
 L|7720248|ba_yard3|map_reached||Captive Freight - Part 3 Reached
 L|7720249|ba_yard3a|map_reached||Captive Freight - Part 4 Reached
-L|7720250|ba_yard3a|charger|func_healthcharger:*39|Captive Freight - Health Charger (Part 4)
+L|7720250|ba_yard3a|charger|func_healthcharger:*39|Captive Freight - Health Charger (Part 4)|-1188 -1920 -496
 L|7720251|ba_yard3b|map_reached||Captive Freight - Part 5 Reached
 L|7720252|ba_yard4|map_reached||Captive Freight - Part 6 Reached
 L|7720253|ba_yard4a|map_reached||Captive Freight - Part 7 Reached
 L|7720254|ba_yard5|map_reached||Captive Freight - Part 8 Reached
 L|7720255|ba_yard5a|map_reached||Captive Freight - Part 9 Reached
 L|7720256|ba_teleport1|map_reached||Focal Point - Part 1 Reached
-L|7720257|ba_teleport1|charger|func_healthcharger:*156|Focal Point - Health Charger (Part 1)
+L|7720257|ba_teleport1|charger|func_healthcharger:*156|Focal Point - Health Charger (Part 1)|-616 -792 52
 L|7720258|ba_xen1|map_reached||Focal Point - Part 2 Reached
 L|7720259|ba_xen2|map_reached||Focal Point - Part 3 Reached
 L|7720260|ba_xen3|map_reached||Focal Point - Part 4 Reached
@@ -322,13 +322,13 @@ L|7720261|ba_xen4|map_reached||Focal Point - Part 5 Reached
 L|7720262|ba_xen5|map_reached||Focal Point - Part 6 Reached
 L|7720263|ba_xen6|map_reached||Focal Point - Part 7 Reached
 L|7720264|ba_teleport2|map_reached||Power Struggle - Part 1 Reached
-L|7720265|ba_teleport2|charger|func_healthcharger:*151|Power Struggle - Health Charger (Part 1)
+L|7720265|ba_teleport2|charger|func_healthcharger:*151|Power Struggle - Health Charger (Part 1)|-616 -792 52
 L|7720266|ba_power1|map_reached||Power Struggle - Part 2 Reached
-L|7720267|ba_power1|charger|func_healthcharger:*133|Power Struggle - Health Charger 1 (Part 2)
-L|7720268|ba_power1|charger|func_healthcharger:*228|Power Struggle - Health Charger 2 (Part 2)
+L|7720267|ba_power1|charger|func_healthcharger:*133|Power Struggle - Health Charger 1 (Part 2)|128 -632 -452
+L|7720268|ba_power1|charger|func_healthcharger:*228|Power Struggle - Health Charger 2 (Part 2)|42 120 -196
 L|7720269|ba_power2|map_reached||Power Struggle - Part 3 Reached
-L|7720270|ba_power2|charger|func_healthcharger:*112|Power Struggle - Health Charger 1 (Part 3)
-L|7720271|ba_power2|charger|func_healthcharger:*197|Power Struggle - Health Charger 2 (Part 3)
+L|7720270|ba_power2|charger|func_healthcharger:*112|Power Struggle - Health Charger 1 (Part 3)|64 -1240 -356
+L|7720271|ba_power2|charger|func_healthcharger:*197|Power Struggle - Health Charger 2 (Part 3)|-1560 694 80
 L|7720272|ba_outro|map_reached||Power Struggle - Part 4 Reached
 L|7720273|th_ep1_00|map_reached||They Hunger: Episode 1 - Part 1 Reached
 L|7720274|th_ep1_01|map_reached||They Hunger: Episode 1 - Part 2 Reached
@@ -342,8 +342,8 @@ L|7720281|th_ep2_02|map_reached||They Hunger: Episode 2 - Part 3 Reached
 L|7720282|th_ep2_03|map_reached||They Hunger: Episode 2 - Part 4 Reached
 L|7720283|th_ep2_04|map_reached||They Hunger: Episode 2 - Part 5 Reached
 L|7720284|th_ep3_00|map_reached||They Hunger: Episode 3 - Part 1 Reached
-L|7720285|th_ep3_00|charger|func_healthcharger:*273|They Hunger: Episode 3 - Health Charger 1 (Part 1)
-L|7720286|th_ep3_00|charger|func_healthcharger:*471|They Hunger: Episode 3 - Health Charger 2 (Part 1)
+L|7720285|th_ep3_00|charger|func_healthcharger:*273|They Hunger: Episode 3 - Health Charger 1 (Part 1)|-1504 -3468 248
+L|7720286|th_ep3_00|charger|func_healthcharger:*471|They Hunger: Episode 3 - Health Charger 2 (Part 1)|-1038 -3732 2488
 L|7720287|th_ep3_01|map_reached||They Hunger: Episode 3 - Part 2 Reached
 L|7720288|th_ep3_02|map_reached||They Hunger: Episode 3 - Part 3 Reached
 L|7720289|th_ep3_03|map_reached||They Hunger: Episode 3 - Part 4 Reached
@@ -351,59 +351,59 @@ L|7720290|th_ep3_04|map_reached||They Hunger: Episode 3 - Part 5 Reached
 L|7720291|th_ep3_05|map_reached||They Hunger: Episode 3 - Part 6 Reached
 L|7720292|th_ep3_06|map_reached||They Hunger: Episode 3 - Part 7 Reached
 L|7720293|th_ep3_07|map_reached||They Hunger: Episode 3 - Part 8 Reached
-L|7720160|hl_c02_a1|weapon_pickup|weapon_glock,weapon_9mmhandgun|First Glock
-L|7720161|hl_c05_a3|weapon_pickup|weapon_357|First .357 Magnum
-L|7720162|hl_c04|weapon_pickup|weapon_9mmAR,weapon_m16|First MP5
-L|7720163|hl_c03|weapon_pickup|weapon_shotgun|First Shotgun
-L|7720164|hl_c08_a1|weapon_pickup|weapon_crossbow|First Crossbow
-L|7720165|hl_c11_a2|weapon_pickup|weapon_rpg|First RPG
-L|7720166|hl_c10|weapon_pickup|weapon_gauss|First Tau Cannon
-L|7720167|hl_c13_a1|weapon_pickup|weapon_egon|First Gluon Gun
-L|7720168|hl_c11_a3|weapon_pickup|weapon_hornetgun|First Hivehand
-L|7720169|hl_c07_a1|weapon_pickup|weapon_satchel|First Satchel Charge
-L|7720170|hl_c07_a1|weapon_pickup|weapon_tripmine|First Tripmine
-L|7720171|hl_c10|weapon_pickup|weapon_snark|First Snarks
-L|7720172|hl_c02_a2|weapon_pickup|weapon_handgrenade|First Hand Grenade
-L|7720173|hl_c02_a1|weapon_pickup|weapon_crowbar|First Crowbar
-L|7720294|of1a5|weapon_pickup|weapon_glock,weapon_9mmhandgun|Opposing Force - First Glock
-L|7720295|of2a1b|weapon_pickup|weapon_9mmAR,weapon_m16|Opposing Force - First MP5
-L|7720296|of1a3|weapon_pickup|weapon_shotgun|Opposing Force - First Shotgun
-L|7720297|of2a6|weapon_pickup|weapon_rpg|Opposing Force - First RPG
-L|7720298|of1a6|weapon_pickup|weapon_satchel|Opposing Force - First Satchel Charge
-L|7720299|of2a4|weapon_pickup|weapon_tripmine|Opposing Force - First Tripmine
-L|7720300|of4a2|weapon_pickup|weapon_snark|Opposing Force - First Snarks
-L|7720301|of1a4b|weapon_pickup|weapon_handgrenade|Opposing Force - First Hand Grenade
-L|7720302|of1a2|weapon_pickup|weapon_eagle|Opposing Force - First Desert Eagle
-L|7720303|of5a1|weapon_pickup|weapon_m249,weapon_saw|Opposing Force - First SAW
-L|7720304|of5a1|weapon_pickup|weapon_sniperrifle|Opposing Force - First Sniper Rifle
-L|7720305|of3a5|weapon_pickup|weapon_displacer|Opposing Force - First Displacer Cannon
-L|7720306|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force - First Spore Launcher
-L|7720307|of4a3|weapon_pickup|weapon_grapple|Opposing Force - First Barnacle Grapple
-L|7720309|of1a1|weapon_pickup|weapon_pipewrench|Opposing Force - First Pipe Wrench
-L|7720310|of2a4|weapon_pickup|weapon_minigun|Opposing Force - First Minigun
-L|7720311|of1a2|weapon_pickup|weapon_crowbar|Opposing Force - First Combat Knife
-L|7720312|ba_yard3|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift - First Glock
-L|7720313|ba_yard1|weapon_pickup|weapon_357|Blue Shift - First .357 Magnum
-L|7720314|ba_power1|weapon_pickup|weapon_9mmAR,weapon_m16|Blue Shift - First MP5
-L|7720315|ba_canal2|weapon_pickup|weapon_shotgun|Blue Shift - First Shotgun
-L|7720316|ba_yard5|weapon_pickup|weapon_rpg|Blue Shift - First RPG
-L|7720317|ba_yard1|weapon_pickup|weapon_satchel|Blue Shift - First Satchel Charge
-L|7720318|ba_xen2|weapon_pickup|weapon_snark|Blue Shift - First Snarks
-L|7720319|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift - First Hand Grenade
-L|7720320|ba_canal1|weapon_pickup|weapon_crowbar|Blue Shift - First Crowbar
-L|7720321|th_ep1_02|weapon_pickup|weapon_357|They Hunger - First .357 Magnum
-L|7720322|th_ep1_03|weapon_pickup|weapon_handgrenade|They Hunger - First TNT
-L|7720323|th_ep1_01|weapon_pickup|weapon_pipewrench|They Hunger - First Shovel
-L|7720324|th_ep1_01|weapon_pickup|weapon_colt1911|They Hunger - First Colt 1911
-L|7720325|th_ep3_00|weapon_pickup|weapon_th_taurus|They Hunger - First Taurus
-L|7720326|th_ep1_01|weapon_pickup|weapon_sawedoff|They Hunger - First Sawed-Off Shotgun
-L|7720327|th_ep3_04|weapon_pickup|weapon_greasegun|They Hunger - First Grease Gun
-L|7720328|th_ep1_03|weapon_pickup|weapon_tommygun|They Hunger - First Tommy Gun
-L|7720329|th_ep1_01|weapon_pickup|weapon_m14|They Hunger - First M14
-L|7720330|th_ep2_00|weapon_pickup|weapon_m16a1|They Hunger - First M16A1
-L|7720331|th_ep1_04|weapon_pickup|weapon_teslagun|They Hunger - First Tesla Gun
-L|7720332|th_ep2_00|weapon_pickup|weapon_spanner|They Hunger - First Spanner
-L|7720333|th_ep1_01|weapon_pickup|weapon_crowbar|They Hunger - First Umbrella
+L|7720160|hl_c02_a1|weapon_pickup|weapon_glock,weapon_9mmhandgun|First Glock|2221 1976 914
+L|7720161|hl_c05_a3|weapon_pickup|weapon_357|First .357 Magnum|-1439 255 -1034
+L|7720162|hl_c04|weapon_pickup|weapon_9mmAR,weapon_m16|First MP5|-888 -1080 64
+L|7720163|hl_c03|weapon_pickup|weapon_shotgun|First Shotgun|1690 -742 255
+L|7720164|hl_c08_a1|weapon_pickup|weapon_crossbow|First Crossbow|1420 288 -588
+L|7720165|hl_c11_a2|weapon_pickup|weapon_rpg|First RPG|-2888 -5008 -1256
+L|7720166|hl_c10|weapon_pickup|weapon_gauss|First Tau Cannon|-1184 432 464
+L|7720167|hl_c13_a1|weapon_pickup|weapon_egon|First Gluon Gun|-2534 310 -80
+L|7720168|hl_c11_a3|weapon_pickup|weapon_hornetgun|First Hivehand|96 320 -1117
+L|7720169|hl_c07_a1|weapon_pickup|weapon_satchel|First Satchel Charge|1384 -2300 -860
+L|7720170|hl_c07_a1|weapon_pickup|weapon_tripmine|First Tripmine|3060 -1896 -1780
+L|7720171|hl_c10|weapon_pickup|weapon_snark|First Snarks|-608 144 256
+L|7720172|hl_c02_a2|weapon_pickup|weapon_handgrenade|First Hand Grenade|-1815 -2875 1509
+L|7720173|hl_c02_a1|weapon_pickup|weapon_crowbar|First Crowbar|1678 1943 -129
+L|7720294|of1a5|weapon_pickup|weapon_glock,weapon_9mmhandgun|Opposing Force - First Glock|1824 -3456 1339
+L|7720295|of2a1b|weapon_pickup|weapon_9mmAR,weapon_m16|Opposing Force - First MP5|-516 2300 -784
+L|7720296|of1a3|weapon_pickup|weapon_shotgun|Opposing Force - First Shotgun|808 -2584 832
+L|7720297|of2a6|weapon_pickup|weapon_rpg|Opposing Force - First RPG|2988 3084 -576
+L|7720298|of1a6|weapon_pickup|weapon_satchel|Opposing Force - First Satchel Charge|232 -1284 8
+L|7720299|of2a4|weapon_pickup|weapon_tripmine|Opposing Force - First Tripmine|64 678 22
+L|7720300|of4a2|weapon_pickup|weapon_snark|Opposing Force - First Snarks|-1768 760 417
+L|7720301|of1a4b|weapon_pickup|weapon_handgrenade|Opposing Force - First Hand Grenade|-544 1856 -976
+L|7720302|of1a2|weapon_pickup|weapon_eagle|Opposing Force - First Desert Eagle|365 -589 -156
+L|7720303|of5a1|weapon_pickup|weapon_m249,weapon_saw|Opposing Force - First SAW|-869 -151 220
+L|7720304|of5a1|weapon_pickup|weapon_sniperrifle|Opposing Force - First Sniper Rifle|-640 -1408 136
+L|7720305|of3a5|weapon_pickup|weapon_displacer|Opposing Force - First Displacer Cannon|1414 302 240
+L|7720306|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force - First Spore Launcher|-1624 -432 384
+L|7720307|of4a3|weapon_pickup|weapon_grapple|Opposing Force - First Barnacle Grapple|-338 -504 337
+L|7720309|of1a1|weapon_pickup|weapon_pipewrench|Opposing Force - First Pipe Wrench|-1152 -560 -112
+L|7720310|of2a4|weapon_pickup|weapon_minigun|Opposing Force - First Minigun|83 564 6
+L|7720311|of1a2|weapon_pickup|weapon_crowbar|Opposing Force - First Combat Knife|549 -2822 68
+L|7720312|ba_yard3|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift - First Glock|1344 440 -560
+L|7720313|ba_yard1|weapon_pickup|weapon_357|Blue Shift - First .357 Magnum|-72 -1765 0
+L|7720314|ba_power1|weapon_pickup|weapon_9mmAR,weapon_m16|Blue Shift - First MP5|-898 -1882 -112
+L|7720315|ba_canal2|weapon_pickup|weapon_shotgun|Blue Shift - First Shotgun|400 2184 -88
+L|7720316|ba_yard5|weapon_pickup|weapon_rpg|Blue Shift - First RPG|-344 2000 93
+L|7720317|ba_yard1|weapon_pickup|weapon_satchel|Blue Shift - First Satchel Charge|-2662 -1550 92
+L|7720318|ba_xen2|weapon_pickup|weapon_snark|Blue Shift - First Snarks|1160 3384 -3576
+L|7720319|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift - First Hand Grenade|-2635 -1550 92
+L|7720320|ba_canal1|weapon_pickup|weapon_crowbar|Blue Shift - First Crowbar|2080 288 56
+L|7720321|th_ep1_02|weapon_pickup|weapon_357|They Hunger - First .357 Magnum|3484 -1708 193
+L|7720322|th_ep1_03|weapon_pickup|weapon_handgrenade|They Hunger - First TNT|-4802 1980 -84
+L|7720323|th_ep1_01|weapon_pickup|weapon_pipewrench|They Hunger - First Shovel|-52 -461 -64
+L|7720324|th_ep1_01|weapon_pickup|weapon_colt1911|They Hunger - First Colt 1911|1628 1848 278
+L|7720325|th_ep3_00|weapon_pickup|weapon_th_taurus|They Hunger - First Taurus|-805 -3630 2608
+L|7720326|th_ep1_01|weapon_pickup|weapon_sawedoff|They Hunger - First Sawed-Off Shotgun|-715 239 264
+L|7720327|th_ep3_04|weapon_pickup|weapon_greasegun|They Hunger - First Grease Gun|-2124 -802 -976
+L|7720328|th_ep1_03|weapon_pickup|weapon_tommygun|They Hunger - First Tommy Gun|1106 750 156
+L|7720329|th_ep1_01|weapon_pickup|weapon_m14|They Hunger - First M14|411 -169 -88
+L|7720330|th_ep2_00|weapon_pickup|weapon_m16a1|They Hunger - First M16A1|2652 -206 80
+L|7720331|th_ep1_04|weapon_pickup|weapon_teslagun|They Hunger - First Tesla Gun|2637 -4784 -1216
+L|7720332|th_ep2_00|weapon_pickup|weapon_spanner|They Hunger - First Spanner|-1362 200 34
+L|7720333|th_ep1_01|weapon_pickup|weapon_crowbar|They Hunger - First Umbrella|64 344 267
 L|7720035|hl_c00|chapter_complete|black_mesa_inbound|Black Mesa Inbound - Complete
 L|7720036|hl_c01_a2|chapter_complete|anomalous_materials|Anomalous Materials - Complete
 L|7720037|hl_c02_a2|chapter_complete|unforeseen_consequences|Unforeseen Consequences - Complete

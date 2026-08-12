@@ -84,6 +84,25 @@ With `random_starting_weapon: true` and Opposing Force or They Hunger enabled:
   bottom stay for the whole seed.
 - Send a check and run it again: that location flips to `[x]` without a map
   change, since the client rewrites the snapshot as soon as the check lands.
+
+`!find`:
+
+- `!find` with no argument names the nearest unfound check on your map. Walk
+  toward it and run it again: the distance must fall. That is the whole test of
+  whether the coordinates are right, and it is worth doing in one Half-Life map,
+  one Opposing Force map and one They Hunger map, since the position comes from
+  the BSP rather than anything the game tells us.
+- Stand next to a charger and `!find` it: a few dozen units, "right about where
+  you are standing", clear line.
+- Turn 180 degrees on the spot and run the same `!find`: the distance must not
+  change and the bearing must flip to "behind you". Left and right come from your
+  own facing, so this is the check that they are not reversed.
+- `!find hev charger 3` matches by name; `!find shotgun` on a seed with several
+  campaigns lists the matches to console rather than guessing.
+- `!find` for something in another mission names the mission and its `!warp`
+  number instead of pointing.
+- The line is a straight one and will happily point through a wall. "Something
+  solid is in the way" is the tracer saying so, and is expected in corridors.
 - With only Half-Life or Blue Shift enabled it is always the crowbar, and the
   seed is indistinguishable from one with the option off.
 

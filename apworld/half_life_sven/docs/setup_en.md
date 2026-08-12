@@ -185,6 +185,8 @@ Chat commands (press `Y` in game, not the console):
 | `!ap` | list every mission and its status, printed to your console (`~`) |
 | `!tracker` | every location in the seed, by map, found or not, to your console |
 | `!tracker <text>` | just the maps or missions matching that, e.g. `!tracker hl_c03` or `!tracker office` |
+| `!find` | point you at the nearest check on this map you have not found |
+| `!find <text>` | point you at a check by name, e.g. `!find hev charger 3` |
 | `!warp <number>` | travel to an unlocked mission |
 | `!hub` | return to the campaign portal |
 

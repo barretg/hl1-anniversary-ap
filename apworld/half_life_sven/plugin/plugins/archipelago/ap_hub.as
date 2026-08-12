@@ -22,6 +22,7 @@ void ShowHelp( CBasePlayer@ pPlayer )
 		"[AP] Commands:\n"
 		"  !ap            list missions and what is unlocked\n"
 		"  !tracker [map] locations found and still out there, to console\n"
+		"  !find [text]   point at the nearest check, or one you name\n"
 		"  !warp <number> travel to an unlocked mission\n"
 		"  !hub           return to the campaign portal\n"
 		"  !help          this list\n"
@@ -190,6 +191,254 @@ void ShowTracker( CBasePlayer@ pPlayer, const string& in szFilter )
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"[AP] Tracker printed to your console (~): "
 		+ uiFound + "/" + uiTotal + " found.\n" );
+}
+
+/*
+* Is this location part of the seed, and has it been found?
+*
+* Anything the client has listed in neither set is not in this seed at all.
+*/
+bool LocationInSeed( APLocation@ pLocation )
+{
+	string szId = "" + pLocation.id;
+	return g_CheckedLocations.exists( szId ) || g_MissingLocations.exists( szId );
+}
+
+bool LocationFound( APLocation@ pLocation )
+{
+	return g_CheckedLocations.exists( "" + pLocation.id );
+}
+
+/*
+* Which way is it, in words, from where the player is standing and facing.
+*
+* Deliberately a compass rather than a route: the direction is the straight line
+* to the thing, so in a corridor it can point through a wall. Run it again after
+* moving and it updates, which is what makes it work in practice -- hot and cold
+* rather than turn by turn. Anything better would want a navigation graph, which
+* AngelScript cannot reach and half these maps do not have.
+*
+* Left and right come from the player's own facing rather than north, because
+* nobody knows which way north is in Black Mesa. Dot products against forward
+* and right do it without any trigonometry.
+*/
+string BearingTo( CBasePlayer@ pPlayer, const Vector& in vecTarget )
+{
+	Vector vecFrom = pPlayer.pev.origin;
+	Vector vecDelta = vecTarget - vecFrom;
+
+	// Flat plane only: height is reported separately, and letting it into the
+	// bearing makes something directly overhead read as "far ahead".
+	Vector vecFlat( vecDelta.x, vecDelta.y, 0.0f );
+	float flFlat = vecFlat.Length();
+
+	if( flFlat < 64 )
+		return "right about where you are standing";
+
+	Math.MakeVectors( pPlayer.pev.v_angle );
+	Vector vecForward = g_Engine.v_forward;
+	Vector vecRight = g_Engine.v_right;
+
+	// By hand: Vector's `*` is component-wise, not a dot product.
+	float flForward = ( vecFlat.x * vecForward.x + vecFlat.y * vecForward.y ) / flFlat;
+	float flRight = ( vecFlat.x * vecRight.x + vecFlat.y * vecRight.y ) / flFlat;
+
+	string szSide = flRight >= 0 ? "right" : "left";
+
+	if( flForward > 0.85f )
+		return "straight ahead";
+	if( flForward > 0.35f )
+		return "ahead and to your " + szSide;
+	if( flForward > -0.35f )
+		return "to your " + szSide;
+	if( flForward > -0.85f )
+		return "behind you, to your " + szSide;
+
+	return "directly behind you";
+}
+
+string HeightTo( CBasePlayer@ pPlayer, const Vector& in vecTarget )
+{
+	float flRise = vecTarget.z - pPlayer.pev.origin.z;
+
+	if( flRise > 128 )
+		return ", well above you";
+	if( flRise > 48 )
+		return ", a little above you";
+	if( flRise < -128 )
+		return ", well below you";
+	if( flRise < -48 )
+		return ", a little below you";
+
+	return "";
+}
+
+/*
+* The tracer: is there anything solid between the player and the thing?
+*
+* One TraceLine, only when the player asks. Turns "somewhere over there" into
+* "you can see it from here" or "there is a wall in the way, find the door".
+*/
+string SightTo( CBasePlayer@ pPlayer, const Vector& in vecTarget )
+{
+	TraceResult tr;
+	g_Utility.TraceLine( pPlayer.GetGunPosition(), vecTarget,
+	                     ignore_monsters, pPlayer.edict(), tr );
+
+	if( tr.flFraction >= 1.0f )
+		return "You have a clear line to it.";
+
+	return "Something solid is in the way.";
+}
+
+void DescribeLocation( CBasePlayer@ pPlayer, APLocation@ pLocation )
+{
+	string szPrefix = LocationFound( pLocation ) ? "[found] " : "";
+
+	// Somewhere else entirely: say where, and how to get there.
+	if( pLocation.map != g_szCurrentMap )
+	{
+		APChapter@ pChapter = ChapterForMap( pLocation.map );
+		string szWhere = pLocation.map;
+		if( pChapter !is null )
+			szWhere = pChapter.name + ", on " + pLocation.map + " (!warp " + pChapter.index + ")";
+
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] " + szPrefix + pLocation.name + " is in " + szWhere + ".\n" );
+		return;
+	}
+
+	if( !pLocation.hasPosition )
+	{
+		// Reaching a map is not a place you can be pointed at; you are already
+		// standing in the answer.
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] " + szPrefix + pLocation.name + " is this map itself -- keep going.\n" );
+		return;
+	}
+
+	int iDistance = int( ( pLocation.position - pPlayer.pev.origin ).Length() );
+
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] " + szPrefix + pLocation.name + ": about " + iDistance + " units "
+		+ BearingTo( pPlayer, pLocation.position )
+		+ HeightTo( pPlayer, pLocation.position ) + ".\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] " + SightTo( pPlayer, pLocation.position ) + "\n" );
+}
+
+/*
+* `!find` -- point the player at a check.
+*
+* With no argument, the nearest one on this map they have not found yet, which
+* is the question people actually have. With text, whatever matches by name.
+*/
+void FindLocation( CBasePlayer@ pPlayer, const string& in szQuery )
+{
+	if( g_CheckedLocations.getSize() == 0 && g_MissingLocations.getSize() == 0 )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] No location data yet; check the client.\n" );
+		return;
+	}
+
+	if( szQuery.Length() == 0 )
+	{
+		APLocation@ pNearest = null;
+		float flNearest = 0;
+
+		for( uint i = 0; i < g_Locations.length(); ++i )
+		{
+			APLocation@ pLocation = g_Locations[i];
+			if( pLocation.map != g_szCurrentMap || !pLocation.hasPosition )
+				continue;
+			if( !LocationInSeed( pLocation ) || LocationFound( pLocation ) )
+				continue;
+
+			float flDistance = ( pLocation.position - pPlayer.pev.origin ).Length();
+			if( pNearest is null || flDistance < flNearest )
+			{
+				@pNearest = pLocation;
+				flNearest = flDistance;
+			}
+		}
+
+		if( pNearest is null )
+		{
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+				"[AP] Nothing left to find on this map.\n" );
+			return;
+		}
+
+		DescribeLocation( pPlayer, pNearest );
+		return;
+	}
+
+	string szWanted = szQuery;
+	szWanted.ToLowercase();
+
+	array<APLocation@> matches;
+	for( uint i = 0; i < g_Locations.length(); ++i )
+	{
+		APLocation@ pLocation = g_Locations[i];
+		if( !LocationInSeed( pLocation ) )
+			continue;
+
+		string szName = pLocation.name;
+		szName.ToLowercase();
+		// Find returns String::INVALID_INDEX rather than -1, and it is unsigned;
+		// read as an int, a miss comes out negative.
+		int iAt = szName.Find( szWanted );
+		if( iAt >= 0 )
+			matches.insertLast( pLocation );
+	}
+
+	if( matches.length() == 0 )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] Nothing in this seed matches \"" + szQuery + "\".\n" );
+		return;
+	}
+
+	// A single hit gets directions. Several, and naming them is more use than
+	// guessing which one was meant -- but prefer this map, since that is nearly
+	// always what a player means.
+	if( matches.length() == 1 )
+	{
+		DescribeLocation( pPlayer, matches[0] );
+		return;
+	}
+
+	APLocation@ pHere = null;
+	uint uiHere = 0;
+	for( uint i = 0; i < matches.length(); ++i )
+	{
+		if( matches[i].map == g_szCurrentMap )
+		{
+			if( pHere is null )
+				@pHere = matches[i];
+			++uiHere;
+		}
+	}
+
+	if( uiHere == 1 )
+	{
+		DescribeLocation( pPlayer, pHere );
+		return;
+	}
+
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] " + matches.length() + " matches; printed to your console (~).\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+		"\n=== !find \"" + szQuery + "\" ===\n" );
+
+	for( uint i = 0; i < matches.length(); ++i )
+	{
+		APLocation@ pLocation = matches[i];
+		string szMark = LocationFound( pLocation ) ? "[x] " : "[ ] ";
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
+			"    " + szMark + pLocation.name + "  (" + pLocation.map + ")\n" );
+	}
 }
 
 void WarpToChapter( CBasePlayer@ pPlayer, int iIndex )
@@ -492,6 +741,21 @@ HookReturnCode ClientSay( SayParameters@ pParams )
 	{
 		pParams.ShouldHide = true;
 		ShowStatus( pPlayer );
+		return HOOK_HANDLED;
+	}
+
+	if( szCommand == "!find" )
+	{
+		pParams.ShouldHide = true;
+		// Everything after the command, so `!find health charger` works.
+		string szQuery;
+		for( int i = 1; i < pArguments.ArgC(); ++i )
+		{
+			if( szQuery.Length() > 0 )
+				szQuery += " ";
+			szQuery += pArguments[i];
+		}
+		FindLocation( pPlayer, szQuery );
 		return HOOK_HANDLED;
 	}
 

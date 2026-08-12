@@ -41,7 +41,7 @@ def render(campaign: dict) -> str:
         "#   M|<key>|<name>|<goal chapter>  a campaign",
         "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<campaign key>",
         "#   P|<console>|<chapter key>      hub console button -> the mission it enters",
-        "#   L|<id>|<map>|<type>|<arg>|<name>",
+        "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
         "#   R|<classname>|<campaign,...>   grantable only on those campaigns' maps",
@@ -97,15 +97,20 @@ def render(campaign: dict) -> str:
                 arg += f"@{trigger['origin']}"
         else:  # map_reached
             arg = ""
-        lines.append(
-            "L|{id}|{map}|{kind}|{arg}|{name}".format(
-                id=location["id"],
-                map=location["map"],
-                kind=kind,
-                arg=arg,
-                name=location["name"],
-            )
+        # A seventh field where we know where the thing is, which is what `!find`
+        # points at. Appended rather than inserted, so a plugin reading the older
+        # six-field form is unaffected.
+        position = location.get("position")
+        record = "L|{id}|{map}|{kind}|{arg}|{name}".format(
+            id=location["id"],
+            map=location["map"],
+            kind=kind,
+            arg=arg,
+            name=location["name"],
         )
+        if position:
+            record += "|" + " ".join(str(value) for value in position)
+        lines.append(record)
 
     # Every classname the plugin must refuse until the matching item arrives.
     for classname, item in sorted(CLASSNAME_TO_ITEM.items()):

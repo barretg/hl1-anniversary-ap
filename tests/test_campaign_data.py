@@ -570,3 +570,58 @@ def test_no_item_or_check_exists_for_a_weapon_the_game_lacks(campaign: dict) -> 
 
     for entry in campaign["locations"]:
         assert absent not in entry["trigger"].get("classnames", ()), entry["name"]
+
+
+def test_placeable_locations_carry_a_position(campaign: dict) -> None:
+    """`!find` can only point at a check that knows where it is.
+
+    Chargers and weapon pickups are somewhere; reaching a map or finishing a
+    mission is not a place, so those carry nothing and `!find` says so.
+    """
+    for entry in campaign["locations"]:
+        kind = entry["trigger"]["type"]
+        if kind in ("charger", "weapon_pickup"):
+            assert "position" in entry, entry["name"]
+            assert len(entry["position"]) == 3, entry["name"]
+            assert all(isinstance(v, int) for v in entry["position"]), entry["name"]
+        else:
+            assert "position" not in entry, entry["name"]
+
+
+def test_a_shared_brush_gives_its_two_chargers_different_places(
+    campaign: dict,
+) -> None:
+    """Otherwise `!find` would point at the same spot for both."""
+    canal = [
+        entry for entry in campaign["locations"]
+        if entry["map"] == "ba_canal1" and entry["trigger"]["type"] == "charger"
+    ]
+    positions = [tuple(entry["position"]) for entry in canal]
+    assert len(set(positions)) == 2, positions
+    # 80 units apart on Y, which is the offset the mapper gave the copy.
+    (ax, ay, az), (bx, by, bz) = sorted(positions)
+    assert (ax, az) == (bx, bz)
+    assert abs(by - ay) == 80
+
+
+def test_checkdata_carries_the_same_positions(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    generated = {
+        int(r[1]): r[6] for r in checkdata if r[0] == "L" and len(r) >= 7
+    }
+    expected = {
+        entry["id"]: " ".join(str(v) for v in entry["position"])
+        for entry in campaign["locations"]
+        if "position" in entry
+    }
+    assert generated == expected, "run: python tools/gen_checkdata.py"
+
+
+def test_positions_are_inside_their_map(campaign: dict) -> None:
+    """A charger at the origin usually means the brush lookup silently failed."""
+    at_origin = [
+        entry["name"] for entry in campaign["locations"]
+        if entry.get("position") == [0, 0, 0]
+    ]
+    assert not at_origin, at_origin

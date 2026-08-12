@@ -60,6 +60,12 @@ class APLocation
 	string arg;          // classnames / classname / count / chapter key
 	array<string> args;  // arg split on ',' for pickup lists
 	string name;
+
+	// Where it is in the world, for `!find`. Only the kinds that are a *place*
+	// have one: a charger's brush centre, a weapon's spot on the floor. Reaching
+	// a map is not somewhere you can be pointed at, so those have none.
+	Vector position;
+	bool hasPosition = false;
 }
 
 /*
@@ -420,6 +426,20 @@ void LoadCheckData()
 			location.arg = parts[4];
 			location.args = parts[4].Split( "," );
 			location.name = parts[5];
+
+			// Optional seventh field, "x y z". Absent for anything that is not a
+			// point in the world, and absent entirely from an older data file.
+			if( parts.length() >= 7 )
+			{
+				array<string>@ xyz = parts[6].Split( " " );
+				if( xyz.length() >= 3 )
+				{
+					location.position = Vector(
+						atoi( xyz[0] ), atoi( xyz[1] ), atoi( xyz[2] ) );
+					location.hasPosition = true;
+				}
+			}
+
 			g_Locations.insertLast( @location );
 		}
 		else if( parts[0] == "K" && parts.length() >= 3 )

@@ -68,6 +68,37 @@ def load_map(bsp_path: Path) -> list[dict[str, str]]:
     return parse_entities(read_entity_lump(bsp_path))
 
 
+LUMP_MODELS = 14
+MODEL_STRUCT_SIZE = 64
+
+
+def brush_model_centres(bsp_path: Path) -> dict[str, tuple[float, float, float]]:
+    """`*N` -> the centre of that brush model's bounding box.
+
+    Brush entities are where a position is otherwise unavailable: a
+    `func_healthcharger` has no `origin` key at all, so the only way to say where
+    one is in the world is to read the bounding box the compiler recorded for its
+    model. Returned keyed the way the entity refers to it, `*79`.
+    """
+    with bsp_path.open("rb") as handle:
+        header = handle.read(struct.calcsize(HEADER_FMT))
+        fields = struct.unpack(HEADER_FMT, header)
+        if fields[0] != 30:
+            raise ValueError(f"{bsp_path.name}: unsupported BSP version {fields[0]}")
+        offset = fields[1 + LUMP_MODELS * 2]
+        length = fields[2 + LUMP_MODELS * 2]
+        handle.seek(offset)
+        raw = handle.read(length)
+
+    centres: dict[str, tuple[float, float, float]] = {}
+    for index in range(length // MODEL_STRUCT_SIZE):
+        base = index * MODEL_STRUCT_SIZE
+        mins = struct.unpack_from("<3f", raw, base)
+        maxs = struct.unpack_from("<3f", raw, base + 12)
+        centres[f"*{index}"] = tuple((mins[i] + maxs[i]) / 2 for i in range(3))
+    return centres
+
+
 def origin_of(entity: dict[str, str]) -> tuple[float, float, float] | None:
     raw = entity.get("origin")
     if not raw:
