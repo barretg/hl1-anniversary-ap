@@ -89,22 +89,41 @@ void Initialise()
 }
 
 /*
-* Register the polling timers once per module.
+* Register the polling timers, and make sure there is exactly one of each.
 *
-* A map load wipes the scheduler, so MapInit clears the flag first and we
-* re-register. A plugin reload gets a fresh module with the flag already false.
-* Either way there is exactly one of each timer.
+* Held as handles rather than guarded by a bool, because the bool only worked if
+* a map load really does wipe the scheduler. If it does not, every map added
+* another poller and another loadout sweep on top of the last, and a session
+* spent hopping between missions would end up running the whole lot several times
+* a second -- which looks exactly like the server grinding to a halt.
+*
+* Handles make that self-correcting either way. They live in globals alongside
+* the timers themselves: if a map load wipes the scheduler it wipes these too and
+* they come back null, so there is nothing to remove and nothing dangling to
+* remove it from. If it does not, they still point at the old timers and we take
+* them down before laying new ones.
 */
-bool g_bScheduled = false;
+CScheduledFunction@ g_pBridgeTimer = null;
+CScheduledFunction@ g_pSweepTimer = null;
 
 void EnsureScheduled()
 {
-	if( g_bScheduled )
-		return;
-	g_bScheduled = true;
+	if( g_pBridgeTimer !is null )
+	{
+		g_Scheduler.RemoveTimer( g_pBridgeTimer );
+		@g_pBridgeTimer = null;
+	}
 
-	g_Scheduler.SetInterval( "BridgePoll", POLL_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
-	g_Scheduler.SetInterval( "EnforceLoadouts", SWEEP_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
+	if( g_pSweepTimer !is null )
+	{
+		g_Scheduler.RemoveTimer( g_pSweepTimer );
+		@g_pSweepTimer = null;
+	}
+
+	@g_pBridgeTimer = g_Scheduler.SetInterval(
+		"BridgePoll", POLL_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
+	@g_pSweepTimer = g_Scheduler.SetInterval(
+		"EnforceLoadouts", SWEEP_INTERVAL, g_Scheduler.REPEAT_INFINITE_TIMES );
 }
 
 /*
@@ -138,8 +157,8 @@ void ForceSurvivalOff()
 */
 void MapInit()
 {
-	// The map load wiped the scheduler, so the timers must be registered again.
-	g_bScheduled = false;
+	// EnsureScheduled takes down whatever it laid last time before laying it
+	// again, so this is safe whether or not the map load wiped the scheduler.
 	Initialise();
 }
 
