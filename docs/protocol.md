@@ -97,17 +97,30 @@ death_link_amnesty=4
 chapters=blast_pit,office_complex
 excluded=black_mesa_inbound
 items=RPG;Shotgun
+ungated=item_longjump
 now=1786000000
 event=4|ITEM|Ammo Cache|1786000000
 event=5|DEATHLINK|PlayerTwo~a gargantua|1786000001
 ```
 
-`chapters` and `excluded` are comma separated; `items` is semicolon separated
-because item names may legitimately contain commas.
+`chapters` and `excluded` are comma separated; `items` and `ungated` are
+semicolon separated because item names may legitimately contain commas.
 
 `excluded` is the missions the seed left out. It is not the same as "locked": no
 item will ever unlock them, so the game reports "not in this seed" rather than
 leaving the player waiting for a key that does not exist.
+
+`ungated` is classnames, not item names, and it is the seed saying "this one is
+not mine". The plugin neither grants nor removes them and lets their pickups be
+collected, so the campaign hands them out on its own schedule. It exists because
+"not shuffled" has two possible meanings and the equipment splits between them:
+the HEV suit has to be reported in `items`, since the suit item is the only thing
+that ever turns armour on, while the long jump module is handed out by the
+campaign itself from Forget About Freeman onward and only needs to be left alone.
+Reporting the module as owned instead granted it from the first spawn of the run.
+
+An older client sends no `ungated` line, which parses as an empty list and
+reproduces the previous behaviour exactly.
 
 `now` is the client's wall clock at write time. Event freshness is judged by
 comparing an event's timestamp against `now` from the same snapshot, so the two

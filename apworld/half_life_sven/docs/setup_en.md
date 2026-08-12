@@ -120,6 +120,16 @@ without it — but your armour is held at zero until the HEV Suit item arrives.
 Batteries, wall chargers and Armor Battery filler all do nothing until then, and
 the game says so in chat when the item lands.
 
+**The long jump module is switched on, not handed over.** With
+`shuffle_longjump: true` you cannot long jump until the item arrives, however
+many modules the campaign puts in front of you. With it off the module is left to
+Half-Life entirely: nothing early, and you get it where the campaign gives it, in
+Forget About Freeman and everything after.
+
+That is the one place the two pieces of optional equipment differ. An unshuffled
+HEV suit is granted from the start, because the item is the only thing that ever
+turns armour on and nothing in the campaign would.
+
 **Nihilanth is not unlocked by an item.** It opens once you have completed
 `missions_required` missions (set in your YAML; the default is all 17 others).
 

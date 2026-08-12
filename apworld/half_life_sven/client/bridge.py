@@ -179,6 +179,7 @@ class Bridge:
         goal_open: bool,
         death_link: bool,
         excluded: list[str] | None = None,
+        ungated: list[str] | None = None,
         death_link_amnesty: int = 0,
         data_version: str = "",
         force: bool = False,
@@ -208,6 +209,10 @@ class Bridge:
             # the player waiting for a key that does not exist.
             "excluded=" + ",".join(sorted(excluded or ())),
             "items=" + ";".join(sorted(items)),
+            # Classnames this seed does not gate at all, which is not the same as
+            # gating them and calling them owned: the game keeps its own schedule
+            # for these, handing them out and taking them back as it always did.
+            "ungated=" + ";".join(sorted(ungated or ())),
         ]
         body = "\n".join(lines)
         pending = tuple(sorted(self._pending))

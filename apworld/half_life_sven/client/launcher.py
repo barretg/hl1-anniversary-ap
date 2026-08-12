@@ -214,7 +214,12 @@ class HalfLifeSvenContext(CommonContext):
         # Equipment this seed did not shuffle. No item will ever be sent for it,
         # so the game has to be told up front or it gates it for the whole run --
         # which for the HEV suit meant no armour, ever.
-        self.always_unlocked: set[str] = set(optional_item_options())
+        self.always_unlocked: set[str] = unshuffled_grants()
+        # The other half of that answer: equipment the game should simply be left
+        # to hand out on its own schedule. Sent as classnames because the plugin
+        # gates classnames, and it has to stop gating these entirely rather than
+        # treat them as owned.
+        self.ungated_classnames: set[str] = unshuffled_vanilla_classnames()
         self.completed_missions: set[str] = set()
         self.missions_required = len(
             [c for c in self.campaign["chapters"] if not c["is_goal"]]
@@ -361,12 +366,15 @@ class HalfLifeSvenContext(CommonContext):
             )
             self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
             self.excluded_chapters = set(slot_data.get("excluded_chapters", ()))
-            # Absent from slot data reads as "not shuffled", which grants it: a
-            # seed that never sends the item must not leave it locked forever.
-            self.always_unlocked = {
+            # Absent from slot data reads as "not shuffled". Either way the item
+            # is never sent, so the game has to be told; what differs is what it
+            # is told. See `unshuffled_grants` and `unshuffled_vanilla_classnames`.
+            unshuffled = {
                 name for name, option in optional_item_options().items()
                 if not slot_data.get(option, False)
             }
+            self.always_unlocked = unshuffled_grants(unshuffled)
+            self.ungated_classnames = unshuffled_vanilla_classnames(unshuffled)
             self.death_link_enabled = bool(slot_data.get("death_link", False))
             self.death_link_amnesty = int(
                 slot_data.get("death_link_amnesty", self.death_link_amnesty)
@@ -539,6 +547,43 @@ def optional_item_options() -> dict[str, str]:
     return OPTIONAL_ITEM_NAMES
 
 
+def unshuffled_grants(unshuffled: set[str] | None = None) -> set[str]:
+    """Unshuffled equipment the game should treat as owned from the first spawn.
+
+    The HEV suit, and nothing else so far: armour is switched on by that item
+    alone, so a seed that never sends it has to say up front that it is held.
+    """
+    from ..data import VANILLA_WHEN_UNSHUFFLED
+
+    if unshuffled is None:
+        unshuffled = set(optional_item_options())
+    return unshuffled - VANILLA_WHEN_UNSHUFFLED
+
+
+def unshuffled_vanilla_classnames(unshuffled: set[str] | None = None) -> set[str]:
+    """Unshuffled equipment the plugin should stop gating altogether.
+
+    Classnames rather than item names, because gating is by classname and the
+    plugin has to recognise the pickup it is being told to leave alone.
+
+    The long jump module: the campaign hands it out from Forget About Freeman
+    onward, so an unshuffled module wants nothing done to it at all. Calling it
+    owned instead granted it from the first spawn of the run.
+    """
+    from ..data import VANILLA_WHEN_UNSHUFFLED
+
+    if unshuffled is None:
+        unshuffled = set(optional_item_options())
+
+    wanted = unshuffled & VANILLA_WHEN_UNSHUFFLED
+    return {
+        classname
+        for entry in load_campaign()["items"]
+        if entry["name"] in wanted
+        for classname in entry.get("classnames", ())
+    }
+
+
 async def game_watcher(ctx: HalfLifeSvenContext) -> None:
     """Pump the bridge: game events in, snapshot out.
 
@@ -621,8 +666,9 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
                 items=sorted(ctx.held_item_names),
                 goal_open=ctx.goal_open,
                 death_link=ctx.death_link_enabled,
-        death_link_amnesty=ctx.death_link_amnesty,
-        excluded=sorted(ctx.excluded_chapters),
+                death_link_amnesty=ctx.death_link_amnesty,
+                excluded=sorted(ctx.excluded_chapters),
+                ungated=sorted(ctx.ungated_classnames),
                 data_version=ctx.data_version,
                 force=True,
             )
@@ -654,6 +700,7 @@ async def pump(ctx: HalfLifeSvenContext) -> None:
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
         excluded=sorted(ctx.excluded_chapters),
+        ungated=sorted(ctx.ungated_classnames),
         data_version=ctx.data_version,
     )
 

@@ -10,9 +10,24 @@
 *      game_player_equip, monster drops) is caught by a periodic sweep.
 */
 
+/*
+* Has this seed left this classname to the game entirely?
+*
+* Checked ahead of everything else, because it is the one answer that means "do
+* nothing" rather than "do something": no grant, no strip, no refusal at the
+* pickup. Whatever Half-Life does with it is what happens.
+*/
+bool ClassnameUngated( const string& in szClassname )
+{
+	return g_UngatedClassnames.exists( szClassname );
+}
+
 /* Is this classname allowed in a player's hands right now? */
 bool ClassnameAllowed( const string& in szClassname )
 {
+	if( ClassnameUngated( szClassname ) )
+		return true;
+
 	for( uint i = 0; i < g_StartingWeapons.length(); ++i )
 	{
 		if( g_StartingWeapons[i] == szClassname )
@@ -26,7 +41,13 @@ bool ClassnameAllowed( const string& in szClassname )
 	return g_State.ItemUnlocked( szItem );
 }
 
-/* Every classname the player is currently entitled to hold. */
+/*
+* Every classname the player is currently entitled to be handed.
+*
+* Narrower than ClassnameAllowed on purpose: an ungated classname is allowed in
+* the player's hands but must never be granted, or we would be handing out on
+* spawn the very thing the campaign is supposed to hand out in its own time.
+*/
 array<string> AllowedClassnames()
 {
 	array<string> allowed = g_StartingWeapons;
@@ -34,6 +55,9 @@ array<string> AllowedClassnames()
 
 	for( uint i = 0; i < keys.length(); ++i )
 	{
+		if( ClassnameUngated( keys[i] ) )
+			continue;
+
 		string szItem;
 		if( g_LockedClassnames.get( keys[i], szItem ) && g_State.ItemUnlocked( szItem ) )
 		{
@@ -139,7 +163,12 @@ void ApplyLoadout( CBasePlayer@ pPlayer )
 
 	StripDisallowed( pPlayer );
 	EnforceArmour( pPlayer );
-	SetLongJump( pPlayer, ClassnameAllowed( LONGJUMP_CLASSNAME ) );
+
+	// Left out of a seed that does not shuffle it: the campaign hands the module
+	// over itself from Forget About Freeman onward, and switching it on here
+	// would be doing that ten missions early.
+	if( !ClassnameUngated( LONGJUMP_CLASSNAME ) )
+		SetLongJump( pPlayer, ClassnameAllowed( LONGJUMP_CLASSNAME ) );
 
 	array<string> allowed = AllowedClassnames();
 	for( uint i = 0; i < allowed.length(); ++i )

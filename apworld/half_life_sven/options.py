@@ -100,7 +100,12 @@ class ShuffleHevSuit(Toggle):
 class ShuffleLongJump(Toggle):
     """Shuffle the long jump module into the item pool.
 
-    When on, the Xen missions expect it in logic.
+    When on, the Xen missions expect it in logic, and you cannot long jump until
+    the item arrives however many modules the campaign puts in front of you.
+
+    When off, the module is left to Half-Life entirely: no long jump early on,
+    and you pick it up where the campaign hands it over, in Forget About Freeman
+    and everything after it.
     """
 
     display_name = "Shuffle Long Jump Module"

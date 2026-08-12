@@ -96,6 +96,11 @@ GoldSrc the suit is what draws the weapon HUD and without it you cannot change
 weapons at all. What the item grants is armour: until it arrives your armour is
 held at zero, and batteries, wall chargers and armour filler all do nothing.
 
+The long jump module is switched on and off directly, so a module lying in a
+level is scenery until the item reaches you. Leave it out of the shuffle and it
+goes back to being Half-Life's: you find it in Forget About Freeman, where the
+campaign has always given it to you.
+
 ## What is the goal?
 
 Kill Nihilanth. Its mission only opens once you have completed enough of the

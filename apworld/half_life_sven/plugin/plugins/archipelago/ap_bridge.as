@@ -140,6 +140,7 @@ void BridgePoll()
 	dictionary chapters;
 	dictionary excluded;
 	dictionary items;
+	dictionary ungated;
 	bool bGoalOpen = false;
 	bool bConnected = false;
 	bool bDeathLink = false;
@@ -193,6 +194,17 @@ void BridgePoll()
 					items[ szItem ] = true;
 			}
 		}
+		else if( szKey == "ungated" )
+		{
+			// Classnames, so semicolon separated for the same reason `items` is.
+			array<string>@ names = szValue.Split( ";" );
+			for( uint i = 0; i < names.length(); ++i )
+			{
+				string szClassname = APTrim( names[i] );
+				if( szClassname.Length() > 0 )
+					ungated[ szClassname ] = true;
+			}
+		}
 		else if( szKey == "now" )
 			g_flSnapshotNow = atof( szValue );
 		else if( szKey == "session" )
@@ -226,6 +238,7 @@ void BridgePoll()
 	g_State.unlockedChapters = chapters;
 	g_State.excludedChapters = excluded;
 	g_State.unlockedItems = items;
+	g_UngatedClassnames = ungated;
 	g_State.goalOpen = bGoalOpen;
 	g_State.connected = bConnected;
 	g_State.deathLink = bDeathLink;

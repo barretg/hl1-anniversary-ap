@@ -97,6 +97,19 @@ def test_snapshot_carries_excluded_missions(bridge: Bridge) -> None:
     assert "excluded=black_mesa_inbound" in bridge.in_path.read_text(encoding="utf-8")
 
 
+def test_snapshot_carries_ungated_classnames(bridge: Bridge) -> None:
+    """"Not gated at all" has to be distinguishable from "gated and owned"."""
+    snapshot(bridge)
+    assert "ungated=\n" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, ungated=["item_longjump"]) is True
+    text = bridge.in_path.read_text(encoding="utf-8")
+    assert "ungated=item_longjump" in text
+    # Classnames are semicolon separated, matching `items`.
+    assert snapshot(bridge, ungated=["item_suit", "item_longjump"]) is True
+    assert "ungated=item_longjump;item_suit" in bridge.in_path.read_text(encoding="utf-8")
+
+
 def test_snapshot_carries_the_deathlink_amnesty(bridge: Bridge) -> None:
     """The plugin counts the allowance down, so it has to be told what it is."""
     snapshot(bridge)

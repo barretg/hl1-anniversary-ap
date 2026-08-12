@@ -309,3 +309,34 @@ def test_pickup_triggers_have_classnames(campaign: dict) -> None:
         trigger = entry["trigger"]
         if trigger["type"] == "pickup":
             assert trigger["classnames"], entry["name"]
+
+
+def test_optional_equipment_carries_the_classnames_it_gates(campaign: dict) -> None:
+    """The client resolves item name -> classnames out of this data.
+
+    `shuffle_longjump: false` is delivered to the plugin as the *classname* it
+    should stop gating, not as an item the player owns, so the mapping has to be
+    in campaign.json rather than assumed on either side.
+    """
+    optional = {
+        entry["name"]: entry.get("classnames", ())
+        for entry in campaign["items"]
+        if entry.get("group") == "optional"
+    }
+
+    assert optional, "no optional equipment in the campaign data"
+    for name, classnames in optional.items():
+        assert classnames, name
+
+
+def test_optional_equipment_is_gated_by_classname(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """Ungating can only cancel a gate that exists in the first place."""
+    gated = {record[1] for record in checkdata if record[0] == "K"}
+
+    for entry in campaign["items"]:
+        if entry.get("group") != "optional":
+            continue
+        for classname in entry["classnames"]:
+            assert classname in gated, classname

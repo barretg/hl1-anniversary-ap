@@ -111,6 +111,17 @@ dictionary g_LockedClassnames;
 // classnames always granted regardless of the multiworld.
 array<string> g_StartingWeapons;
 
+/*
+* Classnames this seed does not gate at all, sent by the client.
+*
+* Not the same as owned, which is why it is a list of its own. Owned means we
+* hand it over and keep it there; ungated means we neither give it nor take it
+* away, and the campaign's own pickups and .cfg loadouts decide when the player
+* gets it -- exactly as Half-Life does. Empty for anything the seed shuffles,
+* and empty when talking to a client too old to send the field.
+*/
+dictionary g_UngatedClassnames;
+
 // Locations relevant to the map we are currently on, bucketed by trigger kind
 // so the hot paths (pickup / kill) never walk all 174 entries.
 array<APLocation@> g_MapPickups;

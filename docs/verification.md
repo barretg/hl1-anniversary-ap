@@ -130,7 +130,17 @@ Then receive the item:
 
 With `shuffle_hev_suit: false`, armour must work from the first spawn. This used
 to be gated on an item the seed never sends, leaving the player with no armour
-for the entire run; the same applies to `shuffle_longjump: false` and the module.
+for the entire run.
+
+`shuffle_longjump: false` is deliberately *not* the same. The module is left to
+the campaign rather than granted, so on a seed with it off:
+
+- Anomalous Materials through Surface Tension: no long jump. Granting it here was
+  the bug this split fixed, and it looked like the module being permanently on.
+- Forget About Freeman (`hl_c14`) and everything after: the module works, from
+  the map's own `.cfg`, with nothing from us.
+- Check `ungated=item_longjump` is in `ap_in.txt`, and that it is absent with
+  `shuffle_longjump: true`.
 
 ### 5a. Weapon pickups
 
@@ -165,11 +175,12 @@ than by handing over a pickup: with it received, duck-jump should long jump. Wit
 `shuffle_longjump: true` and the item not yet received, it should not — including
 on a map whose own .cfg hands one out.
 
-The case that matters most is a map change. Long jump once, legitimately or from
-a .cfg, then cross a map boundary with the item locked: the jump must be gone on
-the far side. The player's flag is reset by the new map but the physics key the
-engine actually reads is not, so this is where the module used to become
-permanent.
+The case that matters most is a map change, and `hl_c14` onward is where to test
+it, since those maps hand a module out themselves. Long jump on one of them with
+the item still locked, then cross a map boundary: the jump must be gone on the
+far side. The player's flag is reset by the new map but the physics key the
+engine actually reads is not, so a module picked up on one map can otherwise
+follow the player into the next.
 
 
 Generate with `trap_percentage: 100` for a seed that is nothing but traps.

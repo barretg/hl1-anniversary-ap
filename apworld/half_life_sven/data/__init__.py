@@ -49,6 +49,17 @@ INTRO_CHAPTER: str = CHAPTERS[0]["key"]
 # Items that only enter the pool when the matching YAML toggle is on.
 OPTIONAL_ITEM_NAMES = {"HEV Suit": "shuffle_hev_suit", "Long Jump Module": "shuffle_longjump"}
 
+# Of those, the ones that go back to behaving exactly as Half-Life does when the
+# toggle is off, rather than being handed over at the start of the run.
+#
+# The two are not alike. Nothing but the HEV Suit item ever turns armour on, so an
+# unshuffled suit has to be granted up front or the player has no armour for the
+# whole run. The long jump module is different: the campaign gives it out itself,
+# in Forget About Freeman and everything after it, so leaving it entirely alone is
+# both possible and what "not shuffled" ought to mean. Granting it up front put a
+# module in the player's legs ten missions before Half-Life would have.
+VANILLA_WHEN_UNSHUFFLED = frozenset({"Long Jump Module"})
+
 # Trigger type of the health / HEV charger checks, switched off by `chargesanity`.
 CHARGER_TRIGGER = "charger"
 
