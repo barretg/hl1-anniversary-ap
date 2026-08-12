@@ -124,15 +124,21 @@ class DeathLinkAmnesty(Range):
 
 
 class TrapPercentage(Range):
-    """Percentage of filler items replaced by traps.
+    """Percentage of your filler items replaced by traps.
 
-    Traps are not implemented yet; this is reserved so seeds generated now stay
-    compatible. Leave at 0.
+    Three exist, all of them the whole lobby's problem, and all nuisances rather
+    than punishments — none can cost you a run:
+
+    - Scientist Trap: four scientists, one of each variant, appear around every
+      player and start following them about.
+    - Headcrab Trap: four headcrabs each, same idea, considerably less friendly.
+    - Butterfingers Trap: everyone drops the weapon they are holding. The suit
+      reissues it after half a minute if you cannot find it again.
     """
 
     display_name = "Trap Percentage"
     range_start = 0
-    range_end = 0
+    range_end = 100
     default = 0
 
 

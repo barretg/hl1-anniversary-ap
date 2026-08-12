@@ -416,6 +416,15 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
     ):
         add(name, "filler", group="filler", classnames=classnames, weight=weight)
 
+    # Traps replace a share of the filler, set by `trap_percentage`. Each is a
+    # nuisance rather than a punishment: nothing here can cost a run.
+    for name, weight in (
+        ("Scientist Trap", 34),
+        ("Headcrab Trap", 33),
+        ("Butterfingers Trap", 33),
+    ):
+        add(name, "trap", group="trap", weight=weight)
+
     return items
 
 

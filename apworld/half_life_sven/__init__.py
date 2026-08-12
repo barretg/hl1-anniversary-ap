@@ -34,6 +34,8 @@ from .items import (
     item_name_groups,
     item_name_to_id,
     optional_items,
+    trap_items,
+    trap_weights,
     unlock_item_for_chapter,
     weapon_items,
 )
@@ -189,7 +191,15 @@ class HalfLifeSvenWorld(World):
         self.multiworld.itempool += pool
 
     def get_filler_names(self, count: int) -> list[str]:
-        return self.random.choices(filler_items, weights=filler_weights, k=count)
+        """Fill the leftover locations, with `trap_percentage` of them traps."""
+        traps = round(count * self.options.trap_percentage.value / 100)
+        names = self.random.choices(trap_items, weights=trap_weights, k=traps)
+        names += self.random.choices(
+            filler_items, weights=filler_weights, k=count - traps
+        )
+        # Otherwise every trap lands in the same stretch of the pool.
+        self.random.shuffle(names)
+        return names
 
     def get_filler_item_name(self) -> str:
         return self.random.choices(filler_items, weights=filler_weights, k=1)[0]

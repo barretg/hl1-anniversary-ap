@@ -26,7 +26,8 @@ apworld/half_life_sven/     the Archipelago world
   client/                   the AP client and the file bridge
   plugin/                   the Sven Co-op server plugin, plus its installer
     plugins/                mirrors svencoop/scripts/
-      archipelago/          ap_main, ap_bridge, ap_items, ap_locations, ap_hub, ap_deathlink
+      archipelago/          ap_main, ap_bridge, ap_items, ap_locations, ap_hub,
+                            ap_deathlink, ap_traps
       store/archipelago/checkdata.txt   generated
   docs/                     setup guide and game page
 tools/                      generators, packaging, installer CLI

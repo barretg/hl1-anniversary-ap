@@ -1,5 +1,5 @@
 {
- "data_version": "7719605f9ae1",
+ "data_version": "84cc1d64f70e",
  "chapters": [
   {
    "key": "black_mesa_inbound",
@@ -571,6 +571,27 @@
     "item_healthkit"
    ],
    "weight": 10
+  },
+  {
+   "id": 7710036,
+   "name": "Scientist Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 34
+  },
+  {
+   "id": 7710037,
+   "name": "Headcrab Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 33
+  },
+  {
+   "id": 7710038,
+   "name": "Butterfingers Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 33
   }
  ],
  "locations": [

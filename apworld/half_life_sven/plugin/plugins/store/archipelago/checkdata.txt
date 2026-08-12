@@ -7,7 +7,7 @@
 #   S|<classname>                  always granted, never randomised
 #   D|<data version>               must match the client's, or ids differ
 V|1
-D|7719605f9ae1
+D|84cc1d64f70e
 C|0|black_mesa_inbound|Black Mesa Inbound|hl_c00|0
 C|1|anomalous_materials|Anomalous Materials|hl_c01_a1,hl_c01_a2|0
 C|2|unforeseen_consequences|Unforeseen Consequences|hl_c02_a1,hl_c02_a2|0

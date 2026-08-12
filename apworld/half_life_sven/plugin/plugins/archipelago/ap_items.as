@@ -155,6 +155,11 @@ void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 			continue;
 		}
 
+		// Butterfingers put this on the floor on purpose. Handing it back one
+		// second later would make the trap a flicker and nothing more.
+		if( WeaponWithheld( pPlayer, szClassname ) )
+			continue;
+
 		if( !HasItem( pPlayer, szClassname ) )
 			pPlayer.GiveNamedItem( szClassname );
 	}

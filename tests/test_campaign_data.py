@@ -93,6 +93,28 @@ def test_locations_outnumber_progression_items(campaign: dict) -> None:
     assert len(campaign["locations"]) > len(progression)
 
 
+def test_traps_exist_and_are_classified_as_traps(campaign: dict) -> None:
+    traps = [item for item in campaign["items"] if item.get("group") == "trap"]
+    assert {item["name"] for item in traps} == {
+        "Scientist Trap", "Headcrab Trap", "Butterfingers Trap"
+    }
+    for item in traps:
+        assert item["classification"] == "trap", item["name"]
+        assert item.get("weight", 0) > 0, item["name"]
+
+
+def test_traps_are_handled_by_the_plugin(campaign: dict) -> None:
+    """A trap the plugin does not know about arrives as a silent no-op."""
+    source = (
+        REPO / "apworld" / "half_life_sven" / "plugin" / "plugins"
+        / "archipelago" / "ap_traps.as"
+    ).read_text(encoding="utf-8")
+
+    for item in campaign["items"]:
+        if item.get("group") == "trap":
+            assert f'"{item["name"]}"' in source, item["name"]
+
+
 def test_requirement_groups_reference_real_items(campaign: dict) -> None:
     names = {item["name"] for item in campaign["items"]}
     for group, members in campaign["requirement_groups"].items():

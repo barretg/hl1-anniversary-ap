@@ -36,6 +36,16 @@ RPG, Tau cannon, gluon gun, hivehand, satchel charges, tripmines, snarks, hand
 grenades), and optionally the HEV suit and long jump module. Everything else is
 filler: ammo caches, medkits and armour batteries.
 
+`trap_percentage` turns some of that filler into traps. There are three. Like
+DeathLink, they are the whole lobby's problem rather than one player's, and all
+of them are nuisances rather than punishments — none can cost you a run:
+
+- **Scientist Trap** — four scientists, one of each variant, appear around every
+  player and start following them about.
+- **Headcrab Trap** — four headcrabs each, same idea, considerably less friendly.
+- **Butterfingers Trap** — everyone drops the weapon they are holding. The suit
+  reissues it after thirty seconds if you cannot find it again.
+
 **Locations** — 173 of them:
 
 - reaching each part of a mission (Surface Tension has five, Office Complex one)

@@ -154,6 +154,27 @@ for the entire run; the same applies to `shuffle_longjump: false` and the module
 - Chargers in a mission you re-enter later do not resend.
 - Press use on ordinary buttons, doors and levers → no checks, no log spam.
 
+### 5c. Traps
+
+Generate with `trap_percentage: 100` for a seed that is nothing but traps.
+
+- Scientist Trap: four scientists appear around **every** living player, and each
+  set is four *different* scientists rather than four of the same model.
+- Headcrab Trap: four headcrabs per player, same placement.
+- With two players standing apart, both get their own four. Standing together,
+  they get eight between them — that is intended, not a bug.
+- Neither should spawn inside geometry. Stand with your back to a wall, in a
+  corridor, and in a lift, and check nothing arrives stuck. Some bearings finding
+  no room is expected and fine; all four failing is not.
+- Butterfingers: every living player's held weapon lands on the floor, and stays
+  there. Watch for a full second — the loadout sweep must not put it back.
+- Wait thirty seconds without touching it: the weapon is reissued.
+- Spring Butterfingers, then change level before the timer runs out. The weapon
+  comes back on the new map rather than being withheld against a clock that
+  restarted.
+- Spring Butterfingers, then die. The weapon comes back on respawn.
+- Springing any trap with nobody alive must not error; the trap is simply spent.
+
 ### 6. Goal
 
 Set `missions_required: 1` for a short test seed. Confirm Nihilanth stays sealed

@@ -29,6 +29,7 @@ PLUGIN_FILES = (
     "plugins/archipelago/ap_locations.as",
     "plugins/archipelago/ap_main.as",
     "plugins/archipelago/ap_state.as",
+    "plugins/archipelago/ap_traps.as",
     "plugins/store/archipelago/checkdata.txt",
 )
 

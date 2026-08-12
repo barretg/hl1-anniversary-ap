@@ -281,6 +281,8 @@ void HandleEvent( const string& in szPayload )
 		ApplyIncomingDeathLink( szData, flStamp );
 	else if( szKind == "ITEM" )
 		GrantFillerItem( szData );
+	else if( szKind == "TRAP" )
+		SpringTrap( szData );
 	else if( szKind == "CHAT" )
 		g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, szData + "\n" );
 

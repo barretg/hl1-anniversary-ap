@@ -147,6 +147,40 @@ class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeSvenTestBase):
         self.assertTrue(self.can_reach_entrance("Enter Xen", state))
 
 
+class TestTraps(HalfLifeSvenTestBase):
+    options = {"trap_percentage": 50}
+
+    def test_traps_replace_filler_not_progression(self) -> None:
+        from BaseClasses import ItemClassification
+
+        pool = [item for item in self.multiworld.itempool if item.player == self.player]
+        traps = [i for i in pool if i.classification == ItemClassification.trap]
+        progression = [
+            i for i in pool if i.classification == ItemClassification.progression
+        ]
+
+        self.assertTrue(traps)
+        # Every progression item is still in the pool; only filler gave way.
+        self.assertEqual(len(progression), len(self.available_progression()))
+
+    def available_progression(self) -> set:
+        return self.multiworld.worlds[self.player].available_item_names - {
+            unlock_item_for_chapter[self.multiworld.worlds[self.player].starting_chapter]
+        }
+
+
+class TestNoTraps(HalfLifeSvenTestBase):
+    options = {"trap_percentage": 0}
+
+    def test_the_default_pool_has_none(self) -> None:
+        from BaseClasses import ItemClassification
+
+        pool = [item for item in self.multiworld.itempool if item.player == self.player]
+        self.assertFalse(
+            [i for i in pool if i.classification == ItemClassification.trap]
+        )
+
+
 class TestChargesanityOff(StartingMissionMixin, HalfLifeSvenTestBase):
     options = {"chargesanity": False}
 

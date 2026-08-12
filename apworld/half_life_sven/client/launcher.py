@@ -464,6 +464,10 @@ class HalfLifeSvenContext(CommonContext):
             self.unlocked_items.add(entry["name"])
         elif group == "filler" and deliver_filler and self.bridge:
             self.bridge.queue_event("ITEM", entry["name"])
+        elif group == "trap" and deliver_filler and self.bridge:
+            # One-shot like filler, and for the same reason it must not be
+            # redelivered on reconnect: nobody wants their traps twice.
+            self.bridge.queue_event("TRAP", entry["name"])
 
     # -- campaign helpers ------------------------------------------------
 

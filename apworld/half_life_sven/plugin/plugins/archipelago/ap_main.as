@@ -18,6 +18,7 @@
 #include "ap_items"
 #include "ap_locations"
 #include "ap_deathlink"
+#include "ap_traps"
 #include "ap_hub"
 
 // How often to look for a new snapshot from the client. Fast enough that an item
@@ -70,6 +71,7 @@ void Initialise()
 	// clearing here just avoids the set growing across a long run.
 	g_SentChecks.deleteAll();
 	g_flLastPortalUse.deleteAll();
+	ClearWithheldWeapons();
 	// Force a full reparse of the snapshot.
 	g_szLastInput = "";
 	g_flDeathLinkImmuneUntil = 0.0f;
@@ -196,6 +198,9 @@ void MapStart()
 
 HookReturnCode PlayerSpawn( CBasePlayer@ pPlayer )
 {
+	// Whatever Butterfingers made them drop, the death already took.
+	ClearWithheldWeapons( pPlayer );
+
 	// The HL campaign .cfg files equip a full loadout on spawn, and that runs
 	// after this hook -- so defer a tick and take it all back off again.
 	g_Scheduler.SetTimeout( "ApplyLoadoutDeferred", 0.5f, EHandle( pPlayer ) );

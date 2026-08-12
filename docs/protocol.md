@@ -121,6 +121,7 @@ load is correctly recognised as stale rather than killing you on arrival.
 | Kind | Payload |
 | --- | --- |
 | `ITEM` | filler item name |
+| `TRAP` | trap name, sprung once on arrival |
 | `DEATHLINK` | `<source>~<cause>` |
 | `CHAT` | a line of multiworld chat to print in game |
 
