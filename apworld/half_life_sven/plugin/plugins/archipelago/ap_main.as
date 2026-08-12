@@ -168,6 +168,12 @@ void MapInit()
 	// EnsureScheduled takes down whatever it laid last time before laying it
 	// again, so this is safe whether or not the map load wiped the scheduler.
 	Initialise();
+
+	// Strictly after Initialise, which clears the flag this sets. MapInit is the
+	// only place a precache is allowed -- see PrecacheTrapMonsters -- which is
+	// why this is here and not in Initialise alongside everything else: that runs
+	// on plugin load too, and precaching there is the Host_Error.
+	PrecacheTrapMonsters();
 }
 
 void MapStart()

@@ -15,8 +15,34 @@
 // Four of whatever is being spawned, arranged around each player.
 const int TRAP_SPAWN_COUNT = 4;
 
-// Far enough out not to telefrag anyone, close enough to be everyone's problem.
-const float TRAP_SPAWN_RADIUS = 96.0f;
+// The band each spawn lands in: far enough out not to telefrag anyone, close
+// enough to be everyone's problem. Rolled per monster, so four of them arrive at
+// four different distances rather than on the rim of a circle.
+const float TRAP_SPAWN_MIN_RADIUS = 72.0f;
+const float TRAP_SPAWN_MAX_RADIUS = 160.0f;
+
+// How many bearings to try before giving up on one monster. A random bearing
+// indoors is very often pointing at a wall, and one roll would mean a trap in a
+// corridor spawning one scientist instead of four.
+const int TRAP_PLACE_ATTEMPTS = 10;
+
+// How far apart two of this trap's spawns have to be. Enough that they read as
+// scattered rather than stacked, and that they are not born pushing each other.
+const float TRAP_MIN_SEPARATION = 40.0f;
+
+// Backed off whatever the outward trace hit, so nobody arrives wedged in a wall.
+const float TRAP_WALL_MARGIN = 16.0f;
+
+// How far a chosen spot may fall before it stops counting as the same room. A
+// short drop is a step or a kerb; a long one is the monster leaving down a shaft
+// the moment it arrives.
+const float TRAP_DROP_HEIGHT = 128.0f;
+
+// Half the height of the engine's standing hulls, which is the distance between
+// the point a hull trace works with (the centre of the box) and a monster's own
+// origin (its feet). Hull 1 is 32x32x72 and hull 3 is 32x32x36.
+const float HUMAN_HULL_HALF = 36.0f;
+const float HEAD_HULL_HALF = 18.0f;
 
 // The four scientist sub-models: Glasses, Einstein, Luther, Slick. One of each,
 // in a random order, which is what makes it read as a crowd rather than a clone.
@@ -117,6 +143,42 @@ void ClearWithheldWeapons( CBasePlayer@ pPlayer )
 }
 
 /*
+* Whether this map's precache table has the trap monsters in it.
+*
+* GoldSrc will only accept a precache while the map is spawning, and killed the
+* server outright the first time a trap tried to create a scientist on a map
+* that had none of its own:
+*
+*   Host_Error: PF_precache_model: 'models/scientist.mdl' Precache can only be
+*   done in spawn functions
+*
+* So the models are booked in MapInit instead, and this records that it happened.
+* Cleared in Initialise, which runs on plugin load as well as on map load -- a
+* plugin reloaded mid-map missed its chance to precache anything, and must not
+* spawn a monster until the next map has booked them properly.
+*/
+bool g_bTrapMonstersPrecached = false;
+
+/*
+* Book the trap monsters into this map's precache table.
+*
+* MapInit only. Anywhere later is the crash above. The cost is paid on every map
+* whether or not a trap ever arrives, which is the trade: a handful of models in
+* the precache table against a server that dies when one does.
+*
+* PrecacheMonster builds the monster once and throws it away, so it pulls in the
+* models, sounds and sentences its own Precache would -- including the scientist
+* sub-models the spawner picks between.
+*/
+void PrecacheTrapMonsters()
+{
+	g_Game.PrecacheMonster( "monster_scientist", true );
+	g_Game.PrecacheMonster( "monster_headcrab", false );
+
+	g_bTrapMonstersPrecached = true;
+}
+
+/*
 * How long a map has to have been settled before the queue drains onto it.
 *
 * Counted from the moment there is somewhere for a trap to land, not from the
@@ -189,6 +251,13 @@ bool TrapGroundReady()
 	if( g_szPendingLevel.Length() > 0 )
 		return false;
 
+	// Nothing can be spawned on this map, so hold everything -- including
+	// Butterfingers, which needs no precache -- rather than draining half a queue
+	// now and leaving the rest. The next map load books the models and releases
+	// the lot.
+	if( !g_bTrapMonstersPrecached )
+		return false;
+
 	for( int i = 1; i <= g_Engine.maxClients; ++i )
 	{
 		CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( i );
@@ -247,6 +316,11 @@ void ProcessTrapQueue()
 void ResetTrapGround()
 {
 	g_flTrapGroundSince = 0.0f;
+
+	// Earned back by MapInit, which is the only place a precache is legal. Set
+	// here rather than trusted from the last map: the precache table belongs to
+	// the map, so it goes when the map does.
+	g_bTrapMonstersPrecached = false;
 }
 
 void SpringTrapNow( const string& in szName )
@@ -268,6 +342,9 @@ void SpringTrapNow( const string& in szName )
 * player's: a DeathLink takes everybody, so a headcrab delivery does too. Players
 * standing together get one another's spawns on top of their own, which is the
 * intended outcome and not worth deduplicating.
+*
+* Four is the ambition, not a promise. Each one is placed independently and a
+* cramped room may have room for fewer, which is better than four in the walls.
 */
 void SpawnTrap( const string& in szClassname, const string& in szMessage )
 {
@@ -282,15 +359,20 @@ void SpawnTrap( const string& in szClassname, const string& in szMessage )
 		if( pPlayer.GetObserver().IsObserver() )
 			continue;
 
-		// Reshuffled per player, so two people do not get the same four
-		// scientists standing in the same four places.
+		// One of each sub-model rather than four of one, in an order nobody can
+		// predict, so a science team looks like a crowd rather than a clone.
 		array<int> variants = { 0, 1, 2, 3 };
 		ShuffleVariants( variants );
 
+		// Where this player's spawns have already gone, so the next one can be
+		// told to stand somewhere else. Per player rather than shared: two players
+		// on top of each other getting spawns in the same spot is the trap working.
+		array<Vector> placed;
+
 		for( int j = 0; j < TRAP_SPAWN_COUNT; ++j )
 		{
-			if( SpawnOne( pPlayer, szClassname, ( 360.0f / TRAP_SPAWN_COUNT ) * j,
-			              variants[j % SCIENTIST_VARIANTS] ) )
+			if( SpawnOne( pPlayer, szClassname, variants[j % SCIENTIST_VARIANTS],
+			              placed ) )
 				++iSpawned;
 		}
 	}
@@ -303,41 +385,152 @@ void SpawnTrap( const string& in szClassname, const string& in szMessage )
 }
 
 /*
-* Place one monster on a bearing from a player.
+* Place one monster somewhere around a player.
 *
-* The hull trace is what stops them arriving inside a wall: it stops at the first
-* thing a human-sized body cannot pass, so the end position is somewhere one can
-* actually stand. Pulled back a little from that so a monster hard against the
-* wall is not wedged into it.
+* Bearing and distance are both rolled, and rolled again from scratch on every
+* attempt: a rejected spot means that direction was no good, so nudging it would
+* mostly find the same wall. Several attempts, because a random bearing in a
+* corridor is usually pointing into a wall and the trap should still land.
 */
-bool SpawnOne( CBasePlayer@ pPlayer, const string& in szClassname, float flBearing,
-               int iVariant )
+bool SpawnOne( CBasePlayer@ pPlayer, const string& in szClassname, int iVariant,
+               array<Vector>@ placed )
 {
-	Vector vecAngles( 0.0f, pPlayer.pev.angles.y + flBearing, 0.0f );
+	HULL_NUMBER hull = human_hull;
+	float flHalfHeight = HUMAN_HULL_HALF;
+
+	// A headcrab is nothing like a person-shaped hole, and testing one against a
+	// human hull turns down crawlspaces and vents it fits through easily.
+	if( szClassname == "monster_headcrab" )
+	{
+		hull = head_hull;
+		flHalfHeight = HEAD_HULL_HALF;
+	}
+
+	for( int attempt = 0; attempt < TRAP_PLACE_ATTEMPTS; ++attempt )
+	{
+		float flBearing = Math.RandomFloat( 0.0f, 360.0f );
+		float flRange = Math.RandomFloat( TRAP_SPAWN_MIN_RADIUS,
+		                                  TRAP_SPAWN_MAX_RADIUS );
+
+		Vector vecSpot;
+		if( !FindTrapSpot( pPlayer, hull, flHalfHeight, flBearing, flRange, vecSpot ) )
+			continue;
+
+		// Two monsters in the same doorway read as one lump and can shove each
+		// other through it. Cheaper to roll again than to resolve it after.
+		if( TooCloseToPlaced( vecSpot, placed ) )
+			continue;
+
+		dictionary keys;
+		keys[ "origin" ] = "" + vecSpot.x + " " + vecSpot.y + " " + vecSpot.z;
+		// Facing back down the bearing, so whatever arrives is looking at whoever
+		// it arrived for.
+		keys[ "angles" ] = "0 " + ( flBearing + 180.0f ) + " 0";
+		if( szClassname == "monster_scientist" )
+			keys[ "body" ] = "" + iVariant;
+
+		CBaseEntity@ pMonster = g_EntityFuncs.CreateEntity( szClassname, keys, true );
+
+		if( pMonster is null )
+			return false;
+
+		placed.insertLast( vecSpot );
+		return true;
+	}
+
+	return false;
+}
+
+/*
+* Find somewhere on this bearing a monster can actually stand.
+*
+* Three traces, each rejecting a different way of arriving somewhere useless:
+*
+*   Outward, at chest height, using the monster's own hull. This is what keeps
+*   them out of walls and in front of them rather than behind: it stops at the
+*   first thing that hull cannot pass, so anything it reaches is connected to the
+*   player by a corridor that hull fits down. A spot beyond the wall is never
+*   reached in the first place.
+*
+*   Downward, to find the floor. Without it a spot chosen at chest height over a
+*   staircase or a railing leaves the monster hanging in the air, and a headcrab
+*   dropped into a lift shaft is a trap nobody ever meets. Limited to a short
+*   fall, so "the floor" means this room and not the bottom of the map.
+*
+*   In place, at the resting spot. The belt-and-braces one: the drop can end with
+*   a hull technically overlapping geometry it slid along, and a monster that
+*   spawns inside the world either sticks or gets pushed through it.
+*/
+bool FindTrapSpot( CBasePlayer@ pPlayer, HULL_NUMBER hull, float flHalfHeight,
+                   float flBearing, float flRange, Vector& out vecSpot )
+{
+	Vector vecAngles( 0.0f, flBearing, 0.0f );
 	Math.MakeVectors( vecAngles );
+	Vector vecDir = g_Engine.v_forward;
 
 	Vector vecStart = pPlayer.pev.origin;
-	Vector vecEnd = vecStart + g_Engine.v_forward * TRAP_SPAWN_RADIUS;
 
 	TraceResult tr;
-	g_Utility.TraceHull( vecStart, vecEnd, ignore_monsters, human_hull,
-	                     pPlayer.edict(), tr );
+	g_Utility.TraceHull( vecStart, vecStart + vecDir * flRange, ignore_monsters,
+	                     hull, pPlayer.edict(), tr );
 
-	// Solid the whole way: there is no room on this bearing at all.
-	if( tr.flFraction < 0.25f )
+	// The player is inside something, so nothing measured from here means
+	// anything. Rare, but a trace that starts solid reports a fraction of 0 and
+	// would otherwise read as "a wall right here".
+	if( tr.fStartSolid != 0 || tr.fAllSolid != 0 )
 		return false;
 
-	Vector vecSpot = vecStart + g_Engine.v_forward
-	                 * ( TRAP_SPAWN_RADIUS * tr.flFraction * 0.9f );
+	float flReach = flRange * tr.flFraction;
 
-	dictionary keys;
-	keys[ "origin" ] = "" + vecSpot.x + " " + vecSpot.y + " " + vecSpot.z;
-	keys[ "angles" ] = "0 " + ( vecAngles.y + 180.0f ) + " 0";
-	if( szClassname == "monster_scientist" )
-		keys[ "body" ] = "" + iVariant;
+	// Backed off whatever it hit, so the monster is standing near the wall rather
+	// than shoulder-deep in it.
+	if( tr.flFraction < 1.0f )
+		flReach -= TRAP_WALL_MARGIN;
 
-	CBaseEntity@ pMonster = g_EntityFuncs.CreateEntity( szClassname, keys, true );
-	return pMonster !is null;
+	// The wall is close enough that anything placed short of it would be inside
+	// the player. Another bearing will do better.
+	if( flReach < TRAP_SPAWN_MIN_RADIUS )
+		return false;
+
+	Vector vecCentre = vecStart + vecDir * flReach;
+
+	TraceResult trDrop;
+	g_Utility.TraceHull( vecCentre, vecCentre - Vector( 0.0f, 0.0f, TRAP_DROP_HEIGHT ),
+	                     ignore_monsters, hull, pPlayer.edict(), trDrop );
+
+	if( trDrop.fStartSolid != 0 || trDrop.fAllSolid != 0 )
+		return false;
+
+	// Nothing within a short fall: a ledge, a pit, or open air.
+	if( trDrop.flFraction >= 1.0f )
+		return false;
+
+	Vector vecRest = trDrop.vecEndPos;
+
+	TraceResult trFit;
+	g_Utility.TraceHull( vecRest, vecRest, ignore_monsters, hull, pPlayer.edict(),
+	                     trFit );
+
+	if( trFit.fStartSolid != 0 || trFit.fAllSolid != 0 )
+		return false;
+
+	// Every trace above works in hull space, where the point being traced is the
+	// centre of the box. A monster's origin is at its feet, so the same position
+	// handed straight to the entity would bury it to the waist.
+	vecSpot = vecRest - Vector( 0.0f, 0.0f, flHalfHeight - 1.0f );
+	return true;
+}
+
+/* Is this spot on top of one we already used? */
+bool TooCloseToPlaced( const Vector& in vecSpot, array<Vector>@ placed )
+{
+	for( uint i = 0; i < placed.length(); ++i )
+	{
+		if( ( placed[i] - vecSpot ).Length() < TRAP_MIN_SEPARATION )
+			return true;
+	}
+
+	return false;
 }
 
 /* Everyone drops what they are holding. */
