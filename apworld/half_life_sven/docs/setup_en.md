@@ -24,7 +24,8 @@
 4. Type `/install` in the client. That copies the AngelScript plugin into your
    game and registers it in `svencoop/default_plugins.txt`.
 
-`/uninstall` removes it again. Your live bridge files are left alone.
+`/uninstall` removes it again, and leaves nothing behind: the scripts, the bridge
+directory and the backup of your `default_plugins.txt` all go.
 
 If you would rather do it by hand, the plugin tree is inside the apworld at
 `half_life_sven/plugin/plugins/`, which mirrors `svencoop/scripts/`. Copy it
@@ -54,7 +55,7 @@ You should see `[AP] Connected to the multiworld.` in the game chat.
 | Command | Effect |
 | --- | --- |
 | `/install` | install the plugin into the selected game folder |
-| `/uninstall` | remove the plugin, leaving your bridge files |
+| `/uninstall` | remove the plugin, its scripts and its bridge files |
 | `/gamedir` | reopen the folder picker to change installs |
 | `/gamedir <path>` | set the folder directly, without the picker |
 | `/where` | show the game folder, bridge path and plugin status |

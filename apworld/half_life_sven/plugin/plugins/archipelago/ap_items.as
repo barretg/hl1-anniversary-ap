@@ -60,9 +60,11 @@ const string SUIT_CLASSNAME = "item_suit";
 // before we put the weapons back.
 const float SUIT_PICKUP_RESTORE_DELAY = 1.5f;
 
-// The long jump module does not live in the inventory either, so we cannot tell
-// whether a player already has it by looking. It is granted only on the paths
-// that run once, never on the repeating one.
+// The long jump module is never handed over with GiveNamedItem. That builds the
+// pickup entity in the world and touches the player with it, so a grant the
+// player did not need leaves a module lying on the floor -- and since the loadout
+// is reapplied on every snapshot change, every item and every trap dropped
+// another one. SetLongJump does what the pickup does, without the pickup.
 const string LONGJUMP_CLASSNAME = "item_longjump";
 
 /* Is the player already carrying this weapon? */
@@ -118,10 +120,10 @@ void StripDisallowed( CBasePlayer@ pPlayer )
 * Ammo is never touched. Ammo pickups stay useful, and finding a stash before
 * the gun is a normal part of a run rather than a loss.
 *
-* `bFull` covers the long jump module, which cannot be detected on the player and
-* so must not be re-granted on a repeating timer.
+* Safe to call as often as you like: everything it grants is checked against what
+* the player already has first, so a run of it changes nothing.
 */
-void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
+void ApplyLoadout( CBasePlayer@ pPlayer )
 {
 	if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
 		return;
@@ -137,6 +139,7 @@ void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 
 	StripDisallowed( pPlayer );
 	EnforceArmour( pPlayer );
+	SetLongJump( pPlayer, ClassnameAllowed( LONGJUMP_CLASSNAME ) );
 
 	array<string> allowed = AllowedClassnames();
 	for( uint i = 0; i < allowed.length(); ++i )
@@ -148,12 +151,9 @@ void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 		if( szClassname == SUIT_CLASSNAME )
 			continue;
 
+		// Not an inventory item; SetLongJump above has already dealt with it.
 		if( szClassname == LONGJUMP_CLASSNAME )
-		{
-			if( bFull )
-				pPlayer.GiveNamedItem( szClassname );
 			continue;
-		}
 
 		// Butterfingers put this on the floor on purpose. Handing it back one
 		// second later would make the trap a flicker and nothing more.
@@ -163,6 +163,31 @@ void ApplyLoadout( CBasePlayer@ pPlayer, bool bFull = true )
 		if( !HasItem( pPlayer, szClassname ) )
 			pPlayer.GiveNamedItem( szClassname );
 	}
+}
+
+/*
+* Turn the long jump module on or off, with nothing dropped in the world.
+*
+* This is precisely what CItemLongJump's pickup does: raise the flag on the
+* player, and write "slj" into their physics key buffer, which is where the
+* engine's movement code actually looks. Setting only the first leaves the flag
+* true and the jump unchanged, which is a worse bug than the litter it replaced
+* because nothing about it is visible.
+*
+* Also the only way to take the module away again -- it is not an inventory item,
+* so StripDisallowed cannot see it, and a campaign .cfg that hands one out would
+* otherwise stick for the rest of the run.
+*/
+void SetLongJump( CBasePlayer@ pPlayer, bool bEnabled )
+{
+	if( pPlayer.m_fLongJump == bEnabled )
+		return;
+
+	pPlayer.m_fLongJump = bEnabled;
+
+	KeyValueBuffer@ pPhysics = g_EngineFuncs.GetPhysicsKeyBuffer( pPlayer.edict() );
+	if( pPhysics !is null )
+		pPhysics.SetValue( "slj", bEnabled ? "1" : "0" );
 }
 
 /*
@@ -191,14 +216,14 @@ void EnforceArmour( CBasePlayer@ pPlayer )
 		pPlayer.pev.armorvalue = 0.0f;
 }
 
-void ApplyLoadoutToAll( bool bFull = true )
+void ApplyLoadoutToAll()
 {
 	for( int i = 1; i <= g_Engine.maxClients; ++i )
 	{
 		CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( i );
 		if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
 			continue;
-		ApplyLoadout( pPlayer, bFull );
+		ApplyLoadout( pPlayer );
 	}
 }
 
@@ -212,11 +237,12 @@ void ApplyLoadoutToAll( bool bFull = true )
 * changes nothing, so firing is never interrupted.
 *
 * This is what makes the loadout self-correcting: whatever goes wrong on spawn,
-* it is right again within a second.
+* it is right again within a second. That now includes the long jump module,
+* which the sweep used to skip because it could not tell whether a player had one.
 */
 void EnforceLoadouts()
 {
-	ApplyLoadoutToAll( false );
+	ApplyLoadoutToAll();
 
 	// Shares the timer rather than adding another: both are "look at the world
 	// once a second and fix what the hooks missed".

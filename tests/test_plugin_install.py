@@ -103,11 +103,12 @@ def test_install_accepts_the_svencoop_folder(game: Path) -> None:
     assert plugin.is_installed(game)
 
 
-def test_uninstall_removes_scripts_but_keeps_the_store(game: Path) -> None:
+def test_uninstall_leaves_nothing_behind(game: Path) -> None:
     plugin.install(game)
     scripts = game / "svencoop" / "scripts"
-    live = scripts / "plugins" / "store" / "archipelago" / "ap_out.txt"
-    live.write_text("CHECK|7720001\n", encoding="utf-8")
+    store = scripts / "plugins" / "store" / "archipelago"
+    (store / "ap_out.txt").write_text("CHECK|7720001\n", encoding="utf-8")
+    (store / "ap_in.txt").write_text("connected=1\n", encoding="utf-8")
 
     removed, deregistered = plugin.uninstall(game)
 
@@ -115,9 +116,58 @@ def test_uninstall_removes_scripts_but_keeps_the_store(game: Path) -> None:
     assert deregistered is True
     assert not plugin.is_installed(game)
     assert not (scripts / "plugins" / "archipelago").exists()
-    # The live session files are the player's, not ours to delete.
-    assert live.read_text(encoding="utf-8") == "CHECK|7720001\n"
-    assert (scripts / "plugins" / "store" / "archipelago" / "checkdata.txt").is_file()
+    assert not store.exists()
+    assert not (game / "svencoop" / "default_plugins.txt.ap-backup").exists()
+
+
+def test_uninstall_removes_scripts_from_older_versions(game: Path) -> None:
+    """The manifest describes this version; a leftover .as still gets compiled."""
+    plugin.install(game)
+    stale = game / "svencoop" / "scripts" / "plugins" / "archipelago" / "ap_gone.as"
+    stale.write_text("// from a previous release\n", encoding="utf-8")
+
+    plugin.uninstall(game)
+
+    assert not stale.exists()
+
+
+def test_uninstall_keeps_files_it_does_not_own(game: Path) -> None:
+    plugin.install(game)
+    plugin_dir = game / "svencoop" / "scripts" / "plugins" / "archipelago"
+    theirs = plugin_dir / "notes.txt"
+    theirs.write_text("mine\n", encoding="utf-8")
+
+    plugin.uninstall(game)
+
+    assert theirs.read_text(encoding="utf-8") == "mine\n"
+    assert not (plugin_dir / "ap_main.as").exists()
+
+
+def test_uninstall_deregisters_a_reformatted_entry(game: Path) -> None:
+    """A config touched by another tool must still be cleaned up."""
+    plugin.install(game)
+    config = game / "svencoop" / "default_plugins.txt"
+    config.write_text(
+        config.read_text(encoding="utf-8").replace("\t", "  "), encoding="utf-8"
+    )
+
+    _, deregistered = plugin.uninstall(game)
+
+    assert deregistered is True
+    text = config.read_text(encoding="utf-8")
+    assert plugin.PLUGIN_SCRIPT_KEY not in text
+    assert "PlayerManagement" in text
+    assert text.rstrip().endswith("}")
+
+
+def test_deregister_leaves_the_rest_of_the_config_intact(game: Path) -> None:
+    original = (game / "svencoop" / "default_plugins.txt").read_text(encoding="utf-8")
+    plugin.install(game)
+    plugin.uninstall(game)
+
+    assert (game / "svencoop" / "default_plugins.txt").read_text(
+        encoding="utf-8"
+    ) == original
 
 
 def test_uninstall_when_not_installed_is_harmless(game: Path) -> None:

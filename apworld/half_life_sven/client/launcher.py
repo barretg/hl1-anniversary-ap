@@ -119,7 +119,7 @@ class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
         return True
 
     def _cmd_uninstall(self) -> bool:
-        """Remove the Sven Co-op plugin. Leaves your bridge files alone."""
+        """Remove the Sven Co-op plugin, its scripts and its bridge files."""
         if not self.ctx.game_dir:
             logger.error("No game folder set. Run /gamedir first.")
             return True
@@ -129,7 +129,7 @@ class HalfLifeSvenCommandProcessor(ClientCommandProcessor):
             logger.error(f"Uninstall failed: {exc}")
             return True
 
-        logger.info(f"Removed {removed} plugin files.")
+        logger.info(f"Removed {removed} files, including the bridge directory.")
         logger.info(
             "Deregistered the plugin from default_plugins.txt."
             if deregistered

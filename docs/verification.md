@@ -156,6 +156,16 @@ for the entire run; the same applies to `shuffle_longjump: false` and the module
 
 ### 5c. Traps
 
+With the long jump module already received, spring any trap and watch the floor:
+no module should appear. The loadout is reapplied on every snapshot change, and a
+trap arriving is one, so this used to drop a module each time.
+
+Check the module itself still works, since it is now switched on directly rather
+than by handing over a pickup: with it received, duck-jump should long jump. With
+`shuffle_longjump: true` and the item not yet received, it should not — including
+on a map whose own .cfg hands one out.
+
+
 Generate with `trap_percentage: 100` for a seed that is nothing but traps.
 
 - Scientist Trap: four scientists appear around **every** living player, and each

@@ -30,13 +30,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.uninstall:
             removed, changed = plugin.uninstall(args.game)
-            print(f"removed {removed} plugin files")
+            print(f"removed {removed} files")
             print(
                 "deregistered from default_plugins.txt"
                 if changed
                 else "plugin was not registered"
             )
-            print("scripts/plugins/store/archipelago was left in place (it holds bridge files)")
+            print("scripts/plugins/archipelago and the bridge directory are gone")
             return 0
 
         written, changed = plugin.install(args.game)
