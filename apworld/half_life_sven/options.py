@@ -168,7 +168,7 @@ class IncludeTheyHunger(Toggle):
     display_name = "Include They Hunger"
 
 
-class ExcludeIntroMissions(Toggle):
+class ExcludeIntroMissions(DefaultOnToggle):
     """Leave every campaign's scene-setting mission out of the seed.
 
     One per campaign that has one, dropped together:
@@ -178,8 +178,8 @@ class ExcludeIntroMissions(Toggle):
     - **Living Quarters Outbound** (Blue Shift) — the tram ride the other way.
 
     They Hunger has none; it opens on Episode 1 proper. Opposing Force's Boot
-    Camp is the training course rather than the intro and stays in either way,
-    reached by `!warp` since the hub has no panel for it.
+    Camp is the training course rather than the intro and is not included in the 
+    apworld.
 
     These are minutes of riding and listening with nothing to fight. Turned on,
     each one goes entirely: no regions, no checks, no unlock item, and it stops
@@ -193,7 +193,7 @@ class ExcludeIntroMissions(Toggle):
     display_name = "Exclude Intro Missions"
 
 
-class IncludeBlackMesaInbound(DefaultOnToggle):
+class IncludeBlackMesaInbound(Toggle):
     """Deprecated: use `exclude_intro_missions`.
 
     Kept so a YAML written before the other campaigns existed still generates the
