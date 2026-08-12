@@ -57,6 +57,11 @@ class Campaign:
     # of this campaign's other missions are done, and finishing it is one of the
     # seed's goal conditions.
     goal_chapter: str
+    # The mission that is scene-setting rather than a level: Half-Life's tram
+    # ride, Blue Shift's ride the other way, Opposing Force's boot camp. Dropped
+    # from the seed by `exclude_intro_missions`. Empty where a campaign has none
+    # -- They Hunger opens straight into Episode 1.
+    intro_chapter: str = ""
     # Weapons this campaign brings to the pool that no earlier one has. Shared
     # weapons (every campaign has a crowbar) are declared once, by Half-Life.
     #
@@ -69,6 +74,15 @@ class Campaign:
     # has to be a melee weapon the campaign's own maps actually contain *and* one
     # the engine knows about everywhere -- see `script_weapons`.
     melee: dict[str, list[str]] = field(default_factory=dict)
+    # Where a weapon's "first" check belongs when the map has no entity for it.
+    #
+    # The anchor is normally the earliest map holding one, read out of the BSPs.
+    # That misses a weapon handed over by an NPC or a `game_player_equip`, which
+    # leaves no entity to find: Blue Shift's guard hands you the glock at the
+    # security gun range, and the earliest actual glock entity is four missions
+    # later in the yards. `{item name: map}` puts the check where the player
+    # really gets it.
+    weapon_anchors: dict[str, str] = field(default_factory=dict)
     # What a shared weapon is called *here*, when this campaign reskins it into
     # something else. Sven Co-op does that with a `globalmodellist` in the map
     # .cfg: They Hunger's maps swap the pipe wrench's models for a shovel and the
@@ -122,6 +136,8 @@ HALF_LIFE = Campaign(
     # Mission 0 is the tram ride and the hub has no console for it.
     consoles=[None] + [f"hl_ch{n}" for n in range(1, 18)],
     goal_chapter="nihilanth",
+    # The tram ride: no weapons, no enemies, two checks.
+    intro_chapter="black_mesa_inbound",
     weapons={
         # One Archipelago item can cover several engine classnames. Sven Co-op
         # splits the MP5 into weapon_9mmAR and its own weapon_m16
@@ -168,35 +184,76 @@ HALF_LIFE = Campaign(
 )
 
 # Ten consoles for 35 maps, so the grouping below is ours: it follows the map
-# names' own act/sub-act structure, which is how the conversion divided them, and
-# borrows Opposing Force's chapter titles where the split lines up. `of4a5` is
-# left out deliberately -- nothing in any shipped map changelevels to it, so a
-# check there could never fire and an item placed on it would be lost.
+# names' own act/sub-act structure, which is how the conversion divided them.
+#
+# The *names* are not ours: every one is the title the game itself shows when you
+# arrive, read out of `svencoop/titles.txt` (`OF1A1TITLE` is "INCOMING", and so
+# on) and matched to the map each group starts on. They were guessed from memory
+# first and came out shifted a place against the maps, so `!ap` promised one
+# chapter and dropped you in the one before it.
+#
+# The last two groups each span more than one of the game's own chapters, because
+# the hub gives Opposing Force ten consoles and the game has twelve titles after
+# boot camp; those are named for where the group starts and where it ends.
+#
+# Keys are deliberately left alone. They key every location id in `data/ids.json`,
+# so renaming one renumbers a location and breaks a seed already being played.
+# That leaves a few reading oddly against their names -- `of_crush_depth` is "We
+# Are Not Alone" -- which is worth a tidy-up before release and not during a run.
+#
+# `of4a5` is left out deliberately: nothing in any shipped map changelevels to it,
+# so a check there could never fire and an item placed on it would be lost.
 OPPOSING_FORCE = Campaign(
     key="opposing_force",
     name="Opposing Force",
     option="include_opposing_force",
     missions_option="opposing_force_missions_required",
     chapters=[
-        ("of_boot_camp", "Boot Camp", ["of0a0"]),
+        # key                       name                    maps
+        #
+        # Taken from the hub's panels and from playing it, not from `titles.txt`:
+        # that file's keys are named for retail Opposing Force's maps, and Sven
+        # Co-op's port does not line up with them. `OF1A1TITLE` says "INCOMING",
+        # but in this port `of1a1` is Welcome To Black Mesa and the osprey ride is
+        # `of0a0`. Trusting the title keys shifted every mission a place.
+        ("of_incoming", "Incoming", ["of0a0"]),
         ("of_welcome_to_black_mesa", "Welcome To Black Mesa", ["of1a1", "of1a2"]),
-        ("of_we_are_not_alone", "We Are Not Alone", ["of1a3", "of1a4", "of1a4b"]),
+        ("of_we_are_pulling_out", "We Are Pulling Out",
+         ["of1a3", "of1a4", "of1a4b"]),
         ("of_missing_in_action", "Missing In Action", ["of1a5", "of1a5b", "of1a6"]),
         ("of_friendly_fire", "Friendly Fire", ["of2a1", "of2a1b", "of2a2"]),
-        ("of_we_are_pulling_out", "We Are Pulling Out", ["of2a4", "of2a5", "of2a6"]),
+        ("of_we_are_not_alone", "We Are Not Alone", ["of2a4", "of2a5", "of2a6"]),
         ("of_crush_depth", "Crush Depth", ["of3a1", "of3a2"]),
         ("of_vicarious_reality", "Vicarious Reality", ["of3a4", "of3a5", "of3a6"]),
         ("of_pit_worms_nest", "Pit Worm's Nest", ["of4a1", "of4a2", "of4a3", "of4a4"]),
-        (
-            "of_worlds_collide",
-            "Worlds Collide",
-            ["of5a1", "of5a2", "of5a3", "of5a4",
-             "of6a1", "of6a2", "of6a3", "of6a4", "of6a4b", "of6a5"],
-        ),
+        ("of_foxtrot_uniform", "Foxtrot Uniform", ["of5a1", "of5a2", "of5a3", "of5a4"]),
+        ("of_the_package", "The Package", ["of6a1", "of6a2", "of6a3"]),
+        ("of_worlds_collide", "Worlds Collide", ["of6a4", "of6a4b", "of6a5"]),
     ],
-    # The hub has no `of_ch06`; its ten consoles run 01-05 and 07-11.
-    consoles=[f"of_ch{n:02d}" for n in (1, 2, 3, 4, 5, 7, 8, 9, 10, 11)],
+    # Read off the hub's own panels, in order:
+    #
+    #   01 Welcome To Black Mesa   07 Vicarious Reality
+    #   02 We Are Pulling Out      08 Pit Worm's Nest
+    #   03 Missing In Action       09 Foxtrot Uniform
+    #   04 Friendly Fire           10 The Package
+    #   05 We Are Not Alone        11 Worlds Collide
+    #
+    # Two missions have no panel and are reachable by `!warp` alone: Incoming,
+    # which sits before the hub's first console the way Half-Life's tram ride
+    # does, and Crush Depth, which is the hub's missing `of_ch06`.
+    consoles=[
+        None,                # Incoming
+        "of_ch01", "of_ch02", "of_ch03", "of_ch04", "of_ch05",
+        None,                # Crush Depth -- the hub has no of_ch06
+        "of_ch07", "of_ch08", "of_ch09", "of_ch10", "of_ch11",
+    ],
     goal_chapter="of_worlds_collide",
+    # Incoming, the osprey ride in: Opposing Force's answer to the tram ride,
+    # and what `exclude_intro_missions` drops. Boot Camp is the training course
+    # rather than the intro -- Half-Life's equivalent, the Hazard Course, is not
+    # part of its campaign at all -- so it stays in, console-less, reached by
+    # `!warp` like Crush Depth.
+    intro_chapter="of_incoming",
     weapons={
         "Desert Eagle": ["weapon_eagle"],
         "SAW": ["weapon_m249", "weapon_saw"],
@@ -226,21 +283,29 @@ OPPOSING_FORCE = Campaign(
         "Pipe Wrench": ["weapon_pipewrench"],
     },
     gates={
-        # Boot camp is a firing range and the first two missions are the escape
-        # from it; the shooting starts once you are back in Black Mesa proper.
-        "of_we_are_not_alone": {"strict": ["ranged"]},
+        # Incoming is the crash and the walk out of it; the shooting starts once
+        # Shephard is on his feet in Black Mesa proper.
+        "of_welcome_to_black_mesa": {"strict": ["ranged"]},
+        "of_we_are_pulling_out": {"strict": ["ranged"]},
         "of_missing_in_action": {"strict": ["ranged"]},
         "of_friendly_fire": {"strict": ["ranged"]},
-        "of_we_are_pulling_out": {"strict": ["ranged"]},
+        "of_we_are_not_alone": {"strict": ["ranged"]},
         "of_crush_depth": {"strict": ["ranged"]},
         "of_vicarious_reality": {"strict": ["ranged"]},
         # The pit worm and the gene worm are both damage races.
         "of_pit_worms_nest": {"strict": ["heavy"]},
+        "of_foxtrot_uniform": {"strict": ["heavy"]},
+        "of_the_package": {"strict": ["heavy"]},
         "of_worlds_collide": {"strict": ["heavy"]},
     },
 )
 
-# Six consoles and six chapters, which is Blue Shift's own structure exactly.
+# Six consoles for the six missions after the tram ride, which has none -- the
+# same shape as Half-Life and Opposing Force. Names come from `titles.txt`, which
+# is also where the seventh chapter came from: `BA_TELEPORTTITLE` is "A Leap of
+# Faith", the trip to Xen and back, and grouping it in with Focal Point left one
+# console with no mission to open.
+#
 # It brings no weapons of its own: in Sven Co-op it uses Half-Life's, down to the
 # crowbar. Its only unique pickups are the armour vest and helmet, which are
 # armour top-ups rather than items.
@@ -259,19 +324,32 @@ BLUE_SHIFT = Campaign(
          ["ba_yard1", "ba_yard2", "ba_yard3", "ba_yard3a", "ba_yard3b",
           "ba_yard4", "ba_yard4a", "ba_yard5", "ba_yard5a"]),
         ("bs_focal_point", "Focal Point",
-         ["ba_teleport1", "ba_xen1", "ba_xen2", "ba_xen3", "ba_xen4", "ba_xen5", "ba_xen6"]),
+         ["ba_teleport1", "ba_xen1", "ba_xen2", "ba_xen3", "ba_xen4", "ba_xen5",
+          "ba_xen6"]),
         ("bs_power_struggle", "Power Struggle",
-         ["ba_teleport2", "ba_power1", "ba_power2", "ba_outro"]),
+         ["ba_teleport2", "ba_power1", "ba_power2"]),
+        # The escape, and the last panel on the wall -- so this is Blue Shift's
+        # finale rather than Power Struggle.
+        ("bs_leap_of_faith", "A Leap Of Faith", ["ba_outro"]),
     ],
-    consoles=[f"bs_ch{n:02d}" for n in range(1, 7)],
-    goal_chapter="bs_power_struggle",
+    # No console for the tram ride, so these six cover the six after it, in the
+    # order they are labelled in the hub: Insecurity, Duty Calls, Captive
+    # Freight, Focal Point, Power Struggle, A Leap Of Faith.
+    consoles=[None] + [f"bs_ch{n:02d}" for n in range(1, 7)],
+    goal_chapter="bs_leap_of_faith",
+    # The tram ride again, from the other end of the shift.
+    intro_chapter="bs_living_quarters",
     # Barney swings the same crowbar Gordon does.
     melee={"Crowbar": ["weapon_crowbar"]},
+    # The gun range guard hands it over; there is no glock entity in either
+    # security map, so the derived anchor landed in the yards instead.
+    weapon_anchors={"Glock": "ba_security2"},
     gates={
         "bs_duty_calls": {"strict": ["ranged"]},
         "bs_captive_freight": {"strict": ["ranged"]},
         "bs_focal_point": {"strict": ["ranged"]},
         "bs_power_struggle": {"strict": ["ranged"]},
+        "bs_leap_of_faith": {"strict": ["ranged"]},
     },
 )
 
@@ -372,6 +450,12 @@ CAMPAIGN_OF_CHAPTER: dict[str, str] = {
 
 GOAL_CHAPTERS: dict[str, str] = {c.goal_chapter: c.key for c in CAMPAIGNS}
 
+# The scene-setting mission of each campaign that has one, dropped together by
+# `exclude_intro_missions`.
+INTRO_CHAPTERS: dict[str, str] = {
+    c.intro_chapter: c.key for c in CAMPAIGNS if c.intro_chapter
+}
+
 CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     key: gates for campaign in CAMPAIGNS for key, gates in campaign.gates.items()
 }
@@ -432,6 +516,13 @@ MELEE_STARTERS: dict[str, list[str]] = {
 }
 
 # campaign key -> {item name: what that campaign calls it}. Display only.
+# campaign key -> {item name: the map its "first" check belongs on}.
+WEAPON_ANCHORS: dict[str, dict[str, str]] = {
+    campaign.key: campaign.weapon_anchors
+    for campaign in CAMPAIGNS
+    if campaign.weapon_anchors
+}
+
 WEAPON_ALIASES: dict[str, dict[str, str]] = {
     campaign.key: campaign.weapon_aliases
     for campaign in CAMPAIGNS

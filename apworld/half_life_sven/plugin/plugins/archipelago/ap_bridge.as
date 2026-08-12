@@ -87,6 +87,18 @@ void SendCheck( APLocation@ pLocation )
 	if( g_bDataMismatch )
 		return;
 
+	// Not while we are only passing through. Finishing a mission loads the next
+	// one for a moment before we bounce back to the hub, and during those few
+	// seconds the proximity sweep is perfectly happy to notice the crowbar lying
+	// in the map we just arrived in -- which is how "Blue Shift - First Crowbar"
+	// arrived for finishing Insecurity, a mission away from where it lives.
+	//
+	// `g_bMissionActive` is exactly the right question: it is true only on a map
+	// we are meant to be playing, and false on the hub, on a mission we never
+	// unlocked, and on the one we are bouncing out of.
+	if( !g_bMissionActive )
+		return;
+
 	string szKey = "" + pLocation.id;
 	if( g_SentChecks.exists( szKey ) )
 		return;

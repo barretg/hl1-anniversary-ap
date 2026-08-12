@@ -95,7 +95,19 @@ bool AnyPlayerNear( const string& in szClassname )
 			if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
 				continue;
 
-			if( ( pPlayer.pev.origin - pEntity.pev.origin ).Length() <= WEAPON_REACH )
+			if( ( pPlayer.pev.origin - pEntity.pev.origin ).Length() > WEAPON_REACH )
+				continue;
+
+			// Near is not the same as reachable. Distance alone counted a weapon
+			// through a wall, a floor or a locked crate, which is how They
+			// Hunger's sawed-off arrived for standing in the church next to
+			// something else entirely. A clear line is a much better proxy for
+			// "you could have walked over this".
+			TraceResult tr;
+			g_Utility.TraceLine( pPlayer.GetGunPosition(), pEntity.pev.origin,
+			                     ignore_monsters, pPlayer.edict(), tr );
+
+			if( tr.flFraction >= 1.0f || tr.pHit is pEntity.edict() )
 				return true;
 		}
 	}

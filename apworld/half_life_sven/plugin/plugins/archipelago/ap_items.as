@@ -190,6 +190,7 @@ void ApplyLoadout( CBasePlayer@ pPlayer )
 		return;
 	}
 
+	EnsureSuit( pPlayer );
 	StripDisallowed( pPlayer );
 	EnforceArmour( pPlayer );
 
@@ -263,6 +264,25 @@ void SetLongJump( CBasePlayer@ pPlayer, bool bEnabled )
 
 	if( pPhysics !is null )
 		pPhysics.SetValue( "slj", szWanted );
+}
+
+/*
+* Make sure the player is wearing a suit, whatever the map thinks.
+*
+* In GoldSrc the suit bit is what draws the weapon HUD and what lets the client
+* switch weapons at all, so a player without one cannot see or select anything
+* they are carrying. Half-Life's maps hand it over themselves, which is why this
+* was never needed; Opposing Force's do not, and Shephard turned up with no HUD
+* and no way to change weapons.
+*
+* Safe everywhere, because in this world the suit is not what the HEV Suit item
+* controls -- armour is, and EnforceArmour holds that at zero until the item
+* arrives. Wearing the suit grants nothing on its own.
+*/
+void EnsureSuit( CBasePlayer@ pPlayer )
+{
+	if( !pPlayer.HasSuit() )
+		pPlayer.SetHasSuit( true );
 }
 
 /*

@@ -10,6 +10,7 @@ from Options import (
     Range,
     StartInventoryPool,
     Toggle,
+    Visibility,
 )
 
 from .data import unlockable_chapters_of
@@ -167,19 +168,46 @@ class IncludeTheyHunger(Toggle):
     display_name = "Include They Hunger"
 
 
-class IncludeBlackMesaInbound(DefaultOnToggle):
-    """Include mission 0, Black Mesa Inbound, in the seed.
+class ExcludeIntroMissions(Toggle):
+    """Leave every campaign's scene-setting mission out of the seed.
 
-    The tram ride: no weapons, no enemies, two checks. Turn it off and the mission,
-    its unlock item and its checks are left out of the seed entirely, and it stops
-    counting toward Missions Required.
+    One per campaign that has one, dropped together:
 
-    Note that the campaign portal has no console for mission 0 — Valve's hub room
-    starts at Anomalous Materials. When it is included, `!warp 0` in Sven Co-op
-    chat is the only way to travel there.
+    - **Black Mesa Inbound** (Half-Life) — the tram ride in.
+    - **Incoming** (Opposing Force) — the osprey ride in.
+    - **Living Quarters Outbound** (Blue Shift) — the tram ride the other way.
+
+    They Hunger has none; it opens on Episode 1 proper. Opposing Force's Boot
+    Camp is the training course rather than the intro and stays in either way,
+    reached by `!warp` since the hub has no panel for it.
+
+    These are minutes of riding and listening with nothing to fight. Turned on,
+    each one goes entirely: no regions, no checks, no unlock item, and it stops
+    counting toward that campaign's Missions Required.
+
+    Note that the campaign portal has no console for Black Mesa Inbound — Valve's
+    hub room starts at Anomalous Materials — so when it is included, `!warp 0` is
+    the only way to travel there. The other two have consoles like any mission.
     """
 
-    display_name = "Include Black Mesa Inbound"
+    display_name = "Exclude Intro Missions"
+
+
+class IncludeBlackMesaInbound(DefaultOnToggle):
+    """Deprecated: use `exclude_intro_missions`.
+
+    Kept so a YAML written before the other campaigns existed still generates the
+    seed it always did. Setting it to false still drops Black Mesa Inbound, and
+    only Black Mesa Inbound; `exclude_intro_missions` is the one that covers
+    Opposing Force's and Blue Shift's as well.
+
+    Hidden rather than removed: it no longer appears in the options creator or in
+    a generated template, so nobody picks it up by accident, but an existing YAML
+    that sets it still works instead of failing to generate.
+    """
+
+    display_name = "Include Black Mesa Inbound (deprecated)"
+    visibility = Visibility.none
 
 
 class RandomStartingWeapon(Toggle):
@@ -296,6 +324,7 @@ class HalfLifeSvenOptions(PerGameCommonOptions):
     blue_shift_missions_required: BlueShiftMissionsRequired
     they_hunger_missions_required: TheyHungerMissionsRequired
     logic_difficulty: LogicDifficulty
+    exclude_intro_missions: ExcludeIntroMissions
     include_black_mesa_inbound: IncludeBlackMesaInbound
     chargesanity: Chargesanity
     random_starting_weapon: RandomStartingWeapon

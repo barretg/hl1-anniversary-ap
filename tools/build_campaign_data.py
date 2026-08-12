@@ -37,6 +37,7 @@ from campaign_layout import (
     REQUIREMENT_GROUPS,
     RESTRICTED_CLASSNAMES,
     WEAPON_ALIASES,
+    WEAPON_ANCHORS,
     UNRANDOMISED_WEAPON_LOCATIONS,
     STARTING_WEAPONS,
     WEAPON_CAMPAIGN,
@@ -458,13 +459,33 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     if "weapon_pickup" in enabled:
         for campaign in CAMPAIGNS:
             campaign_chapters = [c for c in chapters if c["campaign"] == campaign.key]
+            # The suit and the long jump module are checks too. Each campaign
+            # hands the suit over somewhere -- Gordon's HEV, Barney's uniform,
+            # Shephard's vest are all `item_suit` -- and walking up to it is as
+            # much a moment as finding a gun.
             for item_name, classnames in {
-                **WEAPON_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
+                **WEAPON_ITEMS, **OPTIONAL_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
             }.items():
-                anchor = earliest_map_with(campaign_chapters, entities, classnames)
-                if anchor is None:
-                    continue  # not placed in this campaign; the check could never fire
-                chapter, map_name = anchor
+                # A hand-placed anchor wins: some weapons are handed over rather
+                # than left lying about, and those leave no entity to find.
+                forced = WEAPON_ANCHORS.get(campaign.key, {}).get(item_name)
+                if forced:
+                    chapter = next(
+                        (c for c in campaign_chapters if forced in c["maps"]), None
+                    )
+                    if chapter is None:
+                        raise SystemExit(
+                            f"{campaign.key}: anchor map {forced} for {item_name} "
+                            f"is not in any of its missions"
+                        )
+                    map_name = forced
+                    # No entity to stand next to, so `!find` cannot point at it.
+                    placed = None
+                else:
+                    anchor = earliest_map_with(campaign_chapters, entities, classnames)
+                    if anchor is None:
+                        continue  # not here; the check could never fire
+                    chapter, map_name = anchor
                 # What this campaign actually puts in the player's hands. They
                 # Hunger reskins the pipe wrench into a shovel, and a check named
                 # after a wrench sends people looking for the wrong thing.
@@ -479,11 +500,15 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 )
                 # Where the earliest copy sits. There may be several in the map;
                 # the first is as good as any, and `!find` says "one of them".
-                wanted = set(classnames)
-                placed = next(
-                    (e for e in entities[map_name] if e.get("classname", "") in wanted),
-                    None,
-                )
+                # A forced anchor has none, because the point of forcing one is
+                # that the weapon is handed over rather than left lying about.
+                if not forced:
+                    wanted = set(classnames)
+                    placed = next(
+                        (e for e in entities[map_name]
+                         if e.get("classname", "") in wanted),
+                        None,
+                    )
                 position = entity_origin(placed.get("origin", "")) if placed else None
 
                 builder.add(
@@ -518,6 +543,8 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 "option": campaign.option,
                 "missions_option": campaign.missions_option,
                 "goal_chapter": campaign.goal_chapter,
+                # "" where the campaign has no scene-setting mission to drop.
+                "intro_chapter": campaign.intro_chapter,
                 "chapters": [key for key, _, _ in campaign.chapters],
                 # Melee weapons this campaign could open a run with, when
                 # `random_starting_weapon` is on.

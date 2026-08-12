@@ -36,6 +36,8 @@ void ShowHelp( CBasePlayer@ pPlayer )
 		"  !help  this list\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"Or press a mission console's button in the hub.\n" );
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"In console: ap, ap_tracker, ap_find, ap_warp, ap_hub\n" );
 }
 
 void ShowStatus( CBasePlayer@ pPlayer )
@@ -322,19 +324,45 @@ void DescribeLocation( CBasePlayer@ pPlayer, APLocation@ pLocation )
 			return;
 		}
 
+		// Name the part, and hand over the exact command that goes there. On a
+		// mission you have already been through that is a warp straight to the
+		// part, not back to its beginning.
+		string szPart = PartLabel( pChapter, pLocation.map );
+
 		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] In " + pChapter.name + ", on " + pLocation.map + ".\n" );
-		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] Get there with !warp " + pChapter.index + "\n" );
+			"[AP] In " + pChapter.name
+			+ ( szPart.Length() > 0 ? ", " + szPart : "" )
+			+ " (" + pLocation.map + ").\n" );
+
+		if( szPart.Length() > 0 && MapReached( pLocation.map ) )
+		{
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+				"[AP] Get there with !warp " + pLocation.map + "\n" );
+		}
+		else
+		{
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+				"[AP] Get there with !warp " + pChapter.index + "\n" );
+		}
 		return;
 	}
 
 	if( !pLocation.hasPosition )
 	{
-		// Reaching a map is not a place you can be pointed at; you are already
-		// standing in the answer.
-		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-			"[AP] That is this map itself -- keep going.\n" );
+		// Either the check is the map itself, or it is a weapon somebody hands
+		// over rather than one lying on the floor -- nothing to point at either
+		// way, but they want different answers.
+		if( pLocation.kind == TRIGGER_MAP_REACHED
+		    || pLocation.kind == TRIGGER_CHAPTER_COMPLETE )
+		{
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+				"[AP] That is this map itself -- keep going.\n" );
+		}
+		else
+		{
+			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+				"[AP] Somewhere on this map; it is given to you, not left lying.\n" );
+		}
 		return;
 	}
 
@@ -459,6 +487,216 @@ void FindLocation( CBasePlayer@ pPlayer, const string& in szQuery )
 		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTCONSOLE,
 			"    " + szMark + pLocation.name + "  (" + pLocation.map + ")\n" );
 	}
+}
+
+/*
+* `!warp office` as well as `!warp 3`.
+*
+* Numbers are exact and win outright. Text is matched against mission names the
+* way `!tracker` matches, because remembering that Office Complex is 3 is a
+* worse ask than typing "office" -- and with 40 missions across four campaigns,
+* the numbers are no longer memorable at all.
+*/
+void WarpToQuery( CBasePlayer@ pPlayer, const string& in szQuery )
+{
+	if( szQuery.Length() == 0 )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] Usage: !warp <number or mission name>\n" );
+		return;
+	}
+
+	// A plain number is an index and nothing else.
+	bool bNumeric = true;
+	for( uint i = 0; i < szQuery.Length(); ++i )
+	{
+		string szChar = szQuery.SubString( i, 1 );
+		if( szChar < "0" || szChar > "9" )
+		{
+			bNumeric = false;
+			break;
+		}
+	}
+
+	if( bNumeric )
+	{
+		WarpToChapter( pPlayer, atoi( szQuery ) );
+		return;
+	}
+
+	string szWanted = szQuery;
+	szWanted.ToLowercase();
+
+	// A map name outright: `!warp hl_c11_a3`.
+	for( uint i = 0; i < g_Chapters.length(); ++i )
+	{
+		APChapter@ pChapter = g_Chapters[i];
+		for( uint j = 0; j < pChapter.maps.length(); ++j )
+		{
+			string szMap = pChapter.maps[j];
+			szMap.ToLowercase();
+			if( szMap == szWanted )
+			{
+				WarpToMap( pPlayer, pChapter, pChapter.maps[j] );
+				return;
+			}
+		}
+	}
+
+	// `!warp surface tension 3` -- a mission and a part of it. Split the trailing
+	// number off and match the rest as a name.
+	int iPart = 0;
+	int iSplit = szWanted.RFind( " " );
+	if( iSplit > 0 )
+	{
+		string szTail = szWanted.SubString( iSplit + 1, szWanted.Length() - iSplit - 1 );
+		bool bTailNumeric = szTail.Length() > 0;
+		for( uint i = 0; i < szTail.Length(); ++i )
+		{
+			string szChar = szTail.SubString( i, 1 );
+			if( szChar < "0" || szChar > "9" )
+			{
+				bTailNumeric = false;
+				break;
+			}
+		}
+
+		if( bTailNumeric )
+		{
+			iPart = atoi( szTail );
+			szWanted = szWanted.SubString( 0, iSplit );
+		}
+	}
+
+	array<int> matches;
+	for( uint i = 0; i < g_Chapters.length(); ++i )
+	{
+		string szName = g_Chapters[i].name;
+		szName.ToLowercase();
+		// Find returns String::INVALID_INDEX, unsigned; as an int a miss is
+		// negative.
+		int iAt = szName.Find( szWanted );
+		if( iAt >= 0 )
+			matches.insertLast( int( i ) );
+	}
+
+	if( matches.length() == 0 )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] No mission matches \"" + szQuery + "\".\n" );
+		return;
+	}
+
+	if( matches.length() == 1 )
+	{
+		APChapter@ pChapter = g_Chapters[matches[0]];
+
+		if( iPart > 0 )
+		{
+			if( uint( iPart ) > pChapter.maps.length() )
+			{
+				g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+					"[AP] " + pChapter.name + " has only "
+					+ pChapter.maps.length() + " part(s).\n" );
+				return;
+			}
+
+			WarpToMap( pPlayer, pChapter, pChapter.maps[iPart - 1] );
+			return;
+		}
+
+		WarpToChapter( pPlayer, matches[0] );
+		return;
+	}
+
+	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+		"[AP] " + matches.length() + " missions match; be more specific:\n" );
+
+	for( uint i = 0; i < matches.length() && i < 4; ++i )
+	{
+		APChapter@ pChapter = g_Chapters[matches[i]];
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP]   " + matches[i] + ". " + pChapter.name + "\n" );
+	}
+}
+
+/*
+* Has anyone reached this map yet?
+*
+* Answered by the map's own "reached" check, which the client tells us about in
+* the same breath as everything else `!tracker` needs. It is a better question
+* than "is the mission unlocked", because it is the one that makes travelling
+* back safe: a part you have stood in is a part you got to legitimately.
+*/
+bool MapReached( const string& in szMap )
+{
+	for( uint i = 0; i < g_Locations.length(); ++i )
+	{
+		APLocation@ pLocation = g_Locations[i];
+		if( pLocation.kind == TRIGGER_MAP_REACHED && pLocation.map == szMap )
+			return g_CheckedLocations.exists( "" + pLocation.id );
+	}
+
+	// No "reached" check for it at all, so nothing to go on; let the mission's
+	// own lock be the only gate.
+	return true;
+}
+
+/* `Part 3`, or "" for a mission that is one map. */
+string PartLabel( APChapter@ pChapter, const string& in szMap )
+{
+	if( pChapter is null || pChapter.maps.length() < 2 )
+		return "";
+
+	for( uint i = 0; i < pChapter.maps.length(); ++i )
+	{
+		if( pChapter.maps[i] == szMap )
+			return "Part " + ( i + 1 );
+	}
+
+	return "";
+}
+
+/*
+* Travel to one map of a mission rather than its start.
+*
+* Only somewhere already reached. The point is going back for checks missed on
+* the way through, not skipping the parts between -- so the mission has to be
+* unlocked *and* the part has to be one you have already stood in.
+*/
+void WarpToMap( CBasePlayer@ pPlayer, APChapter@ pChapter, const string& in szMap )
+{
+	if( pChapter is null )
+		return;
+
+	if( g_State.ChapterExcluded( pChapter.key ) )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] " + pChapter.name + " is not part of this seed.\n" );
+		return;
+	}
+
+	if( !ChapterPlayable( pChapter ) )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] " + pChapter.name + " is still locked.\n" );
+		return;
+	}
+
+	// The first map of a mission is always fair game: that is what the console
+	// and `!warp <mission>` do, and you cannot have reached anything else first.
+	if( szMap != pChapter.FirstMap() && !MapReached( szMap ) )
+	{
+		g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
+			"[AP] You have not reached that part yet. Play there first.\n" );
+		return;
+	}
+
+	string szPart = PartLabel( pChapter, szMap );
+	g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK,
+		"[AP] Travelling to " + pChapter.name
+		+ ( szPart.Length() > 0 ? ", " + szPart : "" ) + "...\n" );
+	ChangeLevel( szMap );
 }
 
 void WarpToChapter( CBasePlayer@ pPlayer, int iIndex )
@@ -740,6 +978,128 @@ HookReturnCode PlayerUse( CBasePlayer@ pPlayer, uint& out uiFlags )
 }
 
 /* Chat commands. `!ap` lists missions, `!warp <n>` travels, `!hub` goes back. */
+/*
+* The same commands from the console as from chat.
+*
+* Chat is where they were born, but typing `!find` means opening chat, losing
+* mouse look and pushing five lines of scrollback up the screen, which is a lot
+* of ceremony to ask where a charger is. These are the console spellings.
+*
+* Registered as file-scope globals, which is how Sven Co-op's own plugins do it
+* (`scripts/plugins/Yell.as`): the object's construction is the registration, so
+* it happens once when the module loads and never repeats on a map change.
+*
+* Prefixed `ap` throughout, because `find` and `help` are words the console
+* already has opinions about.
+*/
+string ConsoleArgs( const CCommand@ pArgs )
+{
+	string szQuery;
+
+	for( int i = 1; i < pArgs.ArgC(); ++i )
+	{
+		if( szQuery.Length() > 0 )
+			szQuery += " ";
+		szQuery += pArgs[i];
+	}
+
+	return szQuery;
+}
+
+void ConsoleStatus( const CCommand@ pArgs )
+{
+	CBasePlayer@ pPlayer = g_ConCommandSystem.GetCurrentPlayer();
+	if( pPlayer !is null )
+		ShowStatus( pPlayer );
+}
+
+void ConsoleTracker( const CCommand@ pArgs )
+{
+	CBasePlayer@ pPlayer = g_ConCommandSystem.GetCurrentPlayer();
+	if( pPlayer !is null )
+		ShowTracker( pPlayer, ConsoleArgs( pArgs ) );
+}
+
+void ConsoleFind( const CCommand@ pArgs )
+{
+	CBasePlayer@ pPlayer = g_ConCommandSystem.GetCurrentPlayer();
+	if( pPlayer !is null )
+		FindLocation( pPlayer, ConsoleArgs( pArgs ) );
+}
+
+void ConsoleWarp( const CCommand@ pArgs )
+{
+	CBasePlayer@ pPlayer = g_ConCommandSystem.GetCurrentPlayer();
+	if( pPlayer is null )
+		return;
+
+	WarpToQuery( pPlayer, ConsoleArgs( pArgs ) );
+}
+
+void ConsoleHub( const CCommand@ pArgs )
+{
+	CBasePlayer@ pPlayer = g_ConCommandSystem.GetCurrentPlayer();
+	if( pPlayer is null )
+		return;
+
+	g_PlayerFuncs.ClientPrintAll( HUD_PRINTTALK, "[AP] Returning to the hub...\n" );
+	ReturnToHub();
+}
+
+void ConsoleHelp( const CCommand@ pArgs )
+{
+	CBasePlayer@ pPlayer = g_ConCommandSystem.GetCurrentPlayer();
+	if( pPlayer !is null )
+		ShowHelp( pPlayer );
+}
+
+CClientCommand g_CmdStatus( "ap", "List missions and what is unlocked", @ConsoleStatus );
+CClientCommand g_CmdTracker( "ap_tracker", "Locations found and still missing", @ConsoleTracker );
+CClientCommand g_CmdFind( "ap_find", "Point at the nearest check, or one you name", @ConsoleFind );
+CClientCommand g_CmdWarp( "ap_warp", "Travel to an unlocked mission", @ConsoleWarp );
+CClientCommand g_CmdHub( "ap_hub", "Return to the campaign portal", @ConsoleHub );
+CClientCommand g_CmdHelp( "ap_help", "List the Archipelago commands", @ConsoleHelp );
+
+/*
+* Say out loud whether the console commands took.
+*
+* Registration happens when the module loads, which is server start or
+* `as_reloadplugins` -- copying new script files over a running server changes
+* nothing until then. Without this line the only symptom is a command that does
+* not exist, which looks identical to a command that was never written.
+*/
+void ReportClientCommands()
+{
+	string szNames;
+	uint uiAdded = 0;
+
+	array<CClientCommand@> commands = {
+		@g_CmdStatus, @g_CmdTracker, @g_CmdFind,
+		@g_CmdWarp, @g_CmdHub, @g_CmdHelp
+	};
+
+	for( uint i = 0; i < commands.length(); ++i )
+	{
+		if( commands[i] is null )
+			continue;
+
+		if( commands[i].HasBeenAdded() )
+		{
+			++uiAdded;
+			if( szNames.Length() > 0 )
+				szNames += ", ";
+			szNames += commands[i].GetName();
+		}
+		else
+		{
+			APLog( "console command " + commands[i].GetName() + " was refused; "
+			       + "something else on this server already owns that name" );
+		}
+	}
+
+	APLog( "console commands ready (" + uiAdded + "): " + szNames );
+}
+
 HookReturnCode ClientSay( SayParameters@ pParams )
 {
 	CBasePlayer@ pPlayer = pParams.GetPlayer();
@@ -800,10 +1160,14 @@ HookReturnCode ClientSay( SayParameters@ pParams )
 	if( szCommand == "!warp" )
 	{
 		pParams.ShouldHide = true;
-		if( pArguments.ArgC() < 2 )
-			g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK, "[AP] Usage: !warp <number>\n" );
-		else
-			WarpToChapter( pPlayer, atoi( pArguments[1] ) );
+		string szWarp;
+		for( int i = 1; i < pArguments.ArgC(); ++i )
+		{
+			if( szWarp.Length() > 0 )
+				szWarp += " ";
+			szWarp += pArguments[i];
+		}
+		WarpToQuery( pPlayer, szWarp );
 		return HOOK_HANDLED;
 	}
 

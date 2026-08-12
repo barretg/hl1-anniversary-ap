@@ -28,12 +28,14 @@ first on a seed with **all four campaigns enabled**, because they are the parts
 that have never run in-game at all.
 
 - **The consoles go where they say.** This is the one with a real chance of being
-  wrong: the hub's numbering is inconsistent and Opposing Force's skips `of_ch06`,
-  so the mapping is a generated table. Press each Opposing Force console in turn
-  and confirm the mission you arrive in is the one you pressed, not the next one
-  along. Blue Shift and They Hunger too, though their numbering is unbroken. If a
-  console is off by one, the fix is one line of `consoles=` in
+  wrong, and it *was* wrong once already: no campaign has a console for its intro
+  mission, and wiring them as though it did put every Opposing Force panel a
+  mission early, so the one labelled Welcome To Black Mesa opened boot camp.
+  Press each Opposing Force console in turn and confirm the mission you arrive in
+  is the one on the panel. Blue Shift too. The fix is one line of `consoles=` in
   `tools/campaign_layout.py` followed by a regenerate.
+- **The intro missions have no console at all** and are reached only by `!warp`:
+  0 Black Mesa Inbound, 18 Boot Camp, 29 Living Quarters Outbound.
 - **Four missions are open at the start**, one per campaign, and `!ap` lists all
   37 missions grouped under campaign headings.
 - **Weapons cross over.** This is the untested engine question: receive an
@@ -84,6 +86,17 @@ With `random_starting_weapon: true` and Opposing Force or They Hunger enabled:
   bottom stay for the whole seed.
 - Send a check and run it again: that location flips to `[x]` without a map
   change, since the client rewrites the snapshot as soon as the check lands.
+
+Console spellings (`~`), which do the same work without opening chat:
+
+- `ap`, `ap_tracker`, `ap_find`, `ap_warp`, `ap_hub`, `ap_help`. Each must behave
+  exactly as its `!` twin, and `ap_find hev charger` must take the whole phrase
+  rather than only the first word.
+- They register when the module loads, not per map. If a map change produces
+  "a command by that name already exists", the registration has moved somewhere
+  that runs more than once.
+- Console tab completion should offer all six, which is the quickest check that
+  they registered at all.
 
 `!find`:
 

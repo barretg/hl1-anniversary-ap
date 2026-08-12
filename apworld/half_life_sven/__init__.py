@@ -30,6 +30,7 @@ from .data import (
     DEFAULT_CAMPAIGN,
     FIXED_STARTING_WEAPONS,
     INTRO_CHAPTER,
+    INTRO_CHAPTERS,
     OPTIONAL_ITEM_NAMES,
     STARTING_WEAPONS,
     melee_starters_for,
@@ -194,6 +195,10 @@ class HalfLifeSvenWorld(World):
             if chapter["campaign"] not in self.included_campaigns:
                 self.excluded_chapters.add(chapter["key"])
 
+        if self.options.exclude_intro_missions:
+            self.excluded_chapters.update(INTRO_CHAPTERS)
+        # Deprecated, and deliberately still obeyed: a YAML written before the
+        # other campaigns existed says only this, and means only Half-Life's.
         if not self.options.include_black_mesa_inbound:
             self.excluded_chapters.add(INTRO_CHAPTER)
         if not self.options.chargesanity:

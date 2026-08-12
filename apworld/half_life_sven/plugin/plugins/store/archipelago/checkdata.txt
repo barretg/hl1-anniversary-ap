@@ -10,10 +10,10 @@
 #   R|<classname>|<campaign,...>   grantable only on those campaigns' maps
 #   D|<data version>               must match the client's, or ids differ
 V|2
-D|58cd65e2150a
+D|13d591d76c0d
 M|half_life|Half-Life|nihilanth
 M|opposing_force|Opposing Force|of_worlds_collide
-M|blue_shift|Blue Shift|bs_power_struggle
+M|blue_shift|Blue Shift|bs_leap_of_faith
 M|they_hunger|They Hunger|th_episode_3
 C|0|black_mesa_inbound|Black Mesa Inbound|hl_c00|0|half_life
 C|1|anomalous_materials|Anomalous Materials|hl_c01_a1,hl_c01_a2|0|half_life
@@ -33,25 +33,28 @@ C|14|xen|Xen|hl_c14|0|half_life
 C|15|gonarchs_lair|Gonarch's Lair|hl_c15|0|half_life
 C|16|interloper|Interloper|hl_c16_a1,hl_c16_a2,hl_c16_a3,hl_c16_a4|0|half_life
 C|17|nihilanth|Nihilanth|hl_c17,hl_c18|1|half_life
-C|18|of_boot_camp|Boot Camp|of0a0|0|opposing_force
+C|18|of_incoming|Incoming|of0a0|0|opposing_force
 C|19|of_welcome_to_black_mesa|Welcome To Black Mesa|of1a1,of1a2|0|opposing_force
-C|20|of_we_are_not_alone|We Are Not Alone|of1a3,of1a4,of1a4b|0|opposing_force
+C|20|of_we_are_pulling_out|We Are Pulling Out|of1a3,of1a4,of1a4b|0|opposing_force
 C|21|of_missing_in_action|Missing In Action|of1a5,of1a5b,of1a6|0|opposing_force
 C|22|of_friendly_fire|Friendly Fire|of2a1,of2a1b,of2a2|0|opposing_force
-C|23|of_we_are_pulling_out|We Are Pulling Out|of2a4,of2a5,of2a6|0|opposing_force
+C|23|of_we_are_not_alone|We Are Not Alone|of2a4,of2a5,of2a6|0|opposing_force
 C|24|of_crush_depth|Crush Depth|of3a1,of3a2|0|opposing_force
 C|25|of_vicarious_reality|Vicarious Reality|of3a4,of3a5,of3a6|0|opposing_force
 C|26|of_pit_worms_nest|Pit Worm's Nest|of4a1,of4a2,of4a3,of4a4|0|opposing_force
-C|27|of_worlds_collide|Worlds Collide|of5a1,of5a2,of5a3,of5a4,of6a1,of6a2,of6a3,of6a4,of6a4b,of6a5|1|opposing_force
-C|28|bs_living_quarters|Living Quarters Outbound|ba_tram1,ba_tram2,ba_tram3|0|blue_shift
-C|29|bs_insecurity|Insecurity|ba_security1,ba_security2,ba_maint,ba_elevator|0|blue_shift
-C|30|bs_duty_calls|Duty Calls|ba_canal1,ba_canal1b,ba_canal2,ba_canal3|0|blue_shift
-C|31|bs_captive_freight|Captive Freight|ba_yard1,ba_yard2,ba_yard3,ba_yard3a,ba_yard3b,ba_yard4,ba_yard4a,ba_yard5,ba_yard5a|0|blue_shift
-C|32|bs_focal_point|Focal Point|ba_teleport1,ba_xen1,ba_xen2,ba_xen3,ba_xen4,ba_xen5,ba_xen6|0|blue_shift
-C|33|bs_power_struggle|Power Struggle|ba_teleport2,ba_power1,ba_power2,ba_outro|1|blue_shift
-C|34|th_episode_1|They Hunger: Episode 1|th_ep1_00,th_ep1_01,th_ep1_02,th_ep1_03,th_ep1_04,th_ep1_05|0|they_hunger
-C|35|th_episode_2|They Hunger: Episode 2|th_ep2_00,th_ep2_01,th_ep2_02,th_ep2_03,th_ep2_04|0|they_hunger
-C|36|th_episode_3|They Hunger: Episode 3|th_ep3_00,th_ep3_01,th_ep3_02,th_ep3_03,th_ep3_04,th_ep3_05,th_ep3_06,th_ep3_07|1|they_hunger
+C|27|of_foxtrot_uniform|Foxtrot Uniform|of5a1,of5a2,of5a3,of5a4|0|opposing_force
+C|28|of_the_package|The Package|of6a1,of6a2,of6a3|0|opposing_force
+C|29|of_worlds_collide|Worlds Collide|of6a4,of6a4b,of6a5|1|opposing_force
+C|30|bs_living_quarters|Living Quarters Outbound|ba_tram1,ba_tram2,ba_tram3|0|blue_shift
+C|31|bs_insecurity|Insecurity|ba_security1,ba_security2,ba_maint,ba_elevator|0|blue_shift
+C|32|bs_duty_calls|Duty Calls|ba_canal1,ba_canal1b,ba_canal2,ba_canal3|0|blue_shift
+C|33|bs_captive_freight|Captive Freight|ba_yard1,ba_yard2,ba_yard3,ba_yard3a,ba_yard3b,ba_yard4,ba_yard4a,ba_yard5,ba_yard5a|0|blue_shift
+C|34|bs_focal_point|Focal Point|ba_teleport1,ba_xen1,ba_xen2,ba_xen3,ba_xen4,ba_xen5,ba_xen6|0|blue_shift
+C|35|bs_power_struggle|Power Struggle|ba_teleport2,ba_power1,ba_power2|0|blue_shift
+C|36|bs_leap_of_faith|A Leap Of Faith|ba_outro|1|blue_shift
+C|37|th_episode_1|They Hunger: Episode 1|th_ep1_00,th_ep1_01,th_ep1_02,th_ep1_03,th_ep1_04,th_ep1_05|0|they_hunger
+C|38|th_episode_2|They Hunger: Episode 2|th_ep2_00,th_ep2_01,th_ep2_02,th_ep2_03,th_ep2_04|0|they_hunger
+C|39|th_episode_3|They Hunger: Episode 3|th_ep3_00,th_ep3_01,th_ep3_02,th_ep3_03,th_ep3_04,th_ep3_05,th_ep3_06,th_ep3_07|1|they_hunger
 P|hl_ch1|anomalous_materials
 P|hl_ch10|questionable_ethics
 P|hl_ch11|surface_tension
@@ -69,22 +72,22 @@ P|hl_ch6|power_up
 P|hl_ch7|on_a_rail
 P|hl_ch8|apprehension
 P|hl_ch9|residue_processing
-P|of_ch01|of_boot_camp
-P|of_ch02|of_welcome_to_black_mesa
-P|of_ch03|of_we_are_not_alone
-P|of_ch04|of_missing_in_action
-P|of_ch05|of_friendly_fire
-P|of_ch07|of_we_are_pulling_out
-P|of_ch08|of_crush_depth
-P|of_ch09|of_vicarious_reality
-P|of_ch10|of_pit_worms_nest
+P|of_ch01|of_welcome_to_black_mesa
+P|of_ch02|of_we_are_pulling_out
+P|of_ch03|of_missing_in_action
+P|of_ch04|of_friendly_fire
+P|of_ch05|of_we_are_not_alone
+P|of_ch07|of_vicarious_reality
+P|of_ch08|of_pit_worms_nest
+P|of_ch09|of_foxtrot_uniform
+P|of_ch10|of_the_package
 P|of_ch11|of_worlds_collide
-P|bs_ch01|bs_living_quarters
-P|bs_ch02|bs_insecurity
-P|bs_ch03|bs_duty_calls
-P|bs_ch04|bs_captive_freight
-P|bs_ch05|bs_focal_point
-P|bs_ch06|bs_power_struggle
+P|bs_ch01|bs_insecurity
+P|bs_ch02|bs_duty_calls
+P|bs_ch03|bs_captive_freight
+P|bs_ch04|bs_focal_point
+P|bs_ch05|bs_power_struggle
+P|bs_ch06|bs_leap_of_faith
 P|th_ep01|th_episode_1
 P|th_ep02|th_episode_2
 P|th_ep03|th_episode_3
@@ -230,14 +233,14 @@ L|7720031|hl_c16_a3|map_reached||Interloper - Part 3 Reached
 L|7720032|hl_c16_a4|map_reached||Interloper - Part 4 Reached
 L|7720033|hl_c17|map_reached||Nihilanth - Part 1 Reached
 L|7720034|hl_c18|map_reached||Nihilanth - Part 2 Reached
-L|7720174|of0a0|map_reached||Boot Camp - Reached
+L|7720417|of0a0|map_reached||Incoming - Reached
 L|7720175|of1a1|map_reached||Welcome To Black Mesa - Part 1 Reached
 L|7720176|of1a1|charger|func_healthcharger:*108|Welcome To Black Mesa - Health Charger (Part 1)|-584 2980 56
 L|7720177|of1a2|map_reached||Welcome To Black Mesa - Part 2 Reached
-L|7720178|of1a3|map_reached||We Are Not Alone - Part 1 Reached
-L|7720179|of1a4|map_reached||We Are Not Alone - Part 2 Reached
-L|7720180|of1a4|charger|func_healthcharger:*20|We Are Not Alone - Health Charger (Part 2)|-1232 -572 184
-L|7720181|of1a4b|map_reached||We Are Not Alone - Part 3 Reached
+L|7720418|of1a3|map_reached||We Are Pulling Out - Part 1 Reached
+L|7720419|of1a4|map_reached||We Are Pulling Out - Part 2 Reached
+L|7720420|of1a4|charger|func_healthcharger:*20|We Are Pulling Out - Health Charger (Part 2)|-1232 -572 184
+L|7720421|of1a4b|map_reached||We Are Pulling Out - Part 3 Reached
 L|7720182|of1a5|map_reached||Missing In Action - Part 1 Reached
 L|7720183|of1a5b|map_reached||Missing In Action - Part 2 Reached
 L|7720184|of1a5b|charger|func_recharge:*70|Missing In Action - HEV Charger (Part 2)|-1516 -3216 2264
@@ -247,10 +250,10 @@ L|7720187|of2a1|map_reached||Friendly Fire - Part 1 Reached
 L|7720188|of2a1|charger|func_healthcharger:*122|Friendly Fire - Health Charger (Part 1)|500 8 -93
 L|7720189|of2a1b|map_reached||Friendly Fire - Part 2 Reached
 L|7720190|of2a2|map_reached||Friendly Fire - Part 3 Reached
-L|7720191|of2a4|map_reached||We Are Pulling Out - Part 1 Reached
-L|7720192|of2a5|map_reached||We Are Pulling Out - Part 2 Reached
-L|7720193|of2a6|map_reached||We Are Pulling Out - Part 3 Reached
-L|7720194|of2a6|charger|func_recharge:*232|We Are Pulling Out - HEV Charger (Part 3)|-1230 2205 -556
+L|7720422|of2a4|map_reached||We Are Not Alone - Part 1 Reached
+L|7720423|of2a5|map_reached||We Are Not Alone - Part 2 Reached
+L|7720424|of2a6|map_reached||We Are Not Alone - Part 3 Reached
+L|7720425|of2a6|charger|func_recharge:*232|We Are Not Alone - HEV Charger (Part 3)|-1230 2205 -556
 L|7720195|of3a1|map_reached||Crush Depth - Part 1 Reached
 L|7720196|of3a1|charger|func_healthcharger:*57|Crush Depth - Health Charger (Part 1)|592 1186 -204
 L|7720197|of3a1|charger|func_recharge:*58|Crush Depth - HEV Charger (Part 1)|544 1186 -204
@@ -273,20 +276,20 @@ L|7720213|of4a3|charger|func_healthcharger:*137|Pit Worm's Nest - Health Charger
 L|7720214|of4a3|charger|func_healthcharger:*138|Pit Worm's Nest - Health Charger 2 (Part 3)|-544 -1318 1148
 L|7720215|of4a3|charger|func_healthcharger:*191|Pit Worm's Nest - Health Charger 3 (Part 3)|176 -2116 356
 L|7720216|of4a4|map_reached||Pit Worm's Nest - Part 4 Reached
-L|7720217|of5a1|map_reached||Worlds Collide - Part 1 Reached
-L|7720218|of5a2|map_reached||Worlds Collide - Part 2 Reached
-L|7720219|of5a3|map_reached||Worlds Collide - Part 3 Reached
-L|7720220|of5a4|map_reached||Worlds Collide - Part 4 Reached
-L|7720221|of5a4|charger|func_healthcharger:*73|Worlds Collide - Health Charger (Part 4)|-2624 124 -8
-L|7720222|of5a4|charger|func_recharge:*74|Worlds Collide - HEV Charger (Part 4)|-2576 124 -8
-L|7720223|of6a1|map_reached||Worlds Collide - Part 5 Reached
-L|7720224|of6a2|map_reached||Worlds Collide - Part 6 Reached
-L|7720225|of6a3|map_reached||Worlds Collide - Part 7 Reached
-L|7720226|of6a4|map_reached||Worlds Collide - Part 8 Reached
-L|7720227|of6a4b|map_reached||Worlds Collide - Part 9 Reached
-L|7720228|of6a4b|charger|func_healthcharger:*109|Worlds Collide - Health Charger (Part 9)|-1860 -1088 -488
-L|7720229|of6a4b|charger|func_recharge:*110|Worlds Collide - HEV Charger (Part 9)|-1860 -1136 -488
-L|7720230|of6a5|map_reached||Worlds Collide - Part 10 Reached
+L|7720354|of5a1|map_reached||Foxtrot Uniform - Part 1 Reached
+L|7720355|of5a2|map_reached||Foxtrot Uniform - Part 2 Reached
+L|7720356|of5a3|map_reached||Foxtrot Uniform - Part 3 Reached
+L|7720357|of5a4|map_reached||Foxtrot Uniform - Part 4 Reached
+L|7720358|of5a4|charger|func_healthcharger:*73|Foxtrot Uniform - Health Charger (Part 4)|-2624 124 -8
+L|7720359|of5a4|charger|func_recharge:*74|Foxtrot Uniform - HEV Charger (Part 4)|-2576 124 -8
+L|7720405|of6a1|map_reached||The Package - Part 1 Reached
+L|7720406|of6a2|map_reached||The Package - Part 2 Reached
+L|7720407|of6a3|map_reached||The Package - Part 3 Reached
+L|7720226|of6a4|map_reached||Worlds Collide - Part 1 Reached
+L|7720227|of6a4b|map_reached||Worlds Collide - Part 2 Reached
+L|7720228|of6a4b|charger|func_healthcharger:*109|Worlds Collide - Health Charger (Part 2)|-1860 -1088 -488
+L|7720229|of6a4b|charger|func_recharge:*110|Worlds Collide - HEV Charger (Part 2)|-1860 -1136 -488
+L|7720230|of6a5|map_reached||Worlds Collide - Part 3 Reached
 L|7720231|ba_tram1|map_reached||Living Quarters Outbound - Part 1 Reached
 L|7720232|ba_tram2|map_reached||Living Quarters Outbound - Part 2 Reached
 L|7720233|ba_tram3|map_reached||Living Quarters Outbound - Part 3 Reached
@@ -329,7 +332,7 @@ L|7720268|ba_power1|charger|func_healthcharger:*228|Power Struggle - Health Char
 L|7720269|ba_power2|map_reached||Power Struggle - Part 3 Reached
 L|7720270|ba_power2|charger|func_healthcharger:*112|Power Struggle - Health Charger 1 (Part 3)|64 -1240 -356
 L|7720271|ba_power2|charger|func_healthcharger:*197|Power Struggle - Health Charger 2 (Part 3)|-1560 694 80
-L|7720272|ba_outro|map_reached||Power Struggle - Part 4 Reached
+L|7720433|ba_outro|map_reached||A Leap Of Faith - Reached
 L|7720273|th_ep1_00|map_reached||They Hunger: Episode 1 - Part 1 Reached
 L|7720274|th_ep1_01|map_reached||They Hunger: Episode 1 - Part 2 Reached
 L|7720275|th_ep1_02|map_reached||They Hunger: Episode 1 - Part 3 Reached
@@ -364,6 +367,8 @@ L|7720169|hl_c07_a1|weapon_pickup|weapon_satchel|First Satchel Charge|1384 -2300
 L|7720170|hl_c07_a1|weapon_pickup|weapon_tripmine|First Tripmine|3060 -1896 -1780
 L|7720171|hl_c10|weapon_pickup|weapon_snark|First Snarks|-608 144 256
 L|7720172|hl_c02_a2|weapon_pickup|weapon_handgrenade|First Hand Grenade|-1815 -2875 1509
+L|7720429|hl_c01_a1|weapon_pickup|item_suit|First HEV Suit|-3665 926 -280
+L|7720430|hl_c13_a4|weapon_pickup|item_longjump|First Long Jump Module|1855 -297 -244
 L|7720173|hl_c02_a1|weapon_pickup|weapon_crowbar|First Crowbar|1678 1943 -129
 L|7720294|of1a5|weapon_pickup|weapon_glock,weapon_9mmhandgun|Opposing Force - First Glock|1824 -3456 1339
 L|7720295|of2a1b|weapon_pickup|weapon_9mmAR,weapon_m16|Opposing Force - First MP5|-516 2300 -784
@@ -381,8 +386,9 @@ L|7720306|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force - First Spore 
 L|7720307|of4a3|weapon_pickup|weapon_grapple|Opposing Force - First Barnacle Grapple|-338 -504 337
 L|7720309|of1a1|weapon_pickup|weapon_pipewrench|Opposing Force - First Pipe Wrench|-1152 -560 -112
 L|7720310|of2a4|weapon_pickup|weapon_minigun|Opposing Force - First Minigun|83 564 6
+L|7720431|of1a1|weapon_pickup|item_suit|Opposing Force - First HEV Suit|367 2816 48
 L|7720311|of1a2|weapon_pickup|weapon_crowbar|Opposing Force - First Combat Knife|549 -2822 68
-L|7720312|ba_yard3|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift - First Glock|1344 440 -560
+L|7720312|ba_security2|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift - First Glock
 L|7720313|ba_yard1|weapon_pickup|weapon_357|Blue Shift - First .357 Magnum|-72 -1765 0
 L|7720314|ba_power1|weapon_pickup|weapon_9mmAR,weapon_m16|Blue Shift - First MP5|-898 -1882 -112
 L|7720315|ba_canal2|weapon_pickup|weapon_shotgun|Blue Shift - First Shotgun|400 2184 -88
@@ -390,6 +396,7 @@ L|7720316|ba_yard5|weapon_pickup|weapon_rpg|Blue Shift - First RPG|-344 2000 93
 L|7720317|ba_yard1|weapon_pickup|weapon_satchel|Blue Shift - First Satchel Charge|-2662 -1550 92
 L|7720318|ba_xen2|weapon_pickup|weapon_snark|Blue Shift - First Snarks|1160 3384 -3576
 L|7720319|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift - First Hand Grenade|-2635 -1550 92
+L|7720432|ba_tram1|weapon_pickup|item_suit|Blue Shift - First HEV Suit|80 -304 3088
 L|7720320|ba_canal1|weapon_pickup|weapon_crowbar|Blue Shift - First Crowbar|2080 288 56
 L|7720321|th_ep1_02|weapon_pickup|weapon_357|They Hunger - First .357 Magnum|3484 -1708 193
 L|7720322|th_ep1_03|weapon_pickup|weapon_handgrenade|They Hunger - First TNT|-4802 1980 -84
@@ -422,22 +429,25 @@ L|7720049|hl_c14|chapter_complete|xen|Xen - Complete
 L|7720050|hl_c15|chapter_complete|gonarchs_lair|Gonarch's Lair - Complete
 L|7720051|hl_c16_a4|chapter_complete|interloper|Interloper - Complete
 L|7720052|hl_c18|chapter_complete|nihilanth|Nihilanth - Complete
-L|7720334|of0a0|chapter_complete|of_boot_camp|Boot Camp - Complete
+L|7720426|of0a0|chapter_complete|of_incoming|Incoming - Complete
 L|7720335|of1a2|chapter_complete|of_welcome_to_black_mesa|Welcome To Black Mesa - Complete
-L|7720336|of1a4b|chapter_complete|of_we_are_not_alone|We Are Not Alone - Complete
+L|7720427|of1a4b|chapter_complete|of_we_are_pulling_out|We Are Pulling Out - Complete
 L|7720337|of1a6|chapter_complete|of_missing_in_action|Missing In Action - Complete
 L|7720338|of2a2|chapter_complete|of_friendly_fire|Friendly Fire - Complete
-L|7720339|of2a6|chapter_complete|of_we_are_pulling_out|We Are Pulling Out - Complete
+L|7720428|of2a6|chapter_complete|of_we_are_not_alone|We Are Not Alone - Complete
 L|7720340|of3a2|chapter_complete|of_crush_depth|Crush Depth - Complete
 L|7720341|of3a6|chapter_complete|of_vicarious_reality|Vicarious Reality - Complete
 L|7720342|of4a4|chapter_complete|of_pit_worms_nest|Pit Worm's Nest - Complete
+L|7720362|of5a4|chapter_complete|of_foxtrot_uniform|Foxtrot Uniform - Complete
+L|7720416|of6a3|chapter_complete|of_the_package|The Package - Complete
 L|7720343|of6a5|chapter_complete|of_worlds_collide|Worlds Collide - Complete
 L|7720344|ba_tram3|chapter_complete|bs_living_quarters|Living Quarters Outbound - Complete
 L|7720345|ba_elevator|chapter_complete|bs_insecurity|Insecurity - Complete
 L|7720346|ba_canal3|chapter_complete|bs_duty_calls|Duty Calls - Complete
 L|7720347|ba_yard5a|chapter_complete|bs_captive_freight|Captive Freight - Complete
 L|7720348|ba_xen6|chapter_complete|bs_focal_point|Focal Point - Complete
-L|7720349|ba_outro|chapter_complete|bs_power_struggle|Power Struggle - Complete
+L|7720434|ba_power2|chapter_complete|bs_power_struggle|Power Struggle - Complete
+L|7720435|ba_outro|chapter_complete|bs_leap_of_faith|A Leap Of Faith - Complete
 L|7720350|th_ep1_05|chapter_complete|th_episode_1|They Hunger: Episode 1 - Complete
 L|7720351|th_ep2_04|chapter_complete|th_episode_2|They Hunger: Episode 2 - Complete
 L|7720352|th_ep3_07|chapter_complete|th_episode_3|They Hunger: Episode 3 - Complete

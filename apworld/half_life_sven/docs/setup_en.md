@@ -97,8 +97,8 @@ all of them. Each is a YAML toggle:
 | Option | Campaign | Missions | Finale |
 | --- | --- | --- | --- |
 | `include_half_life` | Half-Life | 18 | Nihilanth |
-| `include_opposing_force` | Opposing Force | 10 | Worlds Collide |
-| `include_blue_shift` | Blue Shift | 6 | Power Struggle |
+| `include_opposing_force` | Opposing Force | 13 | Worlds Collide |
+| `include_blue_shift` | Blue Shift | 7 | Power Struggle |
 | `include_they_hunger` | They Hunger | 3 | Episode 3 |
 
 Only Half-Life is on by default, so a YAML written before this existed generates
@@ -111,12 +111,27 @@ Everything runs on the **host's** machine: the plugin and these maps have to be
 on the server, not on the people joining it. A campaign whose maps are missing
 will fail the moment someone warps into it, so check before you generate.
 
-| Campaign | Maps it needs | Check for |
-| --- | --- | --- |
-| Half-Life | `hl_c00` … `hl_c18` | `svencoop/maps/hl_c00.bsp` |
-| Opposing Force | `of0a0` … `of6a5` | `svencoop/maps/of0a0.bsp` |
-| Blue Shift | `ba_tram1` … `ba_outro` | `svencoop/maps/ba_tram1.bsp` |
-| They Hunger | `th_ep1_00` … `th_ep3_07` | `svencoop/maps/th_ep1_00.bsp` |
+| Campaign | Missions | Maps it needs | Check for |
+| --- | --- | --- | --- |
+| Half-Life | 18 | `hl_c00` … `hl_c18` | `svencoop/maps/hl_c00.bsp` |
+| Opposing Force | 13 | `of0a0` … `of6a5` | `svencoop/maps/of0a0.bsp` |
+| Blue Shift | 7 | `ba_tram1` … `ba_outro` | `svencoop/maps/ba_tram1.bsp` |
+| They Hunger | 3 | `th_ep1_00` … `th_ep3_07` | `svencoop/maps/th_ep1_00.bsp` |
+
+**Some missions have no hub console and are reached by `!warp` alone.** No
+campaign has a panel for its intro, and Opposing Force has two more gaps besides:
+
+| Mission | Campaign | Reach it with | Intro? |
+| --- | --- | --- | --- |
+| Black Mesa Inbound | Half-Life | `!warp 0` | yes |
+| Boot Camp | Opposing Force | `!warp 18` | no, the training course |
+| Incoming | Opposing Force | `!warp 19` | yes |
+| Crush Depth | Opposing Force | `!warp 25` | no |
+| Living Quarters Outbound | Blue Shift | `!warp 31` | yes |
+
+Opposing Force's panels run 01-05 and 07-11 with no sixth — that gap is Crush
+Depth. `exclude_intro_missions` drops the three intros and leaves Boot Camp and
+Crush Depth in, console-less, reached by `!warp`.
 
 The campaign portal can also have whole areas switched off by the server, which
 looks identical to a missing campaign from in-game. If a campaign's consoles are
@@ -201,7 +216,32 @@ Chat commands (press `Y` in game, not the console):
 | `!find` | point you at the nearest check on this map you have not found |
 | `!find <text>` | point you at a check by name, e.g. `!find hev charger 3` |
 | `!warp <number>` | travel to an unlocked mission |
+| `!warp <name>` | the same by name, e.g. `!warp office` |
+| `!warp <name> <part>` | back to one part of it, e.g. `!warp surface tension 3` |
+| `!warp <map>` | the same by map name, e.g. `!warp hl_c11_a3` |
 | `!hub` | return to the campaign portal |
+
+Every one of these also works **in the console** (`~`), which saves opening chat
+and losing mouse look just to ask where a charger is. Same commands, spelled
+without the `!` and prefixed so they do not collide with the console's own:
+
+| Chat | Console |
+| --- | --- |
+| `!ap` | `ap` |
+| `!tracker [text]` | `ap_tracker [text]` |
+| `!find [text]` | `ap_find [text]` |
+| `!warp <number>` | `ap_warp <number>` |
+| `!hub` | `ap_hub` |
+| `!help` | `ap_help` |
+
+Console output from `ap` and `ap_tracker` lands in the console you are already
+looking at, which is the main reason to prefer them.
+
+**Going back for a check you missed.** `!find` names the part a check is in and
+prints the exact command to get there, and `!warp` will drop you straight into
+that part rather than at the start of the mission. Only parts you have already
+reached: the mission has to be unlocked *and* you have to have stood in that part
+before, so this is for going back, never for skipping ahead.
 
 `!warp` numbers run across all campaigns: 0-17 Half-Life, 18-27 Opposing Force,
 28-33 Blue Shift, 34-36 They Hunger. Half-Life's are unchanged, and `!ap` prints

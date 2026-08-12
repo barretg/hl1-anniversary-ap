@@ -121,9 +121,15 @@ MAX_MISSIONS_IN_A_CAMPAIGN: int = max(
 )
 
 # Mission 0, Black Mesa Inbound: the tram ride. It has no console in the campaign
-# portal, so `!warp 0` is the only way in, and it is the one mission a YAML can
-# drop from the seed entirely.
+# portal, so `!warp 0` is the only way in.
 INTRO_CHAPTER: str = CHAPTERS[0]["key"]
+
+# The scene-setting mission of each campaign that has one: Half-Life's tram ride,
+# Blue Shift's ride the other way, Opposing Force's boot camp. `exclude_intro_missions`
+# drops all of them at once. They Hunger has none -- it opens on Episode 1 proper.
+INTRO_CHAPTERS: list[str] = [
+    c["intro_chapter"] for c in CAMPAIGNS if c.get("intro_chapter")
+]
 
 # Items that only enter the pool when the matching YAML toggle is on.
 OPTIONAL_ITEM_NAMES = {"HEV Suit": "shuffle_hev_suit", "Long Jump Module": "shuffle_longjump"}

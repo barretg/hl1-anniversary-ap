@@ -1,5 +1,5 @@
 {
- "data_version": "58cd65e2150a",
+ "data_version": "13d591d76c0d",
  "campaigns": [
   {
    "key": "half_life",
@@ -7,6 +7,7 @@
    "option": "include_half_life",
    "missions_option": "missions_required",
    "goal_chapter": "nihilanth",
+   "intro_chapter": "black_mesa_inbound",
    "chapters": [
     "black_mesa_inbound",
     "anomalous_materials",
@@ -58,16 +59,19 @@
    "option": "include_opposing_force",
    "missions_option": "opposing_force_missions_required",
    "goal_chapter": "of_worlds_collide",
+   "intro_chapter": "of_incoming",
    "chapters": [
-    "of_boot_camp",
+    "of_incoming",
     "of_welcome_to_black_mesa",
-    "of_we_are_not_alone",
+    "of_we_are_pulling_out",
     "of_missing_in_action",
     "of_friendly_fire",
-    "of_we_are_pulling_out",
+    "of_we_are_not_alone",
     "of_crush_depth",
     "of_vicarious_reality",
     "of_pit_worms_nest",
+    "of_foxtrot_uniform",
+    "of_the_package",
     "of_worlds_collide"
    ],
    "melee": {
@@ -79,15 +83,15 @@
     ]
    },
    "consoles": {
-    "of_ch01": "of_boot_camp",
-    "of_ch02": "of_welcome_to_black_mesa",
-    "of_ch03": "of_we_are_not_alone",
-    "of_ch04": "of_missing_in_action",
-    "of_ch05": "of_friendly_fire",
-    "of_ch07": "of_we_are_pulling_out",
-    "of_ch08": "of_crush_depth",
-    "of_ch09": "of_vicarious_reality",
-    "of_ch10": "of_pit_worms_nest",
+    "of_ch01": "of_welcome_to_black_mesa",
+    "of_ch02": "of_we_are_pulling_out",
+    "of_ch03": "of_missing_in_action",
+    "of_ch04": "of_friendly_fire",
+    "of_ch05": "of_we_are_not_alone",
+    "of_ch07": "of_vicarious_reality",
+    "of_ch08": "of_pit_worms_nest",
+    "of_ch09": "of_foxtrot_uniform",
+    "of_ch10": "of_the_package",
     "of_ch11": "of_worlds_collide"
    }
   },
@@ -96,14 +100,16 @@
    "name": "Blue Shift",
    "option": "include_blue_shift",
    "missions_option": "blue_shift_missions_required",
-   "goal_chapter": "bs_power_struggle",
+   "goal_chapter": "bs_leap_of_faith",
+   "intro_chapter": "bs_living_quarters",
    "chapters": [
     "bs_living_quarters",
     "bs_insecurity",
     "bs_duty_calls",
     "bs_captive_freight",
     "bs_focal_point",
-    "bs_power_struggle"
+    "bs_power_struggle",
+    "bs_leap_of_faith"
    ],
    "melee": {
     "Crowbar": [
@@ -111,12 +117,12 @@
     ]
    },
    "consoles": {
-    "bs_ch01": "bs_living_quarters",
-    "bs_ch02": "bs_insecurity",
-    "bs_ch03": "bs_duty_calls",
-    "bs_ch04": "bs_captive_freight",
-    "bs_ch05": "bs_focal_point",
-    "bs_ch06": "bs_power_struggle"
+    "bs_ch01": "bs_insecurity",
+    "bs_ch02": "bs_duty_calls",
+    "bs_ch03": "bs_captive_freight",
+    "bs_ch04": "bs_focal_point",
+    "bs_ch05": "bs_power_struggle",
+    "bs_ch06": "bs_leap_of_faith"
    }
   },
   {
@@ -125,6 +131,7 @@
    "option": "include_they_hunger",
    "missions_option": "they_hunger_missions_required",
    "goal_chapter": "th_episode_3",
+   "intro_chapter": "",
    "chapters": [
     "th_episode_1",
     "th_episode_2",
@@ -441,8 +448,8 @@
    }
   },
   {
-   "key": "of_boot_camp",
-   "name": "Boot Camp",
+   "key": "of_incoming",
+   "name": "Incoming",
    "maps": [
     "of0a0"
    ],
@@ -461,11 +468,15 @@
    "index": 19,
    "campaign": "opposing_force",
    "is_goal": false,
-   "gates": {}
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
   },
   {
-   "key": "of_we_are_not_alone",
-   "name": "We Are Not Alone",
+   "key": "of_we_are_pulling_out",
+   "name": "We Are Pulling Out",
    "maps": [
     "of1a3",
     "of1a4",
@@ -515,8 +526,8 @@
    }
   },
   {
-   "key": "of_we_are_pulling_out",
-   "name": "We Are Pulling Out",
+   "key": "of_we_are_not_alone",
+   "name": "We Are Not Alone",
    "maps": [
     "of2a4",
     "of2a5",
@@ -583,21 +594,49 @@
    }
   },
   {
-   "key": "of_worlds_collide",
-   "name": "Worlds Collide",
+   "key": "of_foxtrot_uniform",
+   "name": "Foxtrot Uniform",
    "maps": [
     "of5a1",
     "of5a2",
     "of5a3",
-    "of5a4",
+    "of5a4"
+   ],
+   "index": 27,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ]
+   }
+  },
+  {
+   "key": "of_the_package",
+   "name": "The Package",
+   "maps": [
     "of6a1",
     "of6a2",
-    "of6a3",
+    "of6a3"
+   ],
+   "index": 28,
+   "campaign": "opposing_force",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ]
+   }
+  },
+  {
+   "key": "of_worlds_collide",
+   "name": "Worlds Collide",
+   "maps": [
     "of6a4",
     "of6a4b",
     "of6a5"
    ],
-   "index": 27,
+   "index": 29,
    "campaign": "opposing_force",
    "is_goal": true,
    "gates": {
@@ -614,7 +653,7 @@
     "ba_tram2",
     "ba_tram3"
    ],
-   "index": 28,
+   "index": 30,
    "campaign": "blue_shift",
    "is_goal": false,
    "gates": {}
@@ -628,7 +667,7 @@
     "ba_maint",
     "ba_elevator"
    ],
-   "index": 29,
+   "index": 31,
    "campaign": "blue_shift",
    "is_goal": false,
    "gates": {}
@@ -642,7 +681,7 @@
     "ba_canal2",
     "ba_canal3"
    ],
-   "index": 30,
+   "index": 32,
    "campaign": "blue_shift",
    "is_goal": false,
    "gates": {
@@ -665,7 +704,7 @@
     "ba_yard5",
     "ba_yard5a"
    ],
-   "index": 31,
+   "index": 33,
    "campaign": "blue_shift",
    "is_goal": false,
    "gates": {
@@ -686,7 +725,7 @@
     "ba_xen5",
     "ba_xen6"
    ],
-   "index": 32,
+   "index": 34,
    "campaign": "blue_shift",
    "is_goal": false,
    "gates": {
@@ -701,10 +740,24 @@
    "maps": [
     "ba_teleport2",
     "ba_power1",
-    "ba_power2",
+    "ba_power2"
+   ],
+   "index": 35,
+   "campaign": "blue_shift",
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "key": "bs_leap_of_faith",
+   "name": "A Leap Of Faith",
+   "maps": [
     "ba_outro"
    ],
-   "index": 33,
+   "index": 36,
    "campaign": "blue_shift",
    "is_goal": true,
    "gates": {
@@ -724,7 +777,7 @@
     "th_ep1_04",
     "th_ep1_05"
    ],
-   "index": 34,
+   "index": 37,
    "campaign": "they_hunger",
    "is_goal": false,
    "gates": {}
@@ -739,7 +792,7 @@
     "th_ep2_03",
     "th_ep2_04"
    ],
-   "index": 35,
+   "index": 38,
    "campaign": "they_hunger",
    "is_goal": false,
    "gates": {
@@ -761,7 +814,7 @@
     "th_ep3_06",
     "th_ep3_07"
    ],
-   "index": 36,
+   "index": 39,
    "campaign": "they_hunger",
    "is_goal": true,
    "gates": {
@@ -909,11 +962,11 @@
    "campaign": "half_life"
   },
   {
-   "id": 7710039,
-   "name": "Boot Camp Unlock",
+   "id": 7710073,
+   "name": "Incoming Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "of_boot_camp",
+   "chapter": "of_incoming",
    "campaign": "opposing_force"
   },
   {
@@ -925,11 +978,11 @@
    "campaign": "opposing_force"
   },
   {
-   "id": 7710041,
-   "name": "We Are Not Alone Unlock",
+   "id": 7710044,
+   "name": "We Are Pulling Out Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "of_we_are_not_alone",
+   "chapter": "of_we_are_pulling_out",
    "campaign": "opposing_force"
   },
   {
@@ -949,11 +1002,11 @@
    "campaign": "opposing_force"
   },
   {
-   "id": 7710044,
-   "name": "We Are Pulling Out Unlock",
+   "id": 7710041,
+   "name": "We Are Not Alone Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "of_we_are_pulling_out",
+   "chapter": "of_we_are_not_alone",
    "campaign": "opposing_force"
   },
   {
@@ -978,6 +1031,22 @@
    "classification": "progression",
    "group": "chapter",
    "chapter": "of_pit_worms_nest",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710075,
+   "name": "Foxtrot Uniform Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_foxtrot_uniform",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7710077,
+   "name": "The Package Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of_the_package",
    "campaign": "opposing_force"
   },
   {
@@ -1018,6 +1087,14 @@
    "classification": "progression",
    "group": "chapter",
    "chapter": "bs_focal_point",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7710078,
+   "name": "Power Struggle Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "bs_power_struggle",
    "campaign": "blue_shift"
   },
   {
@@ -3699,9 +3776,9 @@
    }
   },
   {
-   "id": 7720174,
-   "name": "Boot Camp - Reached",
-   "chapter": "of_boot_camp",
+   "id": 7720417,
+   "name": "Incoming - Reached",
+   "chapter": "of_incoming",
    "map": "of0a0",
    "trigger": {
     "type": "map_reached",
@@ -3746,9 +3823,9 @@
    }
   },
   {
-   "id": 7720178,
-   "name": "We Are Not Alone - Part 1 Reached",
-   "chapter": "of_we_are_not_alone",
+   "id": 7720418,
+   "name": "We Are Pulling Out - Part 1 Reached",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a3",
    "trigger": {
     "type": "map_reached",
@@ -3756,9 +3833,9 @@
    }
   },
   {
-   "id": 7720179,
-   "name": "We Are Not Alone - Part 2 Reached",
-   "chapter": "of_we_are_not_alone",
+   "id": 7720419,
+   "name": "We Are Pulling Out - Part 2 Reached",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a4",
    "trigger": {
     "type": "map_reached",
@@ -3766,9 +3843,9 @@
    }
   },
   {
-   "id": 7720180,
-   "name": "We Are Not Alone - Health Charger (Part 2)",
-   "chapter": "of_we_are_not_alone",
+   "id": 7720420,
+   "name": "We Are Pulling Out - Health Charger (Part 2)",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a4",
    "trigger": {
     "type": "charger",
@@ -3783,9 +3860,9 @@
    ]
   },
   {
-   "id": 7720181,
-   "name": "We Are Not Alone - Part 3 Reached",
-   "chapter": "of_we_are_not_alone",
+   "id": 7720421,
+   "name": "We Are Pulling Out - Part 3 Reached",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a4b",
    "trigger": {
     "type": "map_reached",
@@ -3904,9 +3981,9 @@
    }
   },
   {
-   "id": 7720191,
-   "name": "We Are Pulling Out - Part 1 Reached",
-   "chapter": "of_we_are_pulling_out",
+   "id": 7720422,
+   "name": "We Are Not Alone - Part 1 Reached",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a4",
    "trigger": {
     "type": "map_reached",
@@ -3914,9 +3991,9 @@
    }
   },
   {
-   "id": 7720192,
-   "name": "We Are Pulling Out - Part 2 Reached",
-   "chapter": "of_we_are_pulling_out",
+   "id": 7720423,
+   "name": "We Are Not Alone - Part 2 Reached",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a5",
    "trigger": {
     "type": "map_reached",
@@ -3924,9 +4001,9 @@
    }
   },
   {
-   "id": 7720193,
-   "name": "We Are Pulling Out - Part 3 Reached",
-   "chapter": "of_we_are_pulling_out",
+   "id": 7720424,
+   "name": "We Are Not Alone - Part 3 Reached",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a6",
    "trigger": {
     "type": "map_reached",
@@ -3934,9 +4011,9 @@
    }
   },
   {
-   "id": 7720194,
-   "name": "We Are Pulling Out - HEV Charger (Part 3)",
-   "chapter": "of_we_are_pulling_out",
+   "id": 7720425,
+   "name": "We Are Not Alone - HEV Charger (Part 3)",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a6",
    "trigger": {
     "type": "charger",
@@ -4262,9 +4339,9 @@
    }
   },
   {
-   "id": 7720217,
-   "name": "Worlds Collide - Part 1 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720354,
+   "name": "Foxtrot Uniform - Part 1 Reached",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a1",
    "trigger": {
     "type": "map_reached",
@@ -4272,9 +4349,9 @@
    }
   },
   {
-   "id": 7720218,
-   "name": "Worlds Collide - Part 2 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720355,
+   "name": "Foxtrot Uniform - Part 2 Reached",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a2",
    "trigger": {
     "type": "map_reached",
@@ -4282,9 +4359,9 @@
    }
   },
   {
-   "id": 7720219,
-   "name": "Worlds Collide - Part 3 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720356,
+   "name": "Foxtrot Uniform - Part 3 Reached",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a3",
    "trigger": {
     "type": "map_reached",
@@ -4292,9 +4369,9 @@
    }
   },
   {
-   "id": 7720220,
-   "name": "Worlds Collide - Part 4 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720357,
+   "name": "Foxtrot Uniform - Part 4 Reached",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a4",
    "trigger": {
     "type": "map_reached",
@@ -4302,9 +4379,9 @@
    }
   },
   {
-   "id": 7720221,
-   "name": "Worlds Collide - Health Charger (Part 4)",
-   "chapter": "of_worlds_collide",
+   "id": 7720358,
+   "name": "Foxtrot Uniform - Health Charger (Part 4)",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a4",
    "trigger": {
     "type": "charger",
@@ -4319,9 +4396,9 @@
    ]
   },
   {
-   "id": 7720222,
-   "name": "Worlds Collide - HEV Charger (Part 4)",
-   "chapter": "of_worlds_collide",
+   "id": 7720359,
+   "name": "Foxtrot Uniform - HEV Charger (Part 4)",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a4",
    "trigger": {
     "type": "charger",
@@ -4336,9 +4413,9 @@
    ]
   },
   {
-   "id": 7720223,
-   "name": "Worlds Collide - Part 5 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720405,
+   "name": "The Package - Part 1 Reached",
+   "chapter": "of_the_package",
    "map": "of6a1",
    "trigger": {
     "type": "map_reached",
@@ -4346,9 +4423,9 @@
    }
   },
   {
-   "id": 7720224,
-   "name": "Worlds Collide - Part 6 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720406,
+   "name": "The Package - Part 2 Reached",
+   "chapter": "of_the_package",
    "map": "of6a2",
    "trigger": {
     "type": "map_reached",
@@ -4356,9 +4433,9 @@
    }
   },
   {
-   "id": 7720225,
-   "name": "Worlds Collide - Part 7 Reached",
-   "chapter": "of_worlds_collide",
+   "id": 7720407,
+   "name": "The Package - Part 3 Reached",
+   "chapter": "of_the_package",
    "map": "of6a3",
    "trigger": {
     "type": "map_reached",
@@ -4367,7 +4444,7 @@
   },
   {
    "id": 7720226,
-   "name": "Worlds Collide - Part 8 Reached",
+   "name": "Worlds Collide - Part 1 Reached",
    "chapter": "of_worlds_collide",
    "map": "of6a4",
    "trigger": {
@@ -4377,7 +4454,7 @@
   },
   {
    "id": 7720227,
-   "name": "Worlds Collide - Part 9 Reached",
+   "name": "Worlds Collide - Part 2 Reached",
    "chapter": "of_worlds_collide",
    "map": "of6a4b",
    "trigger": {
@@ -4387,7 +4464,7 @@
   },
   {
    "id": 7720228,
-   "name": "Worlds Collide - Health Charger (Part 9)",
+   "name": "Worlds Collide - Health Charger (Part 2)",
    "chapter": "of_worlds_collide",
    "map": "of6a4b",
    "trigger": {
@@ -4404,7 +4481,7 @@
   },
   {
    "id": 7720229,
-   "name": "Worlds Collide - HEV Charger (Part 9)",
+   "name": "Worlds Collide - HEV Charger (Part 2)",
    "chapter": "of_worlds_collide",
    "map": "of6a4b",
    "trigger": {
@@ -4421,7 +4498,7 @@
   },
   {
    "id": 7720230,
-   "name": "Worlds Collide - Part 10 Reached",
+   "name": "Worlds Collide - Part 3 Reached",
    "chapter": "of_worlds_collide",
    "map": "of6a5",
    "trigger": {
@@ -4935,9 +5012,9 @@
    ]
   },
   {
-   "id": 7720272,
-   "name": "Power Struggle - Part 4 Reached",
-   "chapter": "bs_power_struggle",
+   "id": 7720433,
+   "name": "A Leap Of Faith - Reached",
+   "chapter": "bs_leap_of_faith",
    "map": "ba_outro",
    "trigger": {
     "type": "map_reached",
@@ -5405,6 +5482,42 @@
    ]
   },
   {
+   "id": 7720429,
+   "name": "First HEV Suit",
+   "chapter": "anomalous_materials",
+   "map": "hl_c01_a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c01_a1",
+    "classnames": [
+     "item_suit"
+    ]
+   },
+   "position": [
+    -3665,
+    926,
+    -280
+   ]
+  },
+  {
+   "id": 7720430,
+   "name": "First Long Jump Module",
+   "chapter": "lambda_core",
+   "map": "hl_c13_a4",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "hl_c13_a4",
+    "classnames": [
+     "item_longjump"
+    ]
+   },
+   "position": [
+    1855,
+    -297,
+    -244
+   ]
+  },
+  {
    "id": 7720173,
    "name": "First Crowbar",
    "chapter": "unforeseen_consequences",
@@ -5463,7 +5576,7 @@
   {
    "id": 7720296,
    "name": "Opposing Force - First Shotgun",
-   "chapter": "of_we_are_not_alone",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a3",
    "trigger": {
     "type": "weapon_pickup",
@@ -5481,7 +5594,7 @@
   {
    "id": 7720297,
    "name": "Opposing Force - First RPG",
-   "chapter": "of_we_are_pulling_out",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a6",
    "trigger": {
     "type": "weapon_pickup",
@@ -5517,7 +5630,7 @@
   {
    "id": 7720299,
    "name": "Opposing Force - First Tripmine",
-   "chapter": "of_we_are_pulling_out",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a4",
    "trigger": {
     "type": "weapon_pickup",
@@ -5553,7 +5666,7 @@
   {
    "id": 7720301,
    "name": "Opposing Force - First Hand Grenade",
-   "chapter": "of_we_are_not_alone",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a4b",
    "trigger": {
     "type": "weapon_pickup",
@@ -5589,7 +5702,7 @@
   {
    "id": 7720303,
    "name": "Opposing Force - First SAW",
-   "chapter": "of_worlds_collide",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a1",
    "trigger": {
     "type": "weapon_pickup",
@@ -5608,7 +5721,7 @@
   {
    "id": 7720304,
    "name": "Opposing Force - First Sniper Rifle",
-   "chapter": "of_worlds_collide",
+   "chapter": "of_foxtrot_uniform",
    "map": "of5a1",
    "trigger": {
     "type": "weapon_pickup",
@@ -5698,7 +5811,7 @@
   {
    "id": 7720310,
    "name": "Opposing Force - First Minigun",
-   "chapter": "of_we_are_pulling_out",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a4",
    "trigger": {
     "type": "weapon_pickup",
@@ -5711,6 +5824,24 @@
     83,
     564,
     6
+   ]
+  },
+  {
+   "id": 7720431,
+   "name": "Opposing Force - First HEV Suit",
+   "chapter": "of_welcome_to_black_mesa",
+   "map": "of1a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a1",
+    "classnames": [
+     "item_suit"
+    ]
+   },
+   "position": [
+    367,
+    2816,
+    48
    ]
   },
   {
@@ -5734,21 +5865,16 @@
   {
    "id": 7720312,
    "name": "Blue Shift - First Glock",
-   "chapter": "bs_captive_freight",
-   "map": "ba_yard3",
+   "chapter": "bs_insecurity",
+   "map": "ba_security2",
    "trigger": {
     "type": "weapon_pickup",
-    "map": "ba_yard3",
+    "map": "ba_security2",
     "classnames": [
      "weapon_glock",
      "weapon_9mmhandgun"
     ]
-   },
-   "position": [
-    1344,
-    440,
-    -560
-   ]
+   }
   },
   {
    "id": 7720313,
@@ -5875,6 +6001,24 @@
     -2635,
     -1550,
     92
+   ]
+  },
+  {
+   "id": 7720432,
+   "name": "Blue Shift - First HEV Suit",
+   "chapter": "bs_living_quarters",
+   "map": "ba_tram1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_tram1",
+    "classnames": [
+     "item_suit"
+    ]
+   },
+   "position": [
+    80,
+    -304,
+    3088
    ]
   },
   {
@@ -6328,13 +6472,13 @@
    }
   },
   {
-   "id": 7720334,
-   "name": "Boot Camp - Complete",
-   "chapter": "of_boot_camp",
+   "id": 7720426,
+   "name": "Incoming - Complete",
+   "chapter": "of_incoming",
    "map": "of0a0",
    "trigger": {
     "type": "chapter_complete",
-    "chapter": "of_boot_camp",
+    "chapter": "of_incoming",
     "map": "of0a0"
    }
   },
@@ -6350,13 +6494,13 @@
    }
   },
   {
-   "id": 7720336,
-   "name": "We Are Not Alone - Complete",
-   "chapter": "of_we_are_not_alone",
+   "id": 7720427,
+   "name": "We Are Pulling Out - Complete",
+   "chapter": "of_we_are_pulling_out",
    "map": "of1a4b",
    "trigger": {
     "type": "chapter_complete",
-    "chapter": "of_we_are_not_alone",
+    "chapter": "of_we_are_pulling_out",
     "map": "of1a4b"
    }
   },
@@ -6383,13 +6527,13 @@
    }
   },
   {
-   "id": 7720339,
-   "name": "We Are Pulling Out - Complete",
-   "chapter": "of_we_are_pulling_out",
+   "id": 7720428,
+   "name": "We Are Not Alone - Complete",
+   "chapter": "of_we_are_not_alone",
    "map": "of2a6",
    "trigger": {
     "type": "chapter_complete",
-    "chapter": "of_we_are_pulling_out",
+    "chapter": "of_we_are_not_alone",
     "map": "of2a6"
    }
   },
@@ -6424,6 +6568,28 @@
     "type": "chapter_complete",
     "chapter": "of_pit_worms_nest",
     "map": "of4a4"
+   }
+  },
+  {
+   "id": 7720362,
+   "name": "Foxtrot Uniform - Complete",
+   "chapter": "of_foxtrot_uniform",
+   "map": "of5a4",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_foxtrot_uniform",
+    "map": "of5a4"
+   }
+  },
+  {
+   "id": 7720416,
+   "name": "The Package - Complete",
+   "chapter": "of_the_package",
+   "map": "of6a3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of_the_package",
+    "map": "of6a3"
    }
   },
   {
@@ -6493,13 +6659,24 @@
    }
   },
   {
-   "id": 7720349,
+   "id": 7720434,
    "name": "Power Struggle - Complete",
    "chapter": "bs_power_struggle",
-   "map": "ba_outro",
+   "map": "ba_power2",
    "trigger": {
     "type": "chapter_complete",
     "chapter": "bs_power_struggle",
+    "map": "ba_power2"
+   }
+  },
+  {
+   "id": 7720435,
+   "name": "A Leap Of Faith - Complete",
+   "chapter": "bs_leap_of_faith",
+   "map": "ba_outro",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "bs_leap_of_faith",
     "map": "ba_outro"
    }
   },

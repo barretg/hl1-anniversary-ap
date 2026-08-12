@@ -25,8 +25,8 @@ want Half-Life on its own, buy Half-Life.
 | YAML option | Campaign | Missions | Maps | Finale |
 | --- | --- | --- | --- | --- |
 | `include_half_life` | Half-Life | 18 | 35 | Nihilanth |
-| `include_opposing_force` | Opposing Force | 10 | 34 | Worlds Collide |
-| `include_blue_shift` | Blue Shift | 6 | 31 | Power Struggle |
+| `include_opposing_force` | Opposing Force | 13 | 34 | Worlds Collide |
+| `include_blue_shift` | Blue Shift | 7 | 31 | Power Struggle |
 | `include_they_hunger` | They Hunger | 3 | 19 | Episode 3 |
 
 Half-Life alone is the default, so an existing YAML generates the seed it always
@@ -35,9 +35,12 @@ independent `missions_required`, and contributes its finale as a goal: the seed 
 won when every one of them is cleared. Weapons pool across campaigns.
 
 The hub already has consoles for all four, so none of this needed a map edit. It
-numbers them inconsistently, though — Half-Life's are unpadded and start at
-`hl_ch1`, Opposing Force's are padded and skip `of_ch06` — so console-to-mission
-is a generated table (`P` records in `checkdata.txt`) rather than arithmetic.
+numbers them inconsistently, though, and does not have one for every mission:
+Half-Life's are unpadded and start at `hl_ch1` because the tram ride has no panel,
+Opposing Force's are padded and skip `of_ch06`, and three of its missions have no
+panel at all. So console-to-mission is a generated table (`P` records in
+`checkdata.txt`) rather than arithmetic, and the mission groupings are taken from
+the panel labels themselves rather than from the map names.
 
 ## Why Sven Co-op rather than vanilla Half-Life
 
@@ -81,14 +84,14 @@ See [docs/protocol.md](docs/protocol.md).
 
 ## Locations
 
-Three kinds of location, 353 across all four campaigns (173 of them Half-Life's)
-against at most 66 progression items:
+Three kinds of location, 357 across all four campaigns (173 of them Half-Life's)
+against at most 69 progression items:
 
 | Type | Count | Fires when |
 | --- | --- | --- |
-| `map_reached` / `chapter_complete` | 156 | you reach a map division, or finish a mission |
-| `charger` | 143 | you press use on a health or HEV wall unit |
-| `weapon_pickup` | 54 | you reach the weapon that campaign would first have given you |
+| `map_reached` / `chapter_complete` | 160 | you reach a map division, or finish a mission |
+| `charger` | 144 | you press use on a health or HEV wall unit |
+| `weapon_pickup` | 53 | you reach the weapon that campaign would first have given you |
 
 Weapon checks are per campaign, not per seed: each campaign has its own "first
 shotgun" at its own earliest map. Anchoring them once across everything would

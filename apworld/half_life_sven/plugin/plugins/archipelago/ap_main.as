@@ -44,6 +44,11 @@ void PluginInit()
 	g_Hooks.RegisterHook( Hooks::Monster::MonsterKilled, @MonsterKilled );
 	g_Hooks.RegisterHook( Hooks::PickupObject::CanCollect, @PickupCanCollect );
 
+	// Says whether the console commands took, and names any the server refused
+	// because something else already owns the name. Without it a command that
+	// failed to register looks exactly like one that was never written.
+	ReportClientCommands();
+
 	// `as_reloadplugins` runs PluginInit but not MapInit, so without this a
 	// reloaded plugin would sit with no campaign data until the next map change,
 	// stripping loadouts it had no rules for.

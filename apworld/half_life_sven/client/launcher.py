@@ -57,6 +57,10 @@ IN_GAME_COMMANDS = (
     ("!help", "show these commands in game"),
 )
 
+# The same commands from the game console, which avoids opening chat at all.
+# Prefixed because `find` and `help` already mean something to the console.
+IN_GAME_CONSOLE_COMMANDS = "ap, ap_tracker, ap_find, ap_warp, ap_hub, ap_help"
+
 # Only a first guess for where Steam put the game. Sven Co-op is commonly on a
 # secondary library drive, in which case the picker takes over.
 DEFAULT_GAME_DIRS = [
@@ -619,6 +623,7 @@ class HalfLifeSvenContext(SuperContext):
         logger.info("In-game chat commands (press Y in Sven Co-op):")
         for command, description in IN_GAME_COMMANDS:
             logger.info(f"  {command:16} {description}")
+        logger.info(f"Or in the game console (~): {IN_GAME_CONSOLE_COMMANDS}")
         logger.info("Or walk up to a mission console in the hub and press its button.")
 
     def print_missions(self) -> None:

@@ -8,6 +8,7 @@ if someone edits one without regenerating the other.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -100,13 +101,53 @@ def test_portal_consoles_point_at_chapters_of_their_own_campaign(
             assert console not in seen, console
             seen.add(console)
 
-        # Consoles are positional: the Nth console is the Nth mission.
-        ordered = [
-            key for key in entry["chapters"]
-            if key in set(entry["consoles"].values())
+        # Consoles are positional and in campaign order: the Nth console opens
+        # the Nth mission that has one. Ordered by the number in the name, not
+        # the name -- Half-Life's are unpadded, so `hl_ch10` sorts before
+        # `hl_ch2` as text.
+        def console_number(name: str) -> int:
+            digits = re.search(r"(\d+)$", name)
+            return int(digits.group(1)) if digits else -1
+
+        wired = set(entry["consoles"].values())
+        ordered = [key for key in entry["chapters"] if key in wired]
+        by_console = [
+            entry["consoles"][c] for c in sorted(entry["consoles"], key=console_number)
         ]
-        by_console = [entry["consoles"][c] for c in sorted(entry["consoles"])]
-        assert sorted(by_console) == sorted(ordered), entry["key"]
+        assert by_console == ordered, entry["key"]
+
+
+def test_no_console_opens_an_intro_mission(campaign: dict) -> None:
+    """The hub has no panel for a campaign's intro; `!warp` is the only way in.
+
+    Half-Life's hub starts at Anomalous Materials, and Opposing Force's and Blue
+    Shift's start one past their intro the same way. Wiring the consoles as
+    though they covered the intro too put every panel one mission early, so the
+    one labelled Welcome To Black Mesa dropped you into boot camp.
+    """
+    for entry in campaign["campaigns"]:
+        intro = entry.get("intro_chapter")
+        if not intro:
+            continue
+        assert intro not in entry["consoles"].values(), entry["key"]
+
+
+def test_a_campaign_never_claims_more_consoles_than_the_hub_has(
+    campaign: dict,
+) -> None:
+    """Missions may lack a console; consoles may never lack a mission.
+
+    An intro has none by design, and Opposing Force's Crush Depth has none either
+    -- the hub simply has no `of_ch06`. What must never happen is a console
+    listed twice or pointing past the end of the mission list, which is how the
+    panels came to be off by one.
+    """
+    counts = {"half_life": 17, "opposing_force": 10, "blue_shift": 6, "they_hunger": 3}
+
+    for entry in campaign["campaigns"]:
+        assert len(entry["consoles"]) == counts[entry["key"]], entry["key"]
+        assert len(set(entry["consoles"].values())) == len(entry["consoles"])
+        assert set(entry["consoles"].values()) <= set(entry["chapters"])
 
 
 def test_every_chapter_has_a_completion_location(campaign: dict) -> None:
@@ -617,13 +658,24 @@ def test_placeable_locations_carry_a_position(campaign: dict) -> None:
     Chargers and weapon pickups are somewhere; reaching a map or finishing a
     mission is not a place, so those carry nothing and `!find` says so.
     """
+    from campaign_layout import WEAPON_ANCHORS
+
+    # A weapon handed over by an NPC has no entity to stand next to, so its check
+    # is anchored by hand and carries no position. Everything else must have one.
+    handed_over = {
+        name for anchors in WEAPON_ANCHORS.values() for name in anchors
+    }
+
     for entry in campaign["locations"]:
         kind = entry["trigger"]["type"]
-        if kind in ("charger", "weapon_pickup"):
+        if kind == "charger" or (
+            kind == "weapon_pickup"
+            and not any(entry["name"].endswith(f"First {n}") for n in handed_over)
+        ):
             assert "position" in entry, entry["name"]
             assert len(entry["position"]) == 3, entry["name"]
             assert all(isinstance(v, int) for v in entry["position"]), entry["name"]
-        else:
+        elif kind not in ("charger", "weapon_pickup"):
             assert "position" not in entry, entry["name"]
 
 
