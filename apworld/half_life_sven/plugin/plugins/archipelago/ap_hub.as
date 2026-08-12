@@ -69,8 +69,12 @@ void ShowStatus( CBasePlayer@ pPlayer )
 		// A seed can hold several campaigns, so say which one a mission is from
 		// as the list moves from one to the next. Skipped entirely on a
 		// single-campaign seed, where the heading would just be noise.
-		if( bMultiCampaign && pChapter.campaign != szShown
-		    && !g_State.ChapterExcluded( pChapter.key ) )
+		//
+		// Excluded missions count for the heading too: they are still printed as
+		// "not in this seed", and skipping them here filed an excluded intro --
+		// always the first mission of its campaign -- under the previous
+		// campaign's heading.
+		if( bMultiCampaign && pChapter.campaign != szShown )
 		{
 			szShown = pChapter.campaign;
 			string szName;
