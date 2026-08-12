@@ -22,10 +22,7 @@ want Half-Life on its own, buy Half-Life.
 ## Why Sven Co-op rather than vanilla Half-Life
 
 Sven Co-op exposes a real server-plugin API (AngelScript) with the exact hooks
-this needs — `PickupObject::CanCollect`, `Game::MapChange`, `Player::PlayerSpawn`,
-`Monster::MonsterKilled` — plus sandboxed file I/O. That means no C++ engine fork
-and no DLL patching: the whole game-side integration is text files you can edit
-and reload. It also already ships the full campaign as co-op maps and a hub map
+this needs to function. It also already ships the full campaign as co-op maps and a hub map
 with a console per chapter. Vanilla Half-Life has a separate, engine-level effort
 at [GoldSRC-Archipelago/halflife-archipelago](https://github.com/GoldSRC-Archipelago/halflife-archipelago).
 
@@ -126,7 +123,11 @@ The world generates against Archipelago 0.6.7 (verified across
 and long jump module shuffled). The bridge protocol and the data consistency
 between the two halves are covered by tests.
 
-The AngelScript plugin has **not yet been run in-game**.
-[docs/verification.md](docs/verification.md) lists what has been verified, and
+The AngelScript plugin has been tested in-game but requires further stress testing. Please ping @xLander in discord with any bugs.
+[docs/verification.md](docs/verification.md) lists what has been verified (but it's kinda outdated, haha), and
 gives an ordered in-game checklist that calls out the two assumptions most likely
 to need adjusting.
+
+## AI Usage Disclosure
+
+Claude Code was used in the production of this apworld and client integrated into the IDE. No images/assets or other such content were created with generative AI. This apworld is fully human designed with no creative design input from generative AI. 
