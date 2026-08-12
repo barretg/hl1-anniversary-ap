@@ -215,7 +215,7 @@ Chat commands (press `Y` in game, not the console):
 | `!tracker <text>` | just the maps or missions matching that, e.g. `!tracker hl_c03` or `!tracker office` |
 | `!find` | point you at the nearest check on this map you have not found |
 | `!find <text>` | point you at a check by name, e.g. `!find hev charger 3` |
-| `!warp <number>` | travel to an unlocked mission |
+| `!warp <number or name>` | travel to an unlocked mission |
 | `!warp <name>` | the same by name, e.g. `!warp office` |
 | `!warp <name> <part>` | back to one part of it, e.g. `!warp surface tension 3` |
 | `!warp <map>` | the same by map name, e.g. `!warp hl_c11_a3` |
