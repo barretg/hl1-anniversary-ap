@@ -222,17 +222,27 @@ Chat commands (press `Y` in game, not the console):
 | `!hub` | return to the campaign portal |
 
 Every one of these also works **in the console** (`~`), which saves opening chat
-and losing mouse look just to ask where a charger is. Same commands, spelled
-without the `!` and prefixed so they do not collide with the console's own:
+and losing mouse look just to ask where a charger is.
+
+**Mind the leading dot.** Sven Co-op namespaces a plugin's console commands, and
+with no namespace set the separator dot is still there — so it is `.ap`, not
+`ap`. The server prints the exact list at load:
+
+```
+[AP] console commands ready (6): .ap, .ap_tracker, .ap_find, .ap_warp, .ap_hub, .ap_help
+```
 
 | Chat | Console |
 | --- | --- |
-| `!ap` | `ap` |
-| `!tracker [text]` | `ap_tracker [text]` |
-| `!find [text]` | `ap_find [text]` |
-| `!warp <number>` | `ap_warp <number>` |
-| `!hub` | `ap_hub` |
-| `!help` | `ap_help` |
+| `!ap` | `.ap` |
+| `!tracker [text]` | `.ap_tracker [text]` |
+| `!find [text]` | `.ap_find [text]` |
+| `!warp <number or name>` | `.ap_warp <number or name>` |
+| `!hub` | `.ap_hub` |
+| `!help` | `.ap_help` |
+
+The `!` versions are chat commands: they only work typed into chat (`Y`), not
+into the console. The `.` versions are the reverse.
 
 Console output from `ap` and `ap_tracker` lands in the console you are already
 looking at, which is the main reason to prefer them.

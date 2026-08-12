@@ -58,8 +58,12 @@ IN_GAME_COMMANDS = (
 )
 
 # The same commands from the game console, which avoids opening chat at all.
-# Prefixed because `find` and `help` already mean something to the console.
-IN_GAME_CONSOLE_COMMANDS = "ap, ap_tracker, ap_find, ap_warp, ap_hub, ap_help"
+#
+# The leading dot is not decoration. Sven Co-op namespaces a plugin's console
+# commands with the `concommandns` field from default_plugins.txt, and with none
+# set the separator survives on its own -- the server logs these as `.ap` and so
+# on at load, and `ap` without the dot is simply an unknown command.
+IN_GAME_CONSOLE_COMMANDS = ".ap, .ap_tracker, .ap_find, .ap_warp, .ap_hub, .ap_help"
 
 # Only a first guess for where Steam put the game. Sven Co-op is commonly on a
 # secondary library drive, in which case the picker takes over.

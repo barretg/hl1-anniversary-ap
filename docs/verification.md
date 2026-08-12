@@ -89,14 +89,24 @@ With `random_starting_weapon: true` and Opposing Force or They Hunger enabled:
 
 Console spellings (`~`), which do the same work without opening chat:
 
-- `ap`, `ap_tracker`, `ap_find`, `ap_warp`, `ap_hub`, `ap_help`. Each must behave
-  exactly as its `!` twin, and `ap_find hev charger` must take the whole phrase
-  rather than only the first word.
-- They register when the module loads, not per map. If a map change produces
-  "a command by that name already exists", the registration has moved somewhere
-  that runs more than once.
-- Console tab completion should offer all six, which is the quickest check that
-  they registered at all.
+- **`.ap`, `.ap_tracker`, `.ap_find`, `.ap_warp`, `.ap_hub`, `.ap_help` — with
+  the leading dot.** Sven namespaces a plugin's console commands from
+  `concommandns` in `default_plugins.txt`; we set none, so the separator dot
+  survives on its own and the bare name is an unknown command. The server prints
+  the qualified list at load, and that line is the truth:
+
+  ```
+  Angelscript: Adding console command '.ap'
+  [AP] console commands ready (6): .ap, .ap_tracker, ...
+  ```
+
+- Each must behave exactly as its `!` twin, and `.ap_find hev charger` must take
+  the whole phrase rather than only the first word.
+- `!` commands work in chat only, `.` commands in the console only. Typing `!ap`
+  into the console is an unknown command and always will be.
+- They register when the module loads, not per map — and the module only loads
+  on server start or `as_reloadplugins`, so copying new script files over a
+  running server changes nothing.
 
 `!find`:
 

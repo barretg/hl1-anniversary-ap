@@ -37,7 +37,7 @@ void ShowHelp( CBasePlayer@ pPlayer )
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
 		"Or press a mission console's button in the hub.\n" );
 	g_PlayerFuncs.ClientPrint( pPlayer, HUD_PRINTTALK,
-		"In console: ap, ap_tracker, ap_find, ap_warp, ap_hub\n" );
+		"In console (mind the dot): .ap  .ap_tracker  .ap_find  .ap_warp\n" );
 }
 
 void ShowStatus( CBasePlayer@ pPlayer )
@@ -1088,7 +1088,12 @@ void ReportClientCommands()
 			++uiAdded;
 			if( szNames.Length() > 0 )
 				szNames += ", ";
-			szNames += commands[i].GetName();
+			// The *qualified* name, which is what a player actually types. Sven
+			// namespaces a plugin's console commands using `concommandns` from
+			// default_plugins.txt, and with none set the separator dot is still
+			// there -- so these are `.ap`, not `ap`. Logging GetName() instead
+			// printed a list of commands that do not exist.
+			szNames += commands[i].GetFullyQualifiedName();
 		}
 		else
 		{
