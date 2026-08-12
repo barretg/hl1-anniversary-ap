@@ -1,5 +1,17 @@
 # Half-Life (Sven Co-op) Setup Guide
 
+## Please read first: this is a multiplayer game
+
+Sven Co-op is a multiplayer game, and its version of the Half-Life campaign is
+built to be played co-operatively. Some of what it asks of you, such as needing
+more than one player at a campaign portal console, is there on purpose to keep it
+that way.
+
+This randomizer is made for co-op lobbies. We do not endorse using it, or any
+convenience it adds, to work around Sven Co-op's multiplayer design or to treat
+the campaign as a free single-player Half-Life. Play it with other people. If you
+want Half-Life on its own, buy Half-Life.
+
 ## Requirements
 
 - Sven Co-op (free on Steam). The Half-Life campaign maps ship with it — there is
@@ -70,8 +82,7 @@ You start with the crowbar, the medkit, and **one random mission unlock**.
 
 Walk up to a chapter's console in the portal room and press either button. The
 plugin rewires the consoles: one press travels to that mission if you have its
-unlock, or tells you it is locked. The stock portal's "two players standing on
-the same console" requirement no longer applies, so this works solo.
+unlock, or tells you it is locked.
 
 There is no console for Black Mesa Inbound — the portal map does not have one.
 `!warp 0` is the only way to reach mission 0. If you would rather not have a

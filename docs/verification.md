@@ -58,9 +58,9 @@ weapons via its `.cfg`, and you should spawn there with only the crowbar.
 
 ### 4. Mission gating and completion
 
-- Press a console button in the portal room, solo. It should warp with no second
-  player and no "Access Denied" clip. Pressing a locked mission's console should
-  print the lock message instead.
+- Press a console button in the portal room. It should warp on the press, with no
+  "Access Denied" clip. Pressing a locked mission's console should print the lock
+  message instead.
 - `!warp` into an unlocked mission, `!warp` into a locked one (must be refused).
 - Play a multi-part mission to its end. The completion check should send, the
   next chapter's first map will load briefly, and you should then be returned to

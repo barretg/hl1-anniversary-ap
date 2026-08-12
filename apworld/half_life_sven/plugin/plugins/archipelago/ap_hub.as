@@ -8,8 +8,8 @@
 *   - MapChange is the choke point. Every route into a mission -- a portal
 *     console, a console `changelevel`, the campaign's own end-of-map trigger --
 *     goes through it, so one check covers them all.
-*   - The portal map needs two players standing on a console to open a portal.
-*     Chat commands (`!ap`, `!warp`) do the same job for a solo run.
+*   - Mission travel is driven by the multiworld: `!ap` lists what is unlocked
+*     and `!warp` enters it. The portal consoles run the same code path.
 */
 
 /*
@@ -227,10 +227,10 @@ HookReturnCode MapChange( const string& in szNextMap )
 /*
 * Rewiring the portal consoles.
 *
-* The stock portal needs exactly two players standing inside one console's
-* game_zone_player before it will open, which makes a solo run impossible and a
-* duo run fiddly. Rather than override the map script, we watch for the button
-* press ourselves and run the same warp `!warp` would.
+* Which missions may be entered is the multiworld's decision, and the stock
+* console knows nothing about it. Rather than override the map script, we watch
+* for the button press ourselves and run the same warp `!warp` would, so there is
+* one route into a mission and one place that decides whether it is allowed.
 *
 * The console entities are named regularly -- `hl_ch<N>but1` / `hl_ch<N>but2`,
 * with `hl_ch<N>change` pointing at `hl_c<NN>` -- and portal N lines up exactly

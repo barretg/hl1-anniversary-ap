@@ -8,6 +8,17 @@ weapon but the crowbar has to be found in the multiworld.
 Player-facing docs: [setup guide](apworld/half_life_sven/docs/setup_en.md) ·
 [game page](<apworld/half_life_sven/docs/en_Half-Life (Sven Co-op).md>)
 
+## A note on multiplayer
+
+Sven Co-op is a multiplayer game, and its version of the Half-Life campaign is
+built to be played co-operatively. Some of what it asks of you is there on purpose
+to keep it that way.
+
+This randomizer is made for co-op lobbies. We do not endorse using it, or any
+convenience it adds, to work around Sven Co-op's multiplayer design or to treat
+the campaign as a free single-player Half-Life. Play it with other people. If you
+want Half-Life on its own, buy Half-Life.
+
 ## Why Sven Co-op rather than vanilla Half-Life
 
 Sven Co-op exposes a real server-plugin API (AngelScript) with the exact hooks

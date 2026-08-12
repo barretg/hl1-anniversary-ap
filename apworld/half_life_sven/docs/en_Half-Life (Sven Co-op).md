@@ -2,9 +2,20 @@
 
 ## What is this game?
 
-Half-Life's single-player campaign, as rebuilt for co-op play inside Sven Co-op.
-Sven Co-op ships the whole 1998 campaign — Black Mesa Inbound through Nihilanth —
-recombined into 35 larger maps across 18 missions, playable alone or with others.
+Half-Life's campaign, as rebuilt for co-op play inside Sven Co-op. Sven Co-op
+ships the whole 1998 campaign — Black Mesa Inbound through Nihilanth — recombined
+into 35 larger maps across 18 missions, played co-operatively.
+
+## A note on multiplayer
+
+Sven Co-op is a multiplayer game, and its version of the Half-Life campaign is
+built to be played co-operatively. Some of what it asks of you is there on purpose
+to keep it that way.
+
+This randomizer is made for co-op lobbies. We do not endorse using it, or any
+convenience it adds, to work around Sven Co-op's multiplayer design or to treat
+the campaign as a free single-player Half-Life. Play it with other people. If you
+want Half-Life on its own, buy Half-Life.
 
 ## Where is the options page?
 
