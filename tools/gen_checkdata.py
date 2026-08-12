@@ -89,8 +89,12 @@ def render(campaign: dict) -> str:
             arg = trigger["chapter"]
         elif kind == "charger":
             # `<classname>:<brush model>`, which is what the plugin matches the
-            # entity a player pressed +use on against.
+            # entity a player pressed +use on against. Gains `@<origin>` only
+            # where one brush is shared by two chargers, which is the sole case
+            # where the model alone cannot tell them apart.
             arg = f"{trigger['classname']}:{trigger['model']}"
+            if trigger.get("origin"):
+                arg += f"@{trigger['origin']}"
         else:  # map_reached
             arg = ""
         lines.append(

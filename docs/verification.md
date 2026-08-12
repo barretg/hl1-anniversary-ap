@@ -227,6 +227,11 @@ the campaign rather than granted, so on a seed with it off:
 
 ### 5b. Chargers
 
+- **`ba_canal1`'s two health chargers.** They are built from one brush, `*196`,
+  with the second shifted 80 units, so they are the only pair in the game the
+  model alone cannot tell apart. Drink from both: each must send its own check,
+  and neither may send the other's. If the second sends nothing, the engine is
+  not reporting the `origin` the generator wrote into its key.
 - Press use on a health charger and an HEV charger; each sends its own check
   once, and pressing it again sends nothing.
 - An empty charger still sends its check.

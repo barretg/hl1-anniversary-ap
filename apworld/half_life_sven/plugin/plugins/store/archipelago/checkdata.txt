@@ -10,7 +10,7 @@
 #   R|<classname>|<campaign,...>   grantable only on those campaigns' maps
 #   D|<data version>               must match the client's, or ids differ
 V|2
-D|2f192633545d
+D|58cd65e2150a
 M|half_life|Half-Life|nihilanth
 M|opposing_force|Opposing Force|of_worlds_collide
 M|blue_shift|Blue Shift|bs_power_struggle
@@ -296,7 +296,8 @@ L|7720236|ba_security2|charger|func_healthcharger:*14|Insecurity - Health Charge
 L|7720237|ba_maint|map_reached||Insecurity - Part 3 Reached
 L|7720238|ba_elevator|map_reached||Insecurity - Part 4 Reached
 L|7720239|ba_canal1|map_reached||Duty Calls - Part 1 Reached
-L|7720240|ba_canal1|charger|func_healthcharger:*196|Duty Calls - Health Charger (Part 1)
+L|7720240|ba_canal1|charger|func_healthcharger:*196|Duty Calls - Health Charger 1 (Part 1)
+L|7720353|ba_canal1|charger|func_healthcharger:*196@0 80 0|Duty Calls - Health Charger 2 (Part 1)
 L|7720241|ba_canal1b|map_reached||Duty Calls - Part 2 Reached
 L|7720242|ba_canal2|map_reached||Duty Calls - Part 3 Reached
 L|7720243|ba_canal2|charger|func_healthcharger:*110|Duty Calls - Health Charger (Part 3)

@@ -1,5 +1,5 @@
 {
- "data_version": "2f192633545d",
+ "data_version": "58cd65e2150a",
  "campaigns": [
   {
    "key": "half_life",
@@ -3865,7 +3865,7 @@
   },
   {
    "id": 7720240,
-   "name": "Duty Calls - Health Charger (Part 1)",
+   "name": "Duty Calls - Health Charger 1 (Part 1)",
    "chapter": "bs_duty_calls",
    "map": "ba_canal1",
    "trigger": {
@@ -3873,6 +3873,19 @@
     "map": "ba_canal1",
     "classname": "func_healthcharger",
     "model": "*196"
+   }
+  },
+  {
+   "id": 7720353,
+   "name": "Duty Calls - Health Charger 2 (Part 1)",
+   "chapter": "bs_duty_calls",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal1",
+    "classname": "func_healthcharger",
+    "model": "*196",
+    "origin": "0 80 0"
    }
   },
   {

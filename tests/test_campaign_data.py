@@ -272,15 +272,47 @@ def test_charger_triggers_name_a_brush_model(campaign: dict) -> None:
 
 
 def test_chargers_are_unique_within_a_map(campaign: dict) -> None:
-    """Two locations on one model would make the second unreachable."""
-    seen: set[tuple[str, str]] = set()
+    """Two locations the plugin cannot tell apart would strand the second.
+
+    Identity is the brush model, plus the origin when a mapper has reused one
+    brush for two units -- `ba_canal1` builds a second health charger from
+    `*196` and shifts it 80 units across.
+    """
+    seen: set[tuple[str, str, str]] = set()
     for entry in campaign["locations"]:
         trigger = entry["trigger"]
         if trigger["type"] != "charger":
             continue
-        key = (entry["map"], trigger["model"])
+        key = (entry["map"], trigger["model"], trigger.get("origin", ""))
         assert key not in seen, entry["name"]
         seen.add(key)
+
+
+def test_a_shared_charger_brush_is_split_by_origin(campaign: dict) -> None:
+    """Both units on a reused brush are real, so both are checks."""
+    canal = [
+        entry for entry in campaign["locations"]
+        if entry["map"] == "ba_canal1" and entry["trigger"]["type"] == "charger"
+    ]
+    assert len(canal) == 2, "ba_canal1 has two health chargers on one brush"
+    assert {e["trigger"]["model"] for e in canal} == {"*196"}
+    # Exactly one carries the offset: the un-shifted one keeps the plain key it
+    # has always had, so its id never moved.
+    origins = sorted(e["trigger"].get("origin", "") for e in canal)
+    assert origins == ["", "0 80 0"]
+
+
+def test_only_shared_brushes_carry_an_origin(campaign: dict) -> None:
+    """Adding it anywhere else would renumber a location that already existed."""
+    by_map: dict[tuple[str, str], list[dict]] = {}
+    for entry in campaign["locations"]:
+        trigger = entry["trigger"]
+        if trigger["type"] == "charger":
+            by_map.setdefault((entry["map"], trigger["model"]), []).append(trigger)
+
+    for (map_name, model), triggers in by_map.items():
+        if len(triggers) == 1:
+            assert not triggers[0].get("origin"), f"{map_name} {model}"
 
 
 def test_checkdata_charger_args_are_classname_and_model(
@@ -288,11 +320,15 @@ def test_checkdata_charger_args_are_classname_and_model(
 ) -> None:
     """Exactly what the plugin builds from the entity a player pressed +use on."""
     generated = {int(r[1]): r[4] for r in checkdata if r[0] == "L" and r[3] == "charger"}
-    expected = {
-        entry["id"]: f"{entry['trigger']['classname']}:{entry['trigger']['model']}"
-        for entry in campaign["locations"]
-        if entry["trigger"]["type"] == "charger"
-    }
+    expected = {}
+    for entry in campaign["locations"]:
+        trigger = entry["trigger"]
+        if trigger["type"] != "charger":
+            continue
+        arg = f"{trigger['classname']}:{trigger['model']}"
+        if trigger.get("origin"):
+            arg += f"@{trigger['origin']}"
+        expected[entry["id"]] = arg
     assert generated == expected, "run: python tools/gen_checkdata.py"
 
 

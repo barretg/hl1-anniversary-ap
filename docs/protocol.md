@@ -194,7 +194,15 @@ Pipe-delimited so AngelScript can parse it with a single `string.Split("|")`.
 | `C` | index, key, name, comma-separated maps, is_goal, campaign key |
 | `P` | hub console targetname, the chapter its button enters |
 | `L` | id, map, trigger type, trigger arg, name |
-| | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79`; `weapon_pickup` carries the comma-separated classnames |
+| | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>:<brush model>`, e.g. `func_recharge:*79`, plus `@<origin>` when one brush carries two units; `weapon_pickup` carries the comma-separated classnames |
+
+A charger's identity is its brush model, because it has no targetname and that is
+the only handle the BSP and the running game share. That breaks when a mapper
+reuses a brush and shifts the copy with an `origin` key: `ba_canal1` builds two
+health chargers from `*196`, 80 units apart, and both can be drunk from. The
+offset one is keyed `func_healthcharger:*196@0 80 0`. Only shifted copies carry
+the suffix, so the plugin tries the offset form first and falls back to the plain
+one, and every charger id that existed before is untouched.
 | `K` | classname, item name — pickup refused until that item is held |
 | `S` | classname always granted (the crowbar and the medkit), the default a snapshot's `starting` may override |
 | `R` | classname, comma-separated campaigns whose maps it may be granted on |

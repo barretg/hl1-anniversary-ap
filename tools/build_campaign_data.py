@@ -69,6 +69,25 @@ def part_label(chapter_maps: list[str], map_name: str) -> str:
     return f"Part {chapter_maps.index(map_name) + 1}"
 
 
+def normalise_origin(raw: str) -> str:
+    """`0 80 0` as the running game will report it, or "" for no offset.
+
+    Written as integers because that is what the engine hands back for a brush
+    entity's origin and what the plugin will rebuild the key from; a mapper's
+    "0 80.0 0" and the engine's "0 80 0" have to be the same string.
+    """
+    parts = raw.split()
+    if len(parts) != 3:
+        return ""
+    try:
+        values = [int(round(float(p))) for p in parts]
+    except ValueError:
+        return ""
+    if not any(values):
+        return ""  # no offset; this is the brush where the compiler put it
+    return " ".join(str(v) for v in values)
+
+
 def brush_model_index(entity: dict[str, str]) -> int:
     """Numeric part of a brush entity's `*N` model, for a deterministic order."""
     model = entity.get("model", "")
@@ -133,7 +152,11 @@ def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
     elif kind == "chapter_complete":
         arg = trigger["chapter"]
     elif kind == "charger":
+        # The origin is only present on a brush shared by two chargers, so every
+        # key written before this change is byte-identical to what it was.
         arg = f"{trigger['classname']}:{trigger['model']}"
+        if trigger.get("origin"):
+            arg += f"@{trigger['origin']}"
     elif kind == "weapon_pickup":
         # A campaign-wide location: its identity is the weapon, not where the
         # earliest copy happens to sit. Anchoring the key to the map would
@@ -278,28 +301,39 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # Every health and HEV charger placed in the map is its own check.
             # The brush model index ("*58") is the only per-entity identity the
             # BSP and the running game both know, so ids are keyed to it.
+            #
+            # Except when a mapper reuses one brush and shifts the copy with an
+            # `origin` key -- `ba_canal1` has two health chargers 80 units apart
+            # sharing `*196`. Those are two real units a player can drink from, so
+            # they are two checks, told apart by the origin the engine will report
+            # for each. Only the offset copies carry it, so every id that existed
+            # before this stays exactly where it was.
             if "charger" in enabled:
                 for classname, display in CHARGER_CLASSNAMES.items():
-                    # Keyed by brush model, which also de-duplicates: a couple of
-                    # maps carry two entity blocks pointing at the same brush, and
-                    # the running game cannot tell those apart either -- one
-                    # `+use` is one charger, so they have to be one check.
-                    by_model = {}
-                    for entity in ents:
-                        if entity.get("classname", "") != classname:
-                            continue
-                        if brush_model_index(entity) < 0:
-                            continue
-                        by_model.setdefault(entity["model"], entity)
-                    chargers = sorted(by_model.values(), key=brush_model_index)
+                    chargers = sorted(
+                        (e for e in ents
+                         if e.get("classname", "") == classname
+                         and brush_model_index(e) >= 0),
+                        key=brush_model_index,
+                    )
+                    shared = {
+                        model for model in {e["model"] for e in chargers}
+                        if len([e for e in chargers if e["model"] == model]) > 1
+                    }
                     for number, entity in enumerate(chargers, start=1):
                         count = f" {number}" if len(chargers) > 1 else ""
+                        trigger = {
+                            "type": "charger", "map": map_name,
+                            "classname": classname, "model": entity["model"],
+                        }
+                        origin = normalise_origin(entity.get("origin", ""))
+                        if entity["model"] in shared and origin:
+                            trigger["origin"] = origin
                         builder.add(
                             chapter,
                             map_name,
                             f"{display}{count}{suffix}",
-                            {"type": "charger", "map": map_name,
-                             "classname": classname, "model": entity["model"]},
+                            trigger,
                         )
 
             # Every distinct pickup classname present in the map becomes one

@@ -141,6 +141,7 @@
   "bs_captive_freight|ba_yard5|map_reached|": 7720254,
   "bs_duty_calls|ba_canal1b|map_reached|": 7720241,
   "bs_duty_calls|ba_canal1|charger|func_healthcharger:*196": 7720240,
+  "bs_duty_calls|ba_canal1|charger|func_healthcharger:*196@0 80 0": 7720353,
   "bs_duty_calls|ba_canal1|map_reached|": 7720239,
   "bs_duty_calls|ba_canal2|charger|func_healthcharger:*110": 7720243,
   "bs_duty_calls|ba_canal2|map_reached|": 7720242,

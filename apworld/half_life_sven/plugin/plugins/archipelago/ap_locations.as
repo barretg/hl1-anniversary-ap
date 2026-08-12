@@ -111,6 +111,13 @@ bool AnyPlayerNear( const string& in szClassname )
 * and the running game agree on is the brush model index the compiler gave them
 * ("*58"). checkdata.txt carries "<classname>:<model>" for exactly that reason.
 *
+* One brush can carry two chargers, though: `ba_canal1` builds a second health
+* unit from `*196` and shifts it 80 units with an `origin` key. Those are two
+* separate units a player drinks from, so the offset one is keyed
+* "<classname>:<model>@<origin>". Only the shifted copies carry that suffix, so
+* the plain key is tried as well and every charger that existed before still
+* matches on it.
+*
 * The check fires on the press, not on drinking the charger dry: an empty unit
 * is still a unit you found, and a player who tops up two points of health has
 * done the same amount of exploring as one who was nearly dead.
@@ -121,6 +128,30 @@ void RegisterChargerCheck( CBaseEntity@ pEntity )
 		return;
 
 	string szKey = pEntity.GetClassname() + ":" + string( pEntity.pev.model );
+
+	// Whole units: the generator rounds the same way, so a mapper's "0 80.0 0"
+	// and the engine's 80.0f agree on one string.
+	Vector vecOrigin = pEntity.pev.origin;
+	string szOffsetKey;
+	if( vecOrigin.x != 0 || vecOrigin.y != 0 || vecOrigin.z != 0 )
+	{
+		szOffsetKey = szKey + "@" + int( vecOrigin.x )
+			+ " " + int( vecOrigin.y ) + " " + int( vecOrigin.z );
+	}
+
+	// The offset form first: on a shared brush it is the only thing telling the
+	// two units apart, and the plain key would match whichever came first.
+	if( szOffsetKey.Length() > 0 )
+	{
+		for( uint i = 0; i < g_MapChargers.length(); ++i )
+		{
+			if( g_MapChargers[i].arg == szOffsetKey )
+			{
+				SendCheck( g_MapChargers[i] );
+				return;
+			}
+		}
+	}
 
 	for( uint i = 0; i < g_MapChargers.length(); ++i )
 	{
