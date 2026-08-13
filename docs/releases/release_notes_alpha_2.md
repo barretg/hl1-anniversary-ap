@@ -1,4 +1,8 @@
 # Half-Life (Sven Co-op) Archipelago Alpha v0.2
+Note that this is a very early build of the apworld. Please report any problems in Discord or the Issues page on github (with reproduction steps please and thank you!)
+
+Sven Co-op's Half-Life campaign is meant to be played in multiplayer. No support will be offered to players attempting to circumvent this restriction.
+
 
 ## What's New
 * Added Blue Shift Campaign
