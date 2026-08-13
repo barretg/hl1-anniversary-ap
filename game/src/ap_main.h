@@ -42,6 +42,7 @@ void RequestLoadout();                                      // ap_items
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
+bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool InterceptChangeLevel(const std::string& from_map,
                           const std::string& to_map);       // ap_hub
 
@@ -71,6 +72,23 @@ CBasePlayer* Player();
 
 // The map the server is running, from gpGlobals.
 std::string CurrentMap();
+
+// A copy of this string that lives for the rest of the process, as a plain
+// `const char*`.
+//
+// Required by any SDK call that turns a name into an entity: `GiveNamedItem` and
+// `CBaseEntity::Create` both store the name with `MAKE_STRING`, which does not
+// copy it -- it records the *offset of the caller's pointer* from the engine's
+// string base, and `pev->classname` then points at whatever that address holds
+// later. Every caller in Valve's own code passes a string literal, which lives
+// in the data segment forever, so this never troubles them.
+//
+// Pass the `c_str()` of a temporary and the entity's classname turns to freed
+// heap as soon as the caller returns: `HasNamedPlayerItem` stops matching it, so
+// the loadout grants it again and again, and `SelectItem` cannot find it, so the
+// HUD's slot keys silently fail while `lastinv` -- which follows a pointer --
+// still works.
+const char* Intern(const std::string& text);
 
 // Loaded once per map load. Empty when checkdata.txt could not be read, in which
 // case every check is silently inert -- see `Live`.

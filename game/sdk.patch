@@ -1,4 +1,4 @@
-diff --git a/common/mathlib.h b/common/mathlib.h
+﻿diff --git a/common/mathlib.h b/common/mathlib.h
 index c765eb5..8afc4de 100644
 --- a/common/mathlib.h
 +++ b/common/mathlib.h
@@ -14,7 +14,7 @@ index c765eb5..8afc4de 100644
  {
  _asm	
 diff --git a/dlls/client.cpp b/dlls/client.cpp
-index e2f30b7..7789b70 100644
+index e2f30b7..f2f4519 100644
 --- a/dlls/client.cpp
 +++ b/dlls/client.cpp
 @@ -26,6 +26,7 @@
@@ -25,7 +25,22 @@ index e2f30b7..7789b70 100644
  #include "saverestore.h"
  #include "player.h"
  #include "spectator.h"
-@@ -736,6 +737,9 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
+@@ -507,6 +508,14 @@ void ClientCommand( edict_t *pEntity )
+ 
+ 	entvars_t *pev = &pEntity->v;
+ 
++	// Archipelago: chat commands (!ap, !warp, !hub ...) are answered here and
++	// never reach chat. Checked before anything else looks at the line.
++	if ( ( FStrEq(pcmd, "say") || FStrEq(pcmd, "say_team") ) &&
++		 ap::HandleChat( GetClassPtr((CBasePlayer *)pev), CMD_ARGS() ) )
++	{
++		return;
++	}
++
+ 	if ( FStrEq(pcmd, "say" ) )
+ 	{
+ 		Host_Say( pEntity, 0 );
+@@ -736,6 +745,9 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
  
  	// Link user messages here to make sure first client can get them...
  	LinkUserMessages();
@@ -35,7 +50,7 @@ index e2f30b7..7789b70 100644
  }
  
  
-@@ -799,6 +803,9 @@ void StartFrame( void )
+@@ -799,6 +811,9 @@ void StartFrame( void )
  	if ( g_fGameOver )
  		return;
  

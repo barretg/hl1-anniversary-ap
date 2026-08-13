@@ -46,4 +46,46 @@ constexpr float kButterfingersReturnSeconds = 30.0f;
 // How many of a thing a trap spawns.
 constexpr int kTrapSpawnCount = 4;
 
+// --- where they land ------------------------------------------------------
+//
+// Ported from the Sven Co-op project, which had already been through this: a
+// fixed ring of four spawns reads as a summoning circle, spawns things inside
+// walls, and in a corridor produces one monster instead of four.
+//
+// Each spawn is rolled separately -- its own bearing, its own distance -- and
+// checked with three traces before anything is created.
+
+// The band a spawn lands in: far enough out not to telefrag, close enough to be
+// the player's problem immediately.
+constexpr float kTrapSpawnMinRadius = 72.0f;
+constexpr float kTrapSpawnMaxRadius = 160.0f;
+
+// How many bearings to try before giving up on one monster. A random bearing
+// indoors points at a wall more often than not, and one roll per monster would
+// mean a trap in a corridor spawning one of them.
+constexpr int kTrapPlaceAttempts = 10;
+
+// How far apart two spawns of the same trap have to be, so they read as
+// scattered rather than stacked and are not born shoving each other.
+constexpr float kTrapMinSeparation = 40.0f;
+
+// Backed off whatever the outward trace hit, so nobody arrives inside a wall.
+constexpr float kTrapWallMargin = 16.0f;
+
+// How far a chosen spot may fall and still count as the same room. A short drop
+// is a step or a kerb; a long one is the monster leaving down a lift shaft the
+// moment it arrives.
+constexpr float kTrapDropHeight = 128.0f;
+
+// Half the height of the engine's standing hulls: the distance between the point
+// a hull trace works with, which is the centre of the box, and a monster's own
+// origin, which is at its feet. Hull 1 is 32x32x72, hull 3 is 32x32x36.
+constexpr float kHumanHullHalf = 36.0f;
+constexpr float kHeadHullHalf = 18.0f;
+
+// Scientist sub-models: glasses, Einstein, Luther, slick. One of each, in a
+// random order, which is what makes four of them read as a crowd rather than as
+// a clone.
+constexpr int kScientistHeads = 4;
+
 }  // namespace ap

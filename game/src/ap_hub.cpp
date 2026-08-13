@@ -109,26 +109,26 @@ void ListMissions() {
                       chapter.name.c_str(), StatusOf(chapter));
         Say(line);
     }
-    Say("ap_warp <number or name> to travel, plus a part number to return to "
-        "somewhere you have been. ap_hub to come back.");
+    Say("!warp <number or name> to travel, plus a part number to return to "
+        "somewhere you have been. !hub to come back. !help for the rest.");
 }
 
 void Help() {
-    Say("ap                            every mission and its unlock status");
-    Say("ap_warp <number or name>      travel to an unlocked mission");
-    Say("ap_warp <mission> <part>      to a part of it you have already reached");
-    Say("ap_hub                        return to the hub");
-    Say("ap_tracker [map]              locations found and still out there");
-    Say("ap_find [text]                point at the nearest unfound check");
+    Say("In chat (Y), or in the console without the !:");
+    Say("!ap                       every mission and its unlock status");
+    Say("!warp <number or name>    travel to an unlocked mission");
+    Say("!warp <mission> <part>    to a part of it you have already reached");
+    Say("!hub                      return to the hub");
+    Say("!tracker [map]            locations found and still out there");
+    Say("!find [text]              point at the nearest unfound check");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
 }
 
-void Warp() {
+void Warp(const std::string& argument) {
     if (!Data().Loaded()) {
         Say("No checkdata.txt, so there is nowhere to warp to.");
         return;
     }
-    const std::string argument = ArgumentTail(1);
     if (argument.empty()) {
         Say("Usage: ap_warp <number or name> [part]. ap lists them.");
         return;
@@ -238,10 +238,32 @@ void ToHub() {
 
 void Cmd_Ap() { ListMissions(); }
 void Cmd_ApHelp() { Help(); }
-void Cmd_ApWarp() { Warp(); }
+void Cmd_ApWarp() { Warp(ArgumentTail(1)); }
 void Cmd_ApHub() { ToHub(); }
 void Cmd_ApFind() { Find(ArgumentTail(1)); }
 void Cmd_ApTracker() { Tracker(ArgumentTail(1)); }
+
+// One place that knows what every command is, whether it arrived from the
+// console or from chat. The console names are the long ones (`ap_warp`); chat
+// takes the short ones too, because `!warp 3` is what a player will type.
+bool Dispatch(const std::string& name, const std::string& rest) {
+    if (name == "ap") {
+        ListMissions();
+    } else if (name == "help" || name == "ap_help") {
+        Help();
+    } else if (name == "warp" || name == "ap_warp") {
+        Warp(rest);
+    } else if (name == "hub" || name == "ap_hub") {
+        ToHub();
+    } else if (name == "find" || name == "ap_find") {
+        Find(rest);
+    } else if (name == "tracker" || name == "ap_tracker") {
+        Tracker(rest);
+    } else {
+        return false;
+    }
+    return true;
+}
 
 }  // namespace
 
@@ -265,6 +287,39 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
     Trace("  commands registered");
+}
+
+bool HandleChat(CBasePlayer* player, const std::string& said) {
+    // `say` hands the whole line over as one argument, usually quoted, so this
+    // is the raw text the player typed rather than anything pre-split.
+    std::string text = Trim(said);
+    if (text.size() >= 2 && text.front() == '"' && text.back() == '"') {
+        text = Trim(text.substr(1, text.size() - 2));
+    }
+    if (text.empty()) {
+        return false;
+    }
+
+    // `!` is the prefix, and `/` is accepted because half of everyone types
+    // that instead. A line starting with neither is chat, and stays chat.
+    if (text[0] != '!' && text[0] != '/') {
+        return false;
+    }
+    text.erase(text.begin());
+
+    const size_t space = text.find_first_of(" \t");
+    std::string name = Lower(space == std::string::npos ? text
+                                                       : text.substr(0, space));
+    const std::string rest =
+        space == std::string::npos ? std::string() : Trim(text.substr(space + 1));
+
+    if (!Dispatch(name, rest)) {
+        // Ours to answer even when it is not a command we have: a player who
+        // typed `!warpp` wants to be told, not to have it broadcast to a chat
+        // nobody else is in.
+        Say(std::string("No such command: !") + name + ". Try !help.");
+    }
+    return true;
 }
 
 bool InHub() {

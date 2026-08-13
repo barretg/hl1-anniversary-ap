@@ -182,6 +182,30 @@ you stand still (`pool_party` has a `dmg 200` trigger), and small, because it is
 reloaded after every mission. v2 replaces it with one room and a button per
 mission.
 
+**Commands arrive from two places and are handled in one.** `ClientCommand`
+intercepts `say` and `say_team`, so a line starting with `!` or `/` is answered
+and never broadcast; the console commands are the same names with `ap_` in front.
+`Dispatch` in `ap_hub.cpp` is the single table both go through, so a command
+cannot exist on one surface and not the other. Single-player chat has nobody else
+in it, but it opens with one key and does not pause the game.
+
+**The loadout has to be exactly idempotent**, because it runs on every spawn and
+every snapshot change -- which is every check the player sends. The trap here is
+retail's duplicate classnames: `weapon_mp5` and `weapon_9mmAR` are the same gun,
+its maps place both, and the SDK recognises a duplicate *by classname*. Granting
+the spelling the player does not happen to be holding therefore adds a second
+copy of the weapon and pays out another full load of ammo, over and over. Held
+under any of its names counts as held, and the whole list is checked before
+anything is granted.
+
+**A granted weapon needs the client told about it.** A weapon reaches the HUD's
+selection buckets through the `WeapPickup` message its own `AddToPlayer` sends,
+and handing one over outside the ordinary flow of walking onto it misses that.
+The result is a weapon the server has and the HUD does not: unselectable with the
+slot keys, though `lastinv` still reaches it, because that is decided
+server-side. `ApplyLoadout` calls `ForceClientDllUpdate` after a real grant --
+the SDK's own repair, and what `fullupdate` does.
+
 **`ap_warp` takes a part number, and only for parts already reached.**
 `ap_warp unforeseen 6` is a way back into a mission after a death or an errand in
 the hub. It is deliberately not a way past a mission's first half: the checks in

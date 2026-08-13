@@ -49,16 +49,19 @@ POLL_INTERVAL = 0.2
 # Printed on connect, because these are typed in the game rather than here and
 # are easy to forget between sessions.
 #
-# Retail single-player has no chat worth speaking of, so the console is the
-# primary surface and these are real server commands rather than the dot-prefixed
-# workaround Sven Co-op forced on the previous project.
+# Two surfaces, one set of commands: chat with a `!`, or the console with the
+# `ap_` names. Chat is the one to lead with -- it opens with one key and does not
+# pause the game -- and the console versions are real registered server commands
+# rather than the dot-prefixed workaround Sven Co-op forced on the previous
+# project.
 IN_GAME_COMMANDS = (
-    ("ap", "list every mission and its unlock status"),
-    ("ap_tracker [map]", "locations found and still out there, printed to console"),
-    ("ap_find [text]", "point at the nearest unfound check, or one you name"),
-    ("ap_warp <number or name>", "travel to an unlocked mission"),
-    ("ap_hub", "return to the hub"),
-    ("ap_help", "show these commands in game"),
+    ("!ap", "list every mission and its unlock status"),
+    ("!tracker [map]", "locations found and still out there, printed to console"),
+    ("!find [text]", "point at the nearest unfound check, or one you name"),
+    ("!warp <number or name>", "travel to an unlocked mission"),
+    ("!warp <mission> <part>", "back to a part of it you have already reached"),
+    ("!hub", "return to the hub"),
+    ("!help", "show these commands in game"),
 )
 
 # Only a first guess for where Steam put the game. Half-Life is commonly on a
@@ -561,9 +564,10 @@ class HalfLifeContext(SuperContext):
     @staticmethod
     def print_in_game_commands() -> None:
         """Remind the player what to type in the game, not here."""
-        logger.info("In-game console commands (press ~ in Half-Life):")
+        logger.info("In-game commands, in chat (press Y in Half-Life):")
         for command, description in IN_GAME_COMMANDS:
             logger.info(f"  {command:26} {description}")
+        logger.info("The same without the ! work in the console as ap, ap_warp, ...")
 
     def print_missions(self) -> None:
         for chapter in self.campaign["chapters"]:

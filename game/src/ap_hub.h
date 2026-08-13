@@ -30,6 +30,16 @@ namespace ap {
 //   ap_help            these, in game
 void RegisterCommands();
 
+// A line the player typed in chat. True when it was one of ours and has been
+// dealt with, in which case it must not be broadcast as chat.
+//
+// The same commands as the console, with `!` or `/` in front, and the short
+// names allowed: `!ap`, `!warp 3`, `!warp unforeseen 6`, `!hub`, `!find`,
+// `!tracker`, `!help`. Single-player chat has nobody else in it, but it is a
+// text box that opens with one key and does not pause the game, which is more
+// than can be said for the console.
+bool HandleChat(CBasePlayer* player, const std::string& said);
+
 // Ask for a level change. Always deferred to the next frame. `map`, never
 // `changelevel`: a clean load with no carried state is what makes a mission
 // repeatable and independent of how the player got there.

@@ -68,6 +68,18 @@ std::string CurrentMap() {
     return std::string(STRING(gpGlobals->mapname));
 }
 
+const char* Intern(const std::string& text) {
+    // A set, because it never invalidates a reference to an element it already
+    // holds. The pointer handed out here has to stay good for as long as an
+    // entity might carry it, which is the life of the process; a vector would
+    // reallocate and take every previous classname with it.
+    //
+    // It never shrinks, and that is the point. There are two dozen weapon
+    // classnames in the game.
+    static std::set<std::string> pool;
+    return pool.insert(text).first->c_str();
+}
+
 void Say(const std::string& text) {
     CBasePlayer* player = Player();
     if (player == nullptr) {

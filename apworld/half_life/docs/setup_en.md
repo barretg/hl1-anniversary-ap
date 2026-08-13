@@ -35,17 +35,23 @@ is not connected -- otherwise closing the client would be a way past every lock
 in the game.
 
 Start a New Game and you arrive in the hub rather than on the tram. Every mission
-is reached from there. The commands live in the game console (`~`, which needs
-`-console`):
+is reached from there.
 
-| Command | What it does |
-| --- | --- |
-| `ap` | every mission and its unlock status |
-| `ap_warp <number or name>` | travel to an unlocked mission |
-| `ap_hub` | return to the hub |
-| `ap_tracker [map]` | locations found and still out there |
-| `ap_find [text]` | point at the nearest unfound check, or one you name |
-| `ap_help` | these, in game |
+Commands work in two places: **chat** (`Y`), with a `!` in front, or the
+**console** (`~`, which needs `-console`) without it. Chat is usually the one you
+want -- one key, no pause, no `ap_` prefix to type.
+
+| Chat | Console | What it does |
+| --- | --- | --- |
+| `!ap` | `ap` | every mission and its unlock status |
+| `!warp <number or name>` | `ap_warp …` | travel to an unlocked mission |
+| `!warp <mission> <part>` | `ap_warp …` | to a part you have already reached |
+| `!hub` | `ap_hub` | return to the hub |
+| `!tracker [map]` | `ap_tracker …` | locations found and still out there |
+| `!find [text]` | `ap_find …` | point at the nearest unfound check |
+| `!help` | `ap_help` | these, in game |
+
+A `/` works in chat too, if that is what your fingers do.
 
 `ap_warp` takes a mission number, a name, or a map name, and does not care about
 case or punctuation: `ap_warp 15`, `ap_warp Gonarch's Lair`, `ap_warp gonarch`

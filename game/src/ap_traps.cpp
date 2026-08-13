@@ -6,7 +6,6 @@
 
 #include "ap_traps.h"
 
-#include <cmath>
 #include <string>
 #include <vector>
 
@@ -33,33 +32,175 @@ float g_owed_at = 0.0f;
 // trap ever arrives.
 const char* const kTrapMonsters[] = {"monster_scientist", "monster_headcrab"};
 
-void SpawnAround(CBasePlayer* player, const char* classname, int count) {
-    UTIL_MakeVectors(player->pev->angles);
+// Somewhere on this bearing a monster can actually stand.
+//
+// Three traces, each rejecting a different way of arriving somewhere useless:
+//
+//   Outward, at chest height, using the monster's own hull. This is what keeps
+//   them out of walls and in front of them rather than behind: it stops at the
+//   first thing that hull cannot pass, so anywhere it reaches is connected to
+//   the player by a gap that hull fits through. A spot beyond a wall is never
+//   reached in the first place.
+//
+//   Downward, to find the floor. Without it, a spot chosen at chest height over
+//   a staircase or a railing leaves the monster hanging, and a headcrab dropped
+//   down a lift shaft is a trap nobody ever meets. Limited to a short fall, so
+//   "the floor" means this room rather than the bottom of the map.
+//
+//   In place, at the resting spot. The belt-and-braces one: a drop can end with
+//   the hull overlapping geometry it slid along, and a monster spawned inside
+//   the world either sticks or gets pushed through it.
+bool FindTrapSpot(CBasePlayer* player, int hull, float half_height,
+                  float bearing, float range, Vector& spot) {
+    UTIL_MakeVectors(Vector(0.0f, bearing, 0.0f));
+    const Vector direction = gpGlobals->v_forward;
+    const Vector start = player->pev->origin;
 
-    for (int i = 0; i < count; ++i) {
-        // Spread around the player rather than on top of them: a monster spawned
-        // inside the player is a monster stuck in the player.
-        //
-        // Not M_PI: it is not in the standard headers on MSVC without a define,
-        // and this file is not the place to argue about that.
-        const float kTwoPi = 6.2831853f;
-        const float angle = (kTwoPi * i) / count;
-        Vector offset(std::cos(angle) * 96.0f, std::sin(angle) * 96.0f, 8.0f);
-        Vector at = player->pev->origin + offset;
+    TraceResult out;
+    UTIL_TraceHull(start, start + direction * range, ignore_monsters, hull,
+                   player->edict(), &out);
 
-        // Only where there is room. A trap that buries something in a wall is
-        // worse than a trap that quietly spawns three instead of four.
-        TraceResult tr;
-        UTIL_TraceHull(player->pev->origin, at, ignore_monsters, human_hull,
-                       player->edict(), &tr);
-        if (tr.flFraction < 1.0f) {
+    // The player is inside something, so nothing measured from here means
+    // anything. A trace that starts solid reports a fraction of zero, which
+    // would otherwise read as "a wall right here".
+    if (out.fStartSolid != 0 || out.fAllSolid != 0) {
+        return false;
+    }
+
+    float reach = range * out.flFraction;
+    if (out.flFraction < 1.0f) {
+        reach -= kTrapWallMargin;
+    }
+    // The wall is close enough that anything short of it would be inside the
+    // player. Another bearing will do better.
+    if (reach < kTrapSpawnMinRadius) {
+        return false;
+    }
+
+    const Vector centre = start + direction * reach;
+
+    TraceResult drop;
+    UTIL_TraceHull(centre, centre - Vector(0.0f, 0.0f, kTrapDropHeight),
+                   ignore_monsters, hull, player->edict(), &drop);
+    if (drop.fStartSolid != 0 || drop.fAllSolid != 0) {
+        return false;
+    }
+    if (drop.flFraction >= 1.0f) {
+        return false;  // a ledge, a pit, or open air
+    }
+
+    const Vector rest = drop.vecEndPos;
+
+    TraceResult fit;
+    UTIL_TraceHull(rest, rest, ignore_monsters, hull, player->edict(), &fit);
+    if (fit.fStartSolid != 0 || fit.fAllSolid != 0) {
+        return false;
+    }
+
+    // Every trace above works in hull space, where the traced point is the
+    // centre of the box. A monster's origin is at its feet, so the same position
+    // handed straight to the entity would bury it to the waist.
+    spot = rest - Vector(0.0f, 0.0f, half_height - 1.0f);
+    return true;
+}
+
+bool TooCloseToPlaced(const Vector& spot, const std::vector<Vector>& placed) {
+    for (const Vector& other : placed) {
+        if ((other - spot).Length() < kTrapMinSeparation) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CBaseEntity* CreateMonster(const std::string& classname, const Vector& origin,
+                           float bearing, int body) {
+    // Built by hand rather than with `CBaseEntity::Create`, which spawns the
+    // entity before anything can be set on it -- and a scientist picks its head
+    // at random during `Spawn` unless one has already been chosen.
+    edict_t* pent = CREATE_NAMED_ENTITY(MAKE_STRING(Intern(classname)));
+    if (FNullEnt(pent)) {
+        return nullptr;
+    }
+
+    CBaseEntity* monster = CBaseEntity::Instance(pent);
+    if (monster == nullptr) {
+        REMOVE_ENTITY(pent);
+        return nullptr;
+    }
+
+    monster->pev->origin = origin;
+    // Facing back down the bearing, so whatever arrives is looking at whoever it
+    // arrived for.
+    monster->pev->angles = Vector(0.0f, bearing + 180.0f, 0.0f);
+    if (body >= 0) {
+        monster->pev->body = body;
+    }
+
+    DispatchSpawn(pent);
+    return monster;
+}
+
+bool SpawnOne(CBasePlayer* player, const std::string& classname, int body,
+              std::vector<Vector>& placed) {
+    int hull = human_hull;
+    float half_height = kHumanHullHalf;
+
+    // A headcrab is nothing like a person-shaped hole, and testing one against a
+    // human hull turns down crawlspaces and vents it fits through easily.
+    if (classname == "monster_headcrab") {
+        hull = head_hull;
+        half_height = kHeadHullHalf;
+    }
+
+    for (int attempt = 0; attempt < kTrapPlaceAttempts; ++attempt) {
+        const float bearing = RANDOM_FLOAT(0.0f, 360.0f);
+        const float range =
+            RANDOM_FLOAT(kTrapSpawnMinRadius, kTrapSpawnMaxRadius);
+
+        Vector spot;
+        if (!FindTrapSpot(player, hull, half_height, bearing, range, spot)) {
+            continue;
+        }
+        // Two monsters in one doorway read as a single lump and shove each other
+        // through it. Cheaper to roll again than to sort out afterwards.
+        if (TooCloseToPlaced(spot, placed)) {
             continue;
         }
 
-        // Whatever they do next is theirs to decide: a scientist will follow you
-        // if you use one and a headcrab will not wait to be asked.
-        CBaseEntity::Create((char*)classname, at, player->pev->angles,
-                            player->edict());
+        if (CreateMonster(classname, spot, bearing, body) == nullptr) {
+            return false;
+        }
+        placed.push_back(spot);
+        return true;
+    }
+
+    return false;
+}
+
+void SpawnAround(CBasePlayer* player, const std::string& classname, int count) {
+    // One of each scientist head, in a random order. Four identical scientists
+    // read as a bug; four different ones read as a crowd.
+    std::vector<int> heads;
+    if (classname == "monster_scientist") {
+        for (int i = 0; i < kScientistHeads; ++i) {
+            heads.push_back(i);
+        }
+        for (size_t i = heads.size(); i > 1; --i) {
+            const int j = RANDOM_LONG(0, static_cast<int>(i) - 1);
+            const int swap = heads[i - 1];
+            heads[i - 1] = heads[j];
+            heads[j] = swap;
+        }
+    }
+
+    std::vector<Vector> placed;
+    for (int i = 0; i < count; ++i) {
+        const int body =
+            i < static_cast<int>(heads.size()) ? heads[i] : -1;
+        // A failure here is one monster that could not be placed anywhere in ten
+        // tries, which in a tight corridor is a fair outcome. The rest still go.
+        SpawnOne(player, classname, body, placed);
     }
 }
 
@@ -92,8 +233,12 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
         UTIL_MakeVectors(player->pev->v_angle);
         const Vector at = player->pev->origin + gpGlobals->v_forward * 48 +
                           Vector(0, 0, 16);
-        CBaseEntity* dropped =
-            CBaseEntity::Create((char*)classname.c_str(), at, player->pev->angles);
+        // `Intern`, because `Create` stores the pointer rather than the
+        // characters -- see the comment on `Intern` in ap_main.h. A dropped
+        // weapon whose classname turned to freed heap could not be picked back
+        // up, which is the entire trap.
+        CBaseEntity* dropped = CBaseEntity::Create(
+            (char*)Intern(classname), at, player->pev->angles);
         if (dropped != nullptr) {
             // A gentle toss. Hard enough to land somewhere else, soft enough
             // that it does not go over the railing every time.

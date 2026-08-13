@@ -28,26 +28,162 @@ bool g_granting = false;
 bool g_loadout_wanted = false;
 
 const char* const kSuitItem = "HEV Suit";
+const char* const kLongJumpItem = "Long Jump Module";
+
+// Equipment is applied to the player directly, never by spawning its pickup.
+//
+// `GiveNamedItem` works by creating the entity and touching the player with it,
+// and `CItem::ItemTouch` only removes that entity when `MyTouch` returns true --
+// which for both of these means "you did not already have it". The second grant
+// onwards therefore leaves a real, uncollectable pickup lying on the floor, and
+// since neither is a weapon, `HasNamedPlayerItem` cannot see them to stop it:
+// one more every time the loadout runs, which is every check the player sends.
+//
+// True when this actually changed something, for the caller's "did anything
+// happen" flag.
+bool GrantLongJump(CBasePlayer* player) {
+    if (player->m_fLongJump) {
+        return false;
+    }
+    player->m_fLongJump = TRUE;
+    // The client's movement code reads this, not the flag above: without it the
+    // player has a long jump module that does not long jump.
+    g_engfuncs.pfnSetPhysicsKeyValue(player->edict(), "slj", "1");
+    return true;
+}
 
 struct Granting {
     Granting() { g_granting = true; }
     ~Granting() { g_granting = false; }
 };
 
-void Give(CBasePlayer* player, const std::string& classname) {
-    if (player->HasNamedPlayerItem(classname.c_str())) {
+// What the player is actually holding, by the name the inventory knows it under,
+// with its ammo. Written to ap_boot.txt.
+//
+// This exists because "the weapon is in my inventory but I cannot select it" has
+// two completely different causes and they cannot be told apart from outside.
+// Selecting a weapon in the HUD sends the name the *engine* registered for it
+// -- `weapon_9mmhandgun`, whatever the map or the grant called it -- and
+// `CBasePlayer::SelectItem` matches that against the classname of the instance
+// being carried. A mismatch there is silent. `lastinv` works either way, because
+// it follows a pointer and never looks at a name.
+//
+// So: the name we granted, the name in the inventory, and the ammo, all in one
+// line. Whichever of them is wrong, the line says so.
+void TraceInventory(CBasePlayer* player, const char* when) {
+    if (!kTraceLoad || player == nullptr) {
         return;
+    }
+
+    std::string line = std::string("  inventory ") + when + ":";
+    for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
+        for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
+             item != nullptr; item = item->m_pNext) {
+            line += " ";
+            line += STRING(item->pev->classname);
+
+            const int ammo_type = item->PrimaryAmmoIndex();
+            if (ammo_type >= 0 && ammo_type < MAX_AMMO_SLOTS) {
+                char count[24];
+                std::snprintf(count, sizeof(count), "(ammo %d)",
+                              player->m_rgAmmo[ammo_type]);
+                line += count;
+            }
+        }
+    }
+
+    if (player->m_pActiveItem != nullptr) {
+        line += " | active ";
+        line += STRING(player->m_pActiveItem->pev->classname);
+    }
+    Trace(line.c_str());
+}
+
+// How much ammo a granted weapon arrives with, as a share of what the player is
+// allowed to carry of it.
+//
+// `GiveNamedItem` hands over the weapon's `m_iDefaultAmmo`, which is what the
+// pickup lying in a level would have given -- and that number assumes the level
+// around it is stocked with more of the same. Received from the multiworld it is
+// not: the RPG arrives with a single rocket, and Nihilanth is not a one-rocket
+// fight.
+//
+// Half the carry limit, rounded up. Enough to use the weapon it came with,
+// short of the cap the game itself sets, and still finite: three rockets, 125
+// rounds of 9mm, five grenades. Applied when the weapon is granted, which is
+// once per mission entry, since a warp reloads the map and the loadout is
+// reapplied from scratch.
+constexpr float kGrantedAmmoShare = 0.5f;
+
+CBasePlayerItem* FindItem(CBasePlayer* player, const std::string& classname) {
+    for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
+        for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
+             item != nullptr; item = item->m_pNext) {
+            if (classname == STRING(item->pev->classname)) {
+                return item;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// Top a just-granted weapon up to `kGrantedAmmoShare` of its carry limit.
+// Only ever called on a real grant: doing it whenever the loadout runs would be
+// an ammo tap that refills on every check the player sends.
+void StockAmmo(CBasePlayer* player, const std::string& classname) {
+    CBasePlayerItem* item = FindItem(player, classname);
+    if (item == nullptr || item->pszAmmo1() == nullptr) {
+        return;  // the crowbar, and anything else that does not take ammo
+    }
+
+    const int limit = item->iMaxAmmo1();
+    if (limit <= 0) {
+        return;
+    }
+
+    int wanted = static_cast<int>(limit * kGrantedAmmoShare + 0.5f);
+    if (wanted < 1) {
+        wanted = 1;
+    }
+
+    const int index = player->GetAmmoIndex(item->pszAmmo1());
+    const int held = (index >= 0 && index < MAX_AMMO_SLOTS)
+                         ? player->m_rgAmmo[index]
+                         : 0;
+    if (held >= wanted) {
+        return;  // already carrying more than the grant would have given
+    }
+
+    player->GiveAmmo(wanted - held, (char*)item->pszAmmo1(), limit);
+}
+
+// True when something was actually handed over, so the caller knows whether the
+// client needs telling about it.
+bool Give(CBasePlayer* player, const std::string& classname) {
+    // Weapons only. `item_suit` and `item_longjump` have their own handling in
+    // `ApplyLoadout`, because spawning their pickups leaves uncollectable ones
+    // on the floor; anything else beginning `item_` would do the same, so a data
+    // change that adds one says so in the trace rather than littering the map.
+    if (classname.rfind("item_", 0) == 0) {
+        Trace(("  refused to spawn a pickup for " + classname).c_str());
+        return false;
+    }
+
+    if (player->HasNamedPlayerItem(classname.c_str())) {
+        return false;
     }
     // Butterfingers threw this one on the floor and it is not owed back yet.
     // Without this the loadout would return it on the next snapshot change,
     // which is any check the player sends -- seconds, usually.
     if (Withheld(classname)) {
-        return;
+        return false;
     }
 
     {
         Granting guard;
-        player->GiveNamedItem(classname.c_str());
+        // `Intern`, never `classname.c_str()`: the entity keeps the pointer, not
+        // the characters. See the comment on `Intern` in ap_main.h.
+        player->GiveNamedItem(Intern(classname));
     }
 
     // `GiveNamedItem` cannot report failure, and a half-added weapon is not
@@ -58,7 +194,14 @@ void Give(CBasePlayer* player, const std::string& classname) {
     // item, grant again, and spawn another entity for the same weapon.
     if (!player->HasNamedPlayerItem(classname.c_str())) {
         Trace(("  grant failed: " + classname).c_str());
+        return false;
     }
+
+    StockAmmo(player, classname);
+
+    Trace(("  granted " + classname).c_str());
+    TraceInventory(player, "after grant");
+    return true;
 }
 
 bool IsStartingWeapon(const std::string& classname) {
@@ -191,28 +334,73 @@ void ApplyLoadout(CBasePlayer* player) {
 
     const Snapshot& state = State();
 
+    bool gave_something = false;
+
     const std::vector<std::string>& starting =
         state.starting_weapons.empty() ? Data().starting_weapons
                                        : state.starting_weapons;
     for (const std::string& classname : starting) {
-        Give(player, classname);
+        gave_something |= Give(player, classname);
     }
 
-    // Everything the multiworld has sent. Idempotent: `Give` skips what the
-    // player already holds, so this runs on every spawn and every snapshot
-    // change without piling up duplicates.
+    // Everything the multiworld has sent. This runs on every spawn and every
+    // snapshot change, so it has to be exactly idempotent.
     for (const std::string& item : state.held_items) {
+        // Equipment, applied directly. Neither spawns a pickup: see the note on
+        // `GrantLongJump`.
         if (item == kSuitItem) {
-            continue;  // the suit is not a classname to hand over; see above
+            continue;  // the suit bit is set above; this item only frees armour
         }
-        for (const std::string& classname : Data().ClassnamesFor(item)) {
-            // Both spellings of a weapon unlock together, and retail's maps use
-            // both, but the player only needs one of them in hand.
+        if (item == kLongJumpItem) {
+            gave_something |= GrantLongJump(player);
+            continue;
+        }
+
+        const std::vector<std::string> classnames = Data().ClassnamesFor(item);
+        if (classnames.empty()) {
+            continue;
+        }
+
+        // Held under *any* of its names counts as held, and the whole list has
+        // to be checked before granting any of it.
+        //
+        // Retail ships several weapons under two classnames -- `weapon_mp5` and
+        // `weapon_9mmAR`, `weapon_glock` and `weapon_9mmhandgun`, `weapon_357`
+        // and `weapon_python` -- and its maps place both. Checking them in order
+        // and granting the first one not held meant that picking a `weapon_9mmAR`
+        // off the floor earned a granted `weapon_mp5` on top of it. The SDK
+        // recognises a duplicate by classname, so it does not see those as the
+        // same gun: it adds a second one and `AddWeapon` pays out another full
+        // load of ammo, on every snapshot change, forever.
+        bool already_held = false;
+        for (const std::string& classname : classnames) {
             if (player->HasNamedPlayerItem(classname.c_str())) {
+                already_held = true;
                 break;
             }
-            Give(player, classname);
         }
+        if (already_held) {
+            continue;
+        }
+
+        gave_something |= Give(player, classnames.front());
+    }
+
+    // Tell the client what it now has: forget everything the client is believed
+    // to know and send it again, which is what the `fullupdate` console command
+    // does. Only after a real grant, since it costs a HUD reset.
+    if (gave_something) {
+        // The ammo has to be invalidated by hand first, and this is not
+        // optional. `ForceClientDllUpdate` sets `m_fInitHUD`, which sends
+        // `ResetHUD`, and that wipes the ammo counts the client is holding --
+        // but `SendAmmoUpdate` only sends a type whose count has *changed*
+        // since it last sent one. `m_rgAmmoLast` still agrees with `m_rgAmmo`,
+        // so it sends nothing, and every ammo type except the one that just
+        // moved reads zero on a HUD that has just been cleared.
+        for (int i = 0; i < MAX_AMMO_SLOTS; ++i) {
+            player->m_rgAmmoLast[i] = -1;
+        }
+        player->ForceClientDllUpdate();
     }
 
     ClampArmour();
