@@ -2,7 +2,14 @@
 // player's own Half-Life through fallback_dir, so this folder never needs a copy
 // of a map, model or sound and nothing under valve/ is ever written to.
 game "Half-Life Archipelago"
-startmap "c0a0"
+// New Game starts in the hub, not on the tram. Every mission is entered from
+// there by warping, including Black Mesa Inbound when a seed contains it, so
+// starting on `c0a0` would hand the player one mission for free and fire its
+// arrival check before the run had begun.
+//
+// This must stay the same map as `kHubMap` in game/src/ap_hub.cpp;
+// tests/test_mod_install.py fails if the two drift apart.
+startmap "stalkyard"
 trainmap "t0a0"
 mpentity "info_player_deathmatch"
 gamedll "dlls\hl.dll"

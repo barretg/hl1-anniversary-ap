@@ -8,6 +8,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 namespace ap {
 
@@ -29,8 +30,28 @@ struct Snapshot {
     std::set<long> checked;   // for ap_tracker
     std::set<long> missing;   // ids in neither set are not in this seed
 
-    bool Has(const std::string& item) const;
-    bool ChapterOpen(const std::string& key) const;
+    bool Has(const std::string& item) const {
+        return held_items.find(item) != held_items.end();
+    }
+    bool ChapterOpen(const std::string& key) const {
+        return open_chapters.find(key) != open_chapters.end();
+    }
+    bool ChapterExcluded(const std::string& key) const {
+        return excluded_chapters.find(key) != excluded_chapters.end();
+    }
+    bool Ungated(const std::string& classname) const {
+        return ungated_classnames.find(classname) != ungated_classnames.end();
+    }
+    // A location the seed does not contain at all: dropped by chargesanity or by
+    // an excluded mission. Before the first snapshot both sets are empty, which
+    // is not the same answer, so that reads as "in the seed" rather than as
+    // "nothing is".
+    bool InSeed(long id) const {
+        if (checked.empty() && missing.empty()) {
+            return true;
+        }
+        return checked.find(id) != checked.end() || missing.find(id) != missing.end();
+    }
 };
 
 // The live one. Replaced wholesale by each poll rather than merged: a partial

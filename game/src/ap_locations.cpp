@@ -1,0 +1,274 @@
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "player.h"
+
+#include "ap_locations.h"
+
+#include <cmath>
+#include <cstdio>
+#include <set>
+#include <string>
+
+#include "ap_bridge.h"
+#include "ap_checkdata.h"
+#include "ap_main.h"
+#include "ap_state.h"
+#include "ap_text.h"
+
+namespace ap {
+namespace {
+
+// Ids sent since this map loaded. Only to keep ap_out.txt from repeating itself;
+// correctness does not depend on it, since a repeated check is a no-op on the
+// server and that is what makes quickloads safe.
+std::set<long> g_sent;
+std::string g_map;
+
+float WalkScore(const Vector& from, const Vector& to) {
+    const float dx = to.x - from.x;
+    const float dy = to.y - from.y;
+    const float dz = to.z - from.z;
+    return std::sqrt(dx * dx + dy * dy) + kVerticalPenalty * std::fabs(dz);
+}
+
+// A brush entity has no origin of its own, so its position is the centre of the
+// bounding box the engine gives it -- which already includes whatever `origin`
+// the mapper set. Exactly what the generator computed from the BSP.
+Vector CentreOf(CBaseEntity* entity) {
+    return (entity->pev->absmin + entity->pev->absmax) * 0.5f;
+}
+
+const char* Bearing(CBasePlayer* player, const Vector& target) {
+    Vector delta = target - player->pev->origin;
+    delta.z = 0;
+    if (delta.Length() < 1.0f) {
+        return "right here";
+    }
+
+    UTIL_MakeVectors(player->pev->v_angle);
+    Vector forward = gpGlobals->v_forward;
+    forward.z = 0;
+    forward = forward.Normalize();
+    Vector right = gpGlobals->v_right;
+    right.z = 0;
+    right = right.Normalize();
+
+    delta = delta.Normalize();
+    const float ahead = DotProduct(delta, forward);
+    const float across = DotProduct(delta, right);
+
+    if (ahead > 0.85f) return "ahead";
+    if (ahead < -0.85f) return "behind you";
+    if (ahead > 0.0f) return across > 0 ? "ahead and right" : "ahead and left";
+    return across > 0 ? "behind you and right" : "behind you and left";
+}
+
+}  // namespace
+
+void SendCheck(long id) {
+    if (!Live()) {
+        return;
+    }
+    if (g_sent.find(id) != g_sent.end()) {
+        return;
+    }
+    // A location the seed does not contain -- chargesanity off, or an excluded
+    // mission. The client would drop it anyway; not sending it keeps the log
+    // readable.
+    if (!State().InSeed(id)) {
+        return;
+    }
+
+    g_sent.insert(id);
+
+    char text[32];
+    std::snprintf(text, sizeof(text), "%ld", id);
+    Wire().Send("CHECK", text);
+
+    const Location* location = Data().LocationById(id);
+    if (location != nullptr) {
+        Say(std::string("Found: ") + location->name);
+    }
+}
+
+void OnMapStart(const std::string& map_name) {
+    if (map_name != g_map) {
+        g_sent.clear();
+        g_map = map_name;
+    }
+
+    const Chapter* chapter = Data().ChapterOfMap(map_name);
+    if (chapter == nullptr) {
+        return;  // the hub, the hazard course, a deathmatch map: nothing to fire
+    }
+
+    for (const Location& location : Data().locations) {
+        if (location.map != map_name) {
+            continue;
+        }
+        if (location.type == TriggerType::MapReached) {
+            SendCheck(location.id);
+        } else if (location.type == TriggerType::ChapterComplete &&
+                   chapter->IsLastMap(map_name)) {
+            SendCheck(location.id);
+        }
+    }
+
+    if (chapter->IsLastMap(map_name)) {
+        // The check is the location; this is the mission itself, which is what
+        // the client counts toward the finale's seal.
+        Wire().Send("COMPLETE", chapter->key);
+        if (chapter->is_goal) {
+            Wire().Send("GOAL", chapter->key);
+        }
+    }
+}
+
+void OnPlayerUse(CBasePlayer* player, CBaseEntity* target) {
+    if (player == nullptr || target == nullptr || !Live()) {
+        return;
+    }
+
+    const std::string classname(STRING(target->pev->classname));
+    if (classname != "func_healthcharger" && classname != "func_recharge") {
+        return;
+    }
+
+    const Vector centre = CentreOf(target);
+    const float at[3] = {centre.x, centre.y, centre.z};
+    const Location* location = Data().ChargerAt(g_map, classname, at);
+    if (location != nullptr) {
+        SendCheck(location->id);
+    }
+}
+
+void OnWeaponCollected(CBasePlayer* player, const std::string& classname) {
+    if (player == nullptr || !Live()) {
+        return;
+    }
+    // Only in the map where Half-Life would first have handed this weapon over.
+    // The same shotgun six missions later is not that moment, and the RPG lying
+    // in the hub is not it at all.
+    const Location* location = Data().WeaponPickupFor(classname, g_map);
+    if (location != nullptr) {
+        SendCheck(location->id);
+    }
+}
+
+void SweepNearbyPickups() {
+    CBasePlayer* player = Player();
+    if (player == nullptr || !Live()) {
+        return;
+    }
+
+    CBaseEntity* entity = nullptr;
+    while ((entity = UTIL_FindEntityInSphere(entity, player->pev->origin,
+                                             kPickupSweepRadius)) != nullptr) {
+        const std::string classname(STRING(entity->pev->classname));
+        if (!StartsWith(classname, "weapon_") && !StartsWith(classname, "item_")) {
+            continue;
+        }
+        // Only a pickup lying in the world. One attached to the player has no
+        // model index, and standing next to a weapon we are carrying is not a
+        // discovery.
+        if (entity->pev->movetype == MOVETYPE_FOLLOW || entity->pev->modelindex == 0) {
+            continue;
+        }
+        OnWeaponCollected(player, classname);
+    }
+}
+
+void Find(const std::string& text) {
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    if (!Data().Loaded()) {
+        Say("No checkdata.txt, so there is nothing to find.");
+        return;
+    }
+
+    const std::string wanted = Lower(Trim(text));
+    const Location* best = nullptr;
+    float best_score = 0.0f;
+
+    for (const Location& location : Data().locations) {
+        if (!location.has_position) {
+            continue;  // reaching a map is not somewhere a player can be pointed
+        }
+        if (location.map != g_map) {
+            continue;
+        }
+        if (g_sent.find(location.id) != g_sent.end()) {
+            continue;
+        }
+        if (!State().InSeed(location.id)) {
+            continue;
+        }
+        if (State().checked.find(location.id) != State().checked.end()) {
+            continue;
+        }
+        if (!wanted.empty() && Lower(location.name).find(wanted) == std::string::npos) {
+            continue;
+        }
+
+        const Vector at(location.position[0], location.position[1],
+                        location.position[2]);
+        const float score = WalkScore(player->pev->origin, at);
+        if (best == nullptr || score < best_score) {
+            best = &location;
+            best_score = score;
+        }
+    }
+
+    if (best == nullptr) {
+        Say(wanted.empty() ? "Nothing left to find in this map."
+                           : "No unfound check here matches that.");
+        return;
+    }
+
+    const Vector at(best->position[0], best->position[1], best->position[2]);
+    char line[256];
+    std::snprintf(line, sizeof(line), "%s: %s, about %d units away.",
+                  best->name.c_str(), Bearing(player, at),
+                  static_cast<int>(best_score));
+    Say(line);
+}
+
+void Tracker(const std::string& map_filter) {
+    if (!Data().Loaded()) {
+        Say("No checkdata.txt, so there is nothing to track.");
+        return;
+    }
+
+    const std::string filter = Trim(map_filter);
+    const std::string map = filter.empty() ? g_map : filter;
+
+    int found = 0;
+    int left = 0;
+    Say(std::string("Locations in ") + map + ":");
+
+    for (const Location& location : Data().locations) {
+        if (location.map != map) {
+            continue;
+        }
+        if (!State().InSeed(location.id)) {
+            continue;  // not in this seed at all; showing it would be a lie
+        }
+        const bool done = State().checked.find(location.id) != State().checked.end() ||
+                          g_sent.find(location.id) != g_sent.end();
+        if (done) {
+            ++found;
+        } else {
+            ++left;
+            Say(std::string("  still out there: ") + location.name);
+        }
+    }
+
+    char line[128];
+    std::snprintf(line, sizeof(line), "%d found, %d to go.", found, left);
+    Say(line);
+}
+
+}  // namespace ap

@@ -8,22 +8,20 @@
 //
 // The choke point is `CChangeLevel::ChangeLevelNow`. A transition inside a
 // mission is left alone -- inventory and level state carry exactly as retail
-// does. A transition that would leave the mission is taken over instead: send
-// COMPLETE for the mission, and return the player to the hub.
+// does. A transition that would leave the mission is taken over instead: report
+// the mission finished and return the player to the hub.
 //
 // Never act inline. Issuing a level change from inside code the engine is
 // already running a level change through is a crash. Set the flag, act on the
-// next StartFrame.
+// next frame.
 
 #pragma once
 
 #include <string>
 
-class CBasePlayer;
-
 namespace ap {
 
-// Registered with the engine at load.
+// Registered with the engine once, at GameDLLInit.
 //   ap                 every mission and its unlock status
 //   ap_tracker [map]   locations found and still out there
 //   ap_find [text]     point at the nearest unfound check, or one you name
@@ -32,17 +30,33 @@ namespace ap {
 //   ap_help            these, in game
 void RegisterCommands();
 
-// True if the command was ours and has been handled.
-bool HandleCommand(CBasePlayer* player, const std::string& command);
-
-// Ask for a level change. Deferred to the next frame, always.
+// Ask for a level change. Always deferred to the next frame. `map`, never
+// `changelevel`: a clean load with no carried state is what makes a mission
+// repeatable and independent of how the player got there.
 void RequestMap(const std::string& map_name);
 
-// Called from CChangeLevel::ChangeLevelNow. Returns false to let the game's own
-// transition proceed, true when we have taken it over.
+// Called from CChangeLevel::ChangeLevelNow. False lets the game's own transition
+// proceed, which is what happens for every transition inside a mission. True
+// when we have taken it over.
 bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map);
 
-// One frame's worth of deferred work: a queued map change, the bridge poll.
-void RunFrame();
+// One frame's worth of deferred work: a queued map change, and nothing else.
+void RunDeferred();
+
+// Where "the hub" is until an authored map exists.
+//
+// The hazard course entrance: a real, small, empty map that is deliberately not
+// part of the campaign, so no check can fire there and no mission can be
+// completed by standing in it. v2 replaces this with one room and a button per
+// mission, shipped in the mod folder.
+//
+// It is also `startmap` in liblist.gam, so New Game begins here rather than on
+// the tram: every mission is entered by warping, and starting inside one would
+// hand it over for free and fire its arrival check before the run had begun.
+// The two must agree; tests/test_mod_install.py fails if they drift apart.
+extern const char* const kHubMap;
+
+// Is the player in the hub rather than in a mission?
+bool InHub();
 
 }  // namespace ap

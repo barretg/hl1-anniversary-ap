@@ -4,29 +4,52 @@
 // Read once per map load. The format is line-oriented and pipe-delimited; see
 // the header of the generated file for the record types.
 //
-// A charger's identity is its rounded world-space centre, never its brush model
-// index: Valve recompiles single-player maps from time to time and a recompile
-// renumbers brush models, which would silently repoint every charger id in that
-// map. `RoundPosition` here has to agree exactly with `charger_key_position` in
-// `tools/build_campaign_data.py`.
+// A charger's identity is where it stands, never its brush model index: Valve
+// recompiles single-player maps from time to time and a recompile renumbers
+// brush models, which would silently repoint every charger id in that map.
+//
+// Matching is by nearest unit rather than by equal coordinates. The generator
+// snaps its key to a coarse grid so ids stay stable across regenerations, but
+// this side does not have to reproduce that rounding: the closest charger of the
+// same classname in the same map wins, and two of them are never near each other
+// -- the tightest pair in the whole campaign is 204 units apart, and the tightest
+// pair of *any* two chargers is 48. See `kChargerMatchRadius`.
 
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ap {
 
-enum class TriggerType { MapReached, ChapterComplete, Charger, WeaponPickup };
+enum class TriggerType {
+    Unknown,
+    MapReached,
+    ChapterComplete,
+    Charger,
+    WeaponPickup,
+};
 
 struct Location {
     long id = 0;
     std::string map;
-    TriggerType type = TriggerType::MapReached;
-    std::string arg;    // charger: "<classname>@<x y z>"; weapon: "cls,cls"
+    TriggerType type = TriggerType::Unknown;
     std::string name;
+
+    // chapter_complete: the chapter key. weapon_pickup: the classnames, any one
+    // of which fires it.
+    std::string chapter;
+    std::vector<std::string> classnames;
+
+    // charger: the classname of the unit and where it stands.
+    std::string charger_classname;
+    float at[3] = {0, 0, 0};
+
+    // Where in the world this check is, for ap_find. Not every kind has one:
+    // reaching a map is not somewhere a player can be pointed.
     bool has_position = false;
-    float position[3] = {0, 0, 0};   // for ap_find
+    float position[3] = {0, 0, 0};
 };
 
 struct Chapter {
@@ -35,32 +58,68 @@ struct Chapter {
     std::string name;
     std::vector<std::string> maps;
     bool is_goal = false;
+
+    bool HasMap(const std::string& map) const;
+    // Finishing is observed by arriving on the last map of the mission.
+    bool IsLastMap(const std::string& map) const;
 };
 
-struct CheckData {
+class CheckData {
+public:
     int format_version = 0;
-    std::string data_version;   // must match the client's, or ids differ
+    std::string data_version;  // must match the client's, or ids differ
     std::string goal_chapter;
+
     std::vector<Chapter> chapters;
     std::vector<Location> locations;
 
     // classname -> the item name that must arrive before it may be picked up.
     std::vector<std::pair<std::string, std::string>> gated_classnames;
-    // Granted from the first spawn and never taken away.
+    // Granted from the first spawn and never taken away. A snapshot's `starting`
+    // list overrides this; these are the default rather than the truth.
     std::vector<std::string> starting_weapons;
 
-    // Which mission a map belongs to, or "" for a map not in the campaign.
+    bool Load(const std::string& path);
+    bool Loaded() const { return !locations.empty(); }
+
+    // Which mission a map belongs to, or null for a map not in the campaign --
+    // a deathmatch map, the hub, or the hazard course.
     const Chapter* ChapterOfMap(const std::string& map) const;
+    const Chapter* ChapterByKey(const std::string& key) const;
+    // By index as `ap_warp 7` takes it, or by a case-insensitive name fragment.
+    const Chapter* ChapterByIndex(int index) const;
+    const Chapter* ChapterByName(const std::string& text) const;
+
+    const Location* LocationById(long id) const;
+
+    // The charger of this classname nearest `at` in this map, within
+    // kChargerMatchRadius. Null when the player pressed use on something else.
+    const Location* ChargerAt(const std::string& map, const std::string& classname,
+                              const float at[3]) const;
+
+    // The weapon check this classname fires *in this map*, if any.
+    //
+    // Both halves matter. There is one check per weapon for the whole run, and
+    // it sits where Half-Life would first have handed that weapon over -- the
+    // earliest map in campaign order holding one. Finding the same weapon later
+    // is not that moment, and finding one in the hub is not it either.
+    //
+    // It is also what keeps the game honest with generation: the apworld places
+    // this location in that map's region, so a check that could fire anywhere
+    // would be a check landing somewhere logic never put it.
+    const Location* WeaponPickupFor(const std::string& classname,
+                                    const std::string& map) const;
+
+    // "" when the classname is not gated at all.
+    std::string ItemGating(const std::string& classname) const;
+    // Every classname the named item unlocks, for handing it over.
+    std::vector<std::string> ClassnamesFor(const std::string& item_name) const;
 };
 
-bool LoadCheckData(const std::string& path, CheckData& out);
-
-// The grid a charger's position is snapped to before it becomes its identity.
-// Four units: well inside the body of a charger, so two real units can never
-// round together, but coarse enough to absorb the difference between the float
-// the compiler wrote and the one the running game computes.
-constexpr float kChargerPositionGrid = 4.0f;
-
-void RoundPosition(const float in[3], float out[3]);
+// How far from a charger's recorded position the live entity may be and still be
+// the same unit. Chargers are never within 48 units of each other, so this is
+// generous enough to absorb any recompile or rounding drift and far too tight to
+// confuse two of them.
+constexpr float kChargerMatchRadius = 32.0f;
 
 }  // namespace ap

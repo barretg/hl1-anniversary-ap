@@ -1,0 +1,206 @@
+﻿diff --git a/common/mathlib.h b/common/mathlib.h
+index c765eb5..8afc4de 100644
+--- a/common/mathlib.h
++++ b/common/mathlib.h
+@@ -79,7 +79,9 @@ typedef union DLONG {
+ 
+ extern DLONG	dlong;
+ 
+-#ifdef _WIN32
++// The block below is MSVC inline assembly. MinGW cannot parse it and does
++// not need it: the portable branch is these three operations written in C.
++#if defined(_WIN32) && defined(_MSC_VER)
+ void __inline set_fpu_cw(void)
+ {
+ _asm	
+diff --git a/dlls/client.cpp b/dlls/client.cpp
+index e2f30b7..7789b70 100644
+--- a/dlls/client.cpp
++++ b/dlls/client.cpp
+@@ -26,6 +26,7 @@
+ #include "extdll.h"
+ #include "util.h"
+ #include "cbase.h"
++#include "ap_main.h"
+ #include "saverestore.h"
+ #include "player.h"
+ #include "spectator.h"
+@@ -736,6 +737,9 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
+ 
+ 	// Link user messages here to make sure first client can get them...
+ 	LinkUserMessages();
++
++	// Archipelago: read checkdata.txt, open the bridge, say HELLO.
++	ap::Startup();
+ }
+ 
+ 
+@@ -799,6 +803,9 @@ void StartFrame( void )
+ 	if ( g_fGameOver )
+ 		return;
+ 
++	// Archipelago: poll the bridge and run whatever must not run inline.
++	ap::RunFrame();
++
+ 	gpGlobals->teamplay = teamplay.value;
+ 	g_ulFrameCount++;
+ }
+diff --git a/dlls/game.cpp b/dlls/game.cpp
+index 6f2db09..5c9998e 100644
+--- a/dlls/game.cpp
++++ b/dlls/game.cpp
+@@ -15,6 +15,7 @@
+ #include "extdll.h"
+ #include "eiface.h"
+ #include "util.h"
++#include "ap_main.h"
+ #include "game.h"
+ 
+ cvar_t	displaysoundlist = {"displaysoundlist","0"};
+@@ -459,6 +460,9 @@ cvar_t sv_busters = { "sv_busters", "0" };
+ // This gets called one time when the game is initialied
+ void GameDLLInit( void )
+ {
++	// Archipelago: the ap_* console commands, once for the process.
++	ap::RegisterCommands();
++
+ 	// Register cvars here:
+ 
+ 	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
+diff --git a/dlls/gamerules.cpp b/dlls/gamerules.cpp
+index 3fab62a..edf4f60 100644
+--- a/dlls/gamerules.cpp
++++ b/dlls/gamerules.cpp
+@@ -19,6 +19,7 @@
+ #include	"extdll.h"
+ #include	"util.h"
+ #include	"cbase.h"
++#include "ap_main.h"
+ #include	"player.h"
+ #include	"weapons.h"
+ #include	"gamerules.h"
+@@ -79,6 +80,11 @@ edict_t *CGameRules :: GetPlayerSpawnSpot( CBasePlayer *pPlayer )
+ //=========================================================
+ BOOL CGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon )
+ {
++	// Archipelago: refuse a weapon the multiworld has not sent. Every path
++	// into the inventory asks this, including GiveNamedItem from map logic.
++	if ( !ap::CanCollect( pPlayer, pWeapon ) )
++		return FALSE;
++
+ 	// only living players can have items
+ 	if ( pPlayer->pev->deadflag != DEAD_NO )
+ 		return FALSE;
+diff --git a/dlls/player.cpp b/dlls/player.cpp
+index 85b67c4..aced078 100644
+--- a/dlls/player.cpp
++++ b/dlls/player.cpp
+@@ -24,6 +24,7 @@
+ #include "util.h"
+ 
+ #include "cbase.h"
++#include "ap_main.h"
+ #include "player.h"
+ #include "trains.h"
+ #include "nodes.h"
+@@ -928,6 +929,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
+ {
+ 	CSound *pSound;
+ 
++	// Archipelago: every death is reported; the client decides what it means.
++	ap::OnPlayerKilled( this, pevAttacker ? STRING( pevAttacker->classname ) : "" );
++
+ 	// Holster weapon immediately, to allow it to cleanup
+ 	if ( m_pActiveItem )
+ 		m_pActiveItem->Holster( );
+@@ -1666,6 +1670,10 @@ void CBasePlayer::PlayerUse ( void )
+ 		if ( m_afButtonPressed & IN_USE )
+ 			EMIT_SOUND( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM);
+ 
++		// Archipelago: pressing use on a charger is the check, empty or not.
++		if ( m_afButtonPressed & IN_USE )
++			ap::OnPlayerUse( this, pObject );
++
+ 		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
+ 			 ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
+ 		{
+@@ -3085,6 +3093,10 @@ void CBasePlayer::Spawn( void )
+ 	m_flNextChatTime = gpGlobals->time;
+ 
+ 	g_pGameRules->PlayerSpawn( this );
++
++	// Archipelago: reapply the seed's loadout. Nothing is held across a
++	// map load or a quickload, so this is where it all comes back.
++	ap::ApplyLoadout( this );
+ }
+ 
+ 
+diff --git a/dlls/singleplay_gamerules.cpp b/dlls/singleplay_gamerules.cpp
+index 3438f7c..84cc2e8 100644
+--- a/dlls/singleplay_gamerules.cpp
++++ b/dlls/singleplay_gamerules.cpp
+@@ -18,6 +18,7 @@
+ #include	"extdll.h"
+ #include	"util.h"
+ #include	"cbase.h"
++#include "ap_main.h"
+ #include	"player.h"
+ #include	"weapons.h"
+ #include	"gamerules.h"
+@@ -303,7 +304,8 @@ int CHalfLifeRules :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
+ //=========================================================
+ BOOL CHalfLifeRules::CanHaveItem( CBasePlayer *pPlayer, CItem *pItem )
+ {
+-	return TRUE;
++	// Archipelago: the same gate for the suit and the long jump module.
++	return ap::CanCollect( pPlayer, pItem );
+ }
+ 
+ //=========================================================
+diff --git a/dlls/triggers.cpp b/dlls/triggers.cpp
+index 1f9ea5b..f5d3e1e 100644
+--- a/dlls/triggers.cpp
++++ b/dlls/triggers.cpp
+@@ -23,6 +23,7 @@
+ #include "extdll.h"
+ #include "util.h"
+ #include "cbase.h"
++#include "ap_main.h"
+ #include "player.h"
+ #include "saverestore.h"
+ #include "trains.h"			// trigger_camera has train functionality
+@@ -1480,6 +1481,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
+ 	edict_t	*pentLandmark;
+ 	LEVELLIST	levels[16];
+ 
++	// Archipelago: a transition inside a mission is the game's own. One that
++	// would leave the mission is ours, and it never happens inline.
++	if ( ap::InterceptChangeLevel( STRING( gpGlobals->mapname ), m_szMapName ) )
++		return;
++
+ 	ASSERT(!FStrEq(m_szMapName, ""));
+ 
+ 	// Don't work in deathmatch
+diff --git a/dlls/world.cpp b/dlls/world.cpp
+index 5e1d634..3521c37 100644
+--- a/dlls/world.cpp
++++ b/dlls/world.cpp
+@@ -23,6 +23,7 @@
+ #include "extdll.h"
+ #include "util.h"
+ #include "cbase.h"
++#include "ap_main.h"
+ #include "nodes.h"
+ #include "soundent.h"
+ #include "client.h"
+@@ -477,6 +478,10 @@ void CWorld :: Spawn( void )
+ void CWorld :: Precache( void )
+ {
+ 	g_pLastSpawn = NULL;
++
++	// Archipelago: everything a trap can spawn, precached whether or not
++	// one ever arrives. GoldSrc fatally errors on an unprecached model.
++	ap::PrecacheTraps();
+ 	
+ #if 1
+ 	CVAR_SET_STRING("sv_gravity", "800"); // 67ft/sec

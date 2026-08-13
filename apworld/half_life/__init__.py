@@ -130,7 +130,10 @@ class HalfLifeWorld(World):
         # Whole categories of check switched off in the YAML, by trigger type.
         self.excluded_triggers: set[str] = set()
         # `missions_required` clamped to the missions this seed actually has.
-        self.missions_required: int = self.options.missions_required.value
+        # Filled in `generate_early`, not here: Archipelago constructs the world
+        # first and assigns `self.options` afterwards, so reading an option in
+        # `__init__` raises AttributeError before generation has begun.
+        self.missions_required: int = 0
 
     # -- generation ------------------------------------------------------
 

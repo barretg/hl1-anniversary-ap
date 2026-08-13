@@ -9,7 +9,6 @@ folder:
     checkdata.txt   generated, read-only at runtime
     ap_in.txt       client -> game
     ap_out.txt      game -> client
-    ap_pending.txt  game-owned, survives a map change
     ap_amnesty.txt  game-owned, DeathLink amnesty remaining
 ```
 
@@ -37,9 +36,9 @@ leaves the slot.
 **The game holds no state in memory that matters across a map change.** On every
 map load it re-reads `checkdata.txt` and waits for the next snapshot. A map
 change, a quickload or a crash therefore costs nothing, and a re-sent check is a
-no-op on the server. The two things that genuinely must outlive a map change are
-small files alongside the bridge: `ap_pending.txt` (a queued return to the hub)
-and `ap_amnesty.txt` (how much DeathLink amnesty is left).
+no-op on the server. The one thing that genuinely must outlive a map change is
+`ap_amnesty.txt`, how much DeathLink amnesty is left, and it only has to because
+the death message names the remaining allowance at the instant of the death.
 
 **The snapshot is idempotent, events are not.** `ap_in.txt` is a complete
 picture, rewritten whenever it changes and safe to apply any number of times.
@@ -217,20 +216,33 @@ wrong brush in another, and the symptom is chargers that silently never fire.
 
 So the key is the unit's world-space centre -- the brush model's bounding-box
 centre plus whatever `origin` the mapper gave the entity, which is exactly what
-the running game computes from the live entity's absolute bounding box -- rounded
-to a 4-unit grid. Four units is well inside the body of a charger, so two real
-units can never round together, while the difference between the float the
-compiler wrote and the float the game computes is absorbed. Both halves must
-round identically: `charger_key_position` in `tools/build_campaign_data.py` and
-`RoundPosition` in `game/src/ap_checkdata.h`.
+the running game computes from the live entity's absolute bounding box. The
+generator snaps it to a 4-unit grid, which is what keeps an id stable when the
+same map is read again.
+
+The game side does **not** reproduce that rounding, and deliberately: two
+languages agreeing on how to round a float at the boundary is a bug waiting to
+happen, and the failure mode is silent. It matches by nearest unit instead --
+the closest charger of the same classname in the same map, within 32 units. Two
+chargers of the same classname are never closer than 204 units anywhere in the
+campaign, and any two chargers are never closer than 48, so the match cannot be
+ambiguous, and a recompile that nudges a brush cannot break it either.
 
 This also removes a special case the Sven project needed, where one brush shared
 by two chargers had to be split by its `origin` key. Position already tells them
 apart.
 
-Every `L` record carries a map, but `weapon_pickup` is the one type the game does
-**not** filter by it: that field is only where the apworld anchors the check's
-logic, and the game matches on classname anywhere in the campaign.
+Every `L` record carries a map and every type is filtered by it, `weapon_pickup`
+included. There is one weapon check per weapon for the whole run and it sits
+where Half-Life would first have handed that weapon over -- the earliest map in
+campaign order holding one -- so finding the same weapon later fires nothing, and
+neither does the arsenal lying about in the deathmatch map used as the hub.
+
+That is also what keeps the game honest with generation: the apworld places the
+location in that map's region, so a check that fired anywhere would be a check
+landing somewhere logic never put it. (The Sven Co-op project matched these on
+classname alone, campaign-wide. That was a mistake carried across the fork before
+being caught.)
 
 `index` is what `ap_warp <n>` takes in game.
 

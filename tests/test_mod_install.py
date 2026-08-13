@@ -7,6 +7,8 @@ install exactly as it was found.
 
 from __future__ import annotations
 
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -64,6 +66,41 @@ def test_liblist_falls_back_to_valve(install: Path) -> None:
     assert 'gamedll "dlls\\hl.dll"' in text
 
 
+def test_new_game_starts_in_the_hub() -> None:
+    """`startmap` and the game side's hub map have to be the same map.
+
+    New Game goes wherever `startmap` says. If that were a campaign map, the
+    player would be handed one mission for free and its arrival check would fire
+    before the run had begun; if it were a *different* map from the one `ap_hub`
+    returns to, the run would have two homes.
+
+    The two live in different languages, so this is the only thing that can hold
+    them together.
+    """
+    liblist = (WORLD / "mod" / "files" / "liblist.gam").read_text(encoding="utf-8")
+    hub_source = (REPO / "game" / "src" / "ap_hub.cpp").read_text(encoding="utf-8")
+
+    start = re.search(r'^\s*startmap\s+"([^"]+)"', liblist, re.M)
+    hub = re.search(r'kHubMap\s*=\s*"([^"]+)"', hub_source)
+
+    assert start is not None, "liblist.gam has no startmap"
+    assert hub is not None, "ap_hub.cpp no longer defines kHubMap"
+    assert start.group(1) == hub.group(1)
+
+
+def test_the_hub_is_not_a_campaign_map() -> None:
+    """A check firing in the hub would be a check for standing still."""
+    campaign = json.loads(
+        (WORLD / "data" / "campaign.json").read_text(encoding="utf-8")
+    )
+    maps = {m for chapter in campaign["chapters"] for m in chapter["maps"]}
+
+    liblist = (WORLD / "mod" / "files" / "liblist.gam").read_text(encoding="utf-8")
+    start = re.search(r'^\s*startmap\s+"([^"]+)"', liblist, re.M)
+    assert start is not None
+    assert start.group(1) not in maps
+
+
 def test_install_accepts_the_valve_folder_too(install: Path) -> None:
     mod.install(install / "valve")
     assert (install / MOD_DIR / "liblist.gam").is_file()
@@ -75,11 +112,19 @@ def test_install_rejects_a_folder_that_is_not_the_game(tmp_path: Path) -> None:
 
 
 def test_not_installed_without_the_dll(install: Path) -> None:
-    """A manifest with no dll is exactly the half-installed state to report."""
+    """A manifest with no dll is exactly the half-installed state to report.
+
+    Which of the two states a fresh `install()` lands in depends on whether this
+    checkout has a built dll in `mod/files/dlls/`, so the test makes both states
+    rather than assuming either.
+    """
     mod.install(install)
+    dll = install / MOD_DIR / mod.DLL_NAME
+
+    if dll.is_file():
+        dll.unlink()
     assert not mod.is_installed(install)
 
-    dll = install / MOD_DIR / mod.DLL_NAME
     dll.parent.mkdir(parents=True, exist_ok=True)
     dll.write_bytes(b"")
     assert mod.is_installed(install)

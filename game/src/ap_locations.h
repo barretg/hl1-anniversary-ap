@@ -20,18 +20,39 @@ class CBasePlayer;
 
 namespace ap {
 
-// Called once the map is running and checkdata has been read.
+// The map is up and checkdata has been read. Fires the arrival check, and the
+// mission's completion when this is its last map.
 void OnMapStart(const std::string& map_name);
 
-// A player pressed +use on something. Matches the entity against the charger
-// table by classname and rounded absolute-bounding-box centre.
+// The player pressed +use on something. Matches it against the charger table by
+// classname and by where it stands.
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target);
 
 // A weapon entered the player's inventory.
 void OnWeaponCollected(CBasePlayer* player, const std::string& classname);
 
-// Where the nearest unfound check is, for `ap_find`. Distance is weighted:
-// 800 units across a floor is a walk, 800 units up is a hunt for the stairs.
+// Weapons lying within reach that the player already holds. Their touch never
+// fires, so without this the crowbar's check could never be sent.
+void SweepNearbyPickups();
+
+// Send a check by id, once per map load. Repeats are harmless on the server but
+// noisy in the log, and the log is append-only.
+void SendCheck(long id);
+
+// `ap_find`: the nearest check in this map that the seed still wants, or the one
+// whose name contains `text`. Prints a bearing and a distance.
+void Find(const std::string& text);
+
+// `ap_tracker`: what has been found and what is still out there.
+void Tracker(const std::string& map_filter);
+
+// How far a weapon may be from the player and still count as collected by the
+// sweep. Arm's reach, so it cannot fire across a room through a wall.
+constexpr float kPickupSweepRadius = 72.0f;
+
+// How much dearer a unit of height is than a unit of floor when judging how far
+// away a check is. 800 units across a floor is a walk; 800 units up is a hunt
+// for the stairs. The generator weights `ap_find` the same way.
 constexpr float kVerticalPenalty = 3.0f;
 
 }  // namespace ap

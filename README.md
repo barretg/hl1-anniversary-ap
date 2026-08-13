@@ -94,7 +94,11 @@ have no targetname, so the only two candidate handles are the brush model and th
 position. The anniversary update recompiled single-player maps, and a recompile
 renumbers brush models, so keying on the model would leave data that silently
 stops matching after any future Valve patch. Position survives any recompile that
-does not physically move the unit. Both halves round to the same 4-unit grid.
+does not physically move the unit. The generator snaps its key to a 4-unit grid
+so ids stay stable; the game matches by nearest unit rather than by equal
+coordinates, since no two chargers of the same kind are within 204 units of each
+other and two languages agreeing on how to round a float is a silent bug waiting
+to happen.
 
 Weapon checks sit at the *vanilla* first location: the earliest map in campaign
 order that contains that weapon, and only there. Picking the same weapon up later

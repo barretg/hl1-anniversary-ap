@@ -1,35 +1,110 @@
-// Wiring. The only file the SDK's own sources need to know about.
+// Wiring. The only header the SDK's own sources need to include.
 //
 // Every hook below is a call added to a Valve source file rather than a
 // subclass, because the SDK is compiled whole and its classes are not designed
-// to be extended from outside. Keep the added lines to one call each: the less
-// this project edits Valve's files, the less a future SDK update costs.
+// to be extended from outside. Each is one line. `game/sdk.patch` applies them
+// all, and `game/README.md` explains what each is for.
 //
-//   dlls/world.cpp        ServerActivate    -> ap::Startup / ap::OnMapStart
-//   dlls/world.cpp        precache          -> ap::PrecacheTraps
-//   dlls/game.cpp         StartFrame        -> ap::RunFrame
-//   dlls/player.cpp       CBasePlayer::Spawn   -> ap::ApplyLoadout
-//   dlls/player.cpp       CBasePlayer::Killed  -> ap::OnPlayerKilled
-//   dlls/player.cpp       CBasePlayer::PlayerUse -> ap::OnPlayerUse
-//   dlls/weapons.cpp      CBasePlayerItem::AddToPlayer -> ap::CanCollect
-//   dlls/client.cpp       ClientCommand     -> ap::HandleCommand
-//   dlls/triggers.cpp     CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
+//   dlls/game.cpp        GameDLLInit                  -> ap::RegisterCommands
+//   dlls/client.cpp      ServerActivate               -> ap::Startup
+//   dlls/client.cpp      StartFrame                   -> ap::RunFrame
+//   dlls/client.cpp      ClientPrecache               -> ap::PrecacheTraps
+//   dlls/player.cpp      CBasePlayer::Spawn           -> ap::ApplyLoadout
+//   dlls/player.cpp      CBasePlayer::Killed          -> ap::OnPlayerKilled
+//   dlls/player.cpp      CBasePlayer::PlayerUse       -> ap::OnPlayerUse
+//   dlls/gamerules.cpp   CGameRules::CanHavePlayerItem-> ap::CanCollect
+//   dlls/singleplay_gamerules.cpp CHalfLifeRules::CanHaveItem -> ap::CanCollect
+//   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
 
 #pragma once
 
 #include <string>
 
+class CBaseEntity;
+class CBasePlayer;
+
 namespace ap {
 
+class Bridge;
+class CheckData;
+struct PendingEvent;
+
+// --- what the patched SDK files call -------------------------------------
+//
+// Redeclared here, rather than asking Valve's sources to include five of our
+// headers, so that `game/sdk.patch` adds exactly one include per file. Each is
+// defined in the module that owns it.
+
+void RegisterCommands();                                    // ap_hub
+void PrecacheTraps();                                       // ap_traps
+void ApplyLoadout(CBasePlayer* player);                     // ap_items
+bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
+void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
+void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
+bool InterceptChangeLevel(const std::string& from_map,
+                          const std::string& to_map);       // ap_hub
+
 // Once per map load: find the mod folder, read checkdata.txt, open the bridge,
-// announce ourselves with HELLO so the client sends a full snapshot.
+// and announce ourselves with HELLO so the client sends a full snapshot.
 void Startup();
 
-// The poll clock. The bridge is checked this often rather than every frame;
-// file I/O on a 60Hz tick is a waste and the client publishes far slower.
+// Every server frame. Polls the bridge on its own clock, applies whatever the
+// client sent, and runs the deferred work nothing else may run inline.
+void RunFrame();
+
+// Apply one delivery from the client. The caller ACKs it either way, including
+// a kind we do not recognise: holding one would stall the client's whole window.
+void ApplyEvent(const PendingEvent& event);
+
+// The single player. Null between map load and ClientPutInServer, which is most
+// of what can go wrong in here, so every caller checks.
+CBasePlayer* Player();
+
+// The map the server is running, from gpGlobals.
+std::string CurrentMap();
+
+// Loaded once per map load. Empty when checkdata.txt could not be read, in which
+// case every check is silently inert -- see `Live`.
+CheckData& Data();
+Bridge& Wire();
+
+// Is it safe to send checks? False when checkdata.txt is missing, when the
+// client has not connected, or when the two halves disagree about the id map.
+// That last one matters most: a mismatched pair numbers locations differently,
+// so every check would land on the wrong location, which is worse than sending
+// none.
+bool Live();
+
+// Does this game gate anything? True as soon as `checkdata.txt` is present,
+// which is the moment the mod folder says "this is an Archipelago game".
+//
+// Deliberately not `Live`. Gating must not wait on the client, or closing the
+// client would be a way around every lock in the game: collect what you like
+// while disconnected, connect, keep it. It fails closed instead -- with no
+// client you get your starting weapons and nothing else, which is the correct
+// amount of Half-Life to be able to play without a multiworld.
+bool Gated();
+
+// Player-facing text. Console rather than centre-print: single-player has no
+// chat worth speaking of and the console is where this project talks.
+void Say(const std::string& text);
+
+// A breadcrumb in `hlap/archipelago/ap_boot.txt`, flushed as it is written.
+//
+// This exists because of how this project fails: a mistake in a hook crashes the
+// engine during map load, and everything that would tell you where -- the
+// console, the last frame of gameplay -- is gone with it. The file survives, so
+// the last line in it is the last hook that ran. Cheap enough to leave on: a
+// dozen lines per map load.
+void Trace(const char* where);
+void TraceReset();
+constexpr bool kTraceLoad = true;
+
+// The poll clock. The bridge is checked this often rather than every frame; file
+// I/O on a 60Hz tick is a waste and the client publishes far slower.
 constexpr float kPollIntervalSeconds = 0.2f;
 
-// Where the bridge and checkdata live, relative to the game directory.
+// Where the bridge and checkdata live, relative to the mod folder.
 extern const char* const kStoreSubdir;  // "archipelago"
 
 }  // namespace ap

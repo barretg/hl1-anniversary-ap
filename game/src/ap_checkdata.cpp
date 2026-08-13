@@ -1,0 +1,234 @@
+#include "ap_checkdata.h"
+
+#include <cmath>
+#include <fstream>
+
+#include "ap_text.h"
+
+namespace ap {
+
+bool Chapter::HasMap(const std::string& map) const {
+    for (const std::string& name : maps) {
+        if (name == map) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Chapter::IsLastMap(const std::string& map) const {
+    return !maps.empty() && maps.back() == map;
+}
+
+static TriggerType TriggerFromName(const std::string& name) {
+    if (name == "map_reached") return TriggerType::MapReached;
+    if (name == "chapter_complete") return TriggerType::ChapterComplete;
+    if (name == "charger") return TriggerType::Charger;
+    if (name == "weapon_pickup") return TriggerType::WeaponPickup;
+    return TriggerType::Unknown;
+}
+
+// A charger's arg is `<classname>@<x y z>`.
+static bool ParseChargerArg(const std::string& arg, Location& out) {
+    const size_t at = arg.find('@');
+    if (at == std::string::npos) {
+        return false;
+    }
+    out.charger_classname = arg.substr(0, at);
+    return ParseVector(arg.substr(at + 1), out.at);
+}
+
+bool CheckData::Load(const std::string& path) {
+    chapters.clear();
+    locations.clear();
+    gated_classnames.clear();
+    starting_weapons.clear();
+    format_version = 0;
+    data_version.clear();
+    goal_chapter.clear();
+
+    std::ifstream file(path.c_str());
+    if (!file) {
+        return false;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        line = Trim(line);
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
+        const std::vector<std::string> f = Split(line, '|');
+        const std::string& record = f[0];
+
+        if (record == "V" && f.size() >= 2) {
+            format_version = static_cast<int>(ParseLong(f[1]));
+        } else if (record == "D" && f.size() >= 2) {
+            data_version = f[1];
+        } else if (record == "G" && f.size() >= 2) {
+            goal_chapter = f[1];
+        } else if (record == "C" && f.size() >= 6) {
+            Chapter chapter;
+            chapter.index = static_cast<int>(ParseLong(f[1]));
+            chapter.key = f[2];
+            chapter.name = f[3];
+            chapter.maps = Split(f[4], ',');
+            chapter.is_goal = ParseBool(f[5]);
+            chapters.push_back(chapter);
+        } else if (record == "L" && f.size() >= 6) {
+            Location location;
+            location.id = ParseLong(f[1]);
+            location.map = f[2];
+            location.type = TriggerFromName(f[3]);
+            location.name = f[5];
+
+            switch (location.type) {
+                case TriggerType::ChapterComplete:
+                    location.chapter = f[4];
+                    break;
+                case TriggerType::WeaponPickup:
+                    location.classnames = Split(f[4], ',');
+                    break;
+                case TriggerType::Charger:
+                    if (!ParseChargerArg(f[4], location)) {
+                        // A charger we cannot place can never be matched, and
+                        // pretending otherwise would hide the failure.
+                        continue;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if (f.size() >= 7) {
+                location.has_position = ParseVector(f[6], location.position);
+            }
+            locations.push_back(location);
+        } else if (record == "K" && f.size() >= 3) {
+            gated_classnames.push_back(std::make_pair(f[1], f[2]));
+        } else if (record == "S" && f.size() >= 2) {
+            starting_weapons.push_back(f[1]);
+        }
+        // Anything else is a record type from a newer generator. Ignored rather
+        // than refused: the file is additive by design.
+    }
+
+    return Loaded();
+}
+
+const Chapter* CheckData::ChapterOfMap(const std::string& map) const {
+    for (const Chapter& chapter : chapters) {
+        if (chapter.HasMap(map)) {
+            return &chapter;
+        }
+    }
+    return nullptr;
+}
+
+const Chapter* CheckData::ChapterByKey(const std::string& key) const {
+    for (const Chapter& chapter : chapters) {
+        if (chapter.key == key) {
+            return &chapter;
+        }
+    }
+    return nullptr;
+}
+
+const Chapter* CheckData::ChapterByIndex(int index) const {
+    for (const Chapter& chapter : chapters) {
+        if (chapter.index == index) {
+            return &chapter;
+        }
+    }
+    return nullptr;
+}
+
+const Chapter* CheckData::ChapterByName(const std::string& text) const {
+    const std::string wanted = Lower(Trim(text));
+    if (wanted.empty()) {
+        return nullptr;
+    }
+    // An exact name first, so "Xen" does not resolve to whichever mission merely
+    // contains those letters.
+    for (const Chapter& chapter : chapters) {
+        if (Lower(chapter.name) == wanted) {
+            return &chapter;
+        }
+    }
+    for (const Chapter& chapter : chapters) {
+        if (Lower(chapter.name).find(wanted) != std::string::npos ||
+            chapter.key == wanted) {
+            return &chapter;
+        }
+    }
+    return nullptr;
+}
+
+const Location* CheckData::LocationById(long id) const {
+    for (const Location& location : locations) {
+        if (location.id == id) {
+            return &location;
+        }
+    }
+    return nullptr;
+}
+
+const Location* CheckData::ChargerAt(const std::string& map,
+                                     const std::string& classname,
+                                     const float at[3]) const {
+    const Location* best = nullptr;
+    float best_distance = kChargerMatchRadius;
+
+    for (const Location& location : locations) {
+        if (location.type != TriggerType::Charger) continue;
+        if (location.map != map) continue;
+        if (location.charger_classname != classname) continue;
+
+        const float dx = location.at[0] - at[0];
+        const float dy = location.at[1] - at[1];
+        const float dz = location.at[2] - at[2];
+        const float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+        if (distance <= best_distance) {
+            best_distance = distance;
+            best = &location;
+        }
+    }
+
+    return best;
+}
+
+const Location* CheckData::WeaponPickupFor(const std::string& classname,
+                                           const std::string& map) const {
+    for (const Location& location : locations) {
+        if (location.type != TriggerType::WeaponPickup) continue;
+        if (location.map != map) continue;
+        for (const std::string& name : location.classnames) {
+            if (name == classname) {
+                return &location;
+            }
+        }
+    }
+    return nullptr;
+}
+
+std::string CheckData::ItemGating(const std::string& classname) const {
+    for (const auto& entry : gated_classnames) {
+        if (entry.first == classname) {
+            return entry.second;
+        }
+    }
+    return std::string();
+}
+
+std::vector<std::string> CheckData::ClassnamesFor(const std::string& item_name) const {
+    std::vector<std::string> found;
+    for (const auto& entry : gated_classnames) {
+        if (entry.second == item_name) {
+            found.push_back(entry.first);
+        }
+    }
+    return found;
+}
+
+}  // namespace ap

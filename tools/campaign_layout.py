@@ -190,9 +190,12 @@ CHARGER_CLASSNAMES: dict[str, str] = {
 # brush models, which would silently repoint every charger id in a map. Position
 # survives any recompile that does not physically move the unit.
 #
-# 4 units is well inside the ~16-unit body of a charger, so two distinct units
-# can never round together, while a float printed slightly differently by the
-# compiler and by the running game still lands on the same key.
+# The grid exists so that reading the same map twice gives the same id, not so
+# that the game can rebuild the key: the game matches by nearest unit instead,
+# which is what makes the pair robust to a recompile that nudges a brush and
+# removes any need for two languages to round a float identically. 4 units is
+# well inside the ~16-unit body of a charger, so two distinct units can never
+# round together.
 CHARGER_POSITION_GRID = 4
 
 # --- Logic groups ---------------------------------------------------------

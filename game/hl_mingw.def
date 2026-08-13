@@ -1,0 +1,23 @@
+; Exports for a MinGW build of the server dll.
+;
+; The SDK's own dlls/hl.def cannot be used here: it ends with a
+;
+;     SECTIONS
+;         .data READ WRITE
+;
+; clause that GNU ld's module-definition parser rejects outright.
+;
+; Only one export needs a definition file at all. Everything else the engine
+; looks up by name -- GetEntityAPI, GetEntityAPI2, GetNewDLLFunctions and every
+; entity classname registered by LINK_ENTITY_TO_CLASS -- is `cdecl` and carries
+; `__declspec(dllexport)`, so MinGW exports it undecorated by itself.
+;
+; GiveFnptrsToDll is the exception. eiface.h makes it `__stdcall` on Windows and
+; does not mark it exported, because MSVC took the export from the .def file.
+; MinGW decorates a stdcall symbol as `name@bytes`, so the entry point would be
+; exported as GiveFnptrsToDll@8 and the engine, which asks for
+; "GiveFnptrsToDll", would find nothing and refuse to load the dll. The alias
+; below exports the decorated symbol under the undecorated name.
+LIBRARY hl
+EXPORTS
+	GiveFnptrsToDll = GiveFnptrsToDll@8 @1
