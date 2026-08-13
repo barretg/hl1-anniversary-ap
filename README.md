@@ -20,7 +20,7 @@ warp, checks fire, items arrive, and pickups are refused until the multiworld
 sends them. What has not been proved in play is the far end of a run -- the
 mission-boundary interception, the finale's seal, DeathLink -- and nothing has
 had a full run-through yet. See [docs/PORT_PLAN.md](docs/PORT_PLAN.md) for what
-is left and [game/README.md](game/README.md) for how the game side is built.
+is left and [game/README.md](game/README.md) for how the game side is built. // TODO: update, all of these things are tested working
 
 ## The target
 
