@@ -1,10 +1,9 @@
 """Universal Tracker support.
 
-UT re-runs this world's generation locally to work out what is in logic. Two of
-our decisions are rolled rather than derived -- which mission each campaign opens
-with, and what the run starts holding -- so UT is handed the real seed's answers
-through `interpret_slot_data` and reads them back out of
-`multiworld.re_gen_passthrough`.
+UT re-runs this world's generation locally to work out what is in logic. One of
+our decisions is rolled rather than derived -- which mission the run opens with
+-- so UT is handed the real seed's answer through `interpret_slot_data` and reads
+it back out of `multiworld.re_gen_passthrough`.
 
 The failure mode these guard against is silent: a passthrough read whose key was
 never put into slot data just falls back to a fresh roll, and UT's logic view
@@ -17,9 +16,9 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-WORLD = (REPO / "apworld" / "half_life_sven" / "__init__.py").read_text(encoding="utf-8")
+WORLD = (REPO / "apworld" / "half_life" / "__init__.py").read_text(encoding="utf-8")
 CLIENT = (
-    REPO / "apworld" / "half_life_sven" / "client" / "launcher.py"
+    REPO / "apworld" / "half_life" / "client" / "launcher.py"
 ).read_text(encoding="utf-8")
 
 
@@ -43,11 +42,9 @@ def test_every_passthrough_key_is_actually_in_slot_data() -> None:
     assert not missing, f"read from passthrough but never sent: {sorted(missing)}"
 
 
-def test_the_rolled_decisions_are_both_covered() -> None:
-    """The two things UT cannot re-derive, by name, so neither is dropped."""
-    keys = passthrough_keys()
-    assert "starting_chapters" in keys
-    assert "starting_weapons" in keys
+def test_the_rolled_decision_is_covered() -> None:
+    """The one thing UT cannot re-derive, by name, so it is not dropped."""
+    assert "starting_chapters" in passthrough_keys()
 
 
 def test_the_client_falls_back_without_the_tracker_apworld() -> None:

@@ -1,7 +1,7 @@
 """Package the world folder as a distributable `.apworld`.
 
 An .apworld is a zip whose single top-level folder matches the zip's stem, which
-is exactly the layout of `apworld/half_life_sven`.
+is exactly the layout of `apworld/half_life`.
 
 Usage:
     python tools/build_apworld.py [--install "F:/Archipelago/custom_worlds"]
@@ -20,7 +20,7 @@ MANIFEST_VERSION = 8
 MANIFEST_COMPATIBLE_VERSION = 5
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-WORLD_DIR = REPO_ROOT / "apworld" / "half_life_sven"
+WORLD_DIR = REPO_ROOT / "apworld" / "half_life"
 BUILD_DIR = REPO_ROOT / "build"
 
 EXCLUDE_DIRS = {"__pycache__", ".pytest_cache", "test"}

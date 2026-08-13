@@ -1,0 +1,17 @@
+// Half-Life Archipelago. Everything but the server dll is inherited from the
+// player's own Half-Life through fallback_dir, so this folder never needs a copy
+// of a map, model or sound and nothing under valve/ is ever written to.
+game "Half-Life Archipelago"
+startmap "c0a0"
+trainmap "t0a0"
+mpentity "info_player_deathmatch"
+gamedll "dlls\hl.dll"
+gamedll_linux "dlls/hl.so"
+gamedll_osx "dlls/hl.dylib"
+fallback_dir "valve"
+type "singleplayer_only"
+nomodels "0"
+nohimodel "1"
+detailed_textures "0"
+hlversion "1120"
+size "0"

@@ -1,4 +1,4 @@
-"""Bridge protocol tests. These need neither Sven Co-op nor an Archipelago server."""
+"""Bridge protocol tests. These need neither Half-Life nor an Archipelago server."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "apworld" / "half_life_sven"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "apworld" / "half_life"))
 
 from client.bridge import (  # noqa: E402
     MAX_PENDING_IN_SNAPSHOT,
@@ -26,7 +26,7 @@ def bridge(tmp_path: Path) -> Bridge:
 def snapshot(bridge: Bridge, **overrides) -> bool:
     kwargs = dict(
         connected=True,
-        chapters=["office_complex"],
+        chapters=["c1a2"],
         items=["Shotgun"],
         goal_open=False,
         death_link=False,
@@ -36,17 +36,17 @@ def snapshot(bridge: Bridge, **overrides) -> bool:
 
 
 def test_reads_complete_lines_only(bridge: Bridge) -> None:
-    bridge.out_path.write_text("CHECK|7720001\nCHECK|7720002\nCHECK|772", encoding="utf-8")
+    bridge.out_path.write_text("CHECK|7760001\nCHECK|7760002\nCHECK|776", encoding="utf-8")
 
     events = bridge.read_events()
 
     assert [e.kind for e in events] == ["CHECK", "CHECK"]
-    assert [e.arg for e in events] == ["7720001", "7720002"]
+    assert [e.arg for e in events] == ["7760001", "7760002"]
 
-    # The truncated third line is picked up once the plugin finishes writing it.
+    # The truncated third line is picked up once the game finishes writing it.
     with bridge.out_path.open("a", encoding="utf-8") as handle:
         handle.write("0003\n")
-    assert [e.arg for e in bridge.read_events()] == ["7720003"]
+    assert [e.arg for e in bridge.read_events()] == ["7760003"]
 
 
 def test_cursor_survives_repeated_polls(bridge: Bridge) -> None:
@@ -77,12 +77,12 @@ def test_snapshot_is_skipped_when_unchanged(bridge: Bridge) -> None:
 
 
 def test_snapshot_contents(bridge: Bridge) -> None:
-    snapshot(bridge, chapters=["blast_pit", "office_complex"], items=["RPG", "Shotgun"])
+    snapshot(bridge, chapters=["c1a2", "c1a4"], items=["RPG", "Shotgun"])
     text = bridge.in_path.read_text(encoding="utf-8")
 
     assert "connected=1" in text
     assert "goal_open=0" in text
-    assert "chapters=blast_pit,office_complex" in text
+    assert "chapters=c1a2,c1a4" in text
     # Item names are semicolon separated because names may contain commas.
     assert "items=RPG;Shotgun" in text
     assert "now=" in text
@@ -93,35 +93,28 @@ def test_snapshot_carries_excluded_missions(bridge: Bridge) -> None:
     snapshot(bridge)
     assert "excluded=\n" in bridge.in_path.read_text(encoding="utf-8")
 
-    assert snapshot(bridge, excluded=["black_mesa_inbound"]) is True
-    assert "excluded=black_mesa_inbound" in bridge.in_path.read_text(encoding="utf-8")
+    assert snapshot(bridge, excluded=["c0a0"]) is True
+    assert "excluded=c0a0" in bridge.in_path.read_text(encoding="utf-8")
 
 
 def test_snapshot_carries_the_starting_weapons(bridge: Bridge) -> None:
-    """Per seed since `random_starting_weapon`, so the file's list is a default."""
+    """What the seed opens with, and what the game must never take away."""
     snapshot(bridge)
     assert "starting=\n" in bridge.in_path.read_text(encoding="utf-8")
 
-    assert snapshot(bridge, starting=["weapon_pipewrench", "weapon_medkit"]) is True
+    assert snapshot(bridge, starting=["weapon_crowbar"]) is True
     text = bridge.in_path.read_text(encoding="utf-8")
-    # Not sorted: this is the seed's list, and the melee weapon comes first.
-    assert "starting=weapon_pipewrench;weapon_medkit" in text
+    # Not sorted: this is the seed's list, in its own order.
+    assert "starting=weapon_crowbar" in text
 
 
-def test_snapshot_carries_open_finales_per_campaign(bridge: Bridge) -> None:
-    """A seed has one finale per campaign and they unseal independently."""
+def test_snapshot_carries_whether_the_finale_is_open(bridge: Bridge) -> None:
+    """No item unlocks Nihilanth, so this is the only thing that opens it."""
     snapshot(bridge)
-    assert "goals_open=\n" in bridge.in_path.read_text(encoding="utf-8")
+    assert "goal_open=0" in bridge.in_path.read_text(encoding="utf-8")
 
-    assert snapshot(bridge, goals_open=["nihilanth"]) is True
-    assert "goals_open=nihilanth" in bridge.in_path.read_text(encoding="utf-8")
-
-    assert snapshot(bridge, goals_open=["of_worlds_collide", "nihilanth"]) is True
-    text = bridge.in_path.read_text(encoding="utf-8")
-    assert "goals_open=nihilanth,of_worlds_collide" in text
-    # `goal_open` stays a separate field: it is the collapsed answer for a plugin
-    # that predates the list.
-    assert "goal_open=0" in text
+    assert snapshot(bridge, goal_open=True) is True
+    assert "goal_open=1" in bridge.in_path.read_text(encoding="utf-8")
 
 
 def test_snapshot_carries_ungated_classnames(bridge: Bridge) -> None:
@@ -138,7 +131,7 @@ def test_snapshot_carries_ungated_classnames(bridge: Bridge) -> None:
 
 
 def test_snapshot_carries_the_deathlink_amnesty(bridge: Bridge) -> None:
-    """The plugin counts the allowance down, so it has to be told what it is."""
+    """The game counts the allowance down, so it has to be told what it is."""
     snapshot(bridge)
     assert "death_link_amnesty=0" in bridge.in_path.read_text(encoding="utf-8")
 
@@ -157,14 +150,14 @@ def test_snapshot_carries_a_session_id(bridge: Bridge) -> None:
 
 
 def test_sessions_differ_between_client_runs(tmp_path: Path) -> None:
-    """The plugin keys its event high-water mark on this."""
+    """The game keys its event high-water mark on this."""
     assert Bridge(tmp_path).session != Bridge(tmp_path).session
 
 
 def test_equal_length_changes_are_still_written(bridge: Bridge) -> None:
     """A flag flip does not change the snapshot's length.
 
-    The plugin used to compare file size and would freeze on a stale snapshot,
+    The game used to compare file size and would freeze on a stale snapshot,
     so this asserts the two states are genuinely distinguishable by content.
     """
     snapshot(bridge, connected=True)
@@ -202,7 +195,7 @@ def pending_lines(bridge: Bridge) -> list[str]:
 
 
 def test_snapshot_is_not_rewritten_while_pending_is_unchanged(bridge: Bridge) -> None:
-    """The write amplifier: rewriting every poll made the plugin re-ACK the lot."""
+    """The write amplifier: rewriting every poll made the game re-ACK the lot."""
     bridge.queue_event("ITEM", "Ammo Cache")
     assert snapshot(bridge) is True
     assert snapshot(bridge) is False
@@ -289,7 +282,7 @@ def test_event_sequence_numbers_are_monotonic(bridge: Bridge) -> None:
 
 
 def test_deathlink_payload_avoids_the_field_separator(bridge: Bridge) -> None:
-    """The plugin splits an event line on '|', so payload fields use '~'."""
+    """The game splits an event line on '|', so payload fields use '~'."""
     bridge.queue_event("DEATHLINK", "PlayerOne~a gargantua")
     snapshot(bridge)
 
@@ -307,7 +300,7 @@ def test_snapshot_write_is_atomic(bridge: Bridge) -> None:
 
 
 def test_snapshot_survives_a_locked_destination(bridge: Bridge, monkeypatch) -> None:
-    """Windows refuses os.replace while the plugin has ap_in.txt open.
+    """Windows refuses os.replace while the game has ap_in.txt open.
 
     Letting that propagate killed the client's watcher task, which then sat
     there looking connected while delivering nothing.
@@ -361,21 +354,24 @@ def test_clear_log_resets_cursor(bridge: Bridge) -> None:
     assert [e.arg for e in bridge.read_events()] == ["2"]
 
 
-@pytest.mark.parametrize("suffix", ["", "svencoop"])
-def test_find_store_dir_accepts_root_or_svencoop(tmp_path: Path, suffix: str) -> None:
-    (tmp_path / "svencoop").mkdir()
+@pytest.mark.parametrize("suffix", ["", "valve"])
+def test_find_store_dir_accepts_root_or_valve(tmp_path: Path, suffix: str) -> None:
+    """Either half of the install is a reasonable thing to point at."""
+    (tmp_path / "valve").mkdir()
     target = tmp_path / suffix if suffix else tmp_path
 
     result = find_store_dir(target)
 
-    assert result.parts[-4:] == ("scripts", "plugins", "store", "archipelago")
-    assert "svencoop" in result.parts
+    # Always our own mod folder, next to valve rather than inside it: the
+    # player's install is never written to.
+    assert result.parts[-2:] == ("hlap", "archipelago")
+    assert result.parent.parent == tmp_path
 
 
 def make_install(root: Path) -> Path:
-    maps = root / "svencoop" / "maps"
+    maps = root / "valve" / "maps"
     maps.mkdir(parents=True)
-    (maps / "hl_c00.bsp").write_bytes(b"")
+    (maps / "c0a0.bsp").write_bytes(b"")
     return root
 
 
@@ -383,13 +379,13 @@ def test_is_game_dir_accepts_install_root(tmp_path: Path) -> None:
     assert is_game_dir(make_install(tmp_path))
 
 
-def test_is_game_dir_accepts_the_svencoop_folder(tmp_path: Path) -> None:
-    assert is_game_dir(make_install(tmp_path) / "svencoop")
+def test_is_game_dir_accepts_the_valve_folder(tmp_path: Path) -> None:
+    assert is_game_dir(make_install(tmp_path) / "valve")
 
 
 def test_is_game_dir_rejects_an_empty_lookalike(tmp_path: Path) -> None:
     """A folder named right but without the campaign maps is not an install."""
-    (tmp_path / "svencoop").mkdir()
+    (tmp_path / "valve").mkdir()
     assert not is_game_dir(tmp_path)
 
 
@@ -403,16 +399,16 @@ def test_is_game_dir_rejects_unrelated_folder(tmp_path: Path) -> None:
 
 
 def test_snapshot_carries_the_tracker_location_sets(bridge: Bridge) -> None:
-    """`!tracker` needs both: between them they say what is in the seed at all."""
+    """`ap_tracker` needs both: between them they say what is in the seed at all."""
     snapshot(bridge)
     text = bridge.in_path.read_text(encoding="utf-8")
     assert "checked=\n" in text
     assert "missing=\n" in text
 
-    assert snapshot(bridge, checked=[7720001, 7720002], missing=[7720003]) is True
+    assert snapshot(bridge, checked=[7760001, 7760002], missing=[7760003]) is True
     text = bridge.in_path.read_text(encoding="utf-8")
-    assert "checked=7720001,7720002" in text
-    assert "missing=7720003" in text
+    assert "checked=7760001,7760002" in text
+    assert "missing=7760003" in text
 
     # A check landing has to reach the game, so this counts as a change.
-    assert snapshot(bridge, checked=[7720001, 7720002, 7720003], missing=[]) is True
+    assert snapshot(bridge, checked=[7760001, 7760002, 7760003], missing=[]) is True

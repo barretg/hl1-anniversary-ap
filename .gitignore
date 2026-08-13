@@ -4,3 +4,6 @@
 .pytest_cache/
 build/
 *.pyc
+# The built server dll, dropped here so packaging picks it up. A build artifact,
+# not a source file.
+apworld/half_life/mod/files/dlls/

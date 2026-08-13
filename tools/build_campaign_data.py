@@ -1,12 +1,12 @@
-"""Generate `apworld/half_life_sven/data/campaign.json` from the shipped BSPs.
+"""Generate `apworld/half_life/data/campaign.json` from the shipped BSPs.
 
 The Half-Life campaign maps are the source of truth for what a location can be:
 we only ever create a check for something that provably exists in the map file.
-The generated JSON is committed, so neither the apworld nor the client needs Sven
-Co-op installed -- only this tool does.
+The generated JSON is committed, so neither the apworld nor the client needs the
+game installed -- only this tool does.
 
 Usage:
-    python tools/build_campaign_data.py --maps "<...>/svencoop/maps"
+    python tools/build_campaign_data.py --maps "<...>/Half-Life/valve/maps"
 """
 
 from __future__ import annotations
@@ -20,17 +20,15 @@ from pathlib import Path
 
 from bsp_entities import brush_model_centres, load_map
 from campaign_layout import (
-    CAMPAIGNS,
-    CAMPAIGN_OF_CHAPTER,
+    CHAPTER_GATES,
     CHAPTERS,
     CHARGER_CLASSNAMES,
+    CHARGER_POSITION_GRID,
     CLASSNAME_TO_ITEM,
-    DEFAULT_CAMPAIGN,
     ENABLED_LOCATION_TYPES,
-    ENDGAME_CHAPTERS,
-    GOAL_CHAPTERS,
-    GOAL_REQUIRES,
+    GOAL_CHAPTER,
     IGNORED_MONSTERS,
+    INTRO_CHAPTER,
     ITEM_ID_BASE,
     KILL_MILESTONE_FRACTIONS,
     LOCATION_ID_BASE,
@@ -38,18 +36,13 @@ from campaign_layout import (
     NOTABLE_MONSTERS,
     OPTIONAL_ITEMS,
     REQUIREMENT_GROUPS,
-    RESTRICTED_CLASSNAMES,
-    WEAPON_ALIASES,
-    WEAPON_ANCHORS,
-    UNRANDOMISED_WEAPON_LOCATIONS,
     STARTING_WEAPONS,
-    WEAPON_CAMPAIGN,
+    UNRANDOMISED_WEAPON_LOCATIONS,
     WEAPON_ITEMS,
-    CHAPTER_GATES,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-OUT_PATH = REPO_ROOT / "apworld" / "half_life_sven" / "data" / "campaign.json"
+OUT_PATH = REPO_ROOT / "apworld" / "half_life" / "data" / "campaign.json"
 
 # Append-only registry of every id ever handed out.
 #
@@ -58,7 +51,7 @@ OUT_PATH = REPO_ROOT / "apworld" / "half_life_sven" / "data" / "campaign.json"
 # check to whatever location now happened to sit at that index. Keys here are
 # derived from what a location *is*, not where it lands in the list, and an id is
 # never reused for something else.
-IDS_PATH = REPO_ROOT / "apworld" / "half_life_sven" / "data" / "ids.json"
+IDS_PATH = REPO_ROOT / "apworld" / "half_life" / "data" / "ids.json"
 
 SUPPLY_CLASSNAMES = {
     "item_battery": "Battery",
@@ -83,7 +76,7 @@ def spawn_point(ents: list[dict[str, str]]) -> tuple[float, float, float] | None
 
 
 # How much dearer a unit of height is than a unit of floor, for judging how far
-# away something really is. The same weighting `!find` uses in game: 800 units
+# away something really is. The same weighting `ap_find` uses in game: 800 units
 # across a floor is a walk, 800 units up is a hunt for the stairs.
 VERTICAL_PENALTY = 3.0
 
@@ -107,29 +100,46 @@ def entity_origin(raw: str) -> tuple[float, float, float]:
         return (0.0, 0.0, 0.0)
 
 
-def normalise_origin(raw: str) -> str:
-    """`0 80 0` as the running game will report it, or "" for no offset.
+def charger_key_position(
+    position: tuple[float, float, float]
+) -> tuple[int, int, int]:
+    """A charger's position as its identity: snapped to a coarse grid.
 
-    Written as integers because that is what the engine hands back for a brush
-    entity's origin and what the plugin will rebuild the key from; a mapper's
-    "0 80.0 0" and the engine's "0 80 0" have to be the same string.
+    Identity is position rather than brush model index because the anniversary
+    update recompiled single-player maps and a recompile can renumber brush
+    models, which would silently repoint every charger id in that map. The grid
+    absorbs the difference between the float the compiler wrote and the float the
+    running game computes from the entity's absolute bounding box, while staying
+    far finer than the distance between two real chargers.
     """
-    parts = raw.split()
-    if len(parts) != 3:
-        return ""
-    try:
-        values = [int(round(float(p))) for p in parts]
-    except ValueError:
-        return ""
-    if not any(values):
-        return ""  # no offset; this is the brush where the compiler put it
-    return " ".join(str(v) for v in values)
+    grid = CHARGER_POSITION_GRID
+    return tuple(int(round(value / grid)) * grid for value in position)
+
+
+def format_position(position: tuple[int, int, int] | tuple[float, float, float]) -> str:
+    return " ".join(str(int(round(value))) for value in position)
 
 
 def brush_model_index(entity: dict[str, str]) -> int:
     """Numeric part of a brush entity's `*N` model, for a deterministic order."""
     model = entity.get("model", "")
     return int(model[1:]) if model[1:].isdigit() else -1
+
+
+def charger_position(
+    entity: dict[str, str], centres: dict[str, tuple[float, float, float]]
+) -> tuple[float, float, float] | None:
+    """Where a charger actually is: its brush centre plus the entity's `origin`.
+
+    A brush entity has no origin of its own unless the mapper gave it one, so the
+    centre of the model the compiler emitted is the position, and the `origin`
+    key -- where present -- is the offset the engine will apply on top of it.
+    """
+    centre = centres.get(entity.get("model", ""))
+    if centre is None:
+        return None
+    offset = entity_origin(entity.get("origin", ""))
+    return tuple(centre[i] + offset[i] for i in range(3))
 
 
 def weapon_display(classname: str) -> str:
@@ -171,7 +181,7 @@ class IdRegistry:
     def fingerprint(self) -> str:
         """Short digest of the whole id map.
 
-        Written into both the apworld and the plugin's data file so a mismatched
+        Written into both the apworld and the game's data file so a mismatched
         pair can be detected instead of quietly sending the wrong checks.
         """
         payload = json.dumps(self.data, sort_keys=True).encode("utf-8")
@@ -190,24 +200,12 @@ def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
     elif kind == "chapter_complete":
         arg = trigger["chapter"]
     elif kind == "charger":
-        # The origin is only present on a brush shared by two chargers, so every
-        # key written before this change is byte-identical to what it was.
-        arg = f"{trigger['classname']}:{trigger['model']}"
-        if trigger.get("origin"):
-            arg += f"@{trigger['origin']}"
+        arg = f"{trigger['classname']}@{trigger['at']}"
     elif kind == "weapon_pickup":
         # A campaign-wide location: its identity is the weapon, not where the
         # earliest copy happens to sit. Anchoring the key to the map would
         # renumber it if a nearer pickup were ever found.
-        #
-        # Half-Life's spelling of this key predates the other campaigns and is
-        # kept exactly as it was, so its ids do not move. Every other campaign
-        # scopes the key to itself, since each one gets its own "first shotgun".
-        weapon = ",".join(sorted(trigger["classnames"]))
-        campaign = CAMPAIGN_OF_CHAPTER.get(chapter_key, DEFAULT_CAMPAIGN)
-        if campaign == DEFAULT_CAMPAIGN:
-            return f"*|*|{kind}|{weapon}"
-        return f"{campaign}|*|{kind}|{weapon}"
+        return f"*|*|{kind}|{','.join(sorted(trigger['classnames']))}"
     else:
         arg = ""
     return f"{chapter_key}|{map_name}|{kind}|{arg}"
@@ -237,7 +235,7 @@ class LocationBuilder:
         }
         if requires:
             location["requires"] = requires
-        # Where it is in the world, for `!find`. Whole units: the command is a
+        # Where it is in the world, for `ap_find`. Whole units: the command is a
         # compass, and nobody needs a check located to the nearest thousandth.
         if position is not None:
             location["position"] = [int(round(value)) for value in position]
@@ -256,33 +254,6 @@ class LocationBuilder:
         raise RuntimeError(f"could not make {name!r} unique")
 
 
-def campaigns_holding(
-    chapters: list[dict], entities: dict[str, list[dict[str, str]]],
-    classnames: list[str],
-) -> list[str]:
-    """Every campaign whose maps actually contain one of these classnames.
-
-    Read from the BSPs rather than taken from whichever campaign declared the
-    item, because they are not the same question. Half-Life declares the shotgun,
-    but Opposing Force and Blue Shift are full of them -- and attributing the item
-    to Half-Life alone left an Opposing Force seed with shotguns it could never be
-    given the item for, so they sat in the levels permanently refused.
-    """
-    wanted = set(classnames)
-    found: list[str] = []
-
-    for chapter in chapters:
-        campaign = chapter["campaign"]
-        if campaign in found:
-            continue
-        for map_name in chapter["maps"]:
-            if any(e.get("classname", "") in wanted for e in entities[map_name]):
-                found.append(campaign)
-                break
-
-    return found
-
-
 def earliest_map_with(
     chapters: list[dict], entities: dict[str, list[dict[str, str]]],
     classnames: list[str],
@@ -297,17 +268,9 @@ def earliest_map_with(
 
 
 def build(maps_dir: Path, registry: IdRegistry) -> dict:
-    # `index` stays global across every campaign, because it is what `!warp <n>`
-    # takes in game and a number has to mean one mission whichever campaigns a
-    # seed contains. Half-Life is first, so its numbering is unchanged.
+    # `index` is what `ap_warp <n>` takes in game.
     chapters = [
-        {
-            "key": key,
-            "name": name,
-            "maps": maps,
-            "index": index,
-            "campaign": CAMPAIGN_OF_CHAPTER[key],
-        }
+        {"key": key, "name": name, "maps": maps, "index": index}
         for index, (key, name, maps) in enumerate(CHAPTERS)
     ]
 
@@ -345,71 +308,65 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                     {"type": "map_reached", "map": map_name},
                 )
 
-            # Every health and HEV charger placed in the map is its own check.
-            # The brush model index ("*58") is the only per-entity identity the
-            # BSP and the running game both know, so ids are keyed to it.
-            #
-            # Except when a mapper reuses one brush and shifts the copy with an
-            # `origin` key -- `ba_canal1` has two health chargers 80 units apart
-            # sharing `*196`. Those are two real units a player can drink from, so
-            # they are two checks, told apart by the origin the engine will report
-            # for each. Only the offset copies carry it, so every id that existed
-            # before this stays exactly where it was.
+            # Every health and HEV charger placed in the map is its own check,
+            # identified by where it stands. See `charger_key_position`.
             if "charger" in enabled:
                 spawn = spawn_point(ents)
                 for classname, display in CHARGER_CLASSNAMES.items():
-                    found = [
-                        e for e in ents
-                        if e.get("classname", "") == classname
-                        and brush_model_index(e) >= 0
-                    ]
+                    found = []
+                    for entity in ents:
+                        if entity.get("classname", "") != classname:
+                            continue
+                        at = charger_position(entity, centres[map_name])
+                        if at is None:
+                            # No brush model, so nothing in the running game can
+                            # ever be matched to it. Silently skipping would hide
+                            # a check that simply never fires.
+                            raise SystemExit(
+                                f"{map_name}: {classname} with no brush model"
+                            )
+                        found.append((entity, at))
 
                     # Numbered by how far they are from where players arrive,
-                    # not by brush model index. The index is compile order and
-                    # means nothing in play: Office Complex's two nearest units
-                    # were numbered 5 and 6 because that is when the compiler
-                    # happened to emit them, which reads as a mistake.
+                    # not by compile order, which means nothing in play: Office
+                    # Complex's two nearest units came out 5 and 6 because that
+                    # is when the compiler happened to emit them, which reads as
+                    # a mistake.
                     #
-                    # Only the display name depends on this. Location ids key on
-                    # `classname:model`, so renumbering moves no id.
-                    def charger_score(entity: dict[str, str]) -> tuple[float, int]:
-                        centre = centres[map_name].get(entity["model"])
-                        if spawn is None or centre is None:
-                            return (float(brush_model_index(entity)), 0)
-                        offset = entity_origin(entity.get("origin", ""))
-                        at = tuple(centre[i] + offset[i] for i in range(3))
-                        return (walk_score(spawn, at), brush_model_index(entity))
+                    # Only the display name depends on this. Ids key on the
+                    # position, so renumbering moves nothing.
+                    def charger_score(item: tuple[dict[str, str], tuple]) -> tuple:
+                        entity, at = item
+                        if spawn is None:
+                            return (float(brush_model_index(entity)), at)
+                        return (walk_score(spawn, at), at)
 
                     chargers = sorted(found, key=charger_score)
-                    shared = {
-                        model for model in {e["model"] for e in chargers}
-                        if len([e for e in chargers if e["model"] == model]) > 1
-                    }
-                    for number, entity in enumerate(chargers, start=1):
+                    keys: set[tuple[int, int, int]] = set()
+                    for number, (entity, at) in enumerate(chargers, start=1):
+                        rounded = charger_key_position(at)
+                        if rounded in keys:
+                            # Two units rounding together would share one id and
+                            # one of them could never be checked.
+                            raise SystemExit(
+                                f"{map_name}: two {classname} units share the "
+                                f"rounded position {format_position(rounded)}"
+                            )
+                        keys.add(rounded)
+
                         count = f" {number}" if len(chargers) > 1 else ""
-                        trigger = {
-                            "type": "charger", "map": map_name,
-                            "classname": classname, "model": entity["model"],
-                        }
-                        origin = normalise_origin(entity.get("origin", ""))
-                        if entity["model"] in shared and origin:
-                            trigger["origin"] = origin
-
-                        # The brush's own centre, shifted by whatever `origin`
-                        # the mapper gave the entity -- which is exactly how the
-                        # engine will place it.
-                        centre = centres[map_name].get(entity["model"])
-                        position = None
-                        if centre is not None:
-                            offset = entity_origin(entity.get("origin", ""))
-                            position = tuple(centre[i] + offset[i] for i in range(3))
-
                         builder.add(
                             chapter,
                             map_name,
                             f"{display}{count}{suffix}",
-                            trigger,
-                            position=position,
+                            {
+                                "type": "charger",
+                                "map": map_name,
+                                "classname": classname,
+                                # What the game matches a pressed entity against.
+                                "at": format_position(rounded),
+                            },
+                            position=at,
                         )
 
             # Every distinct pickup classname present in the map becomes one
@@ -431,7 +388,8 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # First kill of each notable monster actually placed in the map.
             if "kill" in enabled:
                 present = sorted({
-                    e.get("classname", "") for e in ents if e.get("classname", "") in NOTABLE_MONSTERS
+                    e.get("classname", "") for e in ents
+                    if e.get("classname", "") in NOTABLE_MONSTERS
                 })
                 for classname in present:
                     display, requirement = NOTABLE_MONSTERS[classname]
@@ -497,74 +455,32 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     # "anywhere": finding a shotgun six missions later is not the moment the
     # check is about, and the per-map `pickup` type that fired on every copy is
     # what read as noise. The crowbar is here too even though you start with one.
-    # Anchored per campaign, not once across all of them. A seed that leaves
-    # Half-Life out would otherwise lose every check for a weapon the other
-    # campaigns share with it, because the only anchor sat in a map it does not
-    # contain. Each campaign gets its own "first shotgun" instead.
     if "weapon_pickup" in enabled:
-        for campaign in CAMPAIGNS:
-            campaign_chapters = [c for c in chapters if c["campaign"] == campaign.key]
-            # The suit and the long jump module are checks too. Each campaign
-            # hands the suit over somewhere -- Gordon's HEV, Barney's uniform,
-            # Shephard's vest are all `item_suit` -- and walking up to it is as
-            # much a moment as finding a gun.
-            for item_name, classnames in {
-                **WEAPON_ITEMS, **OPTIONAL_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
-            }.items():
-                # A hand-placed anchor wins: some weapons are handed over rather
-                # than left lying about, and those leave no entity to find.
-                forced = WEAPON_ANCHORS.get(campaign.key, {}).get(item_name)
-                if forced:
-                    chapter = next(
-                        (c for c in campaign_chapters if forced in c["maps"]), None
-                    )
-                    if chapter is None:
-                        raise SystemExit(
-                            f"{campaign.key}: anchor map {forced} for {item_name} "
-                            f"is not in any of its missions"
-                        )
-                    map_name = forced
-                    # No entity to stand next to, so `!find` cannot point at it.
-                    placed = None
-                else:
-                    anchor = earliest_map_with(campaign_chapters, entities, classnames)
-                    if anchor is None:
-                        continue  # not here; the check could never fire
-                    chapter, map_name = anchor
-                # What this campaign actually puts in the player's hands. They
-                # Hunger reskins the pipe wrench into a shovel, and a check named
-                # after a wrench sends people looking for the wrong thing.
-                shown = WEAPON_ALIASES.get(campaign.key, {}).get(item_name, item_name)
-                # Half-Life's names predate the other campaigns and stay as they
-                # were; the rest say which campaign they belong to, since "First
-                # Shotgun" now exists in more than one.
-                label = (
-                    f"First {shown}"
-                    if campaign.key == DEFAULT_CAMPAIGN
-                    else f"{campaign.name} - First {shown}"
-                )
-                # Where the earliest copy sits. There may be several in the map;
-                # the first is as good as any, and `!find` says "one of them".
-                # A forced anchor has none, because the point of forcing one is
-                # that the weapon is handed over rather than left lying about.
-                if not forced:
-                    wanted = set(classnames)
-                    placed = next(
-                        (e for e in entities[map_name]
-                         if e.get("classname", "") in wanted),
-                        None,
-                    )
-                position = entity_origin(placed.get("origin", "")) if placed else None
+        for item_name, classnames in {
+            **WEAPON_ITEMS, **OPTIONAL_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
+        }.items():
+            anchor = earliest_map_with(chapters, entities, classnames)
+            if anchor is None:
+                continue  # not in the campaign; the check could never fire
+            chapter, map_name = anchor
+            # Where the earliest copy sits. There may be several in the map; the
+            # first is as good as any, and `ap_find` says "one of them".
+            wanted = set(classnames)
+            placed = next(
+                (e for e in entities[map_name] if e.get("classname", "") in wanted),
+                None,
+            )
+            position = entity_origin(placed.get("origin", "")) if placed else None
 
-                builder.add(
-                    chapter,
-                    map_name,
-                    label,
-                    {"type": "weapon_pickup", "map": map_name,
-                     "classnames": list(classnames)},
-                    prefixed=False,
-                    position=position,
-                )
+            builder.add(
+                chapter,
+                map_name,
+                f"First {item_name}",
+                {"type": "weapon_pickup", "map": map_name,
+                 "classnames": list(classnames)},
+                prefixed=False,
+                position=position,
+            )
 
     # Chapter completion always comes last so it reads last in the list.
     if "chapter_complete" in enabled:
@@ -577,68 +493,30 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                  "map": chapter["maps"][-1]},
             )
 
-    items = build_items(chapters, entities, registry)
-
     return {
         "data_version": registry.fingerprint(),
-        "campaigns": [
-            {
-                "key": campaign.key,
-                "name": campaign.name,
-                "option": campaign.option,
-                "missions_option": campaign.missions_option,
-                "goal_chapter": campaign.goal_chapter,
-                # The one mission its finale is never opened without, or "".
-                "goal_requires": campaign.goal_requires,
-                # "" where the campaign has no scene-setting mission to drop.
-                "intro_chapter": campaign.intro_chapter,
-                "chapters": [key for key, _, _ in campaign.chapters],
-                # Melee weapons this campaign could open a run with, when
-                # `random_starting_weapon` is on.
-                "melee": campaign.melee,
-                # Portal console targetname -> the mission its button enters.
-                # A table rather than a rule, because the hub numbers its
-                # consoles differently in every campaign.
-                "consoles": {
-                    console: key
-                    for console, (key, _, _) in zip(campaign.consoles, campaign.chapters)
-                    if console is not None
-                },
-            }
-            for campaign in CAMPAIGNS
-        ],
+        "goal_chapter": GOAL_CHAPTER,
+        # The scene-setting mission `exclude_intro_missions` drops.
+        "intro_chapter": INTRO_CHAPTER,
         "chapters": [
             {
                 "key": chapter["key"],
                 "name": chapter["name"],
                 "maps": chapter["maps"],
                 "index": chapter["index"],
-                "campaign": chapter["campaign"],
-                "is_goal": chapter["key"] in GOAL_CHAPTERS,
+                "is_goal": chapter["key"] == GOAL_CHAPTER,
                 "gates": CHAPTER_GATES.get(chapter["key"], {}),
-                # A mission that must be cleared before this one opens, on top
-                # of whatever unlocks it. "" for all but a paired finale.
-                "requires_chapter": GOAL_REQUIRES.get(chapter["key"], ""),
-                # True where finishing means the last map *ended*, not that the
-                # player arrived on it.
-                "complete_on_endgame": chapter["key"] in ENDGAME_CHAPTERS,
             }
             for chapter in chapters
         ],
-        "items": items,
+        "items": build_items(chapters, registry),
         "locations": builder.locations,
         "requirement_groups": REQUIREMENT_GROUPS,
         "starting_weapons": STARTING_WEAPONS,
-        # Classnames that only exist while their own campaign's map script is
-        # running, so they can never be handed over anywhere else.
-        "restricted_classnames": RESTRICTED_CLASSNAMES,
     }
 
 
-def build_items(
-    chapters: list[dict], entities: dict[str, list[dict[str, str]]],
-    registry: IdRegistry,
-) -> list[dict]:
+def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
     items: list[dict] = []
 
     def add(name: str, classification: str, **extra) -> None:
@@ -651,29 +529,17 @@ def build_items(
         })
 
     for chapter in chapters:
-        if chapter["key"] in GOAL_CHAPTERS:
+        if chapter["key"] == GOAL_CHAPTER:
             continue  # opened by mission count, never by an item
         add(
             f"{chapter['name']} Unlock",
             "progression",
             group="chapter",
             chapter=chapter["key"],
-            campaign=chapter["campaign"],
         )
 
-    # `campaign` is who introduced the weapon; `campaigns` is everywhere it can
-    # actually be found, which is what decides whether a seed needs the item. The
-    # two differ for every weapon more than one campaign ships.
     for name, classnames in WEAPON_ITEMS.items():
-        add(
-            name,
-            "progression",
-            group="weapon",
-            classnames=classnames,
-            campaign=WEAPON_CAMPAIGN[name],
-            campaigns=campaigns_holding(chapters, entities, classnames)
-            or [WEAPON_CAMPAIGN[name]],
-        )
+        add(name, "progression", group="weapon", classnames=classnames)
 
     for name, classnames in OPTIONAL_ITEMS.items():
         add(name, "progression", group="optional", classnames=classnames)
@@ -704,7 +570,7 @@ def main(argv: list[str] | None = None) -> int:
         "--maps",
         type=Path,
         required=True,
-        help="path to the svencoop/maps directory",
+        help="path to the Half-Life valve/maps directory",
     )
     parser.add_argument("--out", type=Path, default=OUT_PATH)
     parser.add_argument("--ids", type=Path, default=IDS_PATH)

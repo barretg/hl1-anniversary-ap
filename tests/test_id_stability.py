@@ -2,7 +2,7 @@
 
 Ids used to be positional, so toggling which location types are generated
 reassigned all of them. An existing seed then resolved a check to whatever
-location had moved into that slot, which looks exactly like the plugin sending
+location had moved into that slot, which looks exactly like the game sending
 random checks on level change.
 """
 
@@ -19,11 +19,11 @@ sys.path.insert(0, str(REPO / "tools"))
 
 from build_campaign_data import IdRegistry, location_key  # noqa: E402
 
-CAMPAIGN_PATH = REPO / "apworld" / "half_life_sven" / "data" / "campaign.json"
-IDS_PATH = REPO / "apworld" / "half_life_sven" / "data" / "ids.json"
+CAMPAIGN_PATH = REPO / "apworld" / "half_life" / "data" / "campaign.json"
+IDS_PATH = REPO / "apworld" / "half_life" / "data" / "ids.json"
 CHECKDATA_PATH = (
-    REPO / "apworld" / "half_life_sven" / "plugin"
-    / "plugins" / "store" / "archipelago" / "checkdata.txt"
+    REPO / "apworld" / "half_life" / "mod" / "files"
+    / "archipelago" / "checkdata.txt"
 )
 
 
@@ -67,9 +67,9 @@ def test_ids_are_stable_across_a_location_set_change(tmp_path: Path) -> None:
     path = tmp_path / "ids.json"
     registry = IdRegistry(path)
 
-    reached = location_key("office_complex", "hl_c03", {"type": "map_reached"})
+    reached = location_key("c1a2", "c1a2a", {"type": "map_reached"})
     complete = location_key(
-        "office_complex", "hl_c03", {"type": "chapter_complete", "chapter": "office_complex"}
+        "c1a2", "c1a2d", {"type": "chapter_complete", "chapter": "c1a2"}
     )
     before = (registry.get("locations", reached, 1000), registry.get("locations", complete, 1000))
     registry.save()
@@ -77,7 +77,7 @@ def test_ids_are_stable_across_a_location_set_change(tmp_path: Path) -> None:
     # A later build turns pickups back on, generating them *before* the others.
     reloaded = IdRegistry(path)
     pickup = location_key(
-        "office_complex", "hl_c03", {"type": "pickup", "classnames": ["weapon_shotgun"]}
+        "c1a2", "c1a2a", {"type": "pickup", "classnames": ["weapon_shotgun"]}
     )
     reloaded.get("locations", pickup, 1000)
     after = (
@@ -114,7 +114,7 @@ def test_fingerprint_is_stable_for_the_same_ids(tmp_path: Path) -> None:
 
 
 def test_data_version_is_published_to_both_sides(campaign: dict) -> None:
-    """The plugin pauses checks unless these agree."""
+    """The game pauses checks unless these agree."""
     version = campaign["data_version"]
     assert version
 

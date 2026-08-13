@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "apworld" / "half_life_sven"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "apworld" / "half_life"))
 
 from client import settings  # noqa: E402
 
@@ -22,14 +22,14 @@ def store(tmp_path: Path) -> Path:
 
 
 def test_round_trip(store: Path) -> None:
-    settings.set_value("game_dir", r"F:\Games\Sven Co-op", store)
-    assert settings.get("game_dir", path=store) == r"F:\Games\Sven Co-op"
+    settings.set_value("game_dir", r"F:\Games\Half-Life", store)
+    assert settings.get("game_dir", path=store) == r"F:\Games\Half-Life"
 
 
 def test_survives_a_fresh_read(store: Path) -> None:
     """Nothing is cached in memory, so a new session sees the saved value."""
-    settings.set_value("game_dir", "/games/sven", store)
-    assert settings.load(store) == {"game_dir": "/games/sven"}
+    settings.set_value("game_dir", "/games/half-life", store)
+    assert settings.load(store) == {"game_dir": "/games/half-life"}
 
 
 def test_missing_file_reads_empty(store: Path) -> None:
@@ -60,13 +60,13 @@ def test_overwrite_replaces_the_value(store: Path) -> None:
 
 
 def test_write_is_atomic(store: Path) -> None:
-    settings.set_value("game_dir", "/games/sven", store)
+    settings.set_value("game_dir", "/games/half-life", store)
     assert not list(store.parent.glob("*.tmp"))
 
 
 def test_creates_missing_parent_directories(tmp_path: Path) -> None:
     nested = tmp_path / "deep" / "deeper" / "settings.json"
-    settings.set_value("game_dir", "/games/sven", nested)
+    settings.set_value("game_dir", "/games/half-life", nested)
     assert nested.is_file()
 
 
@@ -133,19 +133,19 @@ def host_yaml(monkeypatch, tmp_path: Path) -> FakeSettings:
 
 
 def test_write_goes_to_host_yaml(host_yaml: FakeSettings) -> None:
-    where = settings.write_game_dir("/games/sven")
+    where = settings.write_game_dir("/games/half-life")
 
-    assert host_yaml.stored == "/games/sven"
+    assert host_yaml.stored == "/games/half-life"
     assert host_yaml.saved == 1
     assert "host.yaml" in where
 
 
 def test_write_survives_a_group_that_is_not_a_mapping(host_yaml: FakeSettings) -> None:
     """`settings.Group` raises on item access; attribute access is the real API."""
-    settings.write_game_dir("/games/sven")
+    settings.write_game_dir("/games/half-life")
 
-    assert host_yaml.stored == "/games/sven"
-    assert settings.read_game_dir() == "/games/sven"
+    assert host_yaml.stored == "/games/half-life"
+    assert settings.read_game_dir() == "/games/half-life"
 
 
 def test_read_prefers_host_yaml(host_yaml: FakeSettings) -> None:
@@ -171,8 +171,8 @@ def test_legacy_path_migrates_into_host_yaml(host_yaml: FakeSettings) -> None:
 
 def test_written_path_reads_back(host_yaml: FakeSettings) -> None:
     """The launcher checks exactly this before trusting the save."""
-    settings.write_game_dir("/games/sven")
-    assert settings.read_game_dir() == "/games/sven"
+    settings.write_game_dir("/games/half-life")
+    assert settings.read_game_dir() == "/games/half-life"
 
 
 def test_read_is_empty_when_nothing_is_stored(host_yaml: FakeSettings) -> None:
@@ -184,6 +184,6 @@ def test_write_still_works_without_the_settings_module(monkeypatch, tmp_path: Pa
     monkeypatch.setitem(sys.modules, "settings", None)
     monkeypatch.setattr(settings, "settings_path", lambda: tmp_path / "legacy.json")
 
-    settings.write_game_dir("/games/sven")
+    settings.write_game_dir("/games/half-life")
 
-    assert settings.read_game_dir() == "/games/sven"
+    assert settings.read_game_dir() == "/games/half-life"
