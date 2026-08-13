@@ -30,6 +30,9 @@ float g_next_poll = 0.0f;
 bool g_started = false;
 bool g_warned_mismatch = false;
 
+// Player-facing lines waiting for a frame safe enough to send them in.
+std::vector<std::string> g_notices;
+
 // `<game dir>/archipelago`. GET_GAME_DIR hands back the mod folder's name
 // ("hlap") and the engine's working directory is the install root, so a relative
 // path is both correct and the only thing that works on a client whose Half-Life
@@ -75,6 +78,60 @@ void Say(const std::string& text) {
     CLIENT_PRINTF(player->edict(), print_console, line.c_str());
 }
 
+void Notify(const std::string& text) {
+    // Queued, never sent from here. A notification is a user message, and the
+    // hooks that raise one run at moments the engine cannot take a message:
+    // `CBasePlayer::Killed`, `Spawn` before the client is fully in the server,
+    // the middle of a level load. Writing one there is
+    // `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t`, which takes
+    // the game down.
+    //
+    // The same rule as the deferred level change, for the same reason: a hook
+    // decides *what* happens, and StartFrame is where it actually happens.
+    g_notices.push_back(text);
+}
+
+void FlushNotices() {
+    if (g_notices.empty()) {
+        return;
+    }
+
+    CBasePlayer* player = Player();
+    const bool can_message =
+        player != nullptr && (player->pev->flags & FL_CLIENT) != 0;
+
+    for (const std::string& text : g_notices) {
+        // The server console always gets it, so nothing is lost when there is
+        // nobody to tell.
+        ALERT(at_console, "[AP] %s\n", text.c_str());
+        if (!can_message) {
+            continue;
+        }
+
+        const std::string line = "[AP] " + text + "\n";
+        CLIENT_PRINTF(player->edict(), print_console, line.c_str());
+
+        // HUD_PRINTTALK: the message area chat uses, bottom left, a few lines
+        // deep and gone after a few seconds. The client runs this through
+        // titles.txt first, so a leading '#' would be read as a lookup key and
+        // a '%' as a substitution. Neither belongs in a location name, but
+        // neither is impossible, and a name that silently vanished would be
+        // worse than an ugly one.
+        std::string hud = line;
+        for (char& c : hud) {
+            if (c == '%') {
+                c = ' ';
+            }
+        }
+        if (hud[0] == '#') {
+            hud.insert(hud.begin(), ' ');
+        }
+        ClientPrint(player->pev, HUD_PRINTTALK, hud.c_str());
+    }
+
+    g_notices.clear();
+}
+
 void Trace(const char* where) {
     if (!kTraceLoad) {
         return;
@@ -110,7 +167,7 @@ bool Live() {
         state.data_version != g_data.data_version) {
         if (!g_warned_mismatch) {
             g_warned_mismatch = true;
-            Say("This mod's checkdata.txt and the apworld that made your seed are "
+            Notify("This mod's checkdata.txt and the apworld that made your seed are "
                 "different builds, so checks are paused. Run /install in the "
                 "client.");
         }
@@ -139,6 +196,8 @@ void Startup() {
     g_bridge.Open(store);
     g_started = true;
     g_next_poll = 0.0f;
+    // A weapon Butterfingers threw on the floor went with the old level.
+    ClearWithheld();
 
     // The client answers a HELLO with a forced snapshot, so this is what gets
     // our unlocks back after any map load.
@@ -160,8 +219,11 @@ void RunFrame() {
     }
 
     // Deferred work first, and every frame. A queued level change must not wait
-    // on the poll clock, and the armour clamp has to be tighter than 0.2s or a
-    // charge panel would visibly fill the bar before we emptied it.
+    // on the poll clock, the armour clamp has to be tighter than 0.2s or a
+    // charge panel would visibly fill the bar before we emptied it, and
+    // anything a hook wanted to tell the player is sent from here rather than
+    // from the hook.
+    FlushNotices();
     RunDeferred();
     ClampArmour();
 
@@ -170,8 +232,19 @@ void RunFrame() {
     }
     g_next_poll = gpGlobals->time + kPollIntervalSeconds;
 
+    // What the player held before this poll, so the snapshot can be diffed for
+    // things worth announcing. Weapons and mission unlocks arrive in the
+    // snapshot rather than as events -- the snapshot is idempotent and events
+    // are one-shot -- so without this they arrive in total silence.
+    const std::set<std::string> had_items = State().held_items;
+    const std::set<std::string> had_chapters = State().open_chapters;
+    const bool had_goal = State().goal_open;
+    const std::string had_session = State().session;
+
     std::vector<PendingEvent> events;
     if (g_bridge.Poll(State(), events)) {
+        AnnounceArrivals(had_session, had_items, had_chapters, had_goal);
+
         for (const PendingEvent& event : events) {
             ApplyEvent(event);
             g_bridge.Acknowledge(event.seq);
@@ -190,6 +263,41 @@ void RunFrame() {
     // check would otherwise be unsendable. Cheap: it only looks at entities
     // within arm's reach.
     SweepNearbyPickups();
+}
+
+void AnnounceArrivals(const std::string& had_session,
+                      const std::set<std::string>& had_items,
+                      const std::set<std::string>& had_chapters,
+                      bool had_goal) {
+    const Snapshot& now = State();
+
+    // The first snapshot of a session is everything at once: every item the
+    // player has been sent all run, every mission opened so far. Announcing that
+    // would be a wall of text on every connect and every map load, saying
+    // nothing that `ap` does not say better.
+    if (had_session.empty() || had_session != now.session) {
+        return;
+    }
+
+    for (const std::string& item : now.held_items) {
+        if (had_items.find(item) == had_items.end()) {
+            Notify("Received: " + item);
+        }
+    }
+
+    for (const std::string& key : now.open_chapters) {
+        if (had_chapters.find(key) == had_chapters.end()) {
+            const Chapter* chapter = Data().ChapterByKey(key);
+            Notify(std::string(chapter ? chapter->name : key) +
+                   " unlocked. ap_warp to travel there.");
+        }
+    }
+
+    if (now.goal_open && !had_goal) {
+        const Chapter* goal = Data().ChapterByKey(Data().goal_chapter);
+        Notify(std::string(goal ? goal->name : "The finale") +
+               " is open. Finish it to win.");
+    }
 }
 
 void ApplyEvent(const PendingEvent& event) {
@@ -212,7 +320,7 @@ void ApplyEvent(const PendingEvent& event) {
                                        : event.payload.substr(split + 1);
         OnDeathLinkReceived(source, cause, event.stamp);
     } else if (event.kind == "CHAT") {
-        Say(event.payload);
+        Notify(event.payload);
     }
     // An unknown kind is a delivery from a newer client. ACKed anyway by the
     // caller: holding it would stall the client's whole event window.

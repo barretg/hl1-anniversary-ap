@@ -27,6 +27,16 @@ void QueueTrap(const std::string& trap_name);
 // Springs whatever is due, and hands back a Butterfingers victim's weapon.
 void RunTrapTimers();
 
+// Is this classname currently out of the player's hands because Butterfingers
+// took it? The loadout asks, because it is reapplied on every snapshot change --
+// which happens whenever a check is sent -- and would otherwise hand the weapon
+// straight back and leave the trap doing nothing at all.
+bool Withheld(const std::string& classname);
+
+// Forget any withheld weapon. Called on map load: the dropped copy is gone with
+// the level, and a player who arrives somewhere new should arrive whole.
+void ClearWithheld();
+
 // How long a trap waits after arriving, so the level has settled first.
 constexpr float kTrapDelaySeconds = 5.0f;
 

@@ -88,7 +88,7 @@ void SendCheck(long id) {
 
     const Location* location = Data().LocationById(id);
     if (location != nullptr) {
-        Say(std::string("Found: ") + location->name);
+        Notify(std::string("Found: ") + location->name);
     }
 }
 

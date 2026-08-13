@@ -138,12 +138,12 @@ void Warp() {
         return;
     }
 
-    Say(std::string("Warping to ") + chapter->name + ".");
+    Notify(std::string("Warping to ") + chapter->name + ".");
     RequestMap(chapter->maps.front());
 }
 
 void ToHub() {
-    Say("Returning to the hub.");
+    Notify("Returning to the hub.");
     RequestMap(kHubMap);
 }
 
@@ -216,7 +216,7 @@ bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map
         Wire().Send("GOAL", from->key);
     }
 
-    Say(from->name + " complete. Returning to the hub.");
+    Notify(from->name + " complete. Returning to the hub.");
     RequestMap(kHubMap);
     return true;
 }

@@ -87,9 +87,27 @@ target_compile_definitions(hl PRIVATE
 set_target_properties(hl PROPERTIES OUTPUT_NAME "hl" PREFIX "")
 
 if(MSVC)
-    # MSVC takes the exports from the SDK's own definition file.
+    # One export needs naming by hand, and only one. Everything the engine looks
+    # up -- GetEntityAPI, GetEntityAPI2, and every entity classname registered by
+    # LINK_ENTITY_TO_CLASS -- already carries `__declspec(dllexport)` through the
+    # SDK's own headers.
+    #
+    # `GiveFnptrsToDll` is the exception: eiface.h makes it `__stdcall` and does
+    # not mark it exported, because MSVC took the export from `dlls/hl.def`. That
+    # route works until it does not -- matching an undecorated name in a .def
+    # against a decorated `_GiveFnptrsToDll@8` is left to the linker's judgement,
+    # and it produced `LNK2001: unresolved external symbol GiveFnptrsToDll@8` on
+    # a build that differed only in its CRT. Naming both sides removes the
+    # judgement.
     set_target_properties(hl PROPERTIES
-        LINK_FLAGS "/DEF:\"${HLSDK_DIR}/dlls/hl.def\"")
+        LINK_FLAGS "/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8")
+
+    # Static CRT. A dll linked against the dynamic one needs the 32-bit VC++
+    # redistributable on the player's machine, and a player who does not have it
+    # gets `LoadLibrary failed (126)` -- ERROR_MOD_NOT_FOUND, with no clue which
+    # module is missing. Nobody installs a Half-Life mod expecting to chase a
+    # redistributable, so the runtime rides along inside the dll.
+    set_property(TARGET hl PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
 else()
     # Two headers spell the MSVC-only `_declspec`, each behind an `#ifndef`, so
     # defining them here is enough to build them with a compiler that has never
@@ -106,14 +124,34 @@ else()
     set_source_files_properties(${SDK_C_SOURCES} PROPERTIES
         COMPILE_OPTIONS "-std=gnu17")
 
+    # NOTE: this build cannot save or load, which in GoldSrc also means it cannot
+    # cross a level transition -- transitions run through the same save/restore
+    # machinery. The engine maps an entity's think, touch and use functions to
+    # names through this dll's export table, and with a MinGW-built dll it fails
+    # to: saving floods the console with `Can't find address:`, writes those
+    # functions as empty strings, and loading the result dies on
+    # `PF_precache_model_I: Bad string ''`.
+    #
+    # `-Wl,--export-all-symbols` was tried and is worse: it takes the export
+    # table from 978 names to 9,976, and the engine resolves map entities by
+    # `GetProcAddress(dll, classname)`, so burying those among thousands of
+    # unrelated symbols crashes it on map load instead. `-fno-ipa-icf` alone
+    # changed nothing.
+    #
+    # MSVC is the answer, and the branch above is written for it. Keep this
+    # branch: it built, loaded and ran the whole hook chain, which is what proved
+    # the design, and it is a useful second opinion if MSVC ever misbehaves.
+
     # Fully static, because a player's Half-Life folder has none of MinGW's
     # runtime in it. `-static-libgcc -static-libstdc++` alone is not enough: the
     # posix-threads build of gcc still imports libwinpthread-1.dll, and the
     # engine's report of that is `LoadLibrary failed (126)` with no name --
     # error 126 is ERROR_MOD_NOT_FOUND, and it means a dependency, not this dll.
-    # -s strips the symbols, 4.9 MB down to about 2.7.
+    #
+    # Not stripped: `-s` would take the symbol table with it, and while exports
+    # survive stripping, keeping the symbols makes a crash address nameable.
     target_link_options(hl PRIVATE
-        -static -static-libgcc -static-libstdc++ -s -Wl,--enable-stdcall-fixup)
+        -static -static-libgcc -static-libstdc++ -Wl,--enable-stdcall-fixup)
     # See the comments in hl_mingw.def: GNU ld cannot parse the SDK's own.
     target_sources(hl PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/hl_mingw.def")
 endif()

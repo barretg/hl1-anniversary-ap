@@ -13,6 +13,7 @@
 #include "ap_locations.h"
 #include "ap_main.h"
 #include "ap_state.h"
+#include "ap_traps.h"
 
 namespace ap {
 namespace {
@@ -32,6 +33,12 @@ struct Granting {
 
 void Give(CBasePlayer* player, const std::string& classname) {
     if (player->HasNamedPlayerItem(classname.c_str())) {
+        return;
+    }
+    // Butterfingers threw this one on the floor and it is not owed back yet.
+    // Without this the loadout would return it on the next snapshot change,
+    // which is any check the player sends -- seconds, usually.
+    if (Withheld(classname)) {
         return;
     }
     Granting guard;
@@ -116,9 +123,10 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
         if (gpGlobals->time - last_said > 3.0f) {
             last_said = gpGlobals->time;
             const std::string item = Data().ItemGating(classname);
-            Say(item.empty() ? std::string("You cannot take that yet.")
-                             : std::string("You need the ") + item +
-                                   " from the multiworld before you can take that.");
+            Notify(item.empty()
+                       ? std::string("You cannot take that yet.")
+                       : std::string("You need the ") + item +
+                             " from the multiworld before you can take that.");
         }
     }
     return allowed;
@@ -193,7 +201,7 @@ void GrantFiller(CBasePlayer* player, const std::string& item_name) {
         }
     }
 
-    Say(std::string("Received: ") + item_name);
+    Notify(std::string("Received: ") + item_name);
 }
 
 }  // namespace ap

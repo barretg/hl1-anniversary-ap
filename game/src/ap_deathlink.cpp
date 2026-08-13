@@ -74,7 +74,7 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
         char line[96];
         std::snprintf(line, sizeof(line),
                       "Death forgiven. %d more before one goes out.", remaining);
-        Say(line);
+        Notify(line);
     } else if (State().death_link) {
         // The allowance runs again from the top, so a run does not become one
         // long unbroken chain after the first death that gets through.
@@ -110,7 +110,7 @@ void OnDeathLinkReceived(const std::string& source, const std::string& cause,
         return;
     }
 
-    Say(source + " died to " + cause + ".");
+    Notify(source + " died to " + cause + ".");
     player->TakeDamage(player->pev, player->pev, player->pev->health + 100.0f,
                        DMG_GENERIC | DMG_ALWAYSGIB);
 }

@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <set>
 #include <string>
 
 class CBaseEntity;
@@ -56,6 +57,14 @@ void RunFrame();
 // a kind we do not recognise: holding one would stall the client's whole window.
 void ApplyEvent(const PendingEvent& event);
 
+// Tell the player what the newest snapshot brought. Weapons and mission unlocks
+// live in the snapshot rather than in events, so a diff against what was held
+// before the poll is the only place they can be noticed.
+void AnnounceArrivals(const std::string& had_session,
+                      const std::set<std::string>& had_items,
+                      const std::set<std::string>& had_chapters,
+                      bool had_goal);
+
 // The single player. Null between map load and ClientPutInServer, which is most
 // of what can go wrong in here, so every caller checks.
 CBasePlayer* Player();
@@ -85,9 +94,22 @@ bool Live();
 // amount of Half-Life to be able to play without a multiworld.
 bool Gated();
 
-// Player-facing text. Console rather than centre-print: single-player has no
-// chat worth speaking of and the console is where this project talks.
+// Console text: the answer to a command the player typed. Lists go here and
+// nowhere else -- `ap` is eighteen lines and would bury the screen.
 void Say(const std::string& text);
+
+// Something happened: a check was found, an item arrived, a pickup was refused.
+// Goes to the HUD's message area, where it is readable without opening the
+// console, and to the console as well so there is a log of it afterwards.
+//
+// Queued rather than sent. A user message written from inside `Killed`, from
+// `Spawn` before the client is in the server, or mid-level-load is
+// `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t` and a dead game.
+// Hooks decide what to say; `FlushNotices` says it.
+void Notify(const std::string& text);
+
+// Send everything `Notify` has queued. StartFrame only.
+void FlushNotices();
 
 // A breadcrumb in `hlap/archipelago/ap_boot.txt`, flushed as it is written.
 //

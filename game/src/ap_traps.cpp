@@ -65,21 +65,46 @@ void SpawnAround(CBasePlayer* player, const char* classname, int count) {
 
 void SpringNow(CBasePlayer* player, const std::string& name) {
     if (name == "Scientist Trap") {
-        Say("Scientists!");
+        Notify("Scientists!");
         SpawnAround(player, "monster_scientist", kTrapSpawnCount);
     } else if (name == "Headcrab Trap") {
-        Say("Headcrabs!");
+        Notify("Headcrabs!");
         SpawnAround(player, "monster_headcrab", kTrapSpawnCount);
     } else if (name == "Butterfingers Trap") {
         CBasePlayerItem* held = player->m_pActiveItem;
         if (held == nullptr) {
             return;  // nothing in hand; the trap is a no-op rather than a debt
         }
-        g_owed_weapon = STRING(held->pev->classname);
-        g_owed_at = gpGlobals->time + kButterfingersReturnSeconds;
+        const std::string classname(STRING(held->pev->classname));
+
+        // Take it out of the inventory, then throw a fresh copy on the floor in
+        // front of the player. `CBasePlayer::DropPlayerItem` cannot be used: it
+        // begins `if ( !g_pGameRules->IsMultiplayer() ) return;`, so in
+        // single-player it does nothing at all.
+        //
+        // A dropped weapon can be walked back onto, which is the point -- the
+        // trap is meant to be a scramble, not a timed confiscation. Collecting
+        // it goes through the same gate as any pickup and passes, because the
+        // multiworld did send you this weapon.
         player->RemovePlayerItem(held);
         held->Kill();
-        Say("Butterfingers. The suit will reissue it shortly.");
+
+        UTIL_MakeVectors(player->pev->v_angle);
+        const Vector at = player->pev->origin + gpGlobals->v_forward * 48 +
+                          Vector(0, 0, 16);
+        CBaseEntity* dropped =
+            CBaseEntity::Create((char*)classname.c_str(), at, player->pev->angles);
+        if (dropped != nullptr) {
+            // A gentle toss. Hard enough to land somewhere else, soft enough
+            // that it does not go over the railing every time.
+            dropped->pev->velocity =
+                gpGlobals->v_forward * 180 + Vector(0, 0, 160);
+        }
+
+        g_owed_weapon = classname;
+        g_owed_at = gpGlobals->time + kButterfingersReturnSeconds;
+        Notify("Butterfingers! Pick it back up, or the suit reissues it in "
+               "half a minute.");
     }
     // An unknown trap name is a trap from a newer apworld. Nothing happens,
     // which is the right outcome: the alternative is guessing.
@@ -133,14 +158,32 @@ void RunTrapTimers() {
         }
     }
 
-    if (!g_owed_weapon.empty() && gpGlobals->time >= g_owed_at) {
+    if (g_owed_weapon.empty()) {
+        return;
+    }
+
+    // Found it again. Nothing owed, and no announcement: picking your own
+    // weapon up off the floor speaks for itself.
+    if (player != nullptr && player->HasNamedPlayerItem(g_owed_weapon.c_str())) {
+        g_owed_weapon.clear();
+        return;
+    }
+
+    if (gpGlobals->time >= g_owed_at) {
         g_owed_weapon.clear();
         if (player != nullptr) {
             // Through the loadout rather than by hand, so the reissue obeys the
             // same gate everything else does.
             ApplyLoadout(player);
+            Notify("The suit reissues your weapon.");
         }
     }
 }
+
+bool Withheld(const std::string& classname) {
+    return !g_owed_weapon.empty() && g_owed_weapon == classname;
+}
+
+void ClearWithheld() { g_owed_weapon.clear(); }
 
 }  // namespace ap
