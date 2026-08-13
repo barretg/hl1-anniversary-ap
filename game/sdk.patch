@@ -1,4 +1,4 @@
-﻿diff --git a/common/mathlib.h b/common/mathlib.h
+diff --git a/common/mathlib.h b/common/mathlib.h
 index c765eb5..8afc4de 100644
 --- a/common/mathlib.h
 +++ b/common/mathlib.h
@@ -92,7 +92,7 @@ index 3fab62a..edf4f60 100644
  	if ( pPlayer->pev->deadflag != DEAD_NO )
  		return FALSE;
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..aced078 100644
+index 85b67c4..19b7b25 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -124,14 +124,16 @@ index 85b67c4..aced078 100644
  		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
  			 ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
  		{
-@@ -3085,6 +3093,10 @@ void CBasePlayer::Spawn( void )
+@@ -3085,6 +3093,12 @@ void CBasePlayer::Spawn( void )
  	m_flNextChatTime = gpGlobals->time;
  
  	g_pGameRules->PlayerSpawn( this );
 +
-+	// Archipelago: reapply the seed's loadout. Nothing is held across a
-+	// map load or a quickload, so this is where it all comes back.
-+	ap::ApplyLoadout( this );
++	// Archipelago: ask for the seed's loadout. Nothing is held across a map
++	// load or a quickload, so this is where it all comes back -- but not from
++	// here: handing a weapon over sends a user message, and one written from
++	// inside Spawn is SZ_GetSpace and a dead game. StartFrame applies it.
++	ap::RequestLoadout();
  }
  
  

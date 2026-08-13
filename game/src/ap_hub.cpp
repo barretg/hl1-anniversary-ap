@@ -47,6 +47,42 @@ std::string ArgumentTail(int from) {
     return Trim(text);
 }
 
+// What `ap_warp` was asked for: a mission, and optionally which part of it.
+//
+// `unforeseen 6` is the mission named `unforeseen`, part 6. The part is only
+// ever a trailing number with something in front of it, so `ap_warp 5` stays
+// mission 5 rather than becoming a part of nothing, and `ap_warp 5 3` is
+// mission 5 part 3.
+struct WarpRequest {
+    std::string where;
+    int part = 0;  // 1-based; 0 means "the start of the mission"
+};
+
+bool IsNumber(const std::string& text) {
+    return !text.empty() &&
+           text.find_first_not_of("0123456789") == std::string::npos;
+}
+
+WarpRequest ParseWarp(const std::string& text) {
+    WarpRequest request;
+    request.where = text;
+
+    const size_t space = text.find_last_of(" \t");
+    if (space == std::string::npos) {
+        return request;  // one word: all of it is the mission
+    }
+
+    const std::string tail = Trim(text.substr(space + 1));
+    const std::string head = Trim(text.substr(0, space));
+    if (head.empty() || !IsNumber(tail)) {
+        return request;
+    }
+
+    request.where = head;
+    request.part = static_cast<int>(ParseLong(tail, 0));
+    return request;
+}
+
 const char* StatusOf(const Chapter& chapter) {
     const Snapshot& state = State();
     if (state.ChapterExcluded(chapter.key)) {
@@ -73,15 +109,18 @@ void ListMissions() {
                       chapter.name.c_str(), StatusOf(chapter));
         Say(line);
     }
-    Say("ap_warp <number or name> to travel. ap_hub to come back.");
+    Say("ap_warp <number or name> to travel, plus a part number to return to "
+        "somewhere you have been. ap_hub to come back.");
 }
 
 void Help() {
-    Say("ap                       every mission and its unlock status");
-    Say("ap_warp <number or name> travel to an unlocked mission");
-    Say("ap_hub                   return to the hub");
-    Say("ap_tracker [map]         locations found and still out there");
-    Say("ap_find [text]           point at the nearest unfound check");
+    Say("ap                            every mission and its unlock status");
+    Say("ap_warp <number or name>      travel to an unlocked mission");
+    Say("ap_warp <mission> <part>      to a part of it you have already reached");
+    Say("ap_hub                        return to the hub");
+    Say("ap_tracker [map]              locations found and still out there");
+    Say("ap_find [text]                point at the nearest unfound check");
+    Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
 }
 
 void Warp() {
@@ -91,16 +130,25 @@ void Warp() {
     }
     const std::string argument = ArgumentTail(1);
     if (argument.empty()) {
-        Say("Usage: ap_warp <number or name>. ap lists them.");
+        Say("Usage: ap_warp <number or name> [part]. ap lists them.");
         return;
     }
 
+    const WarpRequest request = ParseWarp(argument);
+
     const Chapter* chapter = nullptr;
-    const long index = ParseLong(argument, -1);
-    if (index >= 0 && argument.find_first_not_of("0123456789") == std::string::npos) {
-        chapter = Data().ChapterByIndex(static_cast<int>(index));
+    if (IsNumber(request.where)) {
+        chapter = Data().ChapterByIndex(
+            static_cast<int>(ParseLong(request.where, -1)));
     }
     if (chapter == nullptr) {
+        chapter = Data().ChapterByName(request.where);
+    }
+    // A trailing number that turned out not to be a part -- `ap_warp c2a5 3`
+    // where `c2a5 3` is nothing but `c2a5` is something -- has already been
+    // handled, but the reverse needs a second look: `ap_warp 1 4` with no
+    // mission 1 should not silently become a search for "1 4".
+    if (chapter == nullptr && request.part > 0) {
         chapter = Data().ChapterByName(argument);
     }
     if (chapter == nullptr) {
@@ -138,8 +186,49 @@ void Warp() {
         return;
     }
 
-    Notify(std::string("Warping to ") + chapter->name + ".");
-    RequestMap(chapter->maps.front());
+    if (request.part <= 1) {
+        Notify(std::string("Warping to ") + chapter->name + ".");
+        RequestMap(chapter->maps.front());
+        return;
+    }
+
+    // --- a part of a mission --------------------------------------------
+
+    const int parts = static_cast<int>(chapter->maps.size());
+    if (parts == 1) {
+        Say(chapter->name + " is one map; there are no parts to warp to.");
+        return;
+    }
+    if (request.part > parts) {
+        char line[128];
+        std::snprintf(line, sizeof(line), "%s has %d parts.",
+                      chapter->name.c_str(), parts);
+        Say(line);
+        return;
+    }
+
+    const std::string& map_name = chapter->maps[request.part - 1];
+
+    // Only somewhere already walked to. A partial warp is a way *back* -- after
+    // a death, a reload, or an errand in the hub -- and never a way past the
+    // half of a mission you have not played: the checks in a part you skipped to
+    // would be free, and the fastest route through a mission would be to warp to
+    // its last part.
+    if (!Visited(map_name)) {
+        char line[160];
+        std::snprintf(line, sizeof(line),
+                      "You have not reached %s part %d yet. Warp to the mission "
+                      "and walk there.",
+                      chapter->name.c_str(), request.part);
+        Say(line);
+        return;
+    }
+
+    char line[128];
+    std::snprintf(line, sizeof(line), "Warping to %s, part %d.",
+                  chapter->name.c_str(), request.part);
+    Notify(line);
+    RequestMap(map_name);
 }
 
 void ToHub() {
@@ -209,14 +298,21 @@ bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map
         return false;  // inside a mission: retail's own transition, untouched
     }
 
-    // A mission boundary. The arrival check for the mission's last map has
-    // already fired; this is the moment the mission is over.
-    Wire().Send("COMPLETE", from->key);
-    if (from->is_goal) {
-        Wire().Send("GOAL", from->key);
+    // Leaving the mission. Whether that means *finishing* it depends on which
+    // way the player walked: Half-Life's transitions are two-way, and walking
+    // back through the door you came in lands you in the previous mission. That
+    // has to be caught -- its checks would fire in a mission that may not even
+    // be unlocked -- but it is not an achievement.
+    const bool forwards = to != nullptr && to->index > from->index;
+
+    if (forwards) {
+        SendChapterComplete(*from);
+        Notify(from->name + " complete. Returning to the hub.");
+    } else {
+        Notify(std::string("That way leads out of ") + from->name +
+               ". Returning to the hub.");
     }
 
-    Notify(from->name + " complete. Returning to the hub.");
     RequestMap(kHubMap);
     return true;
 }

@@ -59,8 +59,19 @@ struct Chapter {
     std::vector<std::string> maps;
     bool is_goal = false;
 
+    // How this mission is finished.
+    //
+    // Normally false: the mission ends when the player walks on into the next
+    // one, and that transition is intercepted. Arriving on the last map in the
+    // list is *not* the same thing -- `c1a1d` is last in Unforeseen Consequences
+    // only because it is furthest from the start, and it is a dead-end side room
+    // the player walks back out of.
+    //
+    // True only for the mission nothing changelevels out of, the finale, where
+    // arriving on the last map is the only signal there is and the right one.
+    bool complete_on_arrival = false;
+
     bool HasMap(const std::string& map) const;
-    // Finishing is observed by arriving on the last map of the mission.
     bool IsLastMap(const std::string& map) const;
 };
 
@@ -86,7 +97,12 @@ public:
     // a deathmatch map, the hub, or the hazard course.
     const Chapter* ChapterOfMap(const std::string& map) const;
     const Chapter* ChapterByKey(const std::string& key) const;
-    // By index as `ap_warp 7` takes it, or by a case-insensitive name fragment.
+    // By index as `ap_warp 7` takes it, or by name.
+    //
+    // Name matching ignores case and punctuation entirely, and will take a
+    // chapter key or any of its map names: `Gonarch's Lair`, `gonarchs lair`,
+    // `gonarch` and `c4a2` are all the same request. A player typing a mission
+    // name is not transcribing it.
     const Chapter* ChapterByIndex(int index) const;
     const Chapter* ChapterByName(const std::string& text) const;
 

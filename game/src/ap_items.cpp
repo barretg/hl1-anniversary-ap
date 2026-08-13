@@ -24,6 +24,9 @@ namespace {
 // that exists to refuse the map's copy of it.
 bool g_granting = false;
 
+// A spawn asked for the loadout and StartFrame has not applied it yet.
+bool g_loadout_wanted = false;
+
 const char* const kSuitItem = "HEV Suit";
 
 struct Granting {
@@ -41,8 +44,21 @@ void Give(CBasePlayer* player, const std::string& classname) {
     if (Withheld(classname)) {
         return;
     }
-    Granting guard;
-    player->GiveNamedItem(classname.c_str());
+
+    {
+        Granting guard;
+        player->GiveNamedItem(classname.c_str());
+    }
+
+    // `GiveNamedItem` cannot report failure, and a half-added weapon is not
+    // obvious from the outside: `CBasePlayerWeapon::AddToPlayer` sets the HUD's
+    // weapon bit before `AddPlayerItem` decides whether to keep the item, so a
+    // failed grant looks like a weapon that is visible, unselectable, and gone
+    // again once the HUD catches up. Worse, the next loadout pass would see no
+    // item, grant again, and spawn another entity for the same weapon.
+    if (!player->HasNamedPlayerItem(classname.c_str())) {
+        Trace(("  grant failed: " + classname).c_str());
+    }
 }
 
 bool IsStartingWeapon(const std::string& classname) {
@@ -113,7 +129,14 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
     // Walking up to a weapon is the check whether or not the multiworld has sent
     // it. Refusing it and never reporting it is how a location becomes
     // unsendable.
-    OnWeaponCollected(player, classname);
+    //
+    // Unless we are the ones handing it over: `GiveNamedItem` spawns an entity
+    // and touches the player with it, so a granted weapon arrives through this
+    // same path. Counting that as finding one would fire a weapon's check the
+    // moment the multiworld sent it, in whatever map the player happened to be.
+    if (!g_granting) {
+        OnWeaponCollected(player, classname);
+    }
 
     const bool allowed = CanCollect(player, classname);
     if (!allowed) {
@@ -132,12 +155,31 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
     return allowed;
 }
 
-void ApplyLoadout(CBasePlayer* player) {
+void RequestLoadout() {
     static bool first = true;
     if (first) {
         first = false;
-        Trace("CBasePlayer::Spawn: ap::ApplyLoadout");
+        Trace("CBasePlayer::Spawn: ap::RequestLoadout");
     }
+    g_loadout_wanted = true;
+}
+
+void RunLoadout() {
+    if (!g_loadout_wanted) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    // Wait for a player who can actually be sent a message. On the frame after
+    // a respawn there may not be one yet, and the whole point of deferring is
+    // not to write to the client before it can hear us.
+    if (player == nullptr || (player->pev->flags & FL_CLIENT) == 0) {
+        return;
+    }
+    g_loadout_wanted = false;
+    ApplyLoadout(player);
+}
+
+void ApplyLoadout(CBasePlayer* player) {
     if (player == nullptr || !Data().Loaded()) {
         return;
     }

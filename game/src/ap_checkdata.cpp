@@ -75,6 +75,9 @@ bool CheckData::Load(const std::string& path) {
             chapter.name = f[3];
             chapter.maps = Split(f[4], ',');
             chapter.is_goal = ParseBool(f[5]);
+            // Format 2. Absent in an older file, which reads as false and gives
+            // the old behaviour of never completing on arrival.
+            chapter.complete_on_arrival = f.size() >= 7 && ParseBool(f[6]);
             chapters.push_back(chapter);
         } else if (record == "L" && f.size() >= 6) {
             Location location;
@@ -144,21 +147,56 @@ const Chapter* CheckData::ChapterByIndex(int index) const {
     return nullptr;
 }
 
+namespace {
+
+// Letters and digits only, lowercased. A player typing a mission name is not
+// transcribing it: `gonarchs lair` and `Gonarch's Lair` are the same request,
+// and so are `weve got hostiles` and `"We've Got Hostiles"`.
+std::string Simplify(const std::string& text) {
+    std::string out;
+    for (char c : text) {
+        if (c >= 'A' && c <= 'Z') {
+            out.push_back(static_cast<char>(c - 'A' + 'a'));
+        } else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
+
+}  // namespace
+
 const Chapter* CheckData::ChapterByName(const std::string& text) const {
-    const std::string wanted = Lower(Trim(text));
+    const std::string wanted = Simplify(text);
     if (wanted.empty()) {
         return nullptr;
     }
-    // An exact name first, so "Xen" does not resolve to whichever mission merely
+
+    // An exact name first, so `Xen` does not resolve to whichever mission merely
     // contains those letters.
     for (const Chapter& chapter : chapters) {
-        if (Lower(chapter.name) == wanted) {
+        if (Simplify(chapter.name) == wanted) {
             return &chapter;
         }
     }
+
+    // Then a chapter key or one of its map names, which is what someone reading
+    // the console output or the data files will reach for: `c1a0c`, `c2a5`.
     for (const Chapter& chapter : chapters) {
-        if (Lower(chapter.name).find(wanted) != std::string::npos ||
-            chapter.key == wanted) {
+        if (Simplify(chapter.key) == wanted) {
+            return &chapter;
+        }
+        for (const std::string& map : chapter.maps) {
+            if (Simplify(map) == wanted) {
+                return &chapter;
+            }
+        }
+    }
+
+    // Finally anything containing what was typed, so `surface` and `gonarch`
+    // work. First match in campaign order wins.
+    for (const Chapter& chapter : chapters) {
+        if (Simplify(chapter.name).find(wanted) != std::string::npos) {
             return &chapter;
         }
     }

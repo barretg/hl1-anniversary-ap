@@ -254,6 +254,43 @@ class LocationBuilder:
         raise RuntimeError(f"could not make {name!r} unique")
 
 
+def changelevel_targets(entities: list[dict[str, str]]) -> set[str]:
+    """Every map this one can hand the player to, from its `trigger_changelevel`s."""
+    return {
+        entity["map"]
+        for entity in entities
+        if entity.get("classname", "") == "trigger_changelevel" and entity.get("map")
+    }
+
+
+def has_forward_exit(
+    chapter: dict, chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]],
+) -> bool:
+    """Can this mission be left by walking on into a later one?
+
+    Every mission but the last can: that transition is the moment it is over, and
+    the game intercepts it. The last one cannot, which is why it needs a
+    different rule -- see `complete_on_arrival` below.
+
+    "Later" matters. Half-Life's transitions are two-way, so a player can walk
+    back through the door they came in and land in the previous mission. That is
+    leaving the mission too, but it is not finishing it.
+    """
+    index_of = {
+        map_name: c["index"] for c in chapters for map_name in c["maps"]
+    }
+    own = set(chapter["maps"])
+
+    for map_name in chapter["maps"]:
+        for target in changelevel_targets(entities[map_name]):
+            if target in own:
+                continue
+            if index_of.get(target, -1) > chapter["index"]:
+                return True
+    return False
+
+
 def earliest_map_with(
     chapters: list[dict], entities: dict[str, list[dict[str, str]]],
     classnames: list[str],
@@ -493,6 +530,15 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                  "map": chapter["maps"][-1]},
             )
 
+    # Every id must exist before the fingerprint is taken, and item ids are
+    # assigned here. Built into a local first for that reason alone: with the
+    # call left inline in the dict below, Python evaluates the values in order,
+    # `data_version` came out of a registry that had locations but no items yet,
+    # and the version therefore changed on the second run of an unchanged
+    # generator -- a mismatch that pauses checks in game and reads as data
+    # corruption rather than as a bug in this file.
+    items = build_items(chapters, registry)
+
     return {
         "data_version": registry.fingerprint(),
         "goal_chapter": GOAL_CHAPTER,
@@ -506,10 +552,25 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 "index": chapter["index"],
                 "is_goal": chapter["key"] == GOAL_CHAPTER,
                 "gates": CHAPTER_GATES.get(chapter["key"], {}),
+                # How the game knows this mission is over.
+                #
+                # Normally: the player walks on into the next mission, and that
+                # transition is intercepted. Arriving on the mission's last map
+                # is *not* the same thing -- `c1a1d` is the last map of
+                # Unforeseen Consequences only because it is the furthest from
+                # the start, and it is a dead-end side room that the player
+                # visits and walks back out of.
+                #
+                # The exception is the mission with nowhere further to go, which
+                # is the finale: nothing changelevels out of `c5a1`, so arriving
+                # there is the only signal there is, and it is the right one.
+                "complete_on_arrival": not has_forward_exit(
+                    chapter, chapters, entities
+                ),
             }
             for chapter in chapters
         ],
-        "items": build_items(chapters, registry),
+        "items": items,
         "locations": builder.locations,
         "requirement_groups": REQUIREMENT_GROUPS,
         "starting_weapons": STARTING_WEAPONS,

@@ -25,9 +25,21 @@ class CBaseEntity;
 
 namespace ap {
 
-// Give the player exactly what the seed says they should have. Called from
-// CBasePlayer::Spawn, and again after anything that strips weapons -- c2a3d
-// (Apprehension) has a player_weaponstrip in the middle of a mission.
+// Ask for the loadout to be applied. This is what `CBasePlayer::Spawn` calls.
+//
+// Never applied on the spot. Handing a weapon over sends a `WeapPickup` user
+// message, and a user message written from inside `Spawn` -- before the client
+// is in the server -- is
+// `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t` and a dead game.
+// Typing `kill` at the console is enough to reach it.
+void RequestLoadout();
+
+// Apply it, if one was asked for and the player can receive messages.
+// StartFrame only.
+void RunLoadout();
+
+// Give the player exactly what the seed says they should have. Safe to call from
+// anywhere `RunLoadout` would be: StartFrame and below, never from a hook.
 void ApplyLoadout(CBasePlayer* player);
 
 // May this pickup be collected? False refuses it, leaving it in the world.

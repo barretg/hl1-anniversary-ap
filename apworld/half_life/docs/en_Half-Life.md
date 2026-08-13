@@ -33,14 +33,15 @@ traps.
 
 ## What does another world's item look like in Half-Life?
 
-There is no world model for it. Sending a location prints a line in the game
-telling you what you found and who it was for.
+There is no world model for it: locations are places and things that were already
+in Half-Life. Making a check prints a line in the game naming what you found.
 
 ## When the player receives an item, what happens?
 
-A weapon or mission unlock is applied silently and takes effect immediately: the
-mission becomes enterable and the weapon becomes collectable. Filler is granted
-where you stand. A trap springs a few seconds after the level has settled.
+It is announced in the message area at the bottom left, and takes effect
+immediately: a mission becomes enterable, a weapon becomes collectable and is put
+in your hands, filler is granted where you stand. A trap springs a few seconds
+after the level has settled.
 
 ## What is the goal?
 

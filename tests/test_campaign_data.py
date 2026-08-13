@@ -74,6 +74,58 @@ def test_the_goal_chapter_has_no_unlock_item(campaign: dict) -> None:
     assert len(chapter_items) == len(campaign["chapters"]) - 1
 
 
+def test_only_the_finale_completes_on_arrival(campaign: dict) -> None:
+    """Every other mission is finished by walking on out of it.
+
+    Arriving on a mission's last map is not finishing it: the map list is in
+    reach order, and the last entry is often a dead end the player walks back out
+    of -- `c1a1d` in Unforeseen Consequences is a side room, and treating arrival
+    there as completion handed the mission over halfway through.
+
+    The finale is the exception because nothing changelevels out of `c5a1`, so
+    arriving is the only signal there is. If this ever fails for another chapter,
+    that chapter has no forward exit and the map table is wrong.
+    """
+    arrival = [c["key"] for c in campaign["chapters"] if c["complete_on_arrival"]]
+    assert arrival == [campaign["goal_chapter"]]
+
+
+def test_checkdata_carries_the_completion_rule(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """The game reads this off the `C` record and has no other way to know."""
+    generated = {r[2]: r[6] for r in checkdata if r[0] == "C" and len(r) >= 7}
+    expected = {
+        c["key"]: "1" if c["complete_on_arrival"] else "0"
+        for c in campaign["chapters"]
+    }
+    assert generated == expected, "run: python tools/gen_checkdata.py"
+
+
+def test_the_data_version_covers_item_ids(campaign: dict) -> None:
+    """The fingerprint has to be taken after every id is assigned.
+
+    It was not: `data_version` was computed while the registry held locations but
+    no items, so an unchanged generator produced a different version on its
+    second run. In game that reads as the apworld and the mod being different
+    builds, and checks stop.
+    """
+    import json as _json
+    from build_campaign_data import IdRegistry
+
+    registry = IdRegistry(REPO / "apworld" / "half_life" / "data" / "ids.json")
+    assert campaign["data_version"] == registry.fingerprint()
+
+    # And the registry really does contain the item ids, so the test above is
+    # not passing on an empty coincidence.
+    ids = _json.loads(
+        (REPO / "apworld" / "half_life" / "data" / "ids.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert len(ids["items"]) == len(campaign["items"])
+
+
 def test_the_intro_chapter_is_a_real_mission(campaign: dict) -> None:
     """`exclude_intro_missions` drops it by key, so a stale key drops nothing."""
     keys = {c["key"] for c in campaign["chapters"]}

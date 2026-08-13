@@ -224,6 +224,7 @@ void RunFrame() {
     // anything a hook wanted to tell the player is sent from here rather than
     // from the hook.
     FlushNotices();
+    RunLoadout();
     RunDeferred();
     ClampArmour();
 

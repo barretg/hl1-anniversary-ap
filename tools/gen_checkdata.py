@@ -27,12 +27,17 @@ OUT_PATH = (
     / "archipelago" / "checkdata.txt"
 )
 
-# 1 is this project's first format. It is not the Sven Co-op world's format 3
+# 1 was this project's first format. It is not the Sven Co-op world's format 3
 # with records removed: chapters carry no campaign, chargers are keyed by
 # position rather than brush model, and there was never a released seed to keep
-# reading. A future hub map adds a `P|<button targetname>|<chapter key>` record
-# and nothing else changes.
-FORMAT_VERSION = 1
+# reading.
+#
+# 2 adds the seventh field on `C`, `complete on arrival`. Additive, so a reader
+# of format 1 sees a chapter record it understands and ignores the rest.
+#
+# A future hub map adds a `P|<button targetname>|<chapter key>` record and
+# nothing else changes.
+FORMAT_VERSION = 2
 
 
 def render(campaign: dict) -> str:
@@ -41,7 +46,7 @@ def render(campaign: dict) -> str:
         "# Record types:",
         "#   V|<format version>",
         "#   G|<goal chapter key>",
-        "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>",
+        "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>",
         "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
@@ -56,12 +61,16 @@ def render(campaign: dict) -> str:
 
     for chapter in campaign["chapters"]:
         lines.append(
-            "C|{index}|{key}|{name}|{maps}|{goal}".format(
+            "C|{index}|{key}|{name}|{maps}|{goal}|{arrival}".format(
                 index=chapter["index"],
                 key=chapter["key"],
                 name=chapter["name"],
                 maps=",".join(chapter["maps"]),
                 goal=1 if chapter["is_goal"] else 0,
+                # 1 where finishing means arriving on the last map, which is
+                # only true of the mission nothing changelevels out of. Every
+                # other mission is finished by walking on into the next one.
+                arrival=1 if chapter.get("complete_on_arrival") else 0,
             )
         )
 

@@ -92,6 +92,20 @@ void SendCheck(long id) {
     }
 }
 
+bool Visited(const std::string& map_name) {
+    for (const Location& location : Data().locations) {
+        if (location.type != TriggerType::MapReached) continue;
+        if (location.map != map_name) continue;
+
+        // Either the server has it -- which survives a restart, a reconnect and
+        // a new session -- or we sent it since this map loaded and the snapshot
+        // has not caught up yet.
+        return State().checked.find(location.id) != State().checked.end() ||
+               g_sent.find(location.id) != g_sent.end();
+    }
+    return false;  // no arrival check for it, so no record of ever being there
+}
+
 void OnMapStart(const std::string& map_name) {
     if (map_name != g_map) {
         g_sent.clear();
@@ -104,24 +118,33 @@ void OnMapStart(const std::string& map_name) {
     }
 
     for (const Location& location : Data().locations) {
-        if (location.map != map_name) {
-            continue;
-        }
-        if (location.type == TriggerType::MapReached) {
-            SendCheck(location.id);
-        } else if (location.type == TriggerType::ChapterComplete &&
-                   chapter->IsLastMap(map_name)) {
+        if (location.map == map_name && location.type == TriggerType::MapReached) {
             SendCheck(location.id);
         }
     }
 
-    if (chapter->IsLastMap(map_name)) {
-        // The check is the location; this is the mission itself, which is what
-        // the client counts toward the finale's seal.
-        Wire().Send("COMPLETE", chapter->key);
-        if (chapter->is_goal) {
-            Wire().Send("GOAL", chapter->key);
+    // Arriving finishes a mission only where there is nowhere further to walk:
+    // the finale. Everywhere else the mission is over when the player leaves it
+    // forwards, which `InterceptChangeLevel` sees. Arriving on "the last map"
+    // would have finished Unforeseen Consequences in a dead-end side room.
+    if (chapter->complete_on_arrival && chapter->IsLastMap(map_name)) {
+        SendChapterComplete(*chapter);
+    }
+}
+
+void SendChapterComplete(const Chapter& chapter) {
+    for (const Location& location : Data().locations) {
+        if (location.type == TriggerType::ChapterComplete &&
+            location.chapter == chapter.key) {
+            SendCheck(location.id);
         }
+    }
+
+    // The check is the location; this is the mission itself, which is what the
+    // client counts toward the finale's seal.
+    Wire().Send("COMPLETE", chapter.key);
+    if (chapter.is_goal) {
+        Wire().Send("GOAL", chapter.key);
     }
 }
 

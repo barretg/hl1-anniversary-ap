@@ -1,5 +1,5 @@
 {
- "data_version": "d645439896ec",
+ "data_version": "7a861a575303",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -16,7 +16,8 @@
    ],
    "index": 0,
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "complete_on_arrival": false
   },
   {
    "key": "c1a0",
@@ -30,7 +31,8 @@
    ],
    "index": 1,
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "complete_on_arrival": false
   },
   {
    "key": "c1a0c",
@@ -46,7 +48,8 @@
    ],
    "index": 2,
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "complete_on_arrival": false
   },
   {
    "key": "c1a2",
@@ -60,7 +63,8 @@
    ],
    "index": 3,
    "is_goal": false,
-   "gates": {}
+   "gates": {},
+   "complete_on_arrival": false
   },
   {
    "key": "c1a3",
@@ -78,7 +82,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c1a4",
@@ -100,7 +105,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c2a1",
@@ -116,7 +122,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c2a2",
@@ -139,7 +146,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c2a3",
@@ -158,7 +166,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c2a4",
@@ -175,7 +184,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c2a4d",
@@ -192,7 +202,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c2a5",
@@ -215,7 +226,8 @@
     "strict": [
      "ranged"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c3a1",
@@ -231,7 +243,8 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c3a2e",
@@ -251,7 +264,8 @@
     "strict": [
      "heavy"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c4a1",
@@ -270,7 +284,8 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c4a2",
@@ -291,7 +306,8 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c4a1a",
@@ -315,7 +331,8 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "complete_on_arrival": false
   },
   {
    "key": "c4a3",
@@ -335,7 +352,8 @@
      "longjump",
      "suit"
     ]
-   }
+   },
+   "complete_on_arrival": true
   }
  ],
  "items": [

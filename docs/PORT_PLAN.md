@@ -14,19 +14,34 @@ regenerated against `valve/maps`, the client and world are repointed at the
 checkdata parser, the checks, the gating, the hub commands, DeathLink and the
 traps, plus `game/sdk.patch` for the hooks into Valve's sources.
 
-**Phase 0 is done.** It compiles as a 32-bit dll with MinGW gcc 16.2, installs,
-and the anniversary client loads it: `hl.exe -game hlap` starts `c0a0` through
-the fallback, every hook fires in order, `checkdata.txt` parses, and the game
-writes `HELLO|c0a0` to the bridge. The SDK-built-dll approach is therefore
+**Phase 0 is done, and a seed is playable.** The dll builds 32-bit with MSVC,
+installs, and the game runs it: the hub comes up, `ap_warp` travels, checks fire
+and reach the server, items arrive and announce themselves, pickups are refused
+until sent, saves and level transitions work. The SDK-built-dll approach is
 settled and Metamod stays where it belongs, in the rejected column.
 
-One bug found on the way, and it is the shape of bug to expect from the rest:
-the trap precache was hooked into `ClientPrecache`, which is an assets-only
-callback, and `UTIL_PrecacheOther` creates a real entity. That crashed the engine
-on every map load -- inside `hw.dll`, with nothing of ours on the stack. It now
-hooks `CWorld::Precache`. `hlap/archipelago/ap_boot.txt` exists because of it:
-one line per hook, so the next load crash names itself instead of being guessed
-at.
+Four bugs found on the way, and they are the shape of bug to expect from the
+rest:
+
+- **The trap precache was hooked into `ClientPrecache`,** an assets-only
+  callback, and `UTIL_PrecacheOther` creates a real entity. That crashed the
+  engine on every map load -- inside `hw.dll`, with nothing of ours on the
+  stack. It hooks `CWorld::Precache` now.
+- **MinGW cannot build this.** Its dll loads and runs but cannot save, and in
+  GoldSrc a level transition *is* a save. See `game/README.md`; the branch is
+  kept but MSVC is the toolchain.
+- **Notifications were sent inline from hooks,** which crashed on the first
+  death: a user message written from `CBasePlayer::Killed` is
+  `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t`. They queue now
+  and go out from `StartFrame`, which is the same rule the deferred level change
+  already followed.
+- **Gating waited on the client.** Warps and pickups were only refused while
+  connected, so closing the client was a way around every lock in the game. It
+  fails closed now: with checkdata present and no client, you get your starting
+  weapons and nowhere to warp to.
+
+`hlap/archipelago/ap_boot.txt` exists because of the first one: one line per
+hook, so a load crash names itself instead of being guessed at.
 
 What actually landed, and where it differs from the plan below, is recorded in
 "Where the port stands" at the end of this file.
@@ -458,18 +473,26 @@ that the plan above did not anticipate:
 
 ### Next
 
-In order, because each needs the one before it:
+Confirmed in play: the hub, `ap`, `ap_warp`, arrival checks, charger checks,
+weapon refusal, item delivery, saves and intra-mission transitions.
 
-1. **The console interface, with no client running.** `ap`, `ap_help`,
-   `ap_warp 3`, `ap_hub`. These are the only parts that work disconnected, and
-   they exercise the checkdata tables. A warp is also the first test of the
-   deferred level change, which is the crash class this project fears most.
-2. **A real seed.** Generate one, connect the client, and watch a check land:
-   walk into `c1a0` and the arrival check should reach the server. Then a
-   charger, then a weapon refusal.
-3. **The mission boundary.** Play to the end of a mission's last map and let the
+Not yet, in the order a run-through will reach them:
+
+1. **The mission boundary.** Play to the end of a mission's last map and let the
    game's own `trigger_changelevel` fire. It should be intercepted, report the
-   mission complete, and return to the hub.
-4. **The known map facts**, from `game/README.md`. `c2a3d`'s mid-mission
+   mission complete, and return to the hub. Most moving parts, and the one place
+   a mistake can still crash the engine.
+2. **The finale's seal.** Finish `missions_required` missions and check that
+   Nihilanth opens, that `ap_warp` into it works, and that clearing it sends the
+   goal.
+3. **DeathLink**, both directions, and the amnesty countdown across a map change.
+4. **The traps.** Butterfingers is exercised; the two spawning traps are not, and
+   they are the ones that depend on the precache.
+5. **The known map facts**, from `game/README.md`. `c2a3d`'s mid-mission
    `player_weaponstrip` is the first thing to test, and how `c1a0d` actually
    grants the HEV suit is the first thing to find out.
+
+Data work with no game side to it, parked until the above is done: the map
+divisions are much finer than the Sven project's (96 against 35), so the
+`map_reached` set wants a pass for whether every one of them earns a check.
+Regenerating keeps existing ids and appends new ones, so it can happen whenever.

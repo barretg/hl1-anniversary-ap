@@ -14,10 +14,13 @@ data generators. What is new here is the mission layout against retail's own map
 and the game side, which is a Half-Life server dll rather than an AngelScript
 plugin.
 
-**Status: in progress.** The world, the client and the data pipeline are ported
-and tested. The game side is not written yet -- see
-[docs/PORT_PLAN.md](docs/PORT_PLAN.md) for the phases and
-[game/README.md](game/README.md) for its shape.
+**Status: playable, unfinished.** The world, the client and the data pipeline
+are ported and tested. The game side is written and runs: the mod loads, missions
+warp, checks fire, items arrive, and pickups are refused until the multiworld
+sends them. What has not been proved in play is the far end of a run -- the
+mission-boundary interception, the finale's seal, DeathLink -- and nothing has
+had a full run-through yet. See [docs/PORT_PLAN.md](docs/PORT_PLAN.md) for what
+is left and [game/README.md](game/README.md) for how the game side is built.
 
 ## The target
 
@@ -44,6 +47,18 @@ are finished, and clearing it wins the seed.
 A mission is entered from the hub with a fresh `map` load, so it is repeatable
 and carries no state in from anywhere else. Transitions *inside* a mission are
 the game's own -- inventory and level state carry exactly as retail does.
+
+## The hub
+
+New Game starts in `stalkyard`, not on the tram, and every mission is reached
+from there with `ap_warp`. Until there is an authored hub map it is a stock
+deathmatch map, chosen against the map files rather than by taste: no
+`trigger_changelevel` (`lambda_bunker` has one straight into the middle of Forget
+About Freeman), nothing that hurts you while you stand still (`pool_party` has a
+`dmg 200` trigger), and small, because it is reloaded after every mission.
+
+Nothing in the hub can fire a check. Its weapons are not the campaign's weapons,
+and its two chargers are not in `checkdata.txt` at all.
 
 ## Layout
 
@@ -102,7 +117,9 @@ to happen.
 
 Weapon checks sit at the *vanilla* first location: the earliest map in campaign
 order that contains that weapon, and only there. Picking the same weapon up later
-sends nothing. The crowbar has one too, despite being starting inventory.
+sends nothing, and neither does the arsenal lying around the hub. The crowbar has
+one too, despite being starting inventory, which is why the game sweeps for
+pickups within arm's reach -- a weapon you already hold never fires a touch.
 
 Richer location types are already implemented and derived from the map files
 themselves: `tools/bsp_entities.py` reads the entity lump out of each shipped
@@ -132,13 +149,24 @@ python tools/gen_checkdata.py
 # package, and optionally drop straight into an Archipelago install
 python tools/build_apworld.py --install "<Archipelago>/custom_worlds"
 
+# the server dll, 32-bit, against a checkout of Valve's SDK with sdk.patch on it
+cmake -S game -B build/game-msvc -A Win32 -DHLSDK_DIR=../halflife
+cmake --build build/game-msvc --config Release
+copy build/game-msvc/Release/hl.dll apworld/half_life/mod/files/dlls/
+
 # install the hlap mod folder, without going through the Launcher
 # (same code path as the client's /install)
 python tools/install_mod.py --game "<Half-Life>"
 ```
 
 `campaign.json` and `checkdata.txt` are both committed, so neither the apworld
-nor the client needs Half-Life installed -- only the generators do.
+nor the client needs Half-Life installed -- only the generators do. The built
+`hl.dll` is *not* committed; drop one into `apworld/half_life/mod/files/dlls/`
+and packaging picks it up, so a released apworld installs a working mod while a
+development checkout installs everything but the dll and says so.
+
+Playing needs the mod running: launch Half-Life with `-game hlap -console`, or
+pick Half-Life Archipelago from the Custom Game menu.
 
 ## AI Usage Disclosure
 

@@ -19,10 +19,20 @@ class CBaseEntity;
 class CBasePlayer;
 
 namespace ap {
+struct Chapter;
+}
+
+namespace ap {
 
 // The map is up and checkdata has been read. Fires the arrival check, and the
-// mission's completion when this is its last map.
+// mission's completion where arriving *is* finishing -- the finale, and nowhere
+// else.
 void OnMapStart(const std::string& map_name);
+
+// This mission is over: send its completion check and tell the client. Called
+// from the mission-boundary interception, which is where finishing normally
+// happens, and from `OnMapStart` for the finale.
+void SendChapterComplete(const Chapter& chapter);
 
 // The player pressed +use on something. Matches it against the charger table by
 // classname and by where it stands.
@@ -38,6 +48,14 @@ void SweepNearbyPickups();
 // Send a check by id, once per map load. Repeats are harmless on the server but
 // noisy in the log, and the log is append-only.
 void SendCheck(long id);
+
+// Has the player ever been to this map in this seed?
+//
+// Answered by that map's own `map_reached` check: arriving is what fires it, and
+// the client's `checked` list is the durable record of it across sessions. Used
+// to keep `ap_warp <mission> <part>` to parts already walked to, so a partial
+// warp is a way back rather than a way past.
+bool Visited(const std::string& map_name);
 
 // `ap_find`: the nearest check in this map that the seed still wants, or the one
 // whose name contains `text`. Prints a bearing and a distance.

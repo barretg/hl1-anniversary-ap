@@ -11,10 +11,9 @@ Half-Life is never modified: the mod folder inherits every map, model and sound
 from it through `fallback_dir "valve"`. Removing the mod is deleting one folder,
 and the client's `/uninstall` does exactly that.
 
-> **Not written yet.** The game side of this project is still being built, so
-> there is no server dll to install today and none of the in-game half of this
-> guide works. The world generates seeds and the client connects; that is as far
-> as it goes. See `docs/PORT_PLAN.md` in the repository.
+> **Early days.** This is playable but has not had a full run-through. Expect
+> rough edges past the first few missions, and see `docs/PORT_PLAN.md` in the
+> repository for what has been confirmed working and what has not.
 
 ## Installing
 
@@ -30,8 +29,14 @@ and the client's `/uninstall` does exactly that.
 
 ## Playing
 
-Connect the client to your room, then load a map. The client prints what to type
-in the game console (`~`):
+**Connect the client first, then start the game.** Nothing is unlocked until the
+client has told the game what the seed contains, and warps are refused while it
+is not connected -- otherwise closing the client would be a way past every lock
+in the game.
+
+Start a New Game and you arrive in the hub rather than on the tram. Every mission
+is reached from there. The commands live in the game console (`~`, which needs
+`-console`):
 
 | Command | What it does |
 | --- | --- |
@@ -41,6 +46,20 @@ in the game console (`~`):
 | `ap_tracker [map]` | locations found and still out there |
 | `ap_find [text]` | point at the nearest unfound check, or one you name |
 | `ap_help` | these, in game |
+
+`ap_warp` takes a mission number, a name, or a map name, and does not care about
+case or punctuation: `ap_warp 15`, `ap_warp Gonarch's Lair`, `ap_warp gonarch`
+and `ap_warp c4a2` are the same request.
+
+Add a part number to land partway into a mission -- `ap_warp unforeseen 6` -- but
+only for a part you have already reached. It is a way back after a death or an
+errand in the hub, not a way past the half of a mission you have not played: the
+checks in a part you skipped to would be free, and warping straight to a
+mission's last part would be the fastest way through it.
+
+Anything worth knowing -- a check found, an item received, a mission unlocked, a
+pickup refused -- appears in the message area at the bottom left as well as in
+the console, so you do not need the console open to play.
 
 Client-side commands, typed in the client rather than the game:
 

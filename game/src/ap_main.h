@@ -38,7 +38,7 @@ struct PendingEvent;
 
 void RegisterCommands();                                    // ap_hub
 void PrecacheTraps();                                       // ap_traps
-void ApplyLoadout(CBasePlayer* player);                     // ap_items
+void RequestLoadout();                                      // ap_items
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
