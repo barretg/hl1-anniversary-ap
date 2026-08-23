@@ -83,10 +83,67 @@ WarpRequest ParseWarp(const std::string& text) {
     return request;
 }
 
+// Has this mission's own completion check been sent?
+//
+// The completion is a location like any other, so it can arrive from the server
+// without the game having played a second of the mission: released, collected,
+// or sent by hand from the console. It is also the location the finale's seal
+// counts, so this list has to agree with what that seal is waiting on.
+//
+// Found by the mission key the record carries rather than by map: a completion
+// names both, but the key is what says which mission it completes.
+bool CompletionFound(const Chapter& chapter) {
+    const Snapshot& state = State();
+    for (const Location& location : Data().locations) {
+        if (location.type != TriggerType::ChapterComplete) continue;
+        if (location.chapter != chapter.key) continue;
+        return state.checked.find(location.id) != state.checked.end();
+    }
+    return false;
+}
+
+// Is there anything left to find in this mission?
+//
+// Only what this seed actually contains is counted. Chargesanity off leaves
+// every charger id in `checkdata.txt` unclaimed for the whole run, and counting
+// those would mean no mission was ever finished.
+bool AllFound(const Chapter& chapter) {
+    const Snapshot& state = State();
+    size_t in_seed = 0;
+
+    for (const Location& location : Data().locations) {
+        const Chapter* owner = Data().ChapterOfMap(location.map);
+        if (owner == nullptr || owner->key != chapter.key) continue;
+        if (!state.InSeed(location.id)) continue;
+
+        ++in_seed;
+        if (state.checked.find(location.id) == state.checked.end()) {
+            return false;
+        }
+    }
+
+    // Before the first snapshot everything reads as in-seed and nothing as
+    // checked, so this is only ever true once the client has actually spoken.
+    return in_seed > 0;
+}
+
+// Either answer alone is incomplete. A mission can be emptied of everything the
+// seed put in it without its completion ever being sent, when `missions_required`
+// is low enough that nothing was waiting on it, and a completion can arrive from
+// the server with every charger in the mission still unfound.
+bool Finished(const Chapter& chapter) {
+    return CompletionFound(chapter) || AllFound(chapter);
+}
+
 const char* StatusOf(const Chapter& chapter) {
     const Snapshot& state = State();
-    if (state.ChapterExcluded(chapter.key)) {
-        return "not in this seed";
+    // Said instead of "unlocked", and instead of a finale's seal, rather than
+    // alongside either: having got into a mission is implied by having emptied
+    // it, and this list is read to find where there is still something left. A
+    // mission with nothing left in it is done with whether or not its own door
+    // is still open.
+    if (Finished(chapter)) {
+        return "complete";
     }
     if (chapter.is_goal) {
         return state.goal_open ? "OPEN" : "sealed";
@@ -104,6 +161,14 @@ void ListMissions() {
     }
 
     for (const Chapter& chapter : Data().chapters) {
+        // A mission the seed left out is not listed at all. It used to print as
+        // "not in this seed", which with `exclude_intro_missions` on meant the
+        // list opened with lines about missions nobody can play. The numbering
+        // is `chapter.index` rather than a running count, so skipping one does
+        // not renumber the rest: `ap_warp 7` still means the same mission.
+        if (State().ChapterExcluded(chapter.key)) {
+            continue;
+        }
         char line[160];
         std::snprintf(line, sizeof(line), "  %2d. %-26s [%s]", chapter.index,
                       chapter.name.c_str(), StatusOf(chapter));
