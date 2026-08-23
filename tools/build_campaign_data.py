@@ -16,6 +16,7 @@ import collections
 import hashlib
 import json
 import math
+from collections.abc import Iterable
 from pathlib import Path
 
 from bsp_entities import brush_model_centres, load_map
@@ -178,13 +179,22 @@ class IdRegistry:
         self.path.write_text(json.dumps(self.data, indent=1, sort_keys=True) + "\n",
                              encoding="utf-8")
 
-    def fingerprint(self) -> str:
-        """Short digest of the whole id map.
+    def fingerprint(self, live: Iterable[str] = ()) -> str:
+        """Short digest of the id map *and* of what this build actually ships.
 
         Written into both the apworld and the game's data file so a mismatched
         pair can be detected instead of quietly sending the wrong checks.
+
+        The registry alone is not enough, because it is append-only: *removing* a
+        location leaves it untouched, so the two halves would agree on the
+        version while disagreeing on the location set. That is the worse
+        direction of the mismatch, since an apworld holding a check the game will
+        never send is a seed nobody can finish, and it is exactly what a pass
+        over the `map_reached` set would produce.
         """
-        payload = json.dumps(self.data, sort_keys=True).encode("utf-8")
+        payload = json.dumps(
+            {"registry": self.data, "live": sorted(live)}, sort_keys=True
+        ).encode("utf-8")
         return hashlib.sha1(payload).hexdigest()[:12]
 
 
@@ -539,8 +549,15 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     # corruption rather than as a bug in this file.
     items = build_items(chapters, registry)
 
+    # What this build actually ships, so that dropping a location moves the
+    # version even though the append-only registry keeps its id forever.
+    live = (
+        [f"L{location['id']}" for location in builder.locations]
+        + [f"I{item['id']}" for item in items]
+    )
+
     return {
-        "data_version": registry.fingerprint(),
+        "data_version": registry.fingerprint(live),
         "goal_chapter": GOAL_CHAPTER,
         # The scene-setting mission `exclude_intro_missions` drops.
         "intro_chapter": INTRO_CHAPTER,

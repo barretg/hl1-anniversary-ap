@@ -114,7 +114,11 @@ def test_the_data_version_covers_item_ids(campaign: dict) -> None:
     from build_campaign_data import IdRegistry
 
     registry = IdRegistry(REPO / "apworld" / "half_life" / "data" / "ids.json")
-    assert campaign["data_version"] == registry.fingerprint()
+    live = (
+        [f"L{location['id']}" for location in campaign["locations"]]
+        + [f"I{item['id']}" for item in campaign["items"]]
+    )
+    assert campaign["data_version"] == registry.fingerprint(live)
 
     # And the registry really does contain the item ids, so the test above is
     # not passing on an empty coincidence.
@@ -124,6 +128,25 @@ def test_the_data_version_covers_item_ids(campaign: dict) -> None:
         )
     )
     assert len(ids["items"]) == len(campaign["items"])
+
+
+def test_the_data_version_moves_when_a_location_is_dropped(campaign: dict) -> None:
+    """Removing a location has to change the version.
+
+    The registry is append-only, so a dropped location keeps its id there
+    forever and the registry alone cannot see the difference. That is the
+    dangerous direction: an apworld holding a check the game will never send is
+    a seed nobody can finish, and it is what a pass over the `map_reached` set
+    would produce.
+    """
+    from build_campaign_data import IdRegistry
+
+    registry = IdRegistry(REPO / "apworld" / "half_life" / "data" / "ids.json")
+    live = (
+        [f"L{location['id']}" for location in campaign["locations"]]
+        + [f"I{item['id']}" for item in campaign["items"]]
+    )
+    assert registry.fingerprint(live) != registry.fingerprint(live[1:])
 
 
 def test_the_intro_chapter_is_a_real_mission(campaign: dict) -> None:
