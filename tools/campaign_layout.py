@@ -146,6 +146,40 @@ WEAPON_ITEMS: dict[str, list[str]] = {
 # unlike the Sven Co-op world there is nothing here to randomise.
 STARTING_WEAPONS = ["weapon_crowbar"]
 
+# --- The hub ---------------------------------------------------------------
+
+# The lobby map. Authored for this project and shipped inside the mod folder
+# rather than inherited from `valve`, so it is also `startmap` in `liblist.gam`
+# and `kHubMap` in `game/src/ap_hub.cpp`. All three have to name the same map.
+HUB_MAP = "ap_lobby_alpha"
+
+# One button per mission, named by that mission's index: `chapter_0_button` is
+# the first mission in the `C` records, `chapter_17_button` the last.
+#
+# Derived from the map rather than hand-authored, which is the point. A button
+# renamed or renumbered in the BSP moves its record with it, and a button naming
+# a mission that does not exist fails the build instead of becoming a dead panel
+# somebody finds by pressing it. The Sven Co-op world listed these by hand and
+# had to keep the list and the map in step.
+HUB_BUTTON_PREFIX = "chapter_"
+HUB_BUTTON_SUFFIX = "_button"
+
+
+def hub_button_index(targetname: str) -> int | None:
+    """The mission index a lobby button is for, or None if it is not one.
+
+    The map has other buttons in it -- doors, the joke pit -- and they are not
+    ours. Only `chapter_<n>_button` with a genuine number in the middle counts.
+    """
+    if not targetname.startswith(HUB_BUTTON_PREFIX):
+        return None
+    if not targetname.endswith(HUB_BUTTON_SUFFIX):
+        return None
+    middle = targetname[len(HUB_BUTTON_PREFIX):-len(HUB_BUTTON_SUFFIX)]
+    if not middle.isdigit():
+        return None
+    return int(middle)
+
 # Weapons that are a check but never an item. Walking up to the crowbar in the
 # freezer is a moment in the run even though you are already holding one.
 UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {

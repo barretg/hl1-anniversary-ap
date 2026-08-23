@@ -112,12 +112,26 @@ bool CheckData::Load(const std::string& path) {
             gated_classnames.push_back(std::make_pair(f[1], f[2]));
         } else if (record == "S" && f.size() >= 2) {
             starting_weapons.push_back(f[1]);
+        } else if (record == "P" && f.size() >= 3) {
+            hub_buttons.push_back(std::make_pair(f[1], f[2]));
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.
     }
 
     return Loaded();
+}
+
+const Chapter* CheckData::ChapterOfButton(const std::string& targetname) const {
+    if (targetname.empty()) {
+        return nullptr;  // most of the map: brushes with no name at all
+    }
+    for (size_t i = 0; i < hub_buttons.size(); ++i) {
+        if (hub_buttons[i].first == targetname) {
+            return ChapterByKey(hub_buttons[i].second);
+        }
+    }
+    return nullptr;
 }
 
 const Chapter* CheckData::ChapterOfMap(const std::string& map) const {

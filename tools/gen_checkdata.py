@@ -35,9 +35,10 @@ OUT_PATH = (
 # 2 adds the seventh field on `C`, `complete on arrival`. Additive, so a reader
 # of format 1 sees a chapter record it understands and ignores the rest.
 #
-# A future hub map adds a `P|<button targetname>|<chapter key>` record and
-# nothing else changes.
-FORMAT_VERSION = 2
+# 3 adds `P|<button targetname>|<chapter key>`, the authored lobby's panels.
+# Additive like the rest: a reader of format 2 ignores the record and falls back
+# to the console commands, which is exactly the v1 hub.
+FORMAT_VERSION = 3
 
 
 def render(campaign: dict) -> str:
@@ -50,6 +51,7 @@ def render(campaign: dict) -> str:
         "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
+        "#   P|<button targetname>|<chapter key>   a lobby panel and where it goes",
         "#   D|<data version>               must match the client's, or ids differ",
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
@@ -112,6 +114,11 @@ def render(campaign: dict) -> str:
 
     for classname in STARTING_WEAPONS:
         lines.append(f"S|{classname}")
+
+    # The lobby's panels. Empty on a checkout without the map, in which case the
+    # game simply has no buttons to answer and the console commands stand.
+    for button in campaign.get("hub_buttons", ()):
+        lines.append(f"P|{button['targetname']}|{button['chapter']}")
 
     return "\n".join(lines) + "\n"
 

@@ -38,6 +38,42 @@ def checkdata() -> list[list[str]]:
     return records
 
 
+def test_every_mission_has_a_lobby_button(campaign: dict) -> None:
+    """A mission with no panel is a mission only the console can reach.
+
+    The generator refuses to build without one, so this is really a guard on the
+    generated file having been regenerated after the lobby changed.
+    """
+    buttons = campaign["hub_buttons"]
+    assert {button["chapter"] for button in buttons} == {
+        chapter["key"] for chapter in campaign["chapters"]
+    }
+    assert len(buttons) == len(campaign["chapters"])
+
+
+def test_lobby_buttons_are_numbered_by_mission_index(campaign: dict) -> None:
+    """`chapter_<n>_button` travels to the mission with index `n`.
+
+    The whole mapping rests on this, and it is the kind of thing that silently
+    goes one out: a lobby renumbered from 1 would send every panel to the
+    mission before the one on its label.
+    """
+    from campaign_layout import hub_button_index
+
+    by_key = {chapter["key"]: chapter["index"] for chapter in campaign["chapters"]}
+    for button in campaign["hub_buttons"]:
+        assert hub_button_index(button["targetname"]) == by_key[button["chapter"]]
+
+
+def test_checkdata_carries_every_lobby_button(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """The `P` records are how the game learns what a panel is."""
+    generated = {(r[1], r[2]) for r in checkdata if r[0] == "P"}
+    expected = {(b["targetname"], b["chapter"]) for b in campaign["hub_buttons"]}
+    assert generated == expected, "run: python tools/gen_checkdata.py"
+
+
 def test_location_ids_are_unique(campaign: dict) -> None:
     ids = [entry["id"] for entry in campaign["locations"]]
     assert len(ids) == len(set(ids))

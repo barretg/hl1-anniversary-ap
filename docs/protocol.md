@@ -199,14 +199,32 @@ Pipe-delimited so the game side can parse it with one pass and no JSON parser.
 
 | Record | Fields |
 | --- | --- |
-| `V` | format version (1) |
+| `V` | format version (3 since the lobby; every addition so far is ignored harmlessly by an older reader) |
 | `D` | data version, the id-map fingerprint |
 | `G` | the goal chapter's key |
-| `C` | index, key, name, comma-separated maps, is_goal |
+| `C` | index, key, name, comma-separated maps, is_goal, complete-on-arrival |
 | `L` | id, map, trigger type, trigger arg, name |
 | | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>@<x y z>`; `weapon_pickup` carries the comma-separated classnames |
 | `K` | classname, item name — pickup refused until that item is held |
 | `S` | classname always granted (the crowbar), the default a snapshot's `starting` may override |
+| `P` | a lobby panel's targetname, and the mission it enters |
+
+`C`'s last field is 1 only for the mission nothing changelevels out of, the
+finale, where arriving on the last map is the only signal there is. Every other
+mission is finished by walking on into the next one, and that transition is
+intercepted.
+
+The `P` records are the authored lobby's panels, one per mission. They are read
+out of the shipped BSP by the generator rather than written down anywhere:
+`chapter_<n>_button` in the map travels to the mission with index `n`, so
+renaming or renumbering a panel moves its record with it. A button numbered for
+a mission that does not exist, or a mission with no button, fails the build
+rather than becoming a dead panel somebody finds by pressing it.
+
+A panel goes through the same gate `ap_warp` does — excluded, not connected,
+locked, sealed — so it can never be a way past a lock the command honours. The
+only difference is where a refusal is printed: a panel answers on screen, since
+somebody who pressed it is looking at the room rather than the console.
 
 The optional seventh field on `L` is `x y z`, and it is what `ap_find` points at.
 Only the kinds that are a *place* carry one: a charger's centre, and the spot on

@@ -12,6 +12,7 @@
 
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
+#include "ap_hub.h"
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
@@ -150,6 +151,13 @@ void SendChapterComplete(const Chapter& chapter) {
 
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target) {
     if (player == nullptr || target == nullptr || !Live()) {
+        return;
+    }
+
+    // A lobby panel, before anything else: it is a `func_button` rather than a
+    // charger, so the two can never both answer, but the hub owns its own
+    // entities and asking it first keeps it that way.
+    if (PressHubButton(player, target)) {
         return;
     }
 

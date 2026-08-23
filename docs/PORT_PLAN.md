@@ -166,8 +166,7 @@ suit is held, and add a YAML option if it plays badly.
 
 ## Decision 4: the hub
 
-There is no `-sp_campaign_portal` in retail. Two stages, and stage one is fully
-playable.
+There is no `-sp_campaign_portal` in retail. Two stages, **and both have landed.**
 
 - **v1, no hub map.** The hub is a console interface, and in retail those can be
   properly registered server commands (`ap`, `ap_warp`, `ap_tracker`, `ap_find`,
@@ -177,10 +176,18 @@ playable.
   rather than as a fallback. "Returning to the hub" means loading a small idle
   map and printing the mission list.
 - **v2, an authored hub map.** One room, one labelled button per mission,
-  compiled with the standard tools and shipped in the mod folder. The plugin
-  reads the button `targetname` through the same `P` records `checkdata.txt`
-  already carries, so nothing in the data pipeline changes when it lands. Keep
-  the map source in the repo.
+  compiled with the standard tools and shipped in the mod folder. The game reads
+  the button `targetname` through the same `P` records `checkdata.txt` already
+  carries, so nothing in the data pipeline changes when it lands. Keep the map
+  source in the repo.
+
+  Landed as `ap_lobby_alpha`, and it went in as this said it would: `P` records
+  and nothing else. It differs on one point, which is that the records are not
+  written down at all. The generator reads them out of the shipped BSP, keyed
+  `chapter_<n>_button` to the mission with index `n`, so the map is the only
+  authority on what it contains and a mission without a panel fails the build.
+  The map replaces `stalkyard` as `startmap` and as `kHubMap`, and it is the one
+  map the mod folder ships rather than inheriting through the fallback.
 
 Do not let the map block the port.
 

@@ -17,20 +17,18 @@
 
 namespace ap {
 
-// Chosen against the map files rather than by taste, and the three tests it had
-// to pass are the three ways a hub can go wrong:
+// The authored lobby: one room, a labelled panel per mission, and a pit.
 //
-//   - No `trigger_changelevel`. `lambda_bunker` has one straight into `c3a1b`,
-//     which would let a player walk out of the hub into the middle of Forget
-//     About Freeman -- and the interception in this file would not stop it,
-//     since that only takes over transitions *leaving* a mission.
-//   - Nothing that can hurt you while you stand still. `pool_party` has a
-//     `trigger_hurt` with `dmg 200` in it.
-//   - Small, because it is reloaded after every mission. This is 683 KB against
-//     `pool_party`'s 4.2 MB.
+// It replaces `stalkyard`, which was a stock deathmatch map picked against three
+// criteria a hub can fail on -- no `trigger_changelevel` out of it, nothing that
+// hurts you while you stand still, and small enough to reload after every
+// mission. This map is ours, so the first holds by construction and the third by
+// authoring. The second it breaks on purpose, and that is fine: the pit is a
+// joke, and the player has to walk into it.
 //
-// `frenzy` passes the same three and is the obvious swap if this one palls.
-const char* const kHubMap = "stalkyard";
+// `HUB_MAP` in tools/campaign_layout.py and `startmap` in liblist.gam are the
+// same name; tests/test_mod_install.py fails if they drift apart.
+const char* const kHubMap = "ap_lobby_alpha";
 
 namespace {
 
@@ -135,6 +133,59 @@ bool Finished(const Chapter& chapter) {
     return CompletionFound(chapter) || AllFound(chapter);
 }
 
+// Where a refusal goes. Somebody who typed `ap_warp` is reading the console, and
+// `Say` is the answer to a command. Somebody who pressed a panel is looking at
+// the room, and a console-only refusal is indistinguishable from a dead button.
+void Refuse(bool on_screen, const std::string& text) {
+    if (on_screen) {
+        Notify(text);
+    } else {
+        Say(text);
+    }
+}
+
+// May the player enter this mission at all? Says why not on their behalf.
+//
+// The one set of rules, asked in one place, so a lobby panel can never become a
+// way past a gate `ap_warp` refuses. Everything here is the client's answer
+// rather than anything counted locally: deciding "is this open" from a cached
+// count is how the two halves drift apart.
+bool MissionOpen(const Chapter& chapter, bool on_screen) {
+    const Snapshot& state = State();
+
+    if (state.ChapterExcluded(chapter.key)) {
+        Refuse(on_screen, chapter.name + " is not in this seed.");
+        return false;
+    }
+
+    // Not connected means we do not know what is open, and "do not know" has to
+    // refuse rather than allow. Warping freely while disconnected and connecting
+    // afterwards would put a player inside a mission the seed had locked, with
+    // every check in it live the moment the client came up -- which is a way
+    // around every gate in the game, reachable by closing one window.
+    //
+    // `ap_hub` is deliberately still allowed: going home is never a way in.
+    if (!state.connected) {
+        Refuse(on_screen,
+               "The Archipelago client is not connected, so no mission is open "
+               "yet. Start it, connect to your room, and try again.");
+        return false;
+    }
+
+    const bool open = chapter.is_goal ? state.goal_open
+                                      : state.ChapterOpen(chapter.key);
+    if (!open) {
+        Refuse(on_screen,
+               chapter.name +
+                   (chapter.is_goal
+                        ? " is still sealed. Finish more missions."
+                        : " is locked. Its unlock item has not arrived."));
+        return false;
+    }
+
+    return true;
+}
+
 const char* StatusOf(const Chapter& chapter) {
     const Snapshot& state = State();
     // Said instead of "unlocked", and instead of a finale's seal, rather than
@@ -174,8 +225,9 @@ void ListMissions() {
                       chapter.name.c_str(), StatusOf(chapter));
         Say(line);
     }
-    Say("!warp <number or name> to travel, plus a part number to return to "
-        "somewhere you have been. !hub to come back. !help for the rest.");
+    Say("Press a panel in the hub, or !warp <number or name>, plus a part number "
+        "to return to somewhere you have been. !hub to come back. !help for the "
+        "rest.");
 }
 
 void Help() {
@@ -187,6 +239,7 @@ void Help() {
     Say("!tracker [map]            locations found and still out there");
     Say("!find [text]              point at the nearest unfound check");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
+    Say("In the hub you can press a mission's panel instead of typing anything.");
 }
 
 void Warp(const std::string& argument) {
@@ -221,33 +274,7 @@ void Warp(const std::string& argument) {
         return;
     }
 
-    const Snapshot& state = State();
-    if (state.ChapterExcluded(chapter->key)) {
-        Say(chapter->name + " is not in this seed.");
-        return;
-    }
-
-    // Not connected means we do not know what is open, and "do not know" has to
-    // refuse rather than allow. Warping freely while disconnected and connecting
-    // afterwards would put a player inside a mission the seed had locked, with
-    // every check in it live the moment the client came up -- which is a way
-    // around every gate in the game, reachable by closing one window.
-    //
-    // `ap_hub` is deliberately still allowed: going home is never a way in.
-    if (!state.connected) {
-        Say("The Archipelago client is not connected, so no mission is open yet. "
-            "Start it, connect to your room, and try again.");
-        return;
-    }
-
-    // The client owns the answer to "is this open", including the finale's seal.
-    // Deciding it here from a cached count is how the two halves drift apart.
-    const bool open = chapter->is_goal ? state.goal_open
-                                       : state.ChapterOpen(chapter->key);
-    if (!open) {
-        Say(chapter->name +
-            (chapter->is_goal ? " is still sealed. Finish more missions."
-                              : " is locked. Its unlock item has not arrived."));
+    if (!MissionOpen(*chapter, false)) {
         return;
     }
 
@@ -384,6 +411,28 @@ bool HandleChat(CBasePlayer* player, const std::string& said) {
         // nobody else is in.
         Say(std::string("No such command: !") + name + ". Try !help.");
     }
+    return true;
+}
+
+bool PressHubButton(CBasePlayer* player, CBaseEntity* target) {
+    if (player == nullptr || target == nullptr || !Data().Loaded()) {
+        return false;
+    }
+    // STRING(0) is the empty string, which no `P` record answers to, so an
+    // unnamed brush falls straight through without a special case.
+    const Chapter* chapter =
+        Data().ChapterOfButton(std::string(STRING(target->pev->targetname)));
+    if (chapter == nullptr) {
+        return false;
+    }
+
+    if (MissionOpen(*chapter, true)) {
+        Notify(std::string("Entering ") + chapter->name + ".");
+        RequestMap(chapter->maps.front());
+    }
+    // Ours either way: a refused panel has still been answered, and the refusal
+    // is on screen. Returning false would let the press fall through to the
+    // charger check below it, which is not what a lobby panel is.
     return true;
 }
 

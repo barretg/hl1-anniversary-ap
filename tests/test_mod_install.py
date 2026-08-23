@@ -88,6 +88,37 @@ def test_new_game_starts_in_the_hub() -> None:
     assert start.group(1) == hub.group(1)
 
 
+def test_install_ships_the_lobby_map(install: Path) -> None:
+    """The one map the mod folder carries.
+
+    Everything else is inherited from `valve` through the fallback, but no
+    Half-Life install has this one, so an install that skipped it would drop the
+    player into `startmap` with nothing to load.
+    """
+    mod.install(install)
+    liblist = (install / MOD_DIR / "liblist.gam").read_text(encoding="utf-8")
+    start = re.search(r'^\s*startmap\s+"([^"]+)"', liblist, re.M)
+    assert start is not None
+    assert (install / MOD_DIR / "maps" / f"{start.group(1)}.bsp").is_file()
+
+
+def test_the_hub_map_is_named_the_same_in_all_three_places() -> None:
+    """`startmap`, `kHubMap` and the data's `hub_map` are one map.
+
+    `test_new_game_starts_in_the_hub` ties the first two together. The third is
+    what the `P` records were generated against, so a drift there would ship
+    panels keyed to a lobby nobody loads.
+    """
+    campaign = json.loads(
+        (WORLD / "data" / "campaign.json").read_text(encoding="utf-8")
+    )
+    liblist = (WORLD / "mod" / "files" / "liblist.gam").read_text(encoding="utf-8")
+    start = re.search(r'^\s*startmap\s+"([^"]+)"', liblist, re.M)
+
+    assert start is not None
+    assert campaign["hub_map"] == start.group(1)
+
+
 def test_the_hub_is_not_a_campaign_map() -> None:
     """A check firing in the hub would be a check for standing still."""
     campaign = json.loads(

@@ -1,6 +1,8 @@
-// Half-Life Archipelago. Everything but the server dll is inherited from the
-// player's own Half-Life through fallback_dir, so this folder never needs a copy
-// of a map, model or sound and nothing under valve/ is ever written to.
+// Half-Life Archipelago. Everything but the server dll and the lobby map is
+// inherited from the player's own Half-Life through fallback_dir, so this folder
+// needs no copy of a campaign map, model or sound and nothing under valve/ is
+// ever written to. The lobby is here because it is ours: no Half-Life install
+// has it.
 game "Half-Life Archipelago"
 // New Game starts in the hub, not on the tram. Every mission is entered from
 // there by warping, including Black Mesa Inbound when a seed contains it, so
@@ -9,7 +11,7 @@ game "Half-Life Archipelago"
 //
 // This must stay the same map as `kHubMap` in game/src/ap_hub.cpp;
 // tests/test_mod_install.py fails if the two drift apart.
-startmap "stalkyard"
+startmap "ap_lobby_alpha"
 trainmap "t0a0"
 mpentity "info_player_deathmatch"
 gamedll "dlls\hl.dll"

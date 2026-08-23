@@ -28,8 +28,10 @@ from campaign_layout import (
     CLASSNAME_TO_ITEM,
     ENABLED_LOCATION_TYPES,
     GOAL_CHAPTER,
+    HUB_MAP,
     IGNORED_MONSTERS,
     INTRO_CHAPTER,
+    hub_button_index,
     ITEM_ID_BASE,
     KILL_MILESTONE_FRACTIONS,
     LOCATION_ID_BASE,
@@ -53,6 +55,13 @@ OUT_PATH = REPO_ROOT / "apworld" / "half_life" / "data" / "campaign.json"
 # derived from what a location *is*, not where it lands in the list, and an id is
 # never reused for something else.
 IDS_PATH = REPO_ROOT / "apworld" / "half_life" / "data" / "ids.json"
+
+# The authored lobby map, read from where it ships rather than from a second
+# copy: it is committed inside the world package because a zipped `.apworld` has
+# to carry it, and one 540 KB binary in the tree is enough.
+LOBBY_PATH = (
+    REPO_ROOT / "apworld" / "half_life" / "mod" / "files" / "maps" / f"{HUB_MAP}.bsp"
+)
 
 SUPPLY_CLASSNAMES = {
     "item_battery": "Battery",
@@ -591,7 +600,60 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         "locations": builder.locations,
         "requirement_groups": REQUIREMENT_GROUPS,
         "starting_weapons": STARTING_WEAPONS,
+        "hub_map": HUB_MAP,
+        "hub_buttons": build_hub_buttons(chapters, LOBBY_PATH),
     }
+
+
+def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:
+    """`chapter_<n>_button` in the lobby map -> the mission it travels to.
+
+    Read out of the BSP rather than written down here, so the map is the single
+    authority on what it contains. Two things this catches at build time that
+    would otherwise be found by pressing a panel in game: a button numbered for
+    a mission that does not exist, and a mission with no button at all.
+
+    An absent lobby map is not an error. The map is authored separately and a
+    checkout without it should still generate usable data; the game falls back
+    to the console commands, which are the whole of the v1 hub.
+    """
+    if not lobby_path.exists():
+        print(f"  note: no lobby map at {lobby_path}, so no hub buttons")
+        return []
+
+    by_index = {chapter["index"]: chapter["key"] for chapter in chapters}
+    buttons: list[dict] = []
+    seen: dict[int, str] = {}
+
+    for entity in load_map(lobby_path):
+        if entity.get("classname") != "func_button":
+            continue
+        targetname = entity.get("targetname", "")
+        index = hub_button_index(targetname)
+        if index is None:
+            continue
+        if index not in by_index:
+            raise ValueError(
+                f"{lobby_path.name}: {targetname} is for mission {index}, "
+                f"but the campaign has only {len(by_index)}"
+            )
+        if index in seen:
+            raise ValueError(
+                f"{lobby_path.name}: {targetname} and {seen[index]} are both "
+                f"for mission {index}"
+            )
+        seen[index] = targetname
+        buttons.append({"targetname": targetname, "chapter": by_index[index]})
+
+    missing = sorted(set(by_index) - set(seen))
+    if missing:
+        names = ", ".join(by_index[index] for index in missing)
+        raise ValueError(f"{lobby_path.name}: no button for {names}")
+
+    # By mission order, so the file reads the way the lobby is walked and a diff
+    # of it stays legible.
+    buttons.sort(key=lambda button: hub_button_index(button["targetname"]) or 0)
+    return buttons
 
 
 def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
@@ -669,6 +731,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  data version: {data['data_version']}"
           + (f"  ({added} new location ids)" if added else ""))
     print(f"  chapters : {len(data['chapters'])}")
+    print(f"  buttons  : {len(data['hub_buttons'])} in {data['hub_map']}")
     print(f"  items    : {len(data['items'])} ({progression} progression)")
     print(f"  locations: {len(data['locations'])}")
     counts = collections.Counter(l["trigger"]["type"] for l in data["locations"])

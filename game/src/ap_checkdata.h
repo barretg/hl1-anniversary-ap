@@ -90,8 +90,18 @@ public:
     // list overrides this; these are the default rather than the truth.
     std::vector<std::string> starting_weapons;
 
+    // Lobby panel targetname -> the mission it travels to. Empty when the mod
+    // folder has no authored lobby in it, which is not an error: the console
+    // commands are the whole of the hub without one.
+    std::vector<std::pair<std::string, std::string>> hub_buttons;
+
     bool Load(const std::string& path);
     bool Loaded() const { return !locations.empty(); }
+
+    // Which mission this lobby panel enters, or null for any other entity the
+    // player pressed use on. Matched on the targetname, which is the only handle
+    // the map and this file share.
+    const Chapter* ChapterOfButton(const std::string& targetname) const;
 
     // Which mission a map belongs to, or null for a map not in the campaign --
     // a deathmatch map, the hub, or the hazard course.

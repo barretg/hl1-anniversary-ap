@@ -27,8 +27,9 @@ full C++ class access -- `GiveNamedItem`, `RemovePlayerItem`, `PlayerUse`,
 `CanHavePlayerItem` -- with no third-party dependency.
 
 The mod folder inherits everything else through `fallback_dir "valve"`, so the
-player's install is never written to. See `apworld/half_life/mod/` for the
-installer and `liblist.gam`.
+player's install is never written to. The two exceptions are the dll itself and
+`maps/ap_lobby_alpha.bsp`, the authored hub, which is ours and is in no Half-Life
+install. See `apworld/half_life/mod/` for the installer and `liblist.gam`.
 
 ## Building
 
@@ -119,7 +120,7 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_text.*` | splitting, trimming, parsing | nothing |
 | `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon | `ServerActivate`, `CBasePlayer::PlayerUse` |
 | `src/ap_items.*` | the loadout, weapon refusal, armour | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
-| `src/ap_hub.*` | console commands, warps, the mission-boundary choke point | `GameDLLInit`, `CChangeLevel::ChangeLevelNow` |
+| `src/ap_hub.*` | console commands, the lobby's panels, warps, the mission-boundary choke point | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CChangeLevel::ChangeLevelNow` |
 | `src/ap_deathlink.*` | deaths out, deaths in | `CBasePlayer::Killed` |
 | `src/ap_traps.*` | the three traps, and their precache set | `ClientPrecache`, the poll |
 
@@ -174,13 +175,36 @@ chargers of the same classname are never closer than 204 units anywhere in the
 campaign, and any two chargers are never closer than 48, so the match cannot be
 ambiguous -- and a future recompile that shifts a brush slightly cannot break it.
 
-**The hub is `stalkyard` until there is an authored map,** and it is also
-`startmap` in `liblist.gam`, so New Game begins there rather than on the tram.
-It was picked against the map files: no `trigger_changelevel` (`lambda_bunker`
-has one into the middle of Forget About Freeman), nothing that hurts you while
-you stand still (`pool_party` has a `dmg 200` trigger), and small, because it is
-reloaded after every mission. v2 replaces it with one room and a button per
-mission.
+**The hub is `ap_lobby_alpha`,** an authored map: one room, a labelled panel per
+mission, and a pit. It is also `startmap` in `liblist.gam`, so New Game begins
+there rather than on the tram, and it is the one map the mod folder ships --
+everything else is inherited from `valve` through the fallback, but no Half-Life
+install has this one.
+
+It replaces `stalkyard`, a stock deathmatch map picked against three criteria a
+hub can fail on: no `trigger_changelevel` out of it (`lambda_bunker` has one into
+the middle of Forget About Freeman, and the interception here would not stop it,
+since that only takes over transitions *leaving* a mission), nothing that hurts
+you while you stand still (`pool_party` has a `dmg 200` trigger), and small,
+because it is reloaded after every mission. Authoring the map settles the first
+and the third. The second it breaks deliberately: the pit is a joke and has to be
+walked into.
+
+**The lobby's panels go through the same gate as `ap_warp`.** `MissionOpen` in
+`ap_hub.cpp` is the one place that answers "may the player enter this mission",
+so a panel cannot become a way past a lock the command honours. The only thing
+the two do differently is where a refusal is printed: a command answers in the
+console with `Say`, a panel answers on screen with `Notify`, because somebody who
+pressed a button is looking at the room and a console-only refusal is
+indistinguishable from a dead button.
+
+A panel is matched by `targetname` against the `P` records, and the generator
+reads those out of the BSP: `chapter_<n>_button` enters the mission with index
+`n`. Nothing is written down twice, so a panel renamed in the map moves its
+record with it, and a mission with no panel fails the build rather than being
+discovered in play. Four names have to agree -- `kHubMap` here, `startmap` in
+`liblist.gam`, `HUB_MAP` in `tools/campaign_layout.py`, and `hub_map` in the
+generated data -- and `tests/test_mod_install.py` fails if they drift.
 
 **Commands arrive from two places and are handled in one.** `ClientCommand`
 intercepts `say` and `say_team`, so a line starting with `!` or `/` is answered

@@ -45,6 +45,12 @@ DLL_NAME = "dlls/hl.dll"
 MOD_FILES = (
     ("files/liblist.gam", "liblist.gam"),
     ("files/archipelago/checkdata.txt", "archipelago/checkdata.txt"),
+    # The authored lobby. The one map this folder ships: everything else is
+    # inherited from `valve` through the fallback, but this map is ours and the
+    # player's install does not have it. It has to keep the same name as
+    # `startmap` in liblist.gam, `kHubMap` in game/src/ap_hub.cpp and `hub_map`
+    # in the campaign data; tests/test_mod_install.py fails if they drift.
+    ("files/maps/ap_lobby_alpha.bsp", "maps/ap_lobby_alpha.bsp"),
 )
 
 # Everything install writes and uninstall may remove, plus whatever the last

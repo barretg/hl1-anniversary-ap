@@ -6,11 +6,12 @@
 #   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
+#   P|<button targetname>|<chapter key>   a lobby panel and where it goes
 #   D|<data version>               must match the client's, or ids differ
 # A charger's <arg> is <classname>@<x y z>, the rounded world-space centre
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
-V|2
+V|3
 D|782162323610
 G|c4a3
 C|0|c0a0|Black Mesa Inbound|c0a0,c0a0a,c0a0b,c0a0c,c0a0d,c0a0e|0|0
@@ -291,3 +292,21 @@ K|weapon_shotgun|Shotgun
 K|weapon_snark|Snarks
 K|weapon_tripmine|Tripmine
 S|weapon_crowbar
+P|chapter_0_button|c0a0
+P|chapter_1_button|c1a0
+P|chapter_2_button|c1a0c
+P|chapter_3_button|c1a2
+P|chapter_4_button|c1a3
+P|chapter_5_button|c1a4
+P|chapter_6_button|c2a1
+P|chapter_7_button|c2a2
+P|chapter_8_button|c2a3
+P|chapter_9_button|c2a4
+P|chapter_10_button|c2a4d
+P|chapter_11_button|c2a5
+P|chapter_12_button|c3a1
+P|chapter_13_button|c3a2e
+P|chapter_14_button|c4a1
+P|chapter_15_button|c4a2
+P|chapter_16_button|c4a1a
+P|chapter_17_button|c4a3

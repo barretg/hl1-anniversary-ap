@@ -1,10 +1,10 @@
 // The hub: console commands, warps, and the mission-boundary choke point.
 //
-// There is no campaign portal in retail, so v1's hub is the console. These are
+// There is no campaign portal in retail, so the console is the primary surface:
 // properly registered server commands rather than the dot-prefixed workaround
-// Sven Co-op forced on the previous project, and in single-player the console is
-// the primary surface rather than a fallback. An authored hub map is v2 and adds
-// a `P` record to checkdata.txt; nothing else about this changes when it lands.
+// Sven Co-op forced on the previous project. The authored lobby adds a panel per
+// mission on top of that, through the `P` records in checkdata.txt, and both go
+// through the same gate -- a panel cannot be a way past a lock `ap_warp` honours.
 //
 // The choke point is `CChangeLevel::ChangeLevelNow`. A transition inside a
 // mission is left alone -- inventory and level state carry exactly as retail
@@ -53,17 +53,22 @@ bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map
 // One frame's worth of deferred work: a queued map change, and nothing else.
 void RunDeferred();
 
-// Where "the hub" is until an authored map exists.
+// A lobby panel was pressed. True when it was one of ours and has been dealt
+// with; false for every other entity in the world, including the lobby's own
+// doors and anything the campaign puts under a player's crosshair.
 //
-// The hazard course entrance: a real, small, empty map that is deliberately not
-// part of the campaign, so no check can fire there and no mission can be
-// completed by standing in it. v2 replaces this with one room and a button per
-// mission, shipped in the mod folder.
+// Matched on the entity's targetname against the `P` records, which is the one
+// handle the map and `checkdata.txt` share.
+bool PressHubButton(CBasePlayer* player, CBaseEntity* target);
+
+// The hub map: one room, a labelled panel per mission, shipped in the mod
+// folder rather than inherited from `valve` because it is ours.
 //
 // It is also `startmap` in liblist.gam, so New Game begins here rather than on
 // the tram: every mission is entered by warping, and starting inside one would
 // hand it over for free and fire its arrival check before the run had begun.
-// The two must agree; tests/test_mod_install.py fails if they drift apart.
+// The two must agree; tests/test_mod_install.py fails if they drift apart, and
+// `HUB_MAP` in tools/campaign_layout.py is the third name that has to match.
 extern const char* const kHubMap;
 
 // Is the player in the hub rather than in a mission?

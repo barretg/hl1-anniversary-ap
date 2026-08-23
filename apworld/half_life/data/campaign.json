@@ -4042,5 +4042,80 @@
  },
  "starting_weapons": [
   "weapon_crowbar"
+ ],
+ "hub_map": "ap_lobby_alpha",
+ "hub_buttons": [
+  {
+   "targetname": "chapter_0_button",
+   "chapter": "c0a0"
+  },
+  {
+   "targetname": "chapter_1_button",
+   "chapter": "c1a0"
+  },
+  {
+   "targetname": "chapter_2_button",
+   "chapter": "c1a0c"
+  },
+  {
+   "targetname": "chapter_3_button",
+   "chapter": "c1a2"
+  },
+  {
+   "targetname": "chapter_4_button",
+   "chapter": "c1a3"
+  },
+  {
+   "targetname": "chapter_5_button",
+   "chapter": "c1a4"
+  },
+  {
+   "targetname": "chapter_6_button",
+   "chapter": "c2a1"
+  },
+  {
+   "targetname": "chapter_7_button",
+   "chapter": "c2a2"
+  },
+  {
+   "targetname": "chapter_8_button",
+   "chapter": "c2a3"
+  },
+  {
+   "targetname": "chapter_9_button",
+   "chapter": "c2a4"
+  },
+  {
+   "targetname": "chapter_10_button",
+   "chapter": "c2a4d"
+  },
+  {
+   "targetname": "chapter_11_button",
+   "chapter": "c2a5"
+  },
+  {
+   "targetname": "chapter_12_button",
+   "chapter": "c3a1"
+  },
+  {
+   "targetname": "chapter_13_button",
+   "chapter": "c3a2e"
+  },
+  {
+   "targetname": "chapter_14_button",
+   "chapter": "c4a1"
+  },
+  {
+   "targetname": "chapter_15_button",
+   "chapter": "c4a2"
+  },
+  {
+   "targetname": "chapter_16_button",
+   "chapter": "c4a1a"
+  },
+  {
+   "targetname": "chapter_17_button",
+   "chapter": "c4a3"
+  }
  ]
 }
