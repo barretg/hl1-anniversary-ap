@@ -388,6 +388,12 @@ class HalfLifeContext(SuperContext):
         # so it has to see every packet. Harmless otherwise.
         super().on_package(cmd, args)
 
+        # Any packet can move `checked_locations` on: RoomUpdate carries them
+        # after somebody releases, and ReceivedItems after a collect. A mission
+        # completion arriving that way is as real as one the game reported.
+        if cmd in ("Connected", "RoomUpdate", "ReceivedItems"):
+            self.sync_completed_missions()
+
         if cmd == "Connected":
             slot_data = args.get("slot_data", {})
             self.missions_required = int(
@@ -414,12 +420,8 @@ class HalfLifeContext(SuperContext):
             if self.death_link_enabled:
                 asyncio.create_task(self.update_death_link(True), name="UpdateDeathLink")
 
-            # A mission we already finished before a reconnect still counts.
-            self.completed_missions = {
-                self.chapter_for_location(location_id)
-                for location_id in self.checked_locations
-                if self.is_mission_complete(location_id)
-            } - {""}
+            # A mission we already finished before a reconnect still counts, and
+            # `sync_completed_missions` above has already taken care of that.
 
             logger.info(
                 f"Connected. {self.missions_required} missions needed to open "
@@ -528,6 +530,28 @@ class HalfLifeContext(SuperContext):
             if entry["id"] == location_id:
                 return entry["trigger"]["type"] == "chapter_complete"
         return False
+
+    def sync_completed_missions(self) -> None:
+        """Rebuild the finished-mission set from the server's checked locations.
+
+        The server is the authority on what has been checked, and a mission's
+        completion *is* a location. Tracking only the `COMPLETE` events the game
+        reports made the client disagree with the server the moment a location
+        was released or collected from anywhere else: sending a mission's
+        completion check by hand did nothing in game, because the client had
+        never seen the event that normally accompanies it. `missions_required`
+        counts these, so the finale stayed sealed on a completion the server
+        already had.
+
+        Additive rather than a replacement: the game may report a completion a
+        beat before the check round-trips, and dropping it in between would
+        re-seal a finale that had just opened.
+        """
+        self.completed_missions |= {
+            self.chapter_for_location(location_id)
+            for location_id in self.checked_locations
+            if self.is_mission_complete(location_id)
+        } - {""}
 
     @property
     def held_item_names(self) -> set[str]:
@@ -768,6 +792,12 @@ async def pump(ctx: HalfLifeContext) -> None:
             for location_id in unseen:
                 logger.info(f"Check: {ctx.location_name_by_id.get(location_id, location_id)}")
             await ctx.send_msgs([{"cmd": "LocationChecks", "locations": unseen}])
+
+    # A completion the server already had, or one that has just round-tripped,
+    # counted before the snapshot goes out rather than a poll later: it is what
+    # `goal_open` is computed from, and the game learns of the seal opening from
+    # that snapshot and nothing else.
+    ctx.sync_completed_missions()
 
     # Always published, even if reading failed: the snapshot is how the game
     # learns about unlocks, and it must not be skipped just because ap_out.txt
