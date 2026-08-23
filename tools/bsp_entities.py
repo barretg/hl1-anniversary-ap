@@ -1,12 +1,20 @@
 """Extract the entity lump from GoldSrc (BSP v30) maps.
 
-Sven Co-op's Half-Life campaign maps are the authoritative source for what actually
+Half-Life's own campaign maps are the authoritative source for what actually
 exists in each level: monster classnames, their origins, item pickups, and the
 changelevel targets that chain the maps together. Rather than hand-authoring the
 Archipelago location table from memory, we read it straight out of the shipped BSPs.
 
+By default the CLI projects each entity down to classname, targetname and origin,
+which is all the campaign data needs. Investigating an unfamiliar map usually needs
+the rest: `--full` keeps every keyvalue, `--targetname` and `--grep` narrow the dump,
+and `--raw` prints the lump verbatim. That is how the lobby map's buttons were read.
+
 Usage:
     python tools/bsp_entities.py <bsp-or-directory> [--classname monster_*] [--json out.json]
+    python tools/bsp_entities.py ap_lobby_alpha.bsp --classname func_button --full
+    python tools/bsp_entities.py ap_lobby_alpha.bsp --targetname "chapter_*" --full
+    python tools/bsp_entities.py ap_lobby_alpha.bsp --raw > entities.txt
 """
 
 from __future__ import annotations
@@ -72,6 +80,34 @@ LUMP_MODELS = 14
 MODEL_STRUCT_SIZE = 64
 
 
+def brush_model_bounds(
+    bsp_path: Path,
+) -> dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]:
+    """`*N` -> the (mins, maxs) the compiler recorded for that brush model.
+
+    The bounding box rather than its centre, for the cases where the extent is
+    the point: a trigger volume a player has to be standing inside, or a button
+    whose face has to be told apart from the wall it is set into.
+    """
+    with bsp_path.open("rb") as handle:
+        header = handle.read(struct.calcsize(HEADER_FMT))
+        fields = struct.unpack(HEADER_FMT, header)
+        if fields[0] != 30:
+            raise ValueError(f"{bsp_path.name}: unsupported BSP version {fields[0]}")
+        offset = fields[1 + LUMP_MODELS * 2]
+        length = fields[2 + LUMP_MODELS * 2]
+        handle.seek(offset)
+        raw = handle.read(length)
+
+    bounds: dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]] = {}
+    for index in range(length // MODEL_STRUCT_SIZE):
+        base = index * MODEL_STRUCT_SIZE
+        mins = struct.unpack_from("<3f", raw, base)
+        maxs = struct.unpack_from("<3f", raw, base + 12)
+        bounds[f"*{index}"] = (mins, maxs)
+    return bounds
+
+
 def brush_model_centres(bsp_path: Path) -> dict[str, tuple[float, float, float]]:
     """`*N` -> the centre of that brush model's bounding box.
 
@@ -119,11 +155,36 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         help="glob to filter classnames (repeatable); default: all",
     )
+    parser.add_argument(
+        "--targetname",
+        action="append",
+        default=[],
+        help="glob to filter targetnames (repeatable); default: all",
+    )
+    parser.add_argument(
+        "--grep",
+        action="append",
+        default=[],
+        help=(
+            "keep entities where this substring appears in any key or value, "
+            "case-insensitive (repeatable, OR'd)"
+        ),
+    )
     parser.add_argument("--json", type=Path, help="write results as JSON to this path")
     parser.add_argument(
         "--counts",
         action="store_true",
         help="print per-map classname counts instead of individual entities",
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="keep every keyvalue rather than classname/targetname/origin",
+    )
+    parser.add_argument(
+        "--raw",
+        action="store_true",
+        help="print the entity lump verbatim and exit; ignores every filter",
     )
     args = parser.parse_args(argv)
 
@@ -132,10 +193,32 @@ def main(argv: list[str] | None = None) -> int:
     else:
         bsps = [args.target]
 
-    def matches(classname: str) -> bool:
-        if not args.classname:
+    if args.raw:
+        for bsp in bsps:
+            if len(bsps) > 1:
+                print(f"\n=== {bsp.stem} ===")
+            print(read_entity_lump(bsp))
+        return 0
+
+    def globbed(value: str, patterns: list[str]) -> bool:
+        if not patterns:
             return True
-        return any(fnmatch.fnmatch(classname, pattern) for pattern in args.classname)
+        return any(fnmatch.fnmatch(value, pattern) for pattern in patterns)
+
+    needles = [needle.lower() for needle in args.grep]
+
+    def grepped(entity: dict[str, str]) -> bool:
+        if not needles:
+            return True
+        blob = " ".join(f"{key} {value}" for key, value in entity.items()).lower()
+        return any(needle in blob for needle in needles)
+
+    def keep(entity: dict[str, str]) -> bool:
+        return (
+            globbed(entity.get("classname", ""), args.classname)
+            and globbed(entity.get("targetname", ""), args.targetname)
+            and grepped(entity)
+        )
 
     result: dict[str, list[dict[str, object]]] = {}
     for bsp in bsps:
@@ -146,16 +229,19 @@ def main(argv: list[str] | None = None) -> int:
             continue
         kept: list[dict[str, object]] = []
         for entity in entities:
-            classname = entity.get("classname", "")
-            if not matches(classname):
+            if not keep(entity):
                 continue
-            kept.append(
-                {
-                    "classname": classname,
-                    "targetname": entity.get("targetname", ""),
-                    "origin": origin_of(entity),
-                }
-            )
+            if args.full:
+                # `origin` stays parsed so --full is a superset of the default shape.
+                kept.append({**entity, "origin": origin_of(entity)})
+            else:
+                kept.append(
+                    {
+                        "classname": entity.get("classname", ""),
+                        "targetname": entity.get("targetname", ""),
+                        "origin": origin_of(entity),
+                    }
+                )
         result[bsp.stem] = kept
 
     if args.json:
@@ -172,6 +258,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n=== {map_name} ({len(entities)}) ===")
             for classname, count in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])):
                 print(f"  {count:4d}  {classname}")
+        elif args.full:
+            print(f"\n=== {map_name} ({len(entities)}) ===")
+            for entity in entities:
+                print(f"\n  {entity.get('classname', '')}")
+                for key, value in entity.items():
+                    if key != "classname":
+                        print(f"    {key:28} {value}")
         else:
             print(f"\n=== {map_name} ({len(entities)}) ===")
             for entity in entities:
