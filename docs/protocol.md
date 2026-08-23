@@ -92,10 +92,21 @@ happening.
 `session` identifies one run of the client. The client's event sequence restarts
 at 1 each launch, so when the session changes the game resets its high-water
 mark; otherwise every event from a restarted client would look already-applied
-and be ACKed away without running.
+and be ACKed away without running. That is all the session id is good for.
+
+`slot` is `<seed name>:<slot number>`, and it is what says the run has changed
+underneath us. The session cannot do that job and is wrong both ways round: it
+changes when the same slot reconnects from a restarted client, which should move
+nobody, and does not change when a different slot is connected from the client
+already running, which is the case that leaves the player standing in a mission
+the new slot may not have unlocked or may not contain at all. On a change between
+two named slots the game returns to the hub; everything else that is run-scoped
+is cleared by that map load anyway. An empty `slot` is a disconnected client
+rather than a new run, so the last one named stands.
 
 ```
 session=9f3c1ab2
+slot=Seed1234:3
 data_version=d645439896ec
 connected=1
 goal_open=0

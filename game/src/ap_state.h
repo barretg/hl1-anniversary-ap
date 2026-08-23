@@ -17,6 +17,16 @@ struct Snapshot {
     std::string session;        // changes when the client restarts
     std::string data_version;   // ours must match, or ids mean different things
 
+    // Which slot of which seed is being played, "<seed>:<slot>". This is what
+    // says the run has changed underneath us, and it is a different question
+    // from the session above: a client restarted onto the same slot is a blip
+    // and must move nobody, while a different slot connected from the client
+    // already running changes everything the run is about.
+    //
+    // Empty while the client is disconnected, which is no news rather than a
+    // new slot, so the last one named stands.
+    std::string slot;
+
     std::set<std::string> open_chapters;      // missions that may be entered
     std::set<std::string> excluded_chapters;  // not in this seed at all
     std::set<std::string> held_items;         // item names the player has been sent

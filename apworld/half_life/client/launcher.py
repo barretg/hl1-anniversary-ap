@@ -554,6 +554,23 @@ class HalfLifeContext(SuperContext):
         } - {""}
 
     @property
+    def slot_identity(self) -> str:
+        """Which slot of which seed, which is what the game resets its run on.
+
+        The client's `session` id cannot answer this. It is minted once per
+        launch, so it changes when the same slot reconnects from a restarted
+        client, which should move nobody, and does not change when the client
+        already running connects a *different* slot, which is the case that
+        leaves the player standing in a mission the new slot may not have.
+
+        Empty until a slot is connected. That is not "a new slot": a disconnect
+        is no news, and the game keeps the last one it was told about.
+        """
+        if self.slot is None:
+            return ""
+        return f"{self.seed_name or ''}:{self.slot}"
+
+    @property
     def held_item_names(self) -> set[str]:
         """Everything the game should treat as held, received or not.
 
@@ -719,6 +736,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         checked=sorted(ctx.checked_locations),
         missing=sorted(ctx.missing_locations),
         data_version=ctx.data_version,
+        slot=ctx.slot_identity,
         force=force,
     )
 

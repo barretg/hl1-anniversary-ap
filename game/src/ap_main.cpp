@@ -253,9 +253,25 @@ void RunFrame() {
     const std::set<std::string> had_chapters = State().open_chapters;
     const bool had_goal = State().goal_open;
     const std::string had_session = State().session;
+    const std::string had_slot = State().slot;
 
     std::vector<PendingEvent> events;
     if (g_bridge.Poll(State(), events)) {
+        // A different slot is a different run, and the map we are standing on
+        // belongs to a mission the new one may not have unlocked or may not
+        // contain at all. Everything else that is run-scoped -- the checks sent
+        // on this map, a Butterfingers debt, the trap timers -- is cleared by
+        // the map load itself, so the trip back to the hub is the whole reset.
+        //
+        // Only between two named slots. Arriving at the first one is a client
+        // connecting, which is where the player already is.
+        if (!had_slot.empty() && !State().slot.empty() &&
+            had_slot != State().slot) {
+            Trace("  slot changed; returning to the hub");
+            Notify("A different slot is connected. Returning to the hub.");
+            RequestMap(kHubMap);
+        }
+
         AnnounceArrivals(had_session, had_items, had_chapters, had_goal);
 
         for (const PendingEvent& event : events) {

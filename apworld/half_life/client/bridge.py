@@ -193,6 +193,7 @@ class Bridge:
         missing: list[int] | None = None,
         death_link_amnesty: int = 0,
         data_version: str = "",
+        slot: str = "",
         force: bool = False,
     ) -> bool:
         """Rewrite ap_in.txt. Returns True if anything was written.
@@ -205,6 +206,12 @@ class Bridge:
         lines = [
             "# Written by the Half-Life Archipelago client.",
             f"session={self.session}",
+            # Which slot of which seed, which is what the game resets its run on.
+            # `session` is a fresh id per client launch and says nothing about
+            # the slot: it fires on a reconnect that changed nothing and is
+            # silent on the slot change that changes everything. Empty while
+            # disconnected, which the game reads as "no news".
+            f"slot={slot}",
             # The game refuses to send checks if this disagrees with its own
             # copy, since the two would be numbering locations differently.
             f"data_version={data_version}",

@@ -115,6 +115,8 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
 
         if (key == "session") {
             parsed.session = Trim(value);
+        } else if (key == "slot") {
+            parsed.slot = Trim(value);
         } else if (key == "data_version") {
             parsed.data_version = Trim(value);
         } else if (key == "connected") {
@@ -154,6 +156,15 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
     if (parsed.session != session_) {
         session_ = parsed.session;
         applied_ = 0;
+    }
+
+    // An empty slot is a disconnected client, not a new run, so the last one we
+    // were told about stands. Carried into the snapshot rather than left blank
+    // so that the poll can diff it the same way it diffs the session.
+    if (parsed.slot.empty()) {
+        parsed.slot = slot_;
+    } else {
+        slot_ = parsed.slot;
     }
 
     last_text_ = text;

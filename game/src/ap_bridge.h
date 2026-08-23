@@ -70,6 +70,11 @@ private:
     // session resets this. Without that, every event from a restarted client
     // would look already-applied and be ACKed away without running.
     std::string session_;
+
+    // The last slot the client actually named. A disconnected client sends an
+    // empty one, which is no news rather than a new run, so it is carried
+    // forward into the snapshot instead of blanking what we knew.
+    std::string slot_;
     int applied_ = 0;
     long now_ = 0;
 };

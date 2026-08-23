@@ -154,6 +154,24 @@ def test_sessions_differ_between_client_runs(tmp_path: Path) -> None:
     assert Bridge(tmp_path).session != Bridge(tmp_path).session
 
 
+def test_snapshot_carries_the_slot(bridge: Bridge) -> None:
+    """What the game resets its run on, which the session cannot answer."""
+    snapshot(bridge, slot="Seed1234:3")
+    assert "slot=Seed1234:3" in bridge.in_path.read_text(encoding="utf-8")
+
+
+def test_snapshot_slot_is_empty_while_disconnected(bridge: Bridge) -> None:
+    """No slot is "no news" to the game, not "a new run"."""
+    snapshot(bridge)
+    assert "slot=" in bridge.in_path.read_text(encoding="utf-8")
+
+
+def test_a_changed_slot_rewrites_the_snapshot(bridge: Bridge) -> None:
+    """Same length, different run: the write must not be skipped as unchanged."""
+    assert snapshot(bridge, slot="Seed1234:3")
+    assert snapshot(bridge, slot="Seed1234:4")
+
+
 def test_equal_length_changes_are_still_written(bridge: Bridge) -> None:
     """A flag flip does not change the snapshot's length.
 
