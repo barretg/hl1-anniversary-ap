@@ -99,7 +99,11 @@ INTRO_CHAPTER = "c0a0"
 CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     # From here on you are fighting armed marines, not headcrabs.
     "c1a3": {"strict": ["ranged"]},
-    "c1a4": {"strict": ["ranged"]},
+    # Blast Pit also wants something explosive. The tentacle in the silo is the
+    # level, and a seed that dropped the player in with a pistol had them working
+    # around it rather than through it. A gate naming two groups requires one
+    # item from each, so this is a ranged weapon *and* an explosive.
+    "c1a4": {"strict": ["ranged", "explosives"]},
     "c2a1": {"strict": ["ranged"]},
     "c2a2": {"strict": ["ranged"]},
     "c2a3": {"strict": ["ranged"]},

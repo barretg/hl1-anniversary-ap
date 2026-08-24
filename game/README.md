@@ -245,6 +245,12 @@ and mission unlocks arrive in the *snapshot* rather than as events, so the poll
 diffs each new snapshot against the last to find them; without that they arrived
 in complete silence.
 
+The split is by shape rather than by origin, so a command whose answer is one
+line about the room answers on screen: `ap_find` uses `Notify`, because it points
+at something the player is standing near and turning to look for, and reading it
+meant opening the console and losing sight of the level. `ap` and `ap_tracker`
+are lists and stay where lists belong.
+
 **Butterfingers really drops the weapon.** `CBasePlayer::DropPlayerItem` begins
 `if ( !g_pGameRules->IsMultiplayer() ) return;`, so the trap removes the weapon
 and throws a fresh copy on the floor instead. It can be picked back up -- that

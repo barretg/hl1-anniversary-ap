@@ -226,8 +226,13 @@ void Find(const std::string& text) {
     if (player == nullptr) {
         return;
     }
+    // `Find` answers on screen rather than in the console alone, which is the
+    // one place the Say/Notify split goes the other way. It is a single line
+    // that points at somewhere in the room, and it is read by a player who is
+    // standing in the level turning around -- not one who has the console open.
+    // `ap` and `ap_tracker` stay in the console: those are lists.
     if (!Data().Loaded()) {
-        Say("No checkdata.txt, so there is nothing to find.");
+        Notify("No checkdata.txt, so there is nothing to find.");
         return;
     }
 
@@ -265,8 +270,8 @@ void Find(const std::string& text) {
     }
 
     if (best == nullptr) {
-        Say(wanted.empty() ? "Nothing left to find in this map."
-                           : "No unfound check here matches that.");
+        Notify(wanted.empty() ? "Nothing left to find in this map."
+                              : "No unfound check here matches that.");
         return;
     }
 
@@ -275,7 +280,7 @@ void Find(const std::string& text) {
     std::snprintf(line, sizeof(line), "%s: %s, about %d units away.",
                   best->name.c_str(), Bearing(player, at),
                   static_cast<int>(best_score));
-    Say(line);
+    Notify(line);
 }
 
 void Tracker(const std::string& map_filter) {

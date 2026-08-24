@@ -103,7 +103,8 @@
    "is_goal": false,
    "gates": {
     "strict": [
-     "ranged"
+     "ranged",
+     "explosives"
     ]
    },
    "complete_on_arrival": false

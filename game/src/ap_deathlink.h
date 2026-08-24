@@ -10,6 +10,13 @@
 // In: a DEATHLINK delivery kills the player. One older than ten seconds is
 // dropped -- it belongs to a moment that has passed, and arriving late is worse
 // than not arriving.
+//
+// A death we inflict ourselves is not the player's death and is not reported or
+// counted. Without that it is both an amnesty leak -- somebody else's mistake
+// spending your allowance -- and a loop: the kill raises `Killed`, which reports
+// a DEATH the client turns straight back into an outgoing DeathLink, which the
+// other slot answers. Two slots with DeathLink on will do that to each other
+// until one of them quits. See `kDeathLinkImmuneSeconds`.
 
 #pragma once
 
@@ -20,6 +27,14 @@ class CBasePlayer;
 namespace ap {
 
 constexpr long kDeathLinkMaxAgeSeconds = 10;
+
+// How long after a DeathLink kill a death still counts as ours rather than the
+// player's. `TakeDamage` raises `Killed` inside the same call, so this only has
+// to cover that; the margin is for a death that lands a frame or two later --
+// gibs, a fall already in progress -- which is still not a death to report. The
+// cost of being generous is one genuine death going unreported in the second
+// after a DeathLink, which is the safer way to be wrong.
+constexpr float kDeathLinkImmuneSeconds = 1.5f;
 
 // From CBasePlayer::Killed. Reported whether or not DeathLink is on: the client
 // decides what becomes of it, because deciding here from a cached flag means a

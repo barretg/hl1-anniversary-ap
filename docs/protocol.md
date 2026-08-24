@@ -74,7 +74,7 @@ If the file shrinks, the client treats it as a new game session and rewinds.
 | `CHECK\|<location id>` | a location was collected |
 | `COMPLETE\|<chapter key>` | a mission was finished |
 | `GOAL\|<chapter key>` | Nihilanth is dead; client sends `StatusUpdate: CLIENT_GOAL` |
-| `DEATH\|<player>\|<cause>\|<forgiven>` | the player died; sent unconditionally. `forgiven` is `1` when DeathLink amnesty absorbed it, so the client does not report it onward |
+| `DEATH\|<player>\|<cause>\|<forgiven>` | the player died. Sent whether or not DeathLink is on, so the client decides; `forgiven` is `1` when DeathLink amnesty absorbed it, so the client does not report it onward. The one death never sent is one the game dealt out itself to deliver an incoming `DEATHLINK`: see below |
 | `CHAT\|<player>\|<message>` | in-game chat, for relaying to multiworld chat |
 | `ACK\|<seq>` | event consumed; client may drop it |
 
@@ -190,6 +190,21 @@ written. Everything else is generated and cannot desync the parser.
 
 The DeathLink payload joins its two fields with `~` because the game splits the
 event line on `|`.
+
+Delivering a `DEATHLINK` kills the player, and for a second and a half after that
+the game treats a death as its own rather than the player's: no amnesty is spent
+and **no `DEATH` is sent**. Both halves matter. Spending amnesty would let another
+slot's mistakes empty an allowance meant for the player's own, and reporting the
+death would be a loop -- the client turns a reported death into an outgoing
+DeathLink, the slot that sent this one answers it, and two slots with DeathLink
+on will trade deaths until somebody quits.
+
+`death_link_amnesty` in the snapshot is the *setting*, not the countdown. The
+game keeps the countdown in `ap_amnesty.txt` along with the setting it was
+counting down from, and a snapshot that changes the setting resets what is left
+immediately. Without that second number the saved countdown outlived the setting
+that produced it, and `/amnesty 0` went on forgiving deaths the player had just
+asked to have counted.
 
 ## `checkdata.txt`
 

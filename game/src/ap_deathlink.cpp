@@ -34,22 +34,56 @@ std::string AmnestyPath() {
     return dir + "/archipelago" + kAmnestyFile;
 }
 
-int ReadAmnesty() {
+// The countdown, and the setting it was counting down from.
+//
+// Both, because the client may change the setting mid-run -- `/amnesty 0` is a
+// player deciding their deaths should start counting -- and the file alone
+// cannot tell "3 left of 4" from "3 left of 3". Without the second number the
+// saved countdown simply won over the new setting and went on forgiving deaths
+// the player had just asked to have reported.
+struct Amnesty {
+    int remaining = -1;   // -1: nothing written this run
+    int configured = -1;  // -1: written before this field existed
+};
+
+Amnesty ReadAmnesty() {
+    Amnesty saved;
     std::ifstream file(AmnestyPath().c_str());
     if (!file) {
-        return -1;  // never written this run
+        return saved;  // never written this run
     }
     std::string text;
     std::getline(file, text);
-    const long value = ParseLong(text, -1);
-    return static_cast<int>(value);
+
+    const std::vector<std::string> parts = Split(Trim(text), ' ');
+    if (!parts.empty()) {
+        saved.remaining = static_cast<int>(ParseLong(parts[0], -1));
+    }
+    if (parts.size() > 1) {
+        saved.configured = static_cast<int>(ParseLong(parts[1], -1));
+    }
+    return saved;
 }
 
-void WriteAmnesty(int remaining) {
+void WriteAmnesty(int remaining, int configured) {
     std::ofstream file(AmnestyPath().c_str(), std::ios::out | std::ios::trunc);
     if (file) {
-        file << remaining << "\n";
+        file << remaining << " " << configured << "\n";
     }
+}
+
+// When a death still belongs to a DeathLink we delivered rather than to the
+// player. Always set *before* the damage is dealt, because `TakeDamage` raises
+// `Killed` inside the same call and a window opened afterwards would open too
+// late to matter.
+//
+// Deliberately in memory and not in the amnesty file: it is worth less than a
+// frame of the run, and a map change or a quickload inside it is not a death we
+// caused.
+float g_immune_until = 0.0f;
+
+bool DeathLinkImmune() {
+    return gpGlobals->time < g_immune_until;
 }
 
 }  // namespace
@@ -59,13 +93,27 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
         return;
     }
 
+    // A death we dealt out ourselves, delivering somebody else's DeathLink. It
+    // is not the player's death: it must not spend their amnesty, and above all
+    // it must not be reported, because the client turns a reported death into an
+    // outgoing DeathLink and the slot that sent this one would answer it.
+    if (DeathLinkImmune()) {
+        return;
+    }
+
     // Reported unconditionally, whether or not DeathLink is on. The client
     // decides what becomes of it: deciding here from a cached flag means a stale
     // snapshot silently swallows deaths with nothing in either log to explain it.
-    int remaining = ReadAmnesty();
-    if (remaining < 0) {
-        remaining = State().death_link_amnesty;
-    }
+    const int configured = State().death_link_amnesty;
+    const Amnesty saved = ReadAmnesty();
+
+    // The client's setting is the authority on how large the allowance is, and a
+    // change to it takes effect now rather than after the old countdown runs
+    // out. `/amnesty 0` is a player asking for their deaths to start counting,
+    // and honouring it a few deaths later is the same as ignoring it.
+    int remaining = (saved.remaining < 0 || saved.configured != configured)
+                        ? configured
+                        : saved.remaining;
 
     bool forgiven = false;
     if (State().death_link && remaining > 0) {
@@ -78,9 +126,9 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
     } else if (State().death_link) {
         // The allowance runs again from the top, so a run does not become one
         // long unbroken chain after the first death that gets through.
-        remaining = State().death_link_amnesty;
+        remaining = configured;
     }
-    WriteAmnesty(remaining);
+    WriteAmnesty(remaining, configured);
 
     std::vector<std::string> args;
     args.push_back("Freeman");
@@ -111,6 +159,12 @@ void OnDeathLinkReceived(const std::string& source, const std::string& cause,
     }
 
     Notify(source + " died to " + cause + ".");
+
+    // Before the damage, never after: `TakeDamage` raises `CBasePlayer::Killed`
+    // inside this call, so a window opened on the next line would open after the
+    // thing it exists to catch had already happened.
+    g_immune_until = gpGlobals->time + kDeathLinkImmuneSeconds;
+
     player->TakeDamage(player->pev, player->pev, player->pev->health + 100.0f,
                        DMG_GENERIC | DMG_ALWAYSGIB);
 }
