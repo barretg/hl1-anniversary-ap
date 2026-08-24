@@ -150,14 +150,25 @@ void SendChapterComplete(const Chapter& chapter) {
 }
 
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target) {
-    if (player == nullptr || target == nullptr || !Live()) {
+    if (player == nullptr || target == nullptr) {
         return;
     }
 
-    // A lobby panel, before anything else: it is a `func_button` rather than a
-    // charger, so the two can never both answer, but the hub owns its own
-    // entities and asking it first keeps it that way.
+    // A lobby panel, and *before* the `Live` guard below rather than after it.
+    //
+    // `Live` is false while the client is disconnected, which is precisely when
+    // a panel has the most to say: the refusal is the whole point, and behind
+    // that guard the press was swallowed and the panel looked broken. This is
+    // the `Live` versus `Gated` distinction in ap_main.h -- sending a check
+    // waits on the client, but telling the player why they may not travel must
+    // not. `PressHubButton` asks `Data().Loaded()` for itself, which is what
+    // `Gated` means, so an ordinary Half-Life install still falls through.
     if (PressHubButton(player, target)) {
+        return;
+    }
+
+    // Everything below sends a check, so it does wait on the client.
+    if (!Live()) {
         return;
     }
 

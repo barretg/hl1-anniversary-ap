@@ -441,10 +441,18 @@ have not been exercised yet.
   closed. What exists instead is two `player_weaponstrip` entities, in `c2a3d`
   (Apprehension, mid-mission -- the loadout has to survive it) and `c5a1` (the
   ending, where it is correct).
-- **There is no `item_suit` entity in the campaign either.** The HEV suit is
-  granted some other way in `c1a0d`, and Phase 4 has to find out how before it
-  can gate armour. It also means there is no "First HEV Suit" check; the
-  generator says so when it runs.
+- **There is no `item_suit` entity in the campaign, and that answer was wrong.**
+  The HEV suit is a `world_items` of type 45 in `c1a0d` -- the Quake-era entity
+  the SDK swaps for a real pickup at spawn -- so the BSP says `world_items` where
+  the running game has an `item_suit`. The generator resolves that now, and there
+  *is* a "First HEV Suit" check: 241 locations, not 240.
+
+  Taking the BSP at its word cost more than a missing check. That entity targets
+  the `hevmaster1` multisource that opens the airlock into the test chamber, so
+  the pickup is the only way out of Anomalous Materials, and our own suit
+  handling stopped it firing in every seed. See `game/README.md` for the
+  mechanism and the fix. The lesson generalises: an entity the campaign appears
+  not to contain is worth doubting before it is worked around.
 - **The game name is still `Half-Life`** in `archipelago.json`, and the possible
   collision with GoldSRC-Archipelago/halflife-archipelago has not been checked.
   `Half-Life (GoldSrc)` remains the fallback. Change it before the first release,

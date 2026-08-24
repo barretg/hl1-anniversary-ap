@@ -281,6 +281,32 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
         OnWeaponCollected(player, classname);
     }
 
+    // The HEV suit is never refused, and it is made to complete for real.
+    //
+    // Two things go wrong otherwise and between them they seal Anomalous
+    // Materials shut. The suit bit is set on every spawn, because in GoldSrc it
+    // is what draws the weapon HUD -- so `CItemSuit::MyTouch` sees a player who
+    // already has one, returns FALSE, and `CItem::ItemTouch` never reaches
+    // `SUB_UseTargets`. In `c1a0d` that target is the `hevmaster1` multisource,
+    // and the `trigger_once` that sends Barney to open the airlock into the test
+    // chamber is mastered on it. No pickup, no multisource, no airlock. That
+    // happens in every seed, whether or not the item has arrived.
+    //
+    // Refusing the touch while the `HEV Suit` item is still out there does the
+    // same damage one step earlier, so the pickup always goes through. What the
+    // item gates is armour, which `ArmourAllowed` clamps every frame; it was
+    // never meant to gate the suit itself, which the player cannot play without.
+    //
+    // Clearing the bit is what lets the game's own code do the work: MyTouch
+    // then plays the HEV logon, sets the bit back and returns TRUE, so the
+    // targets fire and the entity is removed exactly as in an unmodified game.
+    // It is restored inside the same touch, and `ApplyLoadout` would put it back
+    // on the next poll in any case.
+    if (player != nullptr && classname == "item_suit") {
+        player->pev->weapons &= ~(1 << WEAPON_SUIT);
+        return true;
+    }
+
     const bool allowed = CanCollect(player, classname);
     if (!allowed) {
         // Said once per pickup rather than on every touch: the entity stays
@@ -312,18 +338,35 @@ void RunLoadout() {
         return;
     }
     CBasePlayer* player = Player();
-    // Wait for a player who can actually be sent a message. On the frame after
-    // a respawn there may not be one yet, and the whole point of deferring is
-    // not to write to the client before it can hear us.
-    if (player == nullptr || (player->pev->flags & FL_CLIENT) == 0) {
+    if (player == nullptr) {
         return;
     }
+    // Cleared before the call, not after: `ApplyLoadout` sets it again itself if
+    // the client is not ready yet, and clearing afterwards would throw that away
+    // and lose the loadout entirely.
     g_loadout_wanted = false;
     ApplyLoadout(player);
 }
 
 void ApplyLoadout(CBasePlayer* player) {
     if (player == nullptr || !Data().Loaded()) {
+        return;
+    }
+
+    // Nothing below may run before the client can take a user message, and two
+    // things here write one. Granting is not the quiet inventory change it looks
+    // like: `CBasePlayerWeapon::AddToPlayer` writes `WeapPickup`, and the
+    // `ForceClientDllUpdate` at the end writes `ResetHUD` through
+    // `UpdateClientData`. This runs from `CBasePlayer::Spawn`, which on a
+    // quickload is several frames before either is safe, and writing then is
+    // `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t` and a dead
+    // engine.
+    //
+    // Asked for again rather than skipped, so the loadout lands on the first
+    // frame it is safe to land on. `FL_CLIENT` is not enough to decide this: it
+    // is set while the engine is still restoring the player. See `ClientReady`.
+    if (!ClientReady()) {
+        g_loadout_wanted = true;
         return;
     }
 
@@ -389,6 +432,7 @@ void ApplyLoadout(CBasePlayer* player) {
     // Tell the client what it now has: forget everything the client is believed
     // to know and send it again, which is what the `fullupdate` console command
     // does. Only after a real grant, since it costs a HUD reset.
+    //
     if (gave_something) {
         // The ammo has to be invalidated by hand first, and this is not
         // optional. `ForceClientDllUpdate` sets `m_fInitHUD`, which sends

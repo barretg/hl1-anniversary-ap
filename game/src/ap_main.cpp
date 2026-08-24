@@ -33,6 +33,12 @@ bool g_warned_mismatch = false;
 // Player-facing lines waiting for a frame safe enough to send them in.
 std::vector<std::string> g_notices;
 
+// How many of those to hold while the client is not ready. A restore clears the
+// way for these within a frame or two, so the cap is only there to stop a
+// session that never gets a client from growing this for the life of the
+// process. The console already has every one of them.
+const size_t kMaxHeldNotices = 32;
+
 // `<game dir>/archipelago`. GET_GAME_DIR hands back the mod folder's name
 // ("hlap") and the engine's working directory is the install root, so a relative
 // path is both correct and the only thing that works on a client whose Half-Life
@@ -80,14 +86,31 @@ const char* Intern(const std::string& text) {
     return pool.insert(text).first->c_str();
 }
 
-void Say(const std::string& text) {
+bool ClientReady() {
     CBasePlayer* player = Player();
-    if (player == nullptr) {
-        ALERT(at_console, "[AP] %s\n", text.c_str());
+    if (player == nullptr || (player->pev->flags & FL_CLIENT) == 0) {
+        return false;
+    }
+    // `FL_CLIENT` only says the edict is a client, which it is from the moment
+    // the engine begins restoring one -- long before there is anywhere for a
+    // message to go. `m_fGameHUDInitialized` is set by `UpdateClientData` the
+    // first time it runs for this player, which is the frame the HUD comes up
+    // and the first moment a user message is safe. It is deliberately not a
+    // saved field, so a restore clears it and it comes back a frame later.
+    return player->m_fGameHUDInitialized != FALSE;
+}
+
+void Say(const std::string& text) {
+    // The console half of a command's answer. Always logged server-side, and
+    // sent to the client only when there is a client able to take it: this runs
+    // from command dispatch, where there normally is, but `ap` from the server
+    // console during a load is not a reason to bring the engine down.
+    ALERT(at_console, "[AP] %s\n", text.c_str());
+    if (!ClientReady()) {
         return;
     }
     const std::string line = "[AP] " + text + "\n";
-    CLIENT_PRINTF(player->edict(), print_console, line.c_str());
+    CLIENT_PRINTF(Player()->edict(), print_console, line.c_str());
 }
 
 void Notify(const std::string& text) {
@@ -100,7 +123,21 @@ void Notify(const std::string& text) {
     //
     // The same rule as the deferred level change, for the same reason: a hook
     // decides *what* happens, and StartFrame is where it actually happens.
+    //
+    // The server console is written here rather than in the flush, because it is
+    // the record and an `ALERT` is safe at any moment: it is not a user message
+    // and touches no network buffer. That also means the flush can hold the
+    // queue for a client that is not ready without repeating itself.
+    ALERT(at_console, "[AP] %s\n", text.c_str());
+
     g_notices.push_back(text);
+    // A client that never becomes ready must not grow this without bound. The
+    // oldest go first: what a player wants after a load is the last thing that
+    // happened, not the first.
+    if (g_notices.size() > kMaxHeldNotices) {
+        g_notices.erase(g_notices.begin(),
+                        g_notices.begin() + (g_notices.size() - kMaxHeldNotices));
+    }
 }
 
 void FlushNotices() {
@@ -108,18 +145,17 @@ void FlushNotices() {
         return;
     }
 
+    // Held, not dropped. A restore sets the player up a frame or two before the
+    // HUD exists, and an item that arrived across a quickload is exactly the
+    // thing worth telling the player about; the console already has it either
+    // way. Writing here before the HUD is up is the sizebuf_t crash.
+    if (!ClientReady()) {
+        return;
+    }
+
     CBasePlayer* player = Player();
-    const bool can_message =
-        player != nullptr && (player->pev->flags & FL_CLIENT) != 0;
 
     for (const std::string& text : g_notices) {
-        // The server console always gets it, so nothing is lost when there is
-        // nobody to tell.
-        ALERT(at_console, "[AP] %s\n", text.c_str());
-        if (!can_message) {
-            continue;
-        }
-
         const std::string line = "[AP] " + text + "\n";
         CLIENT_PRINTF(player->edict(), print_console, line.c_str());
 

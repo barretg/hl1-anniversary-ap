@@ -42,6 +42,7 @@
  },
  "locations": {
   "*|*|weapon_pickup|item_longjump": 7760220,
+  "*|*|weapon_pickup|item_suit": 7760240,
   "*|*|weapon_pickup|weapon_357,weapon_python": 7760208,
   "*|*|weapon_pickup|weapon_9mmAR,weapon_mp5": 7760209,
   "*|*|weapon_pickup|weapon_9mmhandgun,weapon_glock": 7760207,

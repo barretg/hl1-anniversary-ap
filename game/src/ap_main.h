@@ -112,6 +112,21 @@ bool Live();
 // amount of Half-Life to be able to play without a multiworld.
 bool Gated();
 
+// Can the client take a user message yet?
+//
+// This is the question behind every crash of the form
+// `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t`, and `FL_CLIENT`
+// is not the answer to it: that is set from the moment the engine begins
+// restoring a player, several frames before there is anywhere for a message to
+// go. `m_fGameHUDInitialized` is set by `UpdateClientData` on the first frame it
+// runs for this player, which is when the HUD comes up. It is not a saved field,
+// so a quickload clears it and it comes back a frame or two later.
+//
+// Anything that writes to the client waits on this: `Notify`'s flush, `Say`, and
+// the loadout -- which writes two of them without looking like it, through
+// `AddToPlayer`'s `WeapPickup` and `ForceClientDllUpdate`'s `ResetHUD`.
+bool ClientReady();
+
 // Console text: the answer to a command the player typed. Lists go here and
 // nowhere else -- `ap` is eighteen lines and would bury the screen.
 void Say(const std::string& text);

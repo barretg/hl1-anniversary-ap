@@ -1,5 +1,5 @@
 {
- "data_version": "782162323610",
+ "data_version": "161f1aca40e5",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -3759,6 +3759,24 @@
     -120,
     -804,
     -19
+   ]
+  },
+  {
+   "id": 7760240,
+   "name": "First HEV Suit",
+   "chapter": "c1a0",
+   "map": "c1a0d",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "c1a0d",
+    "classnames": [
+     "item_suit"
+    ]
+   },
+   "position": [
+    -3648,
+    960,
+    -248
    ]
   },
   {

@@ -68,6 +68,40 @@ SUPPLY_CLASSNAMES = {
     "item_healthkit": "Health Kit",
 }
 
+# `world_items` is Quake-era leftover that the SDK turns into a real pickup at
+# spawn time: `CWorldItem::Spawn` creates the entity named by its `type`, copies
+# its `target`, `targetname` and `spawnflags` across, and removes itself. The BSP
+# therefore says `world_items` where the running game has an `item_suit`.
+#
+# This matters far more than its two uses suggest. There is no `item_suit` entity
+# anywhere in the campaign, so a scan that took the BSP at its word concluded the
+# HEV suit was granted by some means it could not see, and Anomalous Materials
+# ended up with no suit check at all. It is a `world_items` of type 45, in
+# `c1a0d`, and it targets the `hevmaster1` multisource that opens the airlock.
+#
+# Numbers are the SDK's, from `dlls/items.cpp`.
+WORLD_ITEM_TYPES = {
+    "42": "item_antidote",
+    "43": "item_security",
+    "44": "item_battery",
+    "45": "item_suit",
+}
+
+
+def resolve_world_item(entity: dict[str, str]) -> dict[str, str]:
+    """Rewrite a `world_items` into the entity it becomes at spawn.
+
+    Applied to every entity as it is read, so nothing downstream has to know this
+    indirection exists: the generator sees what the running game will see, which
+    is also what the game side matches pickups against by classname.
+    """
+    if entity.get("classname") != "world_items":
+        return entity
+    real = WORLD_ITEM_TYPES.get(entity.get("type", "").strip())
+    if real is None:
+        return entity
+    return {**entity, "classname": real}
+
 
 def part_label(chapter_maps: list[str], map_name: str) -> str:
     """`Part 3` for multi-map chapters, empty for single-map ones."""
@@ -339,7 +373,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             bsp = maps_dir / f"{map_name}.bsp"
             if not bsp.exists():
                 raise SystemExit(f"missing map: {bsp}")
-            entities[map_name] = load_map(bsp)
+            entities[map_name] = [resolve_world_item(e) for e in load_map(bsp)]
             centres[map_name] = brush_model_centres(bsp)
 
     builder = LocationBuilder(registry)

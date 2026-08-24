@@ -266,6 +266,20 @@ change, which is any check the player sends.
     `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t` and a dead game.
     `Notify` queues; `FlushNotices` sends. That one cost a crash on the first
     death of the first real playthrough.
+  - **`ClientReady`, not `FL_CLIENT`, decides when that message may go.**
+    `FL_CLIENT` is set from the moment the engine begins restoring a player, and
+    guarding on it is how the same crash came back on every quickload.
+    `m_fGameHUDInitialized` is set by `UpdateClientData` on the first frame it
+    runs for this player, and that is the first moment the client has anywhere to
+    put a message.
+  - **Two things write a user message without looking like it,** and both are in
+    the loadout: `CBasePlayerWeapon::AddToPlayer` sends `WeapPickup`, so
+    *granting a weapon* is a client write, and `ForceClientDllUpdate` ends in
+    `UpdateClientData`, which sends `ResetHUD`. `ApplyLoadout` runs from
+    `CBasePlayer::Spawn`, several frames before either is safe on a restore, so
+    it returns early and asks for itself again until `ClientReady`. Anything
+    added there that touches the player's inventory is a client write until
+    proven otherwise.
 - **The suit is granted, never removed.** It owns the weapon HUD and weapon
   switching; a player without it cannot use what they have. The `HEV Suit` item
   controls armour, which is clamped to zero every frame until it arrives.
@@ -287,6 +301,25 @@ change, which is any check the player sends.
   -- but this is the case to test first.
 - `c5a1` (Endgame) has one too, which is fine: it is the ending.
 - There is no `game_player_equip` anywhere in the campaign.
-- There is no `item_suit` entity anywhere in the campaign either, so the HEV suit
-  is granted some other way in `c1a0d`. Find out how before trusting the armour
-  gate.
+- **There is no `item_suit` entity anywhere in the campaign, and the HEV suit is
+  one anyway.** It is a `world_items` of type 45 in `c1a0d`, the Quake-era entity
+  `CWorldItem::Spawn` replaces with a real pickup at map start, copying its
+  `target` across. The BSP says `world_items`; the running game has an
+  `item_suit`. `tools/build_campaign_data.py` resolves the indirection when it
+  reads entities, so the generator sees what the game sees.
+
+  That entity targets the `hevmaster1` multisource, and the `trigger_once` that
+  sends Barney to open the airlock into the test chamber is mastered on it. So
+  the suit pickup is not decoration: **it is the only way out of Anomalous
+  Materials.** Two of our own rules sealed it shut. The loadout sets the suit bit
+  on every spawn, so `CItemSuit::MyTouch` saw a player who already had one,
+  returned FALSE, and `CItem::ItemTouch` never reached `SUB_UseTargets` -- in
+  every seed, whether or not the item had arrived. Refusing the touch while the
+  `HEV Suit` item was still out there did the same thing a step earlier.
+
+  `CanCollect` therefore never refuses `item_suit`, and clears the suit bit
+  before allowing it so that the game's own code runs the pickup properly: the
+  HEV logon plays, the bit goes back, the targets fire, the entity is removed.
+  What the `HEV Suit` item gates is armour, through `ArmourAllowed`, and never
+  the suit itself -- which a player cannot play without, since it draws the
+  weapon HUD.
