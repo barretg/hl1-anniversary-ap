@@ -1,5 +1,5 @@
 {
- "data_version": "161f1aca40e5",
+ "data_version": "84d89713b34b",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -793,25 +793,8 @@
    }
   },
   {
-   "id": 7760010,
-   "name": "Anomalous Materials - Health Charger 1 (Part 2)",
-   "chapter": "c1a0",
-   "map": "c1a0d",
-   "trigger": {
-    "type": "charger",
-    "map": "c1a0d",
-    "classname": "func_healthcharger",
-    "at": "-436 604 -184"
-   },
-   "position": [
-    -436,
-    604,
-    -184
-   ]
-  },
-  {
    "id": 7760011,
-   "name": "Anomalous Materials - Health Charger 2 (Part 2)",
+   "name": "Anomalous Materials - Health Charger (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
@@ -1885,25 +1868,8 @@
    }
   },
   {
-   "id": 7760087,
-   "name": "Power Up - Health Charger 1 (Part 2)",
-   "chapter": "c2a1",
-   "map": "c2a1b",
-   "trigger": {
-    "type": "charger",
-    "map": "c2a1b",
-    "classname": "func_healthcharger",
-    "at": "-932 1208 -136"
-   },
-   "position": [
-    -932,
-    1208,
-    -136
-   ]
-  },
-  {
    "id": 7760088,
-   "name": "Power Up - Health Charger 2 (Part 2)",
+   "name": "Power Up - Health Charger (Part 2)",
    "chapter": "c2a1",
    "map": "c2a1b",
    "trigger": {

@@ -8,6 +8,7 @@ someone edits one without regenerating the other.
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -36,6 +37,57 @@ def checkdata() -> list[list[str]]:
         if line and not line.startswith("#"):
             records.append(line.split("|"))
     return records
+
+
+SEALED_SEAM_CHARGERS = {
+    # Anomalous Materials Part 2: the charger from the end of Part 1, rebuilt
+    # ~900 units past the trigger that takes you back there. Reported from play.
+    ("c1a0d", "func_healthcharger", (-436, 604, -184)),
+    # Power Up Part 2, the same shape: 60 units past its return trigger.
+    ("c2a1b", "func_healthcharger", (-932, 1208, -136)),
+}
+
+
+@pytest.mark.parametrize("map_name,classname,position", sorted(SEALED_SEAM_CHARGERS))
+def test_sealed_seam_chargers_are_not_locations(
+    campaign: dict, map_name: str, classname: str, position: tuple
+) -> None:
+    """A charger walled off behind a transition must not be a check.
+
+    Under `accessibility: full` one location nobody can collect holds the entire
+    seed. These are derived rather than listed, by `sealed_seam_chargers`, so the
+    thing worth pinning is that the derivation still finds the two cases that
+    were found by playing.
+    """
+    for entry in campaign["locations"]:
+        trigger = entry["trigger"]
+        if trigger["type"] != "charger" or entry["map"] != map_name:
+            continue
+        at = tuple(int(v) for v in trigger["at"].split())
+        assert at != position, f"{entry['name']} is sealed behind a transition"
+
+
+def test_the_reachable_twin_of_each_sealed_charger_survives(campaign: dict) -> None:
+    """Dropping one must never drop the check.
+
+    The dedupe only ever removes a charger that also exists in the map on the
+    other side of the transition, so every one of these still has somewhere it
+    can be collected. If that stopped being true the seed would quietly lose a
+    location instead of gaining a reachable one.
+    """
+    chargers = [
+        entry for entry in campaign["locations"]
+        if entry["trigger"]["type"] == "charger"
+    ]
+    for _, classname, position in SEALED_SEAM_CHARGERS:
+        twins = [
+            entry for entry in chargers
+            if entry["trigger"]["classname"] == classname
+            and math.dist(
+                [int(v) for v in entry["trigger"]["at"].split()], position
+            ) <= 64
+        ]
+        assert twins, f"no reachable {classname} left near {position}"
 
 
 def test_every_mission_has_a_lobby_button(campaign: dict) -> None:

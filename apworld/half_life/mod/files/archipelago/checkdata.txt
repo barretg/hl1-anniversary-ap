@@ -12,7 +12,7 @@
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
 V|3
-D|161f1aca40e5
+D|84d89713b34b
 G|c4a3
 C|0|c0a0|Black Mesa Inbound|c0a0,c0a0a,c0a0b,c0a0c,c0a0d,c0a0e|0|0
 C|1|c1a0|Anomalous Materials|c1a0,c1a0d,c1a0a,c1a0b,c1a0e|0|0
@@ -42,8 +42,7 @@ L|7760006|c1a0|map_reached||Anomalous Materials - Part 1 Reached
 L|7760007|c1a0|charger|func_healthcharger@-436 604 -168|Anomalous Materials - Health Charger 1 (Part 1)|-436 604 -168
 L|7760008|c1a0|charger|func_healthcharger@-324 -992 -152|Anomalous Materials - Health Charger 2 (Part 1)|-324 -992 -151
 L|7760009|c1a0d|map_reached||Anomalous Materials - Part 2 Reached
-L|7760010|c1a0d|charger|func_healthcharger@-436 604 -184|Anomalous Materials - Health Charger 1 (Part 2)|-436 604 -184
-L|7760011|c1a0d|charger|func_healthcharger@-3372 1556 -232|Anomalous Materials - Health Charger 2 (Part 2)|-3372 1556 -232
+L|7760011|c1a0d|charger|func_healthcharger@-3372 1556 -232|Anomalous Materials - Health Charger (Part 2)|-3372 1556 -232
 L|7760012|c1a0a|map_reached||Anomalous Materials - Part 3 Reached
 L|7760013|c1a0b|map_reached||Anomalous Materials - Part 4 Reached
 L|7760014|c1a0e|map_reached||Anomalous Materials - Part 5 Reached
@@ -119,8 +118,7 @@ L|7760083|c2a1|map_reached||Power Up - Part 1 Reached
 L|7760084|c2a1|charger|func_healthcharger@-932 1208 -136|Power Up - Health Charger (Part 1)|-932 1208 -136
 L|7760085|c2a1|charger|func_recharge@-560 252 152|Power Up - HEV Charger (Part 1)|-560 252 152
 L|7760086|c2a1b|map_reached||Power Up - Part 2 Reached
-L|7760087|c2a1b|charger|func_healthcharger@-932 1208 -136|Power Up - Health Charger 1 (Part 2)|-932 1208 -136
-L|7760088|c2a1b|charger|func_healthcharger@512 892 368|Power Up - Health Charger 2 (Part 2)|512 892 368
+L|7760088|c2a1b|charger|func_healthcharger@512 892 368|Power Up - Health Charger (Part 2)|512 892 368
 L|7760089|c2a1a|map_reached||Power Up - Part 3 Reached
 L|7760090|c2a1a|charger|func_healthcharger@324 1256 224|Power Up - Health Charger 1 (Part 3)|324 1256 224
 L|7760091|c2a1a|charger|func_healthcharger@260 2224 -264|Power Up - Health Charger 2 (Part 3)|260 2224 -264

@@ -431,9 +431,29 @@ have not been exercised yet.
   its Universal Tracker passthrough for no effect. `STARTING_WEAPONS` is the
   constant `["weapon_crowbar"]`; the snapshot still carries `starting` as a
   per-seed field, so restoring the option later costs nothing.
-- **240 locations, not the 190 estimated:** 96 `map_reached`, 111 `charger`, 18
-  `chapter_complete`, 15 `weapon_pickup`, against 32 progression items. Retail's
+- **239 locations, not the 190 estimated:** 96 `map_reached`, 109 `charger`, 18
+  `chapter_complete`, 16 `weapon_pickup`, against 32 progression items. Retail's
   97 campaign maps are finer grained than the estimate assumed.
+
+- **Chargers sealed behind a transition are dropped, and it is derived rather
+  than listed.** Valve cut each chapter into maps by building the seam room into
+  both halves, so a charger at the end of one part is rebuilt at the start of the
+  next, on the far side of the trigger that takes you back. Walking to it loads
+  the previous part instead, and under `accessibility: full` one uncollectable
+  location holds the whole seed.
+
+  `sealed_seam_chargers` in the generator drops a charger only when both are
+  true: it is on the far side of a `trigger_changelevel` from the landmark that
+  transition arrives at, and the same charger exists in the map on the other side
+  of it, matched by transforming through the two maps' `info_landmark` origins.
+  The second condition is what makes it safe to do automatically -- only a
+  duplicate is ever dropped, so the check survives where it can be collected.
+
+  Two in the campaign: `c1a0d` (Anomalous Materials Part 2, found in play) and
+  `c2a1b` (Power Up Part 2, found by the derivation). The Sven Co-op project hit
+  the same thing and hand-listed it as `UNREACHABLE_CHARGERS`, one map at a time,
+  because "whether a room is walled off is geometry, not entity data". A useful
+  part of it turns out to be entity data after all.
 
 ### Answers to things the plan left open
 

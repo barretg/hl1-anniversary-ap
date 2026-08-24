@@ -19,7 +19,7 @@ import math
 from collections.abc import Iterable
 from pathlib import Path
 
-from bsp_entities import brush_model_centres, load_map
+from bsp_entities import brush_model_bounds, brush_model_centres, load_map
 from campaign_layout import (
     CHAPTER_GATES,
     CHAPTERS,
@@ -368,6 +368,11 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     # `*N` -> bounding box centre, per map. The only way to place a brush entity,
     # which is what every charger is.
     centres: dict[str, dict[str, tuple[float, float, float]]] = {}
+    # `*N` -> the (mins, maxs) the compiler recorded, which is what says which
+    # side of a changelevel something is on. See `sealed_seam_chargers`.
+    bounds: dict[
+        str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]
+    ] = {}
     for chapter in chapters:
         for map_name in chapter["maps"]:
             bsp = maps_dir / f"{map_name}.bsp"
@@ -375,8 +380,14 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 raise SystemExit(f"missing map: {bsp}")
             entities[map_name] = [resolve_world_item(e) for e in load_map(bsp)]
             centres[map_name] = brush_model_centres(bsp)
+            bounds[map_name] = brush_model_bounds(bsp)
 
     builder = LocationBuilder(registry)
+
+    sealed = sealed_seam_chargers(chapters, entities, centres, bounds)
+    for map_name in sorted(sealed):
+        for key in sorted(sealed[map_name]):
+            print(f"  sealed behind a transition: {map_name} {key}")
 
     enabled = ENABLED_LOCATION_TYPES
 
@@ -402,10 +413,17 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # identified by where it stands. See `charger_key_position`.
             if "charger" in enabled:
                 spawn = spawn_point(ents)
+                # Sealed on the far side of a transition, and duplicated in the
+                # map that side belongs to. Dropped before the numbering, so the
+                # map's remaining chargers close the gap rather than skipping a
+                # number; ids key on position, so nothing else moves.
+                sealed_here = sealed.get(map_name, set())
                 for classname, display in CHARGER_CLASSNAMES.items():
                     found = []
                     for entity in ents:
                         if entity.get("classname", "") != classname:
+                            continue
+                        if f"{classname}:{entity.get('model', '')}" in sealed_here:
                             continue
                         at = charger_position(entity, centres[map_name])
                         if at is None:
@@ -637,6 +655,133 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         "hub_map": HUB_MAP,
         "hub_buttons": build_hub_buttons(chapters, LOBBY_PATH),
     }
+
+
+# How far apart two copies of the same charger may be and still be one unit.
+#
+# Valve cuts a chapter into maps by building the seam room into both halves and
+# recompiling, so the two copies are the same brush in the same place but their
+# bounding boxes are not bit-identical: Anomalous Materials' shared health
+# charger comes out 16 units apart in Z and exactly equal in X and Y. Well under
+# the 204 units that separate any two chargers of one classname, so a match here
+# cannot be two different units.
+SEAM_TWIN_RADIUS = 64.0
+
+
+def landmark_origins(ents: list[dict[str, str]]) -> dict[str, tuple[float, float, float]]:
+    return {
+        e["targetname"]: entity_origin(e.get("origin", ""))
+        for e in ents
+        if e.get("classname") == "info_landmark" and e.get("targetname")
+    }
+
+
+def beyond_trigger(
+    at: tuple[float, float, float],
+    landmark: tuple[float, float, float],
+    mins: tuple[float, float, float],
+    maxs: tuple[float, float, float],
+) -> bool:
+    """Is `at` on the far side of this changelevel brush from `landmark`?
+
+    A `trigger_changelevel` is a thin slab across the way through, so the axis it
+    is thinnest on is the one you cross it on, and "which side" is a sign along
+    that axis. Anything on the far side of it from the landmark is in the next
+    map's half of the seam: walking towards it changes level before you arrive.
+    """
+    extents = [maxs[i] - mins[i] for i in range(3)]
+    axis = extents.index(min(extents))
+    centre = (mins[axis] + maxs[axis]) / 2
+
+    from_landmark = landmark[axis] - centre
+    from_point = at[axis] - centre
+    if from_landmark == 0 or from_point == 0:
+        return False
+    return (from_landmark > 0) != (from_point > 0)
+
+
+def sealed_seam_chargers(
+    chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]],
+    centres: dict[str, dict[str, tuple[float, float, float]]],
+    bounds: dict[str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]],
+) -> dict[str, set[str]]:
+    """`{map: {"classname:*model"}}` for chargers walled off behind a transition.
+
+    Valve cut each chapter into maps by building the seam room into *both*
+    halves, so a charger at the end of one part is rebuilt at the start of the
+    next -- on the far side of the trigger that takes you back. Anomalous
+    Materials' Part 2 copy is the one that prompted this: 900 units past the
+    return trigger, so walking to it loads Part 1 instead. Under
+    `accessibility: full` a check nobody can collect holds the whole seed.
+
+    Two conditions, both required, and the pair is what makes this safe to do
+    automatically:
+
+      - the charger is on the far side of a `trigger_changelevel` from the
+        landmark that transition arrives at, which is the geometry above; and
+      - the same charger exists in the map on the other side of that transition,
+        found by transforming through the two maps' `info_landmark` origins.
+
+    The second is the important one. It means we only ever drop a *duplicate*, so
+    the check still exists on the side that can reach it and nothing is lost from
+    the seed. A charger that is merely hard to get to, with no twin, is left
+    alone -- this is not a reachability solver, and the 1-D test above would not
+    survive being used as one.
+    """
+    sealed: dict[str, set[str]] = {}
+    all_maps = {m for chapter in chapters for m in chapter["maps"]}
+
+    for map_name in sorted(all_maps):
+        ents = entities[map_name]
+        here = landmark_origins(ents)
+
+        for trigger in ents:
+            if trigger.get("classname") != "trigger_changelevel":
+                continue
+            landmark_name = trigger.get("landmark", "")
+            other_map = trigger.get("map", "")
+            model = trigger.get("model", "")
+            if landmark_name not in here or other_map not in all_maps:
+                continue
+            if model not in bounds[map_name]:
+                continue
+
+            landmark = here[landmark_name]
+            mins, maxs = bounds[map_name][model]
+
+            # The same landmark seen from the other map, which is what aligns the
+            # two coordinate systems. Usually identical, since the maps are cut
+            # from one original, but the offset is what makes that not an
+            # assumption.
+            there = landmark_origins(entities[other_map])
+            if landmark_name not in there:
+                continue
+            shift = [there[landmark_name][i] - landmark[i] for i in range(3)]
+
+            for entity in ents:
+                classname = entity.get("classname", "")
+                if classname not in CHARGER_CLASSNAMES:
+                    continue
+                at = charger_position(entity, centres[map_name])
+                if at is None or not beyond_trigger(at, landmark, mins, maxs):
+                    continue
+
+                twin = tuple(at[i] + shift[i] for i in range(3))
+                for other in entities[other_map]:
+                    if other.get("classname", "") != classname:
+                        continue
+                    other_at = charger_position(other, centres[other_map])
+                    if other_at is None:
+                        continue
+                    distance = math.dist(twin, other_at)
+                    if distance <= SEAM_TWIN_RADIUS:
+                        sealed.setdefault(map_name, set()).add(
+                            f"{classname}:{entity.get('model', '')}"
+                        )
+                        break
+
+    return sealed
 
 
 def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:
