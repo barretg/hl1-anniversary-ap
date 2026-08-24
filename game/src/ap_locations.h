@@ -24,10 +24,21 @@ struct Chapter;
 
 namespace ap {
 
-// The map is up and checkdata has been read. Fires the arrival check, and the
-// mission's completion where arriving *is* finishing -- the finale, and nowhere
-// else.
+// The map is up and checkdata has been read. Records what this map owes but
+// fires nothing: it runs from `ServerActivate`, before any snapshot for this map
+// exists, so there is nothing here that can say whether we are allowed to be on
+// it. `AuthoriseMap` answers that and releases the arrival.
 void OnMapStart(const std::string& map_name);
+
+// Settle whether this map may fire at all, on the first snapshot that can answer
+// it. Called from the poll.
+//
+// A warp is checked at the warp, but it is not the only way into a mission: the
+// engine restores the last save when the player dies, and that save may belong
+// to another seed. Dying in the lobby of a new run restored a quicksave from an
+// old one and sent its arrival check. A mission the seed has not opened sends
+// the player back to the hub instead, having fired nothing.
+void AuthoriseMap();
 
 // This mission is over: send its completion check and tell the client. Called
 // from the mission-boundary interception, which is where finishing normally

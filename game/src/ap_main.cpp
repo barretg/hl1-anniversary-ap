@@ -30,6 +30,12 @@ float g_next_poll = 0.0f;
 bool g_started = false;
 bool g_warned_mismatch = false;
 
+// Frames run since this map's ServerActivate. Reset in `Startup`, which is the
+// point of it: everything else that claims to say "the client is ready" either
+// is set before the load finishes or survives the load entirely. See
+// `ClientReady`.
+int g_frames_this_map = 0;
+
 // Player-facing lines waiting for a frame safe enough to send them in.
 std::vector<std::string> g_notices;
 
@@ -87,16 +93,27 @@ const char* Intern(const std::string& text) {
 }
 
 bool ClientReady() {
+    // Frames actually run on *this* map. The only signal here that a level load
+    // cannot lie about.
+    //
+    // `FL_CLIENT` is set from the moment the engine begins restoring a player,
+    // so it was never the answer. `m_fGameHUDInitialized` looked like it: it is
+    // set by `UpdateClientData` when the HUD comes up, and it is not a saved
+    // field. But a restore inside a running process reuses the `CBasePlayer`
+    // object, so it survives from the map before and reads TRUE on the first
+    // frame of the new one -- which is how the quickload crash came back after
+    // being "fixed". A counter we reset ourselves in `Startup` cannot do that.
+    //
+    // Two rather than one, so at least one whole frame has been through
+    // `PlayerPreThink` -- which is what calls `UpdateClientData` and actually
+    // brings the HUD up -- before anything of ours writes to the client.
+    if (g_frames_this_map < 2) {
+        return false;
+    }
     CBasePlayer* player = Player();
     if (player == nullptr || (player->pev->flags & FL_CLIENT) == 0) {
         return false;
     }
-    // `FL_CLIENT` only says the edict is a client, which it is from the moment
-    // the engine begins restoring one -- long before there is anywhere for a
-    // message to go. `m_fGameHUDInitialized` is set by `UpdateClientData` the
-    // first time it runs for this player, which is the frame the HUD comes up
-    // and the first moment a user message is safe. It is deliberately not a
-    // saved field, so a restore clears it and it comes back a frame later.
     return player->m_fGameHUDInitialized != FALSE;
 }
 
@@ -157,7 +174,9 @@ void FlushNotices() {
 
     for (const std::string& text : g_notices) {
         const std::string line = "[AP] " + text + "\n";
-        CLIENT_PRINTF(player->edict(), print_console, line.c_str());
+        // No console write here. `Notify` already made one, at the moment the
+        // thing happened; on a listen server that is the same console the player
+        // is reading, so printing again here said everything twice.
 
         // HUD_PRINTTALK: the message area chat uses, bottom left, a few lines
         // deep and gone after a few seconds. The client runs this through
@@ -244,8 +263,13 @@ void Startup() {
     g_bridge.Open(store);
     g_started = true;
     g_next_poll = 0.0f;
+    // Nothing may be written to the client until frames have run on this map.
+    g_frames_this_map = 0;
     // A weapon Butterfingers threw on the floor went with the old level.
     ClearWithheld();
+    // Anything still queued was timed against the previous level's clock, which
+    // no longer exists. See `RearmQueuedTraps`.
+    RearmQueuedTraps();
 
     // The client answers a HELLO with a forced snapshot, so this is what gets
     // our unlocks back after any map load.
@@ -260,6 +284,9 @@ void RunFrame() {
     if (!g_started) {
         return;
     }
+    if (g_frames_this_map < 1000) {
+        ++g_frames_this_map;  // capped: only the first couple are interesting
+    }
     static bool first = true;
     if (first) {
         first = false;
@@ -273,6 +300,7 @@ void RunFrame() {
     // from the hook.
     FlushNotices();
     RunLoadout();
+    RunSeamDoors();
     RunDeferred();
     ClampArmour();
 
@@ -322,6 +350,12 @@ void RunFrame() {
             ApplyLoadout(player);
         }
     }
+
+    // Every poll, not only when a snapshot changed. The state this reads may
+    // have arrived several polls ago -- it survives a map load, since only the
+    // level reloads and not the dll -- and a map that never got an answer would
+    // otherwise sit unauthorised forever, firing nothing and saying nothing.
+    AuthoriseMap();
 
     RunTrapTimers();
     // A weapon the player is already holding never fires a touch, so the crowbar

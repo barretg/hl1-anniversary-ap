@@ -27,6 +27,13 @@ void QueueTrap(const std::string& trap_name);
 // Springs whatever is due, and hands back a Butterfingers victim's weapon.
 void RunTrapTimers();
 
+// Called at map start. Re-times anything still queued against the new level's
+// clock, because `gpGlobals->time` restarts with the map and this queue does
+// not: a due time carried over from the previous map is measured against a
+// clock that no longer exists, and the trap springs at an arbitrary moment much
+// later, in a map that had nothing to do with it.
+void RearmQueuedTraps();
+
 // Is this classname currently out of the player's hands because Butterfingers
 // took it? The loadout asks, because it is reapplied on every snapshot change --
 // which happens whenever a check is sent -- and would otherwise hand the weapon

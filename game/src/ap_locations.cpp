@@ -26,6 +26,27 @@ namespace {
 std::set<long> g_sent;
 std::string g_map;
 
+// May anything on this map fire at all?
+//
+// A warp is checked at the warp, but that is not the only way into a mission.
+// The engine restores the last save when the player dies, and that save can be
+// from a different seed entirely: dying in the lobby of a brand new run restored
+// a quicksave from a previous one and sent its arrival check. So arriving is
+// held until the client confirms the mission is open, which is `AuthoriseMap`.
+//
+// The hub authorises itself, since there is nothing there to fire and nowhere
+// illegitimate to have arrived from.
+bool g_map_authorised = false;
+
+// The arrival is owed but has not been allowed yet. Held rather than dropped:
+// on a legitimate warp the snapshot arrives a poll later and the check is real.
+bool g_arrival_owed = false;
+
+// The bounce is announced and requested once per map, not once per poll: the
+// level change is deferred a frame, so without this every poll in between says
+// it again and asks again.
+bool g_bounce_announced = false;
+
 float WalkScore(const Vector& from, const Vector& to) {
     const float dx = to.x - from.x;
     const float dy = to.y - from.y;
@@ -69,6 +90,14 @@ const char* Bearing(CBasePlayer* player, const Vector& target) {
 
 void SendCheck(long id) {
     if (!Live()) {
+        return;
+    }
+    // Nothing fires until the client has confirmed we are allowed to be on this
+    // map. See `AuthoriseMap`: arriving by warp is checked at the warp, but the
+    // engine can drop us into a mission map without one -- a save restored after
+    // a death is the way it happens, and the save may belong to another seed
+    // entirely.
+    if (!g_map_authorised) {
         return;
     }
     if (g_sent.find(id) != g_sent.end()) {
@@ -115,11 +144,41 @@ void OnMapStart(const std::string& map_name) {
 
     const Chapter* chapter = Data().ChapterOfMap(map_name);
     if (chapter == nullptr) {
-        return;  // the hub, the hazard course, a deathmatch map: nothing to fire
+        // The hub, the hazard course, a deathmatch map: nothing to fire, and no
+        // way to have got here that needs questioning.
+        g_map_authorised = true;
+        g_arrival_owed = false;
+        return;
+    }
+
+    // A map we asked for is authorised by the asking: `ap_warp` and the lobby
+    // panels have already been through `MissionOpen`, and re-deriving that here
+    // from a snapshot which may still be a poll behind the warp is how a
+    // perfectly legal trip to Office Complex bounced straight back out of it.
+    //
+    // Anything else, the engine reached on its own -- which in practice means a
+    // save it restored after a death, possibly from another seed entirely. That
+    // is the case worth questioning, and `AuthoriseMap` questions it.
+    const bool requested = WasRequested(map_name);
+    g_map_authorised = requested;
+    g_arrival_owed = true;
+    g_bounce_announced = false;
+
+    if (requested) {
+        // A warp starts the level cold, without the seam state a transition
+        // would have carried in. See `RunSeamDoors`.
+        RequestSeamDoors();
+    }
+}
+
+void SendArrival() {
+    const Chapter* chapter = Data().ChapterOfMap(g_map);
+    if (chapter == nullptr) {
+        return;
     }
 
     for (const Location& location : Data().locations) {
-        if (location.map == map_name && location.type == TriggerType::MapReached) {
+        if (location.map == g_map && location.type == TriggerType::MapReached) {
             SendCheck(location.id);
         }
     }
@@ -128,8 +187,57 @@ void OnMapStart(const std::string& map_name) {
     // the finale. Everywhere else the mission is over when the player leaves it
     // forwards, which `InterceptChangeLevel` sees. Arriving on "the last map"
     // would have finished Unforeseen Consequences in a dead-end side room.
-    if (chapter->complete_on_arrival && chapter->IsLastMap(map_name)) {
+    if (chapter->complete_on_arrival && chapter->IsLastMap(g_map)) {
         SendChapterComplete(*chapter);
+    }
+}
+
+void AuthoriseMap() {
+    if (!Data().Loaded()) {
+        return;
+    }
+
+    const Chapter* chapter = Data().ChapterOfMap(g_map);
+    if (chapter == nullptr) {
+        g_map_authorised = true;
+        g_arrival_owed = false;
+        return;
+    }
+
+    if (!g_map_authorised) {
+        const Snapshot& state = State();
+        // No answer yet rather than a "no". Waiting costs nothing: `SendCheck`
+        // refuses while unauthorised, so the map stays inert until this resolves.
+        if (!state.connected) {
+            return;
+        }
+
+        const bool open = chapter->is_goal ? state.goal_open
+                                           : state.ChapterOpen(chapter->key);
+        if (state.ChapterExcluded(chapter->key) || !open) {
+            // We did not ask to come here and the seed does not allow it: a save
+            // the engine restored, possibly from another run. Nothing has fired
+            // and nothing will.
+            if (!g_bounce_announced) {
+                g_bounce_announced = true;
+                Trace(("  not authorised on " + g_map + "; to the hub").c_str());
+                Notify(chapter->name +
+                       " is not open in this seed. Returning to the hub.");
+                RequestMap(kHubMap);
+            }
+            return;
+        }
+
+        Trace(("  authorised on " + g_map).c_str());
+        g_map_authorised = true;
+    }
+
+    // Held until it can actually be sent. `Live` wants a connected client and a
+    // matching data version, and until then the arrival is still owed rather
+    // than quietly dropped -- `SendCheck` would have discarded it.
+    if (g_arrival_owed && Live()) {
+        g_arrival_owed = false;
+        SendArrival();
     }
 }
 

@@ -259,6 +259,12 @@ class HalfLifeContext(SuperContext):
         # How far through the server's item history we have got. Guards against
         # re-delivering filler when it resends everything on reconnect.
         self.items_seen = 0
+        # Has the history the server had at connect time been taken in yet?
+        # Until it has, nothing is "new": `items_seen` counts only this client
+        # run, so a freshly started client has seen nothing and would otherwise
+        # treat every item it has ever been sent as having just arrived. Reset on
+        # every Connected, because each connection resends that history.
+        self.items_synced = False
 
         self.resolve_game_dir()
 
@@ -395,6 +401,10 @@ class HalfLifeContext(SuperContext):
             self.sync_completed_missions()
 
         if cmd == "Connected":
+            # The item history is about to be resent. None of it is new, however
+            # much of it this client run has seen.
+            self.items_synced = False
+
             slot_data = args.get("slot_data", {})
             self.missions_required = int(
                 slot_data.get("missions_required", self.missions_required)
@@ -473,6 +483,15 @@ class HalfLifeContext(SuperContext):
         an ammo top-up -- and re-delivering it on reconnect both floods the
         bridge and means nothing in the game. Two reconnects used to double the
         backlog each time, which is how a few dozen items became hundreds.
+
+        The first batch after connecting is that history, and none of it is new
+        however this client counts. `items_seen` is a counter in memory, so a
+        client that has just started has seen nothing and called the whole
+        backlog new: every trap ever received sprang again, a few seconds after
+        connecting, in whatever map the player was standing in. That is the
+        report of scientists appearing in the hub out of nowhere. A trap is a
+        moment, and a moment that has passed is not redeliverable -- so the
+        backlog never delivers one, and only what arrives afterwards does.
         """
         start = int(args.get("index", 0))
         items = args["items"]
@@ -482,12 +501,17 @@ class HalfLifeContext(SuperContext):
             self.unlocked_chapters.clear()
             self.unlocked_items.clear()
 
+        # Everything the server had for us at connect time. Applied for its
+        # unlocks, never for its one-shot effects.
+        backlog = not self.items_synced
+
         for offset, item in enumerate(items):
             # Only genuinely new items earn a filler delivery.
-            is_new = (start + offset) >= self.items_seen
+            is_new = not backlog and (start + offset) >= self.items_seen
             self.apply_item(item.item, deliver_filler=is_new)
 
         self.items_seen = max(self.items_seen, start + len(items))
+        self.items_synced = True
 
         if self.bridge is not None and self.bridge.queued_count > 50:
             logger.info(

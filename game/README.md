@@ -230,6 +230,43 @@ slot keys, though `lastinv` still reaches it, because that is decided
 server-side. `ApplyLoadout` calls `ForceClientDllUpdate` after a real grant --
 the SDK's own repair, and what `fullupdate` does.
 
+**A warp arrives cold, and at a seam that is not the same as arriving.**
+`changelevel` carries a `globalname` entity's state into the next map;
+`map` starts the level with an empty global table. Where a mission begins at a
+seam, the difference is a door that is open because you walked through it against
+one that has never moved.
+
+Office Complex is where it bites, and it stops the mission dead. Its entrance is
+an elevator whose doors are `c1a2_trans_ele1` and `2` -- the same pair you ride
+in `c1a1c` -- and the only button that opens them is `master button_lock`, a
+`multisource` that only those doors can satisfy. Cold, the button is locked and
+nothing can unlock it.
+
+`RunSeamDoors` opens every `func_door` carrying a `globalname` on a map we warped
+into. It opens the door rather than writing the global table, so the door's own
+`DoorHitTop` fires its target, satisfies the multisource and unlocks the button:
+the map ends up in the state the transition would have left it in rather than one
+we imposed. Doors only -- `globalname` exists to survive a level change, so an
+entity carrying one is standing at the join. The `func_breakable` crates in Blast
+Pit and Surface Tension and the `func_tracktrain` in On A Rail and Apprehension
+carry them too and are left alone: a whole crate and a train at its start are a
+playable map.
+
+**A map is not allowed to fire until the client says it may.** `ap_warp` and the
+lobby panels check the gate at the point of travel, but they are not the only way
+into a mission: **the engine restores the last save when the player dies**, and
+that save can belong to a different seed. Dying in the lobby of a brand new run
+restored a quicksave from a previous one and sent that mission's arrival check.
+
+`OnMapStart` therefore fires nothing. It records what the map owes and leaves it
+unauthorised, because it runs from `ServerActivate` before a single snapshot for
+this map exists -- there is no answer available there. `AuthoriseMap` settles it
+on the first poll that can: a mission the seed has opened releases the arrival,
+and one it has not sends the player back to the hub having fired nothing.
+`SendCheck` refuses outright while unauthorised, so nothing else can slip out in
+the meantime. An unconnected client is "no answer yet" rather than "no", so a
+legitimate warp simply waits a poll.
+
 **`ap_warp` takes a part number, and only for parts already reached.**
 `ap_warp unforeseen 6` is a way back into a mission after a death or an errand in
 the hub. It is deliberately not a way past a mission's first half: the checks in
@@ -272,12 +309,16 @@ change, which is any check the player sends.
     `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t` and a dead game.
     `Notify` queues; `FlushNotices` sends. That one cost a crash on the first
     death of the first real playthrough.
-  - **`ClientReady`, not `FL_CLIENT`, decides when that message may go.**
-    `FL_CLIENT` is set from the moment the engine begins restoring a player, and
-    guarding on it is how the same crash came back on every quickload.
-    `m_fGameHUDInitialized` is set by `UpdateClientData` on the first frame it
-    runs for this player, and that is the first moment the client has anywhere to
-    put a message.
+  - **`ClientReady`, not `FL_CLIENT`, decides when that message may go,** and it
+    counts frames rather than trusting a flag. `FL_CLIENT` is set from the moment
+    the engine begins restoring a player, so it was never the answer.
+    `m_fGameHUDInitialized` looked like a better one -- `UpdateClientData` sets
+    it when the HUD comes up, and it is deliberately not a saved field -- but a
+    restore inside a running process **reuses the `CBasePlayer` object**, so it
+    survives from the previous map and reads TRUE on the first frame of the new
+    one. That is how the crash came back after being fixed once. `ClientReady`
+    now requires two frames since `Startup` reset the counter, which is the one
+    signal a level load cannot carry over.
   - **Two things write a user message without looking like it,** and both are in
     the loadout: `CBasePlayerWeapon::AddToPlayer` sends `WeapPickup`, so
     *granting a weapon* is a client write, and `ForceClientDllUpdate` ends in

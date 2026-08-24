@@ -283,6 +283,22 @@ void QueueTrap(const std::string& trap_name) {
     g_queued.push_back(queued);
 }
 
+void RearmQueuedTraps() {
+    // `gpGlobals->time` is level time and starts again near zero on every map,
+    // but this queue is in memory and outlives the level -- that is the point of
+    // it, since a trap arriving during a load is exactly what it exists to hold.
+    // A due time from the previous map is therefore measured against a clock
+    // that no longer exists: a trap queued twenty minutes into a mission sat
+    // dormant and then sprang twenty minutes into the *hub*, long after the item
+    // that caused it, which reads as a trap nobody sent.
+    //
+    // Re-armed rather than dropped or sprung: the rule is "once things have
+    // settled", and a map that has just loaded has not settled.
+    for (size_t i = 0; i < g_queued.size(); ++i) {
+        g_queued[i].due = gpGlobals->time + kTrapDelaySeconds;
+    }
+}
+
 void RunTrapTimers() {
     CBasePlayer* player = Player();
 

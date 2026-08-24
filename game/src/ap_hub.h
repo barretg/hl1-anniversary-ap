@@ -45,6 +45,22 @@ bool HandleChat(CBasePlayer* player, const std::string& said);
 // repeatable and independent of how the player got there.
 void RequestMap(const std::string& map_name);
 
+// Did we ask the engine for this map, as opposed to the engine arriving at it by
+// itself? True exactly once per request, and consumed by the asking.
+//
+// This is what tells a warp apart from a save the engine restored after a death.
+// A warp has already been through the gate in `MissionOpen`, so it needs no
+// second opinion -- and a second opinion is worse than none, because it is drawn
+// from a snapshot that may be a poll behind the warp that just happened.
+bool WasRequested(const std::string& map_name);
+
+// A map we warped into arrives cold: `map` starts a level with an empty global
+// table, where `changelevel` carries the seam's state across. These reopen the
+// doors that state would have left open. `RequestSeamDoors` marks it wanted at
+// map start; `RunSeamDoors` acts once the level has settled, from StartFrame.
+void RequestSeamDoors();
+void RunSeamDoors();
+
 // Called from CChangeLevel::ChangeLevelNow. False lets the game's own transition
 // proceed, which is what happens for every transition inside a mission. True
 // when we have taken it over.

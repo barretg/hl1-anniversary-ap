@@ -34,6 +34,14 @@ namespace {
 
 std::string g_pending_map;
 
+// The map we last asked the engine to load. Survives the load, because only the
+// level reloads and not the dll, which is what makes it readable on the other
+// side as "we meant to be here".
+std::string g_intended_map;
+
+// A map we warped into needs its seam doors opened. See `RunSeamDoors`.
+bool g_seam_doors_wanted = false;
+
 std::string ArgumentTail(int from) {
     std::string text;
     for (int i = from; i < CMD_ARGC(); ++i) {
@@ -448,6 +456,73 @@ void RequestMap(const std::string& map_name) {
     // engine is midway through its own command dispatch and a level change from
     // inside it is the same crash class as one from inside a level change.
     g_pending_map = map_name;
+    // Where we meant to end up. Anywhere else the engine drops us is somewhere
+    // we did not ask to go, which is the question `AuthoriseMap` exists to ask.
+    g_intended_map = map_name;
+}
+
+void RequestSeamDoors() { g_seam_doors_wanted = true; }
+
+void RunSeamDoors() {
+    if (!g_seam_doors_wanted) {
+        return;
+    }
+    // Entities have spawned and the client is up. `ClientReady` is two frames in,
+    // which is late enough for the door to have a bounding box and early enough
+    // that the player has not tried the button yet.
+    if (!ClientReady()) {
+        return;
+    }
+    g_seam_doors_wanted = false;
+
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+
+    // Open every door that carries a `globalname`.
+    //
+    // `globalname` is GoldSrc's cross-level state: the engine carries such an
+    // entity's state through a `changelevel` so the seam room looks the same on
+    // both sides. Our warps use `map`, which starts the level cold with an empty
+    // global table, and at a seam that is the difference between a door that is
+    // open because you just walked through it and one that has never moved.
+    //
+    // Office Complex is where it bites. Its entrance is an elevator whose doors
+    // are `c1a2_trans_ele1` and `2`, the same pair you ride in `c1a1c`, and the
+    // only button that opens them is mastered on a `multisource` that only those
+    // doors can satisfy. Cold, that is a deadlock: the mission cannot be started.
+    //
+    // Opening the door rather than writing the global table is deliberate -- the
+    // door's own `DoorHitTop` fires its target, which is what satisfies the
+    // multisource and unlocks the button, so the map ends up in exactly the
+    // state the transition would have left it in rather than one we imposed.
+    //
+    // Doors only, and only ones with a globalname, which in practice means seam
+    // doors: `globalname` exists to survive a level change, and an entity that
+    // needs to is one standing at the join. The `func_breakable` crates and
+    // `func_tracktrain` that also carry them are left alone -- a crate that is
+    // whole again, or a train parked at its start, is a playable map.
+    CBaseEntity* entity = nullptr;
+    while ((entity = UTIL_FindEntityByClassname(entity, "func_door")) != nullptr) {
+        if (FStringNull(entity->pev->globalname)) {
+            continue;
+        }
+        Trace(("  opening seam door " + std::string(STRING(entity->pev->globalname)))
+                  .c_str());
+        entity->Use(player, player, USE_ON, 0);
+    }
+}
+
+bool WasRequested(const std::string& map_name) {
+    if (g_intended_map.empty() || g_intended_map != map_name) {
+        return false;
+    }
+    // Consumed, so it answers for exactly one arrival. A stale one left lying
+    // around would authorise a later restore into the same map, which is the
+    // thing being guarded against.
+    g_intended_map.clear();
+    return true;
 }
 
 bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map) {
