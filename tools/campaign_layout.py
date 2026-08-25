@@ -96,22 +96,39 @@ INTRO_CHAPTER = "c0a0"
 # `always` gates apply at every difficulty and name equipment rather than a
 # weapon tier.
 
+# Three tiers, and the step between them is where the game stops being about
+# headcrabs.
+#
+# `ranged` is a deliberately low bar and has to be read as one: the Hivehand and
+# the Snarks are both in it, so a seed can satisfy it with two weapons that
+# cannot kill an armoured target between them. That is fine early and wrong for
+# everything past the middle of the game, which is what playing Questionable
+# Ethics on a Hivehand proved. From Power Up onward the bar is a *heavy* weapon
+# and an explosive: a gate naming two groups requires one item from each.
+#
+# Blast Pit sits between the two. Its explosive is about the tentacle rather than
+# about the difficulty tier, so it asks for one without yet asking for a heavy
+# weapon.
+#
+# Xen keeps its own gate, which is stricter again and names its weapons by hand.
 CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     # From here on you are fighting armed marines, not headcrabs.
     "c1a3": {"strict": ["ranged"]},
-    # Blast Pit also wants something explosive. The tentacle in the silo is the
-    # level, and a seed that dropped the player in with a pistol had them working
-    # around it rather than through it. A gate naming two groups requires one
-    # item from each, so this is a ranged weapon *and* an explosive.
+    # The tentacle in the silo is the level, and a seed that dropped the player
+    # in with a pistol had them working around it rather than through it. Still
+    # only `ranged`: the tentacle wants something thrown at it, not a firefight.
     "c1a4": {"strict": ["ranged", "explosives"]},
-    "c2a1": {"strict": ["ranged"]},
-    "c2a2": {"strict": ["ranged"]},
-    "c2a3": {"strict": ["ranged"]},
-    "c2a4": {"strict": ["ranged"]},
-    "c2a4d": {"strict": ["ranged"]},
-    "c2a5": {"strict": ["ranged"]},
-    "c3a1": {"strict": ["heavy"]},
-    "c3a2e": {"strict": ["heavy"]},
+    "c2a1": {"strict": ["heavy", "explosives"]},
+    "c2a2": {"strict": ["heavy", "explosives"]},
+    "c2a3": {"strict": ["heavy", "explosives"]},
+    "c2a4": {"strict": ["heavy", "explosives"]},
+    # The lab is full of alien grunts, which are armoured and shrug off hornets,
+    # and its corridors are strung with tripmines that want detonating from a
+    # distance rather than by throwing squeakers at them.
+    "c2a4d": {"strict": ["heavy", "explosives"]},
+    "c2a5": {"strict": ["heavy", "explosives"]},
+    "c3a1": {"strict": ["heavy", "explosives"]},
+    "c3a2e": {"strict": ["heavy", "explosives"]},
     # Xen onward: the long jump module is standard equipment from here, and the
     # suit is what powers it. Strict logic names the two weapons by hand rather
     # than a tier -- the alien grunt and Gonarch fights are not something to walk

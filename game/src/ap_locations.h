@@ -68,11 +68,17 @@ void SendCheck(long id);
 // warp is a way back rather than a way past.
 bool Visited(const std::string& map_name);
 
-// `ap_find`: the nearest check in this map that the seed still wants, or the one
-// whose name contains `text`. Prints a bearing and a distance.
+// `ap_find`: with no text, the nearest check on this map the seed still wants,
+// as a bearing and a distance. With text, whatever matches by name *anywhere in
+// the seed* -- this map is the default, not the limit, since asking where the
+// crossbow is from the hub is exactly when the question is worth asking. A match
+// elsewhere names its mission and part and hands over the command to get there.
 void Find(const std::string& text);
 
-// `ap_tracker`: what has been found and what is still out there.
+// `ap_tracker`: every location in the seed, grouped by mission and map, marked
+// found or not. An optional filter narrows it to a mission name or a map name;
+// the totals stay the seed's either way, so the footer means the same thing
+// whether or not anything was filtered out.
 void Tracker(const std::string& map_filter);
 
 // How far a weapon may be from the player and still count as collected by the

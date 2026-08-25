@@ -329,66 +329,185 @@ void SweepNearbyPickups() {
     }
 }
 
+// Has this location been collected, as far as either side knows?
+bool Collected(const Location& location) {
+    return State().checked.find(location.id) != State().checked.end() ||
+           g_sent.find(location.id) != g_sent.end();
+}
+
+// 1-based part number of a map within its mission, or 0 for a one-map mission.
+int PartOf(const Chapter& chapter, const std::string& map_name) {
+    if (chapter.maps.size() <= 1) {
+        return 0;
+    }
+    for (size_t i = 0; i < chapter.maps.size(); ++i) {
+        if (chapter.maps[i] == map_name) {
+            return static_cast<int>(i) + 1;
+        }
+    }
+    return 0;
+}
+
+// Point the player at one location, wherever it is.
+//
+// Somewhere else in the campaign is a legitimate answer -- `ap_find crossbow`
+// from the hub should say where the crossbow is, not that there is nothing here
+// -- so this says which mission and part, and hands over the command that goes
+// there rather than leaving the player to work it out.
+void DescribeLocation(CBasePlayer* player, const Location& location) {
+    Notify((Collected(location) ? "[found] " : "") + location.name);
+
+    if (location.map != g_map) {
+        const Chapter* chapter = Data().ChapterOfMap(location.map);
+        if (chapter == nullptr) {
+            Notify(std::string("It is on ") + location.map + ".");
+            return;
+        }
+
+        const int part = PartOf(*chapter, location.map);
+        char line[192];
+        if (part > 0) {
+            std::snprintf(line, sizeof(line), "In %s, part %d (%s).",
+                          chapter->name.c_str(), part, location.map.c_str());
+        } else {
+            std::snprintf(line, sizeof(line), "In %s (%s).",
+                          chapter->name.c_str(), location.map.c_str());
+        }
+        Notify(line);
+
+        // A part warp only works somewhere already walked to, so offer it only
+        // where it would be accepted. Otherwise the mission's own door.
+        if (part > 0 && Visited(location.map)) {
+            std::snprintf(line, sizeof(line), "Get there with ap_warp %d %d.",
+                          chapter->index, part);
+        } else {
+            std::snprintf(line, sizeof(line), "Get there with ap_warp %d.",
+                          chapter->index);
+        }
+        Notify(line);
+        return;
+    }
+
+    if (!location.has_position) {
+        // Either the check is the map itself, or it is a weapon handed over
+        // rather than one lying about. Nothing to point at either way, but they
+        // are different answers.
+        if (location.type == TriggerType::MapReached ||
+            location.type == TriggerType::ChapterComplete) {
+            Notify("That is this map itself. Keep going.");
+        } else {
+            Notify("Somewhere on this map, but it is given to you rather than "
+                   "left lying about.");
+        }
+        return;
+    }
+
+    const Vector at(location.position[0], location.position[1],
+                    location.position[2]);
+    char line[192];
+    std::snprintf(line, sizeof(line), "%s, about %d units away.",
+                  Bearing(player, at),
+                  static_cast<int>(WalkScore(player->pev->origin, at)));
+    Notify(line);
+}
+
 void Find(const std::string& text) {
     CBasePlayer* player = Player();
     if (player == nullptr) {
         return;
     }
     // `Find` answers on screen rather than in the console alone, which is the
-    // one place the Say/Notify split goes the other way. It is a single line
-    // that points at somewhere in the room, and it is read by a player who is
-    // standing in the level turning around -- not one who has the console open.
-    // `ap` and `ap_tracker` stay in the console: those are lists.
+    // one place the Say/Notify split goes the other way. It is a short answer
+    // read by a player standing in the level turning around, not one with the
+    // console open. `ap` and `ap_tracker` stay in the console: those are lists.
     if (!Data().Loaded()) {
         Notify("No checkdata.txt, so there is nothing to find.");
         return;
     }
 
     const std::string wanted = Lower(Trim(text));
-    const Location* best = nullptr;
-    float best_score = 0.0f;
 
-    for (const Location& location : Data().locations) {
-        if (!location.has_position) {
-            continue;  // reaching a map is not somewhere a player can be pointed
-        }
-        if (location.map != g_map) {
-            continue;
-        }
-        if (g_sent.find(location.id) != g_sent.end()) {
-            continue;
-        }
-        if (!State().InSeed(location.id)) {
-            continue;
-        }
-        if (State().checked.find(location.id) != State().checked.end()) {
-            continue;
-        }
-        if (!wanted.empty() && Lower(location.name).find(wanted) == std::string::npos) {
-            continue;
+    // No query: the nearest thing left on this map, which is the question people
+    // actually have when they type it with nothing after it.
+    if (wanted.empty()) {
+        const Location* best = nullptr;
+        float best_score = 0.0f;
+
+        for (const Location& location : Data().locations) {
+            if (!location.has_position || location.map != g_map) {
+                continue;
+            }
+            if (!State().InSeed(location.id) || Collected(location)) {
+                continue;
+            }
+
+            const Vector at(location.position[0], location.position[1],
+                            location.position[2]);
+            const float score = WalkScore(player->pev->origin, at);
+            if (best == nullptr || score < best_score) {
+                best = &location;
+                best_score = score;
+            }
         }
 
-        const Vector at(location.position[0], location.position[1],
-                        location.position[2]);
-        const float score = WalkScore(player->pev->origin, at);
-        if (best == nullptr || score < best_score) {
-            best = &location;
-            best_score = score;
+        if (best == nullptr) {
+            Notify("Nothing left to find on this map.");
+            return;
         }
-    }
-
-    if (best == nullptr) {
-        Notify(wanted.empty() ? "Nothing left to find in this map."
-                              : "No unfound check here matches that.");
+        DescribeLocation(player, *best);
         return;
     }
 
-    const Vector at(best->position[0], best->position[1], best->position[2]);
-    char line[256];
-    std::snprintf(line, sizeof(line), "%s: %s, about %d units away.",
-                  best->name.c_str(), Bearing(player, at),
-                  static_cast<int>(best_score));
-    Notify(line);
+    // A query searches the whole seed, not this map. The current map is the
+    // default, not the limit: asking where something is from the hub, or from
+    // six missions later, is exactly when the question is worth asking.
+    std::vector<const Location*> matches;
+    for (const Location& location : Data().locations) {
+        if (!State().InSeed(location.id)) {
+            continue;
+        }
+        if (Lower(location.name).find(wanted) == std::string::npos) {
+            continue;
+        }
+        matches.push_back(&location);
+    }
+
+    if (matches.empty()) {
+        Notify(std::string("Nothing in this seed matches \"") + Trim(text) + "\".");
+        return;
+    }
+    if (matches.size() == 1) {
+        DescribeLocation(player, *matches[0]);
+        return;
+    }
+
+    // Several. Prefer this map when it settles it, since that is nearly always
+    // what was meant; otherwise name them rather than guessing.
+    const Location* here = nullptr;
+    int here_count = 0;
+    for (size_t i = 0; i < matches.size(); ++i) {
+        if (matches[i]->map == g_map) {
+            if (here == nullptr) {
+                here = matches[i];
+            }
+            ++here_count;
+        }
+    }
+    if (here_count == 1) {
+        DescribeLocation(player, *here);
+        return;
+    }
+
+    char head[128];
+    std::snprintf(head, sizeof(head),
+                  "%d matches; the list is in your console (~).",
+                  static_cast<int>(matches.size()));
+    Notify(head);
+    Say(std::string("Locations matching \"") + Trim(text) + "\":");
+    for (size_t i = 0; i < matches.size(); ++i) {
+        Say(std::string("  ") + (Collected(*matches[i]) ? "[x] " : "[ ] ") +
+            matches[i]->name + "  (" + matches[i]->map + ")");
+    }
 }
 
 void Tracker(const std::string& map_filter) {
@@ -396,33 +515,96 @@ void Tracker(const std::string& map_filter) {
         Say("No checkdata.txt, so there is nothing to track.");
         return;
     }
+    if (State().checked.empty() && State().missing.empty()) {
+        Say("No location data yet. Is the client connected?");
+        Notify("No location data yet; check the client.");
+        return;
+    }
 
+    // The whole seed by default. This used to show the current map only, which
+    // made it useless from the hub -- where a player is most likely to be asking
+    // what is left -- and gave no way to see anywhere else at all. A filter
+    // narrows it, matching either a map name or a mission name, so `ap_tracker
+    // office` and `ap_tracker c1a2b` both work.
     const std::string filter = Trim(map_filter);
-    const std::string map = filter.empty() ? g_map : filter;
+    const std::string wanted = Lower(filter);
+
+    Say("=== Archipelago: location tracker ===");
 
     int found = 0;
-    int left = 0;
-    Say(std::string("Locations in ") + map + ":");
+    int total = 0;
+    int shown = 0;
 
-    for (const Location& location : Data().locations) {
-        if (location.map != map) {
+    for (const Chapter& chapter : Data().chapters) {
+        if (State().ChapterExcluded(chapter.key)) {
             continue;
         }
-        if (!State().InSeed(location.id)) {
-            continue;  // not in this seed at all; showing it would be a lie
-        }
-        const bool done = State().checked.find(location.id) != State().checked.end() ||
-                          g_sent.find(location.id) != g_sent.end();
-        if (done) {
-            ++found;
-        } else {
-            ++left;
-            Say(std::string("  still out there: ") + location.name);
+
+        for (size_t part = 0; part < chapter.maps.size(); ++part) {
+            const std::string& map_name = chapter.maps[part];
+
+            // Gathered before anything is printed: a map the seed put nothing in
+            // should not print a heading with nothing under it.
+            std::vector<const Location*> on_map;
+            for (const Location& location : Data().locations) {
+                if (location.map != map_name) {
+                    continue;
+                }
+                if (!State().InSeed(location.id)) {
+                    continue;  // not in this seed; showing it would be a lie
+                }
+                on_map.push_back(&location);
+            }
+            if (on_map.empty()) {
+                continue;
+            }
+
+            int map_found = 0;
+            for (size_t i = 0; i < on_map.size(); ++i) {
+                if (Collected(*on_map[i])) {
+                    ++map_found;
+                }
+            }
+
+            // Counted whether or not it is shown, so the total at the end is the
+            // seed's and not the filter's.
+            found += map_found;
+            total += static_cast<int>(on_map.size());
+
+            if (!wanted.empty() &&
+                Lower(map_name).find(wanted) == std::string::npos &&
+                Lower(chapter.name).find(wanted) == std::string::npos) {
+                continue;
+            }
+
+            ++shown;
+            char head[192];
+            if (chapter.maps.size() > 1) {
+                std::snprintf(head, sizeof(head), "%s, part %d -- %s  (%d/%d)",
+                              chapter.name.c_str(), static_cast<int>(part) + 1,
+                              map_name.c_str(), map_found,
+                              static_cast<int>(on_map.size()));
+            } else {
+                std::snprintf(head, sizeof(head), "%s -- %s  (%d/%d)",
+                              chapter.name.c_str(), map_name.c_str(), map_found,
+                              static_cast<int>(on_map.size()));
+            }
+            Say(head);
+
+            for (size_t i = 0; i < on_map.size(); ++i) {
+                Say(std::string("    ") +
+                    (Collected(*on_map[i]) ? "[x] " : "[ ] ") + on_map[i]->name);
+            }
         }
     }
 
+    if (shown == 0 && !wanted.empty()) {
+        Say(std::string("Nothing matches \"") + filter + "\".");
+    }
+
     char line[128];
-    std::snprintf(line, sizeof(line), "%d found, %d to go.", found, left);
+    std::snprintf(line, sizeof(line), "Found %d of %d locations in this seed.",
+                  found, total);
     Say(line);
 }
 

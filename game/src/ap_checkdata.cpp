@@ -252,9 +252,27 @@ const Location* CheckData::ChargerAt(const std::string& map,
 
 const Location* CheckData::WeaponPickupFor(const std::string& classname,
                                            const std::string& map) const {
+    // The map only has to be *a* campaign map, not the one the location is
+    // anchored to.
+    //
+    // "First Shotgun" is one check for the first shotgun of the run, and the
+    // generator anchors it to the earliest map that contains one so the apworld
+    // has somewhere to put it in the region graph. Requiring the player to pick
+    // up that particular copy is a different and much stricter thing: Office
+    // Complex alone has five shotguns across four of its maps, and taking any of
+    // the other four meant the check never fired at all. The one in the anchor
+    // map is not even the one most players walk into first.
+    //
+    // Widening this cannot make a check available earlier than the anchor,
+    // because the anchor *is* the earliest map in campaign order that has one --
+    // so nothing comes into reach that logic did not already allow.
+    if (ChapterOfMap(map) == nullptr) {
+        return nullptr;  // the hub or the hazard course: finding one here is not
+                         // finding it in the campaign
+    }
+
     for (const Location& location : locations) {
         if (location.type != TriggerType::WeaponPickup) continue;
-        if (location.map != map) continue;
         for (const std::string& name : location.classnames) {
             if (name == classname) {
                 return &location;

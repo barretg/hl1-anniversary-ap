@@ -370,6 +370,16 @@ void ApplyLoadout(CBasePlayer* player) {
         return;
     }
 
+    // Nothing can be handed to a corpse. `GiveNamedItem` still builds the entity
+    // and touches the player with it, `AddPlayerItem` refuses, and the loadout
+    // logs a grant failure for every weapon in the list -- which is what filled
+    // the boot trace with `grant failed` while the player was dead in
+    // Questionable Ethics. Asked for again, and the respawn asks too.
+    if (!player->IsAlive()) {
+        g_loadout_wanted = true;
+        return;
+    }
+
     // The suit first and always, whatever the seed says about armour. In GoldSrc
     // it draws the weapon HUD and owns weapon switching, so a player without one
     // cannot use what they are holding.

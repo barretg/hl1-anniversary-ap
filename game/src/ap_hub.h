@@ -23,8 +23,8 @@ namespace ap {
 
 // Registered with the engine once, at GameDLLInit.
 //   ap                 every mission and its unlock status
-//   ap_tracker [map]   locations found and still out there
-//   ap_find [text]     point at the nearest unfound check, or one you name
+//   ap_tracker [text]  every location in the seed; filter by mission or map
+//   ap_find [text]     the nearest check here, or one named anywhere in the seed
 //   ap_warp <n|name>   travel to an unlocked mission
 //   ap_hub             return to the hub
 //   ap_help            these, in game

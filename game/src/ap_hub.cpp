@@ -244,8 +244,10 @@ void Help() {
     Say("!warp <number or name>    travel to an unlocked mission");
     Say("!warp <mission> <part>    to a part of it you have already reached");
     Say("!hub                      return to the hub");
-    Say("!tracker [map]            locations found and still out there");
-    Say("!find [text]              point at the nearest unfound check");
+    Say("!tracker [filter]         every location in the seed, found and not");
+    Say("!tracker office           narrowed to a mission or a map name");
+    Say("!find                     point at the nearest check on this map");
+    Say("!find <text>              find a check by name, anywhere in the seed");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
     Say("In the hub you can press a mission's panel instead of typing anything.");
 }
