@@ -61,6 +61,24 @@ bool WasRequested(const std::string& map_name);
 void RequestSeamDoors();
 void RunSeamDoors();
 
+// The other half of arriving cold: a monster the map before this one would have
+// walked in. Gonarch's Lair places one Gonarch in Part 1 and lets the engine
+// carry it through both transitions, so warping into Part 2 or Part 3 gives an
+// empty arena. This puts it back, on the path node it would have been standing
+// on -- which is not an approximation of the mid-mission state, it is where the
+// fight's remaining health and script are read from.
+//
+// Called from `RunSeamDoors`, so it inherits the same "only on a warp, only once
+// the level has settled" timing. Placing a monster is a spawn, and a spawn from
+// anywhere but StartFrame is the usual crash.
+void PlaceCarriedMonsters();
+
+// Their models and sounds, from `CWorld::Precache`. A monster spawned at
+// StartFrame can only use what was precached during the load; asking the engine
+// for a model after that is a fatal error. Precached on every load of a map that
+// lists one, warp or not, because at precache time we cannot yet know.
+void PrecacheCarriedMonsters();
+
 // Called from CChangeLevel::ChangeLevelNow. False lets the game's own transition
 // proceed, which is what happens for every transition inside a mission. True
 // when we have taken it over.

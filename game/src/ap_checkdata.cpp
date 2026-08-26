@@ -1,6 +1,7 @@
 #include "ap_checkdata.h"
 
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 
 #include "ap_text.h"
@@ -114,6 +115,20 @@ bool CheckData::Load(const std::string& path) {
             starting_weapons.push_back(f[1]);
         } else if (record == "P" && f.size() >= 3) {
             hub_buttons.push_back(std::make_pair(f[1], f[2]));
+        } else if (record == "M" && f.size() >= 8) {
+            CarriedMonster monster;
+            monster.map = f[1];
+            monster.classname = f[2];
+            monster.targetname = f[3];
+            monster.netname = f[4];
+            if (!ParseVector(f[5], monster.origin)) {
+                // Nowhere to put it. Placing it at the world origin would be a
+                // monster in a wall, so drop the record instead.
+                continue;
+            }
+            monster.angle = static_cast<float>(atof(f[6].c_str()));
+            monster.spawnflags = static_cast<int>(ParseLong(f[7]));
+            carried_monsters.push_back(monster);
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.

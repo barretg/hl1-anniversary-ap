@@ -38,7 +38,11 @@ OUT_PATH = (
 # 3 adds `P|<button targetname>|<chapter key>`, the authored lobby's panels.
 # Additive like the rest: a reader of format 2 ignores the record and falls back
 # to the console commands, which is exactly the v1 hub.
-FORMAT_VERSION = 3
+#
+# 4 adds `M`, the monsters a mid-mission map expects to have been walked in from
+# the map before it. Additive again: a reader of format 3 warps into Gonarch's
+# Lair Part 3 and finds an empty arena, which is what it did before.
+FORMAT_VERSION = 4
 
 
 def render(campaign: dict) -> str:
@@ -52,6 +56,10 @@ def render(campaign: dict) -> str:
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
         "#   P|<button targetname>|<chapter key>   a lobby panel and where it goes",
+        "#   M|<map>|<classname>|<targetname>|<netname>|<x y z>|<angle>|<spawnflags>",
+        "#     a monster this map only ever gets by transition, placed on arrival",
+        "#     when the map was warped into. <netname> is the path node it starts",
+        "#     on, which is what puts the fight where the player would have left it.",
         "#   D|<data version>               must match the client's, or ids differ",
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
@@ -119,6 +127,19 @@ def render(campaign: dict) -> str:
     # game simply has no buttons to answer and the console commands stand.
     for button in campaign.get("hub_buttons", ()):
         lines.append(f"P|{button['targetname']}|{button['chapter']}")
+
+    for placement in campaign.get("carried_monsters", ()):
+        lines.append(
+            "M|{map}|{classname}|{targetname}|{netname}|{origin}|{angle}|{flags}".format(
+                map=placement["map"],
+                classname=placement["classname"],
+                targetname=placement["targetname"],
+                netname=placement["netname"],
+                origin=" ".join(str(value) for value in placement["origin"]),
+                angle=placement["angle"],
+                flags=placement["spawnflags"],
+            )
+        )
 
     return "\n".join(lines) + "\n"
 

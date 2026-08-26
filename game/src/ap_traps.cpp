@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "ap_hub.h"
 #include "ap_items.h"
 #include "ap_main.h"
 
@@ -274,6 +275,11 @@ void PrecacheTraps() {
         UTIL_PrecacheOther(classname);
     }
     Trace("  traps precached");
+
+    // Not a trap, but the same window and the only hook we have into it. The
+    // SDK patch calls this one function from `CWorld::Precache`; adding a second
+    // call site there would mean repatching every SDK checkout for no gain.
+    PrecacheCarriedMonsters();
 }
 
 void QueueTrap(const std::string& trap_name) {

@@ -514,6 +514,70 @@ void RunSeamDoors() {
                   .c_str());
         entity->Use(player, player, USE_ON, 0);
     }
+
+    PlaceCarriedMonsters();
+}
+
+void PrecacheCarriedMonsters() {
+    // Precaching runs before `Startup`, so on the first map of a session there
+    // is nothing loaded yet to look in.
+    EnsureData();
+
+    const std::string map = STRING(gpGlobals->mapname);
+    for (const CarriedMonster& carried : Data().carried_monsters) {
+        if (carried.map != map) {
+            continue;
+        }
+        // Only the maps that list one, rather than every map in the game. A
+        // precache slot is not free and the Gonarch is a large model with a
+        // dozen sounds behind it.
+        Trace(("CWorld::Precache: " + carried.classname).c_str());
+        UTIL_PrecacheOther(carried.classname.c_str());
+    }
+}
+
+void PlaceCarriedMonsters() {
+    // Everything below runs only on a map we warped into. Reached the ordinary
+    // way, the engine carries the real monster across the transition and a
+    // second would be two bosses in one arena.
+    const std::string map = STRING(gpGlobals->mapname);
+
+    for (const CarriedMonster& carried : Data().carried_monsters) {
+        if (carried.map != map) {
+            continue;
+        }
+
+        // Already here means the transition brought it, or we have run once
+        // before on this map. Either way there is nothing to do.
+        if (!carried.targetname.empty() &&
+            UTIL_FindEntityByTargetname(nullptr, carried.targetname.c_str()) !=
+                nullptr) {
+            continue;
+        }
+
+        edict_t* edict = CREATE_NAMED_ENTITY(MAKE_STRING(carried.classname.c_str()));
+        if (FNullEnt(edict)) {
+            Trace(("  could not create " + carried.classname).c_str());
+            continue;
+        }
+
+        // Set up before spawning, not after: a monster reads its path node and
+        // its flags in `Spawn`, and one spawned bare has already decided it has
+        // nowhere to walk by the time we could tell it otherwise.
+        edict->v.origin = Vector(carried.origin[0], carried.origin[1],
+                                 carried.origin[2]);
+        edict->v.angles = Vector(0.0f, carried.angle, 0.0f);
+        edict->v.targetname = ALLOC_STRING(carried.targetname.c_str());
+        edict->v.netname = ALLOC_STRING(carried.netname.c_str());
+        edict->v.spawnflags = carried.spawnflags;
+
+        // Its assets came in at `CWorld::Precache`, the same window the traps
+        // use. Precaching here would be after the level has started, which the
+        // engine refuses with a fatal error.
+        DispatchSpawn(edict);
+
+        Trace(("  placed " + carried.classname + " on " + carried.netname).c_str());
+    }
 }
 
 bool WasRequested(const std::string& map_name) {

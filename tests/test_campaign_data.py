@@ -90,6 +90,84 @@ def test_the_reachable_twin_of_each_sealed_charger_survives(campaign: dict) -> N
         assert twins, f"no reachable {classname} left near {position}"
 
 
+# Apprehension Part 3, mounted 110 units above the only floor near it. Reported
+# from play as "in the void". Nothing else in the campaign comes close: the next
+# furthest charger of the other hundred and ten has somewhere to stand 44 units
+# away, well inside the engine's own 64-unit use radius.
+UNUSABLE_CHARGERS = {
+    ("c2a3b", "func_healthcharger", (-872, 2372, 1212)),
+}
+
+
+@pytest.mark.parametrize("map_name,classname,position", sorted(UNUSABLE_CHARGERS))
+def test_chargers_with_nowhere_to_stand_are_not_locations(
+    campaign: dict, map_name: str, classname: str, position: tuple
+) -> None:
+    """A charger no player can press use on must not be a check.
+
+    Worse than a sealed seam duplicate, which at least has a reachable twin: this
+    one is the only copy, so under `accessibility: full` it holds the seed with
+    nothing to fall back on. Derived by `unusable_chargers`; pinned here because
+    the derivation is the only thing standing between the seed and a soft lock.
+    """
+    for entry in campaign["locations"]:
+        trigger = entry["trigger"]
+        if trigger["type"] != "charger" or entry["map"] != map_name:
+            continue
+        at = tuple(int(v) for v in trigger["at"].split())
+        assert at != position, f"{entry['name']} has nowhere to stand and use it"
+
+
+def test_the_gonarch_is_placed_in_every_map_of_its_fight(campaign: dict) -> None:
+    """Warping into a mid-mission map must not give an empty arena.
+
+    Gonarch's Lair is three maps and one Gonarch, carried across both transitions
+    by the engine. Parts 2 and 3 hold the fight's script and no boss, so a warp
+    lands in a room with a door at the end and nothing in it.
+    """
+    placed = {
+        entry["map"]: entry for entry in campaign["carried_monsters"]
+    }
+    assert set(placed) == {"c4a2a", "c4a2b"}
+    for entry in placed.values():
+        assert entry["classname"] == "monster_bigmomma"
+        assert entry["targetname"] == "big_momma"
+        # The path node it starts on is the whole of the mid-mission state.
+        assert entry["netname"]
+
+
+def test_carried_monsters_start_on_a_node_their_map_defines(campaign: dict) -> None:
+    """A monster pointed at a node from another map has nowhere to walk.
+
+    `netname` is read during `Spawn` and never looked up again, so getting it
+    wrong is a boss that stands still rather than an error anyone would see.
+    """
+    from bsp_entities import load_map
+
+    maps_dir = Path(
+        r"F:\SteamLibrary\steamapps\common\Half-Life\valve\maps"
+    )
+    if not maps_dir.exists():
+        pytest.skip("no Half-Life install to read maps from")
+
+    for entry in campaign["carried_monsters"]:
+        names = {
+            e.get("targetname")
+            for e in load_map(maps_dir / f"{entry['map']}.bsp")
+        }
+        assert entry["netname"] in names, (
+            f"{entry['map']} has no node named {entry['netname']}"
+        )
+
+
+def test_checkdata_carries_every_placement(
+    campaign: dict, checkdata: list[list[str]]
+) -> None:
+    """The game reads checkdata.txt, not campaign.json."""
+    records = {row[1] for row in checkdata if row[0] == "M"}
+    assert records == {entry["map"] for entry in campaign["carried_monsters"]}
+
+
 def test_every_mission_has_a_lobby_button(campaign: dict) -> None:
     """A mission with no panel is a mission only the console can reach.
 

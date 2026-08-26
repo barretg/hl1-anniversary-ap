@@ -252,6 +252,29 @@ Pit and Surface Tension and the `func_tracktrain` in On A Rail and Apprehension
 carry them too and are left alone: a whole crate and a train at its start are a
 playable map.
 
+**Doors are not the only thing a transition brings.** Gonarch's Lair is three
+maps and one Gonarch: it is placed in Part 1 and carried across both transitions
+by the engine, so Parts 2 and 3 contain the fight's `info_bigmomma` path, its
+scripted death and the relay that kills it, and no boss at all. Warped into,
+Part 3 is an empty arena with a door at the far end.
+
+`PlaceCarriedMonsters` puts it back, and the state it puts back is not a guess.
+Each map's path has exactly one entry node -- the one no other node in that map
+targets -- and everything about where the fight is up to is read from the chain
+onward from there: remaining health per node, the animation played on arrival,
+the collapse triggers. Starting the Gonarch on that node *is* the mid-mission
+state rather than an approximation of it.
+
+Both halves are derived from the BSPs by `carried_monsters` and shipped as `M`
+records, so a recompile that moves the path needs no edit. Two constraints go
+with it. It runs only on a map that was warped into, because reaching one
+normally brings the real monster and a second would be two bosses in one arena.
+And the assets are precached from `CWorld::Precache` on any load of a map that
+lists one: a monster spawned at StartFrame can only use what came in during the
+load, and asking the engine for a model after that is fatal. That hook is
+`PrecacheTraps`, which is not what it is any more but is the one call site the
+SDK patch adds.
+
 **A map is not allowed to fire until the client says it may.** `ap_warp` and the
 lobby panels check the gate at the point of travel, but they are not the only way
 into a mission: **the engine restores the last save when the player dies**, and
@@ -288,6 +311,25 @@ at something the player is standing near and turning to look for, and reading it
 meant opening the console and losing sight of the level. `ap` and `ap_tracker`
 are lists and stay where lists belong.
 
+**Everything the player reads goes through one queue, and nothing is written
+with `ALERT`.** `Say` and `Notify` differ only in whether the line also gets the
+chat overlay; both append to `g_notices`, and `FlushNotices` is the only place in
+the dll that writes to the client.
+
+`ALERT(at_console)` looks like the cheap way to reach a listen server's console,
+and it is, but the engine drops it unless `developer` is set -- so it reaches
+nobody in a normal game. Routing `Say` through it made every command silent while
+still running perfectly, which is a bug that looks like a much worse bug.
+
+The reason it was tried is real, though, and it is why the queue drains a few
+lines per frame: every `CLIENT_PRINTF` and every `ClientPrint` is a reliable
+message, and the engine's reliable channel is small. `ap_tracker` prints a line
+per location and sending those through in one frame overflowed it:
+`SZ_GetSpace: overflow on netchan->message`, `Reliable channel overflowed`, the
+client dropped, the player back at the main menu by typing a command. A queue
+held across a load has the same shape. `kMaxNoticesPerFrame` is the fix; the
+queue holds enough for a whole tracker listing and spends a second delivering it.
+
 **Butterfingers really drops the weapon.** `CBasePlayer::DropPlayerItem` begins
 `if ( !g_pGameRules->IsMultiplayer() ) return;`, so the trap removes the weapon
 and throws a fresh copy on the floor instead. It can be picked back up -- that
@@ -309,16 +351,21 @@ change, which is any check the player sends.
     `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t` and a dead game.
     `Notify` queues; `FlushNotices` sends. That one cost a crash on the first
     death of the first real playthrough.
-  - **`ClientReady`, not `FL_CLIENT`, decides when that message may go,** and it
-    counts frames rather than trusting a flag. `FL_CLIENT` is set from the moment
-    the engine begins restoring a player, so it was never the answer.
-    `m_fGameHUDInitialized` looked like a better one -- `UpdateClientData` sets
-    it when the HUD comes up, and it is deliberately not a saved field -- but a
-    restore inside a running process **reuses the `CBasePlayer` object**, so it
-    survives from the previous map and reads TRUE on the first frame of the new
-    one. That is how the crash came back after being fixed once. `ClientReady`
-    now requires two frames since `Startup` reset the counter, which is the one
-    signal a level load cannot carry over.
+  - **`ClientReady` counts frames, and must not consult anything else.** It is
+    three frames since `Startup` reset the counter, plus a player with
+    `FL_CLIENT`. Nothing more, and the two attempts to be cleverer than that both
+    shipped bugs.
+
+    `FL_CLIENT` alone is set from the moment the engine begins restoring a
+    player, so it was never the answer. `m_fGameHUDInitialized` looks like the
+    right flag and is worse than useless: it is **not** a saved field, so a
+    `changelevel` leaves it FALSE, and the block in `UpdateClientData` that would
+    set it again is guarded by `m_fInitHUD`, which *is* saved and restores as
+    FALSE. So it stays FALSE for the rest of the run. Every write to the client
+    stopped after the first map transition -- no HUD messages, no console output,
+    and no loadout, which is why the suit bit stopped being reapplied and took
+    the whole HUD with it. A counter we reset ourselves cannot be wrong about
+    which map it is on.
   - **Two things write a user message without looking like it,** and both are in
     the loadout: `CBasePlayerWeapon::AddToPlayer` sends `WeapPickup`, so
     *granting a weapon* is a client write, and `ForceClientDllUpdate` ends in

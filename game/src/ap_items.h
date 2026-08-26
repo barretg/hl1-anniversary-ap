@@ -59,4 +59,14 @@ void GrantFiller(CBasePlayer* player, const std::string& item_name);
 void ClampArmour();
 bool ArmourAllowed();
 
+// The suit bit, held on every frame. "Granted, never removed" is the rule, and
+// this is where it is kept rather than only on a spawn and a snapshot change.
+//
+// In GoldSrc the bit draws the HUD as well as marking the suit owned, so a
+// player who loses it loses health, ammo and the message area with it -- the
+// game goes quiet while still running. `CanCollect` clears it for exactly one
+// synchronous call so the real suit pickup can fire the map logic that hangs off
+// it; this is what puts it back if that call does not finish the job.
+void EnforceSuit();
+
 }  // namespace ap

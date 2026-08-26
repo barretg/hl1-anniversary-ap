@@ -36,14 +36,34 @@ bool g_warned_mismatch = false;
 // `ClientReady`.
 int g_frames_this_map = 0;
 
-// Player-facing lines waiting for a frame safe enough to send them in.
-std::vector<std::string> g_notices;
+// One player-facing line waiting for a frame safe enough to send it in.
+//
+// `hud` is the only difference between the two ways out of here. Everything
+// reaches the console; a notice -- an item arriving, a check going out -- also
+// gets the chat overlay, because it is news rather than a line of a list.
+struct Notice {
+    std::string text;
+    bool hud;
+};
 
-// How many of those to hold while the client is not ready. A restore clears the
-// way for these within a frame or two, so the cap is only there to stop a
-// session that never gets a client from growing this for the life of the
-// process. The console already has every one of them.
-const size_t kMaxHeldNotices = 32;
+std::vector<Notice> g_notices;
+
+// How many of those to hold while the client is not ready. Large enough for a
+// whole `ap_tracker` listing, which is the longest thing this queue ever holds
+// at once and runs to a couple of hundred lines on a full seed. The cap is only
+// there to stop a session that never gets a client from growing this for the
+// life of the process.
+const size_t kMaxHeldNotices = 512;
+
+// Frames after a map load before anything may be written to the client.
+const int kFramesBeforeClientWrites = 3;
+
+// Lines sent in one frame. Each is a reliable message, and the
+// engine's reliable channel is small: overrun it and the engine prints
+// `SZ_GetSpace: overflow on netchan->message`, drops the client and returns the
+// player to the main menu. A held queue draining after a load is exactly the
+// shape that overruns it, so it drains a few at a time instead.
+const size_t kMaxNoticesPerFrame = 4;
 
 // `<game dir>/archipelago`. GET_GAME_DIR hands back the mod folder's name
 // ("hlap") and the engine's working directory is the install root, so a relative
@@ -93,61 +113,48 @@ const char* Intern(const std::string& text) {
 }
 
 bool ClientReady() {
-    // Frames actually run on *this* map. The only signal here that a level load
-    // cannot lie about.
+    // Frames actually run on *this* map, and nothing else. This is the only
+    // signal here that a level load cannot lie about, and two attempts to find a
+    // better one both made things worse.
     //
     // `FL_CLIENT` is set from the moment the engine begins restoring a player,
-    // so it was never the answer. `m_fGameHUDInitialized` looked like it: it is
-    // set by `UpdateClientData` when the HUD comes up, and it is not a saved
-    // field. But a restore inside a running process reuses the `CBasePlayer`
-    // object, so it survives from the map before and reads TRUE on the first
-    // frame of the new one -- which is how the quickload crash came back after
-    // being "fixed". A counter we reset ourselves in `Startup` cannot do that.
+    // so it was never the answer. `m_fGameHUDInitialized` looked like it and is
+    // worse than useless: it is not a saved field, so a `changelevel` leaves it
+    // FALSE, and the thing that would set it again is guarded by `m_fInitHUD`,
+    // which *is* saved and restores as FALSE. `UpdateClientData` therefore skips
+    // the block entirely and the flag stays FALSE for the rest of the run. Every
+    // write to the client stopped after the first transition: no messages, no
+    // console output, and no loadout -- which is how the suit bit stopped coming
+    // back and the HUD went with it.
     //
-    // Two rather than one, so at least one whole frame has been through
-    // `PlayerPreThink` -- which is what calls `UpdateClientData` and actually
-    // brings the HUD up -- before anything of ours writes to the client.
-    if (g_frames_this_map < 2) {
+    // Frames since `Startup` reset the counter. Three, so the client is well
+    // past the moment a write would land in a buffer that does not exist yet.
+    if (g_frames_this_map < kFramesBeforeClientWrites) {
         return false;
     }
     CBasePlayer* player = Player();
-    if (player == nullptr || (player->pev->flags & FL_CLIENT) == 0) {
-        return false;
-    }
-    return player->m_fGameHUDInitialized != FALSE;
+    return player != nullptr && (player->pev->flags & FL_CLIENT) != 0;
 }
 
-void Say(const std::string& text) {
-    // The console half of a command's answer. Always logged server-side, and
-    // sent to the client only when there is a client able to take it: this runs
-    // from command dispatch, where there normally is, but `ap` from the server
-    // console during a load is not a reason to bring the engine down.
-    ALERT(at_console, "[AP] %s\n", text.c_str());
-    if (!ClientReady()) {
-        return;
-    }
-    const std::string line = "[AP] " + text + "\n";
-    CLIENT_PRINTF(Player()->edict(), print_console, line.c_str());
-}
-
-void Notify(const std::string& text) {
-    // Queued, never sent from here. A notification is a user message, and the
-    // hooks that raise one run at moments the engine cannot take a message:
-    // `CBasePlayer::Killed`, `Spawn` before the client is fully in the server,
-    // the middle of a level load. Writing one there is
+void Queue(const std::string& text, bool hud) {
+    // Queued, never sent from here. Every line out of this dll is a message to
+    // the client, and the hooks that raise one run at moments the engine cannot
+    // take a message: `CBasePlayer::Killed`, `Spawn` before the client is fully
+    // in the server, the middle of a level load. Writing one there is
     // `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t`, which takes
     // the game down.
     //
     // The same rule as the deferred level change, for the same reason: a hook
     // decides *what* happens, and StartFrame is where it actually happens.
     //
-    // The server console is written here rather than in the flush, because it is
-    // the record and an `ALERT` is safe at any moment: it is not a user message
-    // and touches no network buffer. That also means the flush can hold the
-    // queue for a client that is not ready without repeating itself.
-    ALERT(at_console, "[AP] %s\n", text.c_str());
+    // Nothing is written to the server console here either. `ALERT(at_console)`
+    // looks like the cheap way to reach a listen server's console, and it is,
+    // but the engine drops it unless `developer` is set -- so it reaches nobody
+    // in a normal game. That is the whole of why the commands went silent. The
+    // queue is the one path, and `Trace` still keeps the crash record in
+    // `ap_boot.txt`, which is what `ALERT` was standing in for.
+    g_notices.push_back(Notice{text, hud});
 
-    g_notices.push_back(text);
     // A client that never becomes ready must not grow this without bound. The
     // oldest go first: what a player wants after a load is the last thing that
     // happened, not the first.
@@ -155,6 +162,18 @@ void Notify(const std::string& text) {
         g_notices.erase(g_notices.begin(),
                         g_notices.begin() + (g_notices.size() - kMaxHeldNotices));
     }
+}
+
+void Say(const std::string& text) {
+    // Console only. This is the voice for lists and command replies: `ap_tracker`
+    // is a couple of hundred lines and belongs somewhere it can be scrolled.
+    Queue(text, false);
+}
+
+void Notify(const std::string& text) {
+    // Console and the chat overlay both. News the player should see without
+    // opening the console: an item arriving, a check going out.
+    Queue(text, true);
 }
 
 void FlushNotices() {
@@ -172,11 +191,24 @@ void FlushNotices() {
 
     CBasePlayer* player = Player();
 
-    for (const std::string& text : g_notices) {
-        const std::string line = "[AP] " + text + "\n";
-        // No console write here. `Notify` already made one, at the moment the
-        // thing happened; on a listen server that is the same console the player
-        // is reading, so printing again here said everything twice.
+    // A few per frame. Each of these is a reliable message, and a queue that has
+    // been held across a load -- or a whole `ap_tracker` listing -- would
+    // otherwise go out in one burst and overflow the channel, which drops the
+    // client to the main menu.
+    const size_t take = g_notices.size() < kMaxNoticesPerFrame
+                            ? g_notices.size()
+                            : kMaxNoticesPerFrame;
+
+    for (size_t i = 0; i < take; ++i) {
+        const std::string line = "[AP] " + g_notices[i].text + "\n";
+
+        // The console, always. `CLIENT_PRINTF` takes the string as a string
+        // rather than a format, so a location name is safe in it verbatim.
+        CLIENT_PRINTF(player->edict(), print_console, line.c_str());
+
+        if (!g_notices[i].hud) {
+            continue;
+        }
 
         // HUD_PRINTTALK: the message area chat uses, bottom left, a few lines
         // deep and gone after a few seconds. The client runs this through
@@ -196,7 +228,7 @@ void FlushNotices() {
         ClientPrint(player->pev, HUD_PRINTTALK, hud.c_str());
     }
 
-    g_notices.clear();
+    g_notices.erase(g_notices.begin(), g_notices.begin() + take);
 }
 
 void Trace(const char* where) {
@@ -244,20 +276,24 @@ bool Live() {
     return true;
 }
 
+void EnsureData() {
+    // Once per process rather than once per map: rereading a file that cannot
+    // have changed on every level transition is pure cost, and the whole point
+    // of the design is that a map load is cheap.
+    if (g_data.Loaded()) {
+        return;
+    }
+    const std::string store = StoreDir();
+    if (!g_data.Load(store + "/checkdata.txt")) {
+        Say("no checkdata.txt in " + store + " -- running as ordinary Half-Life");
+    }
+}
+
 void Startup() {
     Trace("ServerActivate: ap::Startup");
     const std::string store = StoreDir();
 
-    // Once per process rather than once per map: rereading a file that cannot
-    // have changed on every level transition is pure cost, and the whole point
-    // of the design is that a map load is cheap.
-    if (!g_data.Loaded()) {
-        if (!g_data.Load(store + "/checkdata.txt")) {
-            ALERT(at_console,
-                  "[AP] no checkdata.txt in %s -- running as ordinary Half-Life\n",
-                  store.c_str());
-        }
-    }
+    EnsureData();
     Trace(g_data.Loaded() ? "  checkdata read" : "  no checkdata");
 
     g_bridge.Open(store);
@@ -302,6 +338,7 @@ void RunFrame() {
     RunLoadout();
     RunSeamDoors();
     RunDeferred();
+    EnforceSuit();
     ClampArmour();
 
     if (gpGlobals->time < g_next_poll) {

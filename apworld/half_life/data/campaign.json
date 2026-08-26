@@ -1,5 +1,5 @@
 {
- "data_version": "84d89713b34b",
+ "data_version": "88d05f1ad7cd",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -2323,7 +2323,7 @@
   },
   {
    "id": 7760120,
-   "name": "Apprehension - Health Charger 1 (Part 3)",
+   "name": "Apprehension - Health Charger (Part 3)",
    "chapter": "c2a3",
    "map": "c2a3b",
    "trigger": {
@@ -2336,23 +2336,6 @@
     -952,
     2608,
     1092
-   ]
-  },
-  {
-   "id": 7760121,
-   "name": "Apprehension - Health Charger 2 (Part 3)",
-   "chapter": "c2a3",
-   "map": "c2a3b",
-   "trigger": {
-    "type": "charger",
-    "map": "c2a3b",
-    "classname": "func_healthcharger",
-    "at": "-872 2372 1212"
-   },
-   "position": [
-    -872,
-    2372,
-    1212
    ]
   },
   {
@@ -4109,6 +4092,34 @@
   {
    "targetname": "chapter_17_button",
    "chapter": "c4a3"
+  }
+ ],
+ "carried_monsters": [
+  {
+   "map": "c4a2a",
+   "classname": "monster_bigmomma",
+   "targetname": "big_momma",
+   "netname": "goose5",
+   "origin": [
+    848,
+    -96,
+    -64
+   ],
+   "angle": 180.0,
+   "spawnflags": 4
+  },
+  {
+   "map": "c4a2b",
+   "classname": "monster_bigmomma",
+   "targetname": "big_momma",
+   "netname": "goose8b",
+   "origin": [
+    8,
+    -648,
+    896
+   ],
+   "angle": 90.0,
+   "spawnflags": 4
   }
  ]
 }

@@ -431,7 +431,7 @@ have not been exercised yet.
   its Universal Tracker passthrough for no effect. `STARTING_WEAPONS` is the
   constant `["weapon_crowbar"]`; the snapshot still carries `starting` as a
   per-seed field, so restoring the option later costs nothing.
-- **239 locations, not the 190 estimated:** 96 `map_reached`, 109 `charger`, 18
+- **238 locations, not the 190 estimated:** 96 `map_reached`, 108 `charger`, 18
   `chapter_complete`, 16 `weapon_pickup`, against 32 progression items. Retail's
   97 campaign maps are finer grained than the estimate assumed.
 
@@ -454,6 +454,29 @@ have not been exercised yet.
   the same thing and hand-listed it as `UNREACHABLE_CHARGERS`, one map at a time,
   because "whether a room is walled off is geometry, not entity data". A useful
   part of it turns out to be entity data after all.
+
+- **The rest of it is geometry, and the BSP answers that too.** Apprehension
+  Part 3 has a health charger mounted 110 units above the only floor near it:
+  reachable by nothing, twinned with nothing, and the only copy of that check.
+  `unusable_chargers` reads the compiled clip hull -- the collision tree the map
+  compiler builds per player size, which is the same one the engine traces
+  against -- and asks whether anywhere a standing player fits, with something
+  solid a step below, lies within `PLAYER_SEARCH_RADIUS` of the charger. That
+  radius is the engine's own: `CBasePlayer::PlayerUse` considers nothing outside
+  it, and measures to the brush centre a charger check is already keyed on.
+
+  It separates cleanly. One charger at 110 units, and the next furthest of the
+  other 110 at 44. It is deliberately not a reachability solver: it asks only
+  whether somewhere to stand exists beside the charger, never whether the player
+  can get there, so a charger behind a locked door passes and should. 238
+  locations after the drop.
+
+- **A boss can be mid-mission state rather than map contents.** Gonarch's Lair
+  places one Gonarch in Part 1 and lets the engine carry it across both
+  transitions; Parts 2 and 3 hold the fight's script and no monster. Warping into
+  a part is the hub's whole premise, so `carried_monsters` derives the placement
+  from each map's `info_bigmomma` chain and the game rebuilds it on arrival. See
+  `game/README.md`.
 
 ### Answers to things the plan left open
 

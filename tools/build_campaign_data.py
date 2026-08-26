@@ -19,7 +19,14 @@ import math
 from collections.abc import Iterable
 from pathlib import Path
 
-from bsp_entities import brush_model_bounds, brush_model_centres, load_map
+from bsp_entities import (
+    CONTENTS_EMPTY,
+    ClipHull,
+    brush_model_bounds,
+    brush_model_centres,
+    load_map,
+    origin_of,
+)
 from campaign_layout import (
     CHAPTER_GATES,
     CHAPTERS,
@@ -389,6 +396,12 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         for key in sorted(sealed[map_name]):
             print(f"  sealed behind a transition: {map_name} {key}")
 
+    unusable = unusable_chargers(chapters, entities, bounds, maps_dir)
+    for map_name in sorted(unusable):
+        for key in sorted(unusable[map_name]):
+            print(f"  nowhere to stand and use it: {map_name} {key}")
+        sealed.setdefault(map_name, set()).update(unusable[map_name])
+
     enabled = ENABLED_LOCATION_TYPES
 
     for chapter in chapters:
@@ -413,10 +426,12 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             # identified by where it stands. See `charger_key_position`.
             if "charger" in enabled:
                 spawn = spawn_point(ents)
-                # Sealed on the far side of a transition, and duplicated in the
-                # map that side belongs to. Dropped before the numbering, so the
-                # map's remaining chargers close the gap rather than skipping a
-                # number; ids key on position, so nothing else moves.
+                # Chargers no player will ever press: sealed on the far side of
+                # a transition and duplicated in the map that side belongs to,
+                # or with nowhere to stand within reach of them. Dropped before
+                # the numbering, so the map's remaining chargers close the gap
+                # rather than skipping a number; ids key on position, so nothing
+                # else moves.
                 sealed_here = sealed.get(map_name, set())
                 for classname, display in CHARGER_CLASSNAMES.items():
                     found = []
@@ -654,6 +669,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         "starting_weapons": STARTING_WEAPONS,
         "hub_map": HUB_MAP,
         "hub_buttons": build_hub_buttons(chapters, LOBBY_PATH),
+        "carried_monsters": carried_monsters(chapters, entities),
     }
 
 
@@ -782,6 +798,186 @@ def sealed_seam_chargers(
                         break
 
     return sealed
+
+
+# `PLAYER_SEARCH_RADIUS` from the SDK's `player.cpp`. `CBasePlayer::PlayerUse`
+# only ever considers entities inside a sphere this wide around the player's
+# origin, and the engine measures that sphere to a brush entity's bounding box
+# centre -- which is exactly the position a charger check is keyed on. So this is
+# not a guess at what feels reachable: outside it, pressing use cannot reach the
+# charger, whatever the player does.
+PLAYER_SEARCH_RADIUS = 64.0
+
+# How far out to look for somewhere to stand, and how finely. 8 units is half the
+# player's width, so nowhere a body fits is skipped over; 96 is comfortably past
+# the radius, so a charger that only just fails is still measured rather than
+# reported as infinitely far.
+STAND_SEARCH_RADIUS = 96
+STAND_SEARCH_STEP = 8
+
+
+def standing_distance(hull: ClipHull, centre: tuple[float, float, float]) -> float:
+    """Distance from `centre` to the nearest place a player could press use from.
+
+    Somewhere to stand means two things, both asked of the compiled clip hull:
+    the standing player's body fits there, and it does not fit one step below --
+    which is what floor, a ladder rung, a crate top or the surface of water all
+    look like from in here. Air with air below it is not standing, it is falling
+    past, and while a player can press use mid-jump they cannot count on it.
+    """
+    best = float("inf")
+    lows = [int(centre[i] - STAND_SEARCH_RADIUS) for i in range(3)]
+    highs = [int(centre[i] + STAND_SEARCH_RADIUS) for i in range(3)]
+    for x in range(lows[0], highs[0] + 1, STAND_SEARCH_STEP):
+        for y in range(lows[1], highs[1] + 1, STAND_SEARCH_STEP):
+            for z in range(lows[2], highs[2] + 1, STAND_SEARCH_STEP):
+                if hull.contents((x, y, z)) != CONTENTS_EMPTY:
+                    continue
+                if hull.contents((x, y, z - STAND_SEARCH_STEP)) == CONTENTS_EMPTY:
+                    continue
+                best = min(best, math.dist((x, y, z), centre))
+    return best
+
+
+def unusable_chargers(
+    chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]],
+    bounds: dict[
+        str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]
+    ],
+    maps_dir: Path,
+) -> dict[str, set[str]]:
+    """`{map: {"classname:*model"}}` for chargers no player can press use on.
+
+    Half-Life's own maps contain a few pieces of scenery that look like
+    equipment and are not: a charger set into a wall above a drop, decoration
+    from the far side of a room that was never meant to be walked up to.
+    Apprehension's Part 3 map has one, 110 units above the only floor near it.
+    Under `accessibility: full` a check nobody can collect holds the whole seed,
+    and unlike a sealed seam duplicate there is no second copy to fall back on --
+    this check simply must not exist.
+
+    The measurement is the engine's own: `PLAYER_SEARCH_RADIUS` against the clip
+    hull the compiler built for a standing player. Across the whole campaign it
+    separates cleanly -- 110 units for that one, 44 for the next furthest of the
+    other hundred and ten -- so the threshold is nowhere near anything real.
+
+    This is deliberately *not* a reachability solver. It asks only whether a
+    place to stand exists next to the charger, not whether a player can get to
+    that place. A charger behind a locked door passes, and should.
+    """
+    unusable: dict[str, set[str]] = {}
+    all_maps = {m for chapter in chapters for m in chapter["maps"]}
+
+    for map_name in sorted(all_maps):
+        hull: ClipHull | None = None
+        for entity in entities[map_name]:
+            classname = entity.get("classname", "")
+            if classname not in CHARGER_CLASSNAMES:
+                continue
+            model = entity.get("model", "")
+            if model not in bounds[map_name]:
+                continue
+            if hull is None:
+                hull = ClipHull(maps_dir / f"{map_name}.bsp")
+            mins, maxs = bounds[map_name][model]
+            centre = tuple((mins[i] + maxs[i]) / 2 for i in range(3))
+            if standing_distance(hull, centre) > PLAYER_SEARCH_RADIUS:
+                unusable.setdefault(map_name, set()).add(f"{classname}:{model}")
+
+    return unusable
+
+
+# The one boss Valve walks from map to map instead of placing in each one, and
+# the node entity that says where it should be standing when you arrive. Keyed by
+# the monster so adding another is a line rather than a rewrite, though there is
+# only one in Half-Life.
+CARRIED_MONSTERS = {"monster_bigmomma": "info_bigmomma"}
+
+
+def carried_monsters(
+    chapters: list[dict], entities: dict[str, list[dict[str, str]]]
+) -> list[dict]:
+    """Monsters a mid-mission map expects the *previous* map to have walked in.
+
+    Gonarch's Lair is three maps and one Gonarch. It is placed in Part 1 and
+    carried across both transitions by the engine, so Parts 2 and 3 contain the
+    fight's script -- the `info_bigmomma` path it follows, the scripted death,
+    the trigger that kills it -- and no boss. Reached the way Valve intended
+    that is invisible. Warped into, which is the whole point of the hub, Part 3
+    is an empty arena with a door at the end.
+
+    What comes back is enough to rebuild it: where the fight is up to when you
+    arrive is not a save-game detail, it is a node. Each map's path has exactly
+    one entry -- the node no other node in that map targets -- and the Gonarch's
+    remaining health, the animation it plays on arrival, and everything after are
+    all read from the chain onward from there. Starting it on that node is not an
+    approximation of the mid-mission state, it *is* the mid-mission state.
+
+    Derived rather than written down, so a map Valve recompiles with the path
+    moved needs no edit here.
+    """
+    placements: list[dict] = []
+
+    for chapter in chapters:
+        chapter_maps = chapter["maps"]
+        for index, map_name in enumerate(chapter_maps):
+            if index == 0:
+                continue
+            here = entities[map_name]
+
+            for classname, node_classname in CARRIED_MONSTERS.items():
+                if any(e.get("classname") == classname for e in here):
+                    continue
+                nodes = [e for e in here if e.get("classname") == node_classname]
+                if not nodes:
+                    continue
+
+                # The one the map's own path never arrives at, which is where the
+                # monster must already have been standing.
+                arrived_at = {e.get("target", "") for e in nodes}
+                entries = [
+                    e for e in nodes if e.get("targetname", "") not in arrived_at
+                ]
+                if len(entries) != 1:
+                    raise SystemExit(
+                        f"{map_name}: {node_classname} path has "
+                        f"{len(entries)} entry nodes, expected exactly one"
+                    )
+                entry = entries[0]
+
+                # The real one, from whichever earlier map places it. Its name
+                # and spawnflags are what the rest of the chapter's scripts
+                # address it by, so they are copied rather than invented.
+                original = None
+                for earlier in chapter_maps[:index]:
+                    for candidate in entities[earlier]:
+                        if candidate.get("classname") == classname:
+                            original = candidate
+                            break
+                    if original is not None:
+                        break
+                if original is None:
+                    continue
+
+                origin = origin_of(entry)
+                if origin is None:
+                    raise SystemExit(f"{map_name}: {node_classname} entry has no origin")
+
+                placements.append(
+                    {
+                        "map": map_name,
+                        "classname": classname,
+                        "targetname": original.get("targetname", ""),
+                        # `netname` is the path node a monster starts on.
+                        "netname": entry.get("targetname", ""),
+                        "origin": [int(value) for value in origin],
+                        "angle": float(entry.get("angle", "0") or 0),
+                        "spawnflags": int(original.get("spawnflags", "0") or 0),
+                    }
+                )
+
+    return placements
 
 
 def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:

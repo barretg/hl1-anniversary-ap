@@ -75,6 +75,26 @@ struct Chapter {
     bool IsLastMap(const std::string& map) const;
 };
 
+// A monster a map only ever has because the map before it walked one in.
+//
+// Valve builds a boss fight that spans several maps by placing the monster once
+// and letting the engine carry it across each transition. The later maps hold
+// the script and the path and no monster at all, which is invisible when the
+// chapter is played through and an empty room when it is warped into. This is
+// what a warp puts back.
+struct CarriedMonster {
+    std::string map;
+    std::string classname;
+    std::string targetname;
+    // The path node it starts on, which is the whole of the mid-mission state:
+    // remaining health, the animation played on arrival and everything after are
+    // read from the chain onward from there.
+    std::string netname;
+    float origin[3] = {0.0f, 0.0f, 0.0f};
+    float angle = 0.0f;
+    int spawnflags = 0;
+};
+
 class CheckData {
 public:
     int format_version = 0;
@@ -94,6 +114,11 @@ public:
     // folder has no authored lobby in it, which is not an error: the console
     // commands are the whole of the hub without one.
     std::vector<std::pair<std::string, std::string>> hub_buttons;
+
+    // Placed on arrival, but only on a map that was warped into. Reaching one
+    // the ordinary way brings the real monster with it, and a second would be
+    // two bosses in one arena.
+    std::vector<CarriedMonster> carried_monsters;
 
     bool Load(const std::string& path);
     bool Loaded() const { return !locations.empty(); }

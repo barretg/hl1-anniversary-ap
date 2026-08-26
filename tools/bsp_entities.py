@@ -135,6 +135,86 @@ def brush_model_centres(bsp_path: Path) -> dict[str, tuple[float, float, float]]
     return centres
 
 
+LUMP_PLANES = 1
+LUMP_CLIPNODES = 9
+
+PLANE_STRUCT_SIZE = 20
+CLIPNODE_STRUCT_SIZE = 8
+
+CONTENTS_EMPTY = -1
+CONTENTS_SOLID = -2
+
+# Hulls 1 and 2 are the standing and crouching player. Hull 0 is a point, which
+# is not what a player is: a point can sit in a gap no body fits through.
+HULL_STANDING = 1
+HULL_CROUCHING = 3
+
+
+class ClipHull:
+    """Where a player-sized body can and cannot be, read out of a BSP.
+
+    GoldSrc does not trace the world geometry against the player's bounding box
+    at runtime. The compiler precomputes one collision tree per player size --
+    the clip hulls -- with every surface pushed outward by half the body, so a
+    collision test is a point walked down a BSP of planes. That is cheap enough
+    to do a few thousand times per charger from Python, and it is the *same*
+    answer the engine gives, not an approximation of it.
+
+    Used here to ask the one question the entity lump cannot answer: is there
+    anywhere a player could stand and reach this thing.
+    """
+
+    def __init__(self, bsp_path: Path) -> None:
+        with bsp_path.open("rb") as handle:
+            header = handle.read(struct.calcsize(HEADER_FMT))
+            fields = struct.unpack(HEADER_FMT, header)
+            if fields[0] != 30:
+                raise ValueError(
+                    f"{bsp_path.name}: unsupported BSP version {fields[0]}"
+                )
+
+            def lump(index: int) -> bytes:
+                handle.seek(fields[1 + index * 2])
+                return handle.read(fields[2 + index * 2])
+
+            planes_raw = lump(LUMP_PLANES)
+            clipnodes_raw = lump(LUMP_CLIPNODES)
+            models_raw = lump(LUMP_MODELS)
+
+        self.planes: list[tuple[tuple[float, float, float], float]] = []
+        for index in range(len(planes_raw) // PLANE_STRUCT_SIZE):
+            base = index * PLANE_STRUCT_SIZE
+            normal = struct.unpack_from("<3f", planes_raw, base)
+            distance = struct.unpack_from("<f", planes_raw, base + 12)[0]
+            self.planes.append((normal, distance))
+
+        self.clipnodes: list[tuple[int, int, int]] = []
+        for index in range(len(clipnodes_raw) // CLIPNODE_STRUCT_SIZE):
+            base = index * CLIPNODE_STRUCT_SIZE
+            self.clipnodes.append(struct.unpack_from("<ihh", clipnodes_raw, base))
+
+        # Model 0 is the world. Its four headnodes are the point hull and the
+        # three player hulls; a negative child is a contents value rather than
+        # another node, which is what ends the walk.
+        self.headnodes = struct.unpack_from("<4i", models_raw, 36)
+
+    def contents(
+        self, point: tuple[float, float, float], hull: int = HULL_STANDING
+    ) -> int:
+        node = self.headnodes[hull]
+        while node >= 0:
+            plane_number, front, back = self.clipnodes[node]
+            normal, distance = self.planes[plane_number]
+            side = (
+                normal[0] * point[0]
+                + normal[1] * point[1]
+                + normal[2] * point[2]
+                - distance
+            )
+            node = front if side >= 0 else back
+        return node
+
+
 def origin_of(entity: dict[str, str]) -> tuple[float, float, float] | None:
     raw = entity.get("origin")
     if not raw:

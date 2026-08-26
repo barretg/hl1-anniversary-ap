@@ -1,6 +1,8 @@
 *__pycache__
 *out
 .claude
+.vexp
+.vscode
 .pytest_cache/
 build/
 *.pyc

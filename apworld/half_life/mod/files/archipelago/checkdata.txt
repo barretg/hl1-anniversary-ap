@@ -7,12 +7,16 @@
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
 #   P|<button targetname>|<chapter key>   a lobby panel and where it goes
+#   M|<map>|<classname>|<targetname>|<netname>|<x y z>|<angle>|<spawnflags>
+#     a monster this map only ever gets by transition, placed on arrival
+#     when the map was warped into. <netname> is the path node it starts
+#     on, which is what puts the fight where the player would have left it.
 #   D|<data version>               must match the client's, or ids differ
 # A charger's <arg> is <classname>@<x y z>, the rounded world-space centre
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
-V|3
-D|84d89713b34b
+V|4
+D|88d05f1ad7cd
 G|c4a3
 C|0|c0a0|Black Mesa Inbound|c0a0,c0a0a,c0a0b,c0a0c,c0a0d,c0a0e|0|0
 C|1|c1a0|Anomalous Materials|c1a0,c1a0d,c1a0a,c1a0b,c1a0e|0|0
@@ -150,8 +154,7 @@ L|7760116|c2a3a|charger|func_healthcharger@1040 888 1248|Apprehension - Health C
 L|7760117|c2a3a|charger|func_recharge@1416 800 1196|Apprehension - HEV Charger 1 (Part 2)|1416 800 1196
 L|7760118|c2a3a|charger|func_recharge@992 888 1248|Apprehension - HEV Charger 2 (Part 2)|992 888 1250
 L|7760119|c2a3b|map_reached||Apprehension - Part 3 Reached
-L|7760120|c2a3b|charger|func_healthcharger@-952 2608 1092|Apprehension - Health Charger 1 (Part 3)|-952 2608 1092
-L|7760121|c2a3b|charger|func_healthcharger@-872 2372 1212|Apprehension - Health Charger 2 (Part 3)|-872 2372 1212
+L|7760120|c2a3b|charger|func_healthcharger@-952 2608 1092|Apprehension - Health Charger (Part 3)|-952 2608 1092
 L|7760122|c2a3c|map_reached||Apprehension - Part 4 Reached
 L|7760123|c2a3c|charger|func_recharge@2628 1776 776|Apprehension - HEV Charger (Part 4)|2628 1776 776
 L|7760124|c2a3d|map_reached||Apprehension - Part 5 Reached
@@ -309,3 +312,5 @@ P|chapter_14_button|c4a1
 P|chapter_15_button|c4a2
 P|chapter_16_button|c4a1a
 P|chapter_17_button|c4a3
+M|c4a2a|monster_bigmomma|big_momma|goose5|848 -96 -64|180.0|4
+M|c4a2b|monster_bigmomma|big_momma|goose8b|8 -648 896|90.0|4

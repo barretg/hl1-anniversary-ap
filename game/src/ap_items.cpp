@@ -229,6 +229,38 @@ bool ArmourAllowed() {
     return State().Has(kSuitItem);
 }
 
+void EnforceSuit() {
+    if (!Data().Loaded()) {
+        return;  // ordinary Half-Life: the suit is the game's to give
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    if ((player->pev->weapons & (1 << WEAPON_SUIT)) != 0) {
+        return;
+    }
+
+    // Every frame, not only on a spawn and a snapshot change.
+    //
+    // "Granted, never removed" is the rule, and in GoldSrc the bit does more
+    // than mark the suit as owned: it draws the HUD. A player without it has no
+    // health, no ammo and no message area, which reads as the game having gone
+    // quiet -- commands still run and checks still send, and none of it can be
+    // seen.
+    //
+    // It is cleared deliberately for exactly one call, in `CanCollect`, so that
+    // `CItemSuit::MyTouch` performs the real pickup and fires the map logic that
+    // hangs off it. That clear and the MyTouch that undoes it are both inside
+    // one synchronous touch, so this never lands between them. What this covers
+    // is the case where MyTouch does *not* run -- anything that asks
+    // `CanHaveItem` about an `item_suit` without going on to collect it -- which
+    // otherwise left the bit clear for the rest of the run. That is what
+    // happened after the suit was picked up in Anomalous Materials.
+    Trace("  suit bit was missing; restored");
+    player->pev->weapons |= (1 << WEAPON_SUIT);
+}
+
 void ClampArmour() {
     if (ArmourAllowed()) {
         return;

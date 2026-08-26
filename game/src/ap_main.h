@@ -93,6 +93,12 @@ const char* Intern(const std::string& text);
 // Loaded once per map load. Empty when checkdata.txt could not be read, in which
 // case every check is silently inert -- see `Live`.
 CheckData& Data();
+
+// Read checkdata.txt if it has not been read yet. `Startup` calls this at
+// ServerActivate, which is where it belongs; the precache hooks call it too,
+// because precaching runs *before* ServerActivate and on the very first map of a
+// session there would otherwise be nothing loaded to precache against.
+void EnsureData();
 Bridge& Wire();
 
 // Is it safe to send checks? False when checkdata.txt is missing, when the
@@ -118,17 +124,26 @@ bool Gated();
 // `SZ_GetSpace: Tried to write to an uninitialized sizebuf_t`, and `FL_CLIENT`
 // is not the answer to it: that is set from the moment the engine begins
 // restoring a player, several frames before there is anywhere for a message to
-// go. `m_fGameHUDInitialized` is set by `UpdateClientData` on the first frame it
-// runs for this player, which is when the HUD comes up. It is not a saved field,
-// so a quickload clears it and it comes back a frame or two later.
+// go.
 //
-// Anything that writes to the client waits on this: `Notify`'s flush, `Say`, and
-// the loadout -- which writes two of them without looking like it, through
+// The answer is frames run on this map, counted here, and nothing the engine
+// offers. `m_fGameHUDInitialized` was tried and is a trap: it is not a saved
+// field, so a `changelevel` leaves it FALSE, and the thing that would set it
+// again is guarded by `m_fInitHUD`, which *is* saved and restores as FALSE. It
+// therefore stays FALSE for the rest of the run, and every write to the client
+// stops after the first transition.
+//
+// Anything that writes to the client waits on this: `FlushNotices`, and the
+// loadout -- which writes two of them without looking like it, through
 // `AddToPlayer`'s `WeapPickup` and `ForceClientDllUpdate`'s `ResetHUD`.
 bool ClientReady();
 
 // Console text: the answer to a command the player typed. Lists go here and
 // nowhere else -- `ap` is eighteen lines and would bury the screen.
+//
+// Queued like `Notify` and for the same reasons, and never written with
+// `ALERT`: the engine drops `ALERT(at_console)` unless `developer` is set, so
+// it reaches nobody in a normal game.
 void Say(const std::string& text);
 
 // Something happened: a check was found, an item arrived, a pickup was refused.
