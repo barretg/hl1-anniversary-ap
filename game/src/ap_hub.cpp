@@ -401,19 +401,29 @@ void ToHub() {
     RequestMap(kHubMap);
 }
 
-void Cmd_Ap() { ListMissions(); }
-void Cmd_ApHelp() { Help(); }
-void Cmd_ApWarp() { Warp(ArgumentTail(1)); }
-void Cmd_ApHub() { ToHub(); }
-void Cmd_ApSetWarp() { SetWarp(ArgumentTail(1)); }
-void Cmd_ApWarps() { ListWarps(); }
-void Cmd_ApFind() { Find(ArgumentTail(1)); }
-void Cmd_ApTracker() { Tracker(ArgumentTail(1)); }
+// One reply per command, wherever it came from. `BeginReply` holds everything
+// the command says until it has finished saying it, so a short answer can go to
+// the HUD as well as the console -- which is the only place a player can read it
+// without opening the console, and opening the console pauses the game.
+struct Reply {
+    Reply() { BeginReply(); }
+    ~Reply() { EndReply(); }
+};
+
+void Cmd_Ap() { Reply reply; ListMissions(); }
+void Cmd_ApHelp() { Reply reply; Help(); }
+void Cmd_ApWarp() { Reply reply; Warp(ArgumentTail(1)); }
+void Cmd_ApHub() { Reply reply; ToHub(); }
+void Cmd_ApSetWarp() { Reply reply; SetWarp(ArgumentTail(1)); }
+void Cmd_ApWarps() { Reply reply; ListWarps(); }
+void Cmd_ApFind() { Reply reply; Find(ArgumentTail(1)); }
+void Cmd_ApTracker() { Reply reply; Tracker(ArgumentTail(1)); }
 
 // One place that knows what every command is, whether it arrived from the
 // console or from chat. The console names are the long ones (`ap_warp`); chat
 // takes the short ones too, because `!warp 3` is what a player will type.
 bool Dispatch(const std::string& name, const std::string& rest) {
+    Reply reply;
     if (name == "ap") {
         ListMissions();
     } else if (name == "help" || name == "ap_help") {
@@ -489,8 +499,9 @@ bool HandleChat(CBasePlayer* player, const std::string& said) {
     if (!Dispatch(name, rest)) {
         // Ours to answer even when it is not a command we have: a player who
         // typed `!warpp` wants to be told, not to have it broadcast to a chat
-        // nobody else is in.
-        Say(std::string("No such command: !") + name + ". Try !help.");
+        // nobody else is in. On the HUD, because a player who mistyped is
+        // looking at the game rather than at the console.
+        Notify(std::string("No such command: !") + name + ". Try !help.");
     }
     return true;
 }

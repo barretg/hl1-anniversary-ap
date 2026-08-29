@@ -214,6 +214,7 @@ class Bridge:
         checked: list[int] | None = None,
         missing: list[int] | None = None,
         death_link_amnesty: int = 0,
+        ammo_relief: bool = False,
         data_version: str = "",
         slot: str = "",
         force: bool = False,
@@ -243,6 +244,10 @@ class Bridge:
             # Counted down by the game, not here: the death message has to name
             # the remaining allowance at the moment of the death.
             f"death_link_amnesty={max(0, int(death_link_amnesty))}",
+            # A gun the level cannot feed is refilled after a wait. Off unless
+            # the seed asked for it, and the game reads it from here every time
+            # rather than remembering it.
+            f"ammo_relief={1 if ammo_relief else 0}",
             "chapters=" + ",".join(sorted(chapters)),
             # Missions the seed left out. Distinct from "locked": no item will
             # ever unlock these, and the game should say so rather than leaving

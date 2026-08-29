@@ -107,7 +107,7 @@ index 3fab62a..edf4f60 100644
  	if ( pPlayer->pev->deadflag != DEAD_NO )
  		return FALSE;
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..19b7b25 100644
+index 85b67c4..2805091 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -152,6 +152,17 @@ index 85b67c4..19b7b25 100644
  }
  
  
+@@ -5015,6 +5029,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+ 
+ void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+ {
++	// Archipelago: the fade-and-reload ending. A fall into the void and a
++	// scientist dying both end here, and neither ever reaches Killed.
++	ap::OnRevertSaved();
++
+ 	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
+ 	pev->nextthink = gpGlobals->time + MessageTime();
+ 	SetThink( &CRevertSaved::MessageThink );
 diff --git a/dlls/singleplay_gamerules.cpp b/dlls/singleplay_gamerules.cpp
 index 3438f7c..84cc2e8 100644
 --- a/dlls/singleplay_gamerules.cpp
@@ -175,7 +186,7 @@ index 3438f7c..84cc2e8 100644
  
  //=========================================================
 diff --git a/dlls/triggers.cpp b/dlls/triggers.cpp
-index 1f9ea5b..f5d3e1e 100644
+index 1f9ea5b..872d722 100644
 --- a/dlls/triggers.cpp
 +++ b/dlls/triggers.cpp
 @@ -23,6 +23,7 @@
@@ -186,7 +197,18 @@ index 1f9ea5b..f5d3e1e 100644
  #include "player.h"
  #include "saverestore.h"
  #include "trains.h"			// trigger_camera has train functionality
-@@ -1480,6 +1481,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
+@@ -1014,6 +1015,10 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
+ 		{
+ 			pOther->TakeHealth( -fldmg, m_bitsDamageInflict );
+ 		}
++
++		// Archipelago: a trigger_hurt that heals is one of Xen's healing
++		// pools, and touching it is the check.
++		ap::OnHealingTouch( pOther, this );
+ 	}
+ 	else
+ 		pOther->TakeDamage( pev, pev, fldmg, m_bitsDamageInflict );
+@@ -1480,6 +1485,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
  	edict_t	*pentLandmark;
  	LEVELLIST	levels[16];
  

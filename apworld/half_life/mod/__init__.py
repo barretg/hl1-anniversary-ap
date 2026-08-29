@@ -67,7 +67,20 @@ MOD_FILES = (
     # `startmap` in liblist.gam, `kHubMap` in game/src/ap_hub.cpp and `hub_map`
     # in the campaign data; tests/test_mod_install.py fails if they drift.
     ("files/maps/ap_lobby_alpha.bsp", "maps/ap_lobby_alpha.bsp"),
+    # Key binds for the in-game commands, and the config that runs them.
+    #
+    # They are bundled because of how GoldSrc treats the console: opening it
+    # pauses single-player, and a paused server runs no frames, which is where
+    # this mod does everything it defers. A command typed into the console sits
+    # there until the console closes again. A bound key does not.
+    ("files/autoexec.cfg", "autoexec.cfg"),
+    ("files/apbinds.cfg", "apbinds.cfg"),
 )
+
+# Files installed once and then left alone. A player is expected to edit these,
+# and an update that silently rebound their keys -- or deleted a bind they had
+# removed on purpose -- would be worse than an update that ships nothing.
+PLAYER_OWNED = frozenset({"autoexec.cfg", "apbinds.cfg"})
 
 # Everything install writes and uninstall may remove, plus whatever the last
 # session left in the store: ap_in.txt, ap_out.txt and friends. All of it goes on
@@ -147,6 +160,8 @@ def install(game_dir: str | os.PathLike[str]) -> tuple[int, bool]:
         if data is None:
             raise FileNotFoundError(f"{__name__}/{source} is missing from the world package")
         target = target_root / relative
+        if relative in PLAYER_OWNED and target.exists():
+            continue  # yours now; see PLAYER_OWNED
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         written += 1

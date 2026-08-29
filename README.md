@@ -93,16 +93,24 @@ saves. See [docs/protocol.md](docs/protocol.md).
 
 ## Locations
 
-Three kinds, 240 in all against at most 32 progression items:
+Three kinds, 253 in all against at most 32 progression items:
 
 | Type | Count | Fires when |
 | --- | --- | --- |
 | `map_reached` / `chapter_complete` | 114 | you reach a map division, or finish a mission |
-| `charger` | 111 | you press use on a health or HEV wall unit |
-| `weapon_pickup` | 15 | you reach the weapon Half-Life would first have given you |
+| `charger` | 123 | you press use on a health or HEV wall unit, or stand in a Xen healing pool |
+| `weapon_pickup` | 16 | you reach the weapon Half-Life would first have given you |
 
 Chargers fire on the `+use`, empty or not, so they are about finding one rather
 than needing it. They can be switched off wholesale with `chargesanity: false`.
+
+**Xen's healing pools count as chargers.** They are the same location type,
+identified the same way, and the only difference is that standing in one is what
+fires the check rather than pressing use. In the maps they are a `trigger_hurt`
+with *negative* damage -- `CBaseTrigger::HurtTouch` calls `TakeHealth` instead of
+`TakeDamage` when `dmg` is below zero -- so the sign is the whole of what tells a
+healing pool from a lava pit, and every other `trigger_hurt` in the game is left
+alone. Fifteen of them, all on Xen.
 
 **Chargers are identified by where they stand, not by brush model index.** They
 have no targetname, so the only two candidate handles are the brush model and the

@@ -130,6 +130,7 @@ connected=1
 goal_open=0
 death_link=1
 death_link_amnesty=4
+ammo_relief=0
 chapters=c1a2,c1a4
 excluded=c0a0
 items=RPG;Shotgun
@@ -216,6 +217,11 @@ slot's mistakes empty an allowance meant for the player's own, and reporting the
 death would be a loop -- the client turns a reported death into an outgoing
 DeathLink, the slot that sent this one answers it, and two slots with DeathLink
 on will trade deaths until somebody quits.
+
+`ammo_relief` is a seed option and nothing more: the game reads it from the
+snapshot every time it looks, and refuses to act on a remembered copy. A client
+that has not connected has it off, which is the harmless way round -- nothing is
+granted rather than everything.
 
 `death_link_amnesty` in the snapshot is the *setting*, not the countdown. The
 game keeps the countdown in `ap_amnesty.txt` along with the setting it was

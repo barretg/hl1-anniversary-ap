@@ -24,11 +24,12 @@ number of other missions.
 the long jump module, plus filler (ammo, medkits, armour batteries) and three
 traps.
 
-**Locations:** 240 of them.
+**Locations:** 253 of them.
 
 - reaching each map division of a mission, and finishing the mission
-- pressing use on each of the 111 health chargers and HEV charge panels, empty or
-  not -- these can be switched off with `chargesanity`
+- pressing use on each of the 108 health chargers and HEV charge panels, empty or
+  not, and standing in each of Xen's 15 healing pools -- these can be switched
+  off with `chargesanity`
 - reaching each weapon at the place Half-Life would first have given it to you
 
 ## What does another world's item look like in Half-Life?

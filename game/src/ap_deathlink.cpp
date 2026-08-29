@@ -86,7 +86,39 @@ bool DeathLinkImmune() {
     return gpGlobals->time < g_immune_until;
 }
 
+// When the last `player_loadsaved` fade began, in level time. A revert is one
+// event even when the map fires the trigger more than once, and the fade lasts
+// seconds during which the player is still alive and still touching whatever
+// set it off.
+//
+// Not reset on a map change and it does not need to be: `gpGlobals->time`
+// restarts with the level, so a value carried over from the previous map is
+// larger than the new clock and the difference below goes negative, which is
+// not inside the window.
+float g_reverted_at = -1000.0f;
+
 }  // namespace
+
+void OnRevertSaved() {
+    CBasePlayer* player = Player();
+    if (player == nullptr || !Live()) {
+        return;
+    }
+    // Already dead means `Killed` has been through here with the real cause.
+    if (!player->IsAlive()) {
+        return;
+    }
+    const float since = gpGlobals->time - g_reverted_at;
+    if (since >= 0.0f && since < kRevertQuietSeconds) {
+        return;
+    }
+    g_reverted_at = gpGlobals->time;
+
+    // Deliberately vague, because the entity does not know either: the same
+    // entity ends a fall into the void, a scientist dying and a hostage lost.
+    // What the multiworld needs is that the run was cut short, not the reason.
+    OnPlayerKilled(player, "a fatal mistake");
+}
 
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
     if (player == nullptr || !Live()) {

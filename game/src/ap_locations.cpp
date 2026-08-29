@@ -306,6 +306,31 @@ void OnPlayerUse(CBasePlayer* player, CBaseEntity* target) {
     }
 }
 
+void OnHealingTouch(CBaseEntity* toucher, CBaseEntity* pool) {
+    // From `CBaseTrigger::HurtTouch`, and only down the branch where the damage
+    // is negative -- which is what a healing pool is. Every hazard in the game
+    // reaches that function, so the check has to be the sign of `dmg` rather
+    // than the classname.
+    if (pool == nullptr || !Live()) {
+        return;
+    }
+    // Monsters touch it too, and heal from it.
+    CBasePlayer* player = Player();
+    if (player == nullptr || toucher != player) {
+        return;
+    }
+
+    // Touch, not use, so this arrives twice a second for as long as the player
+    // stands in it. `SendCheck` drops one already sent, which is what keeps that
+    // from becoming a stream of writes to the bridge.
+    const Vector centre = CentreOf(pool);
+    const float at[3] = {centre.x, centre.y, centre.z};
+    const Location* location = Data().ChargerAt(g_map, "trigger_hurt", at);
+    if (location != nullptr) {
+        SendCheck(location->id);
+    }
+}
+
 void OnWeaponCollected(CBasePlayer* player, const std::string& classname) {
     if (player == nullptr || !Live()) {
         return;

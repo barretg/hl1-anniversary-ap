@@ -121,6 +121,21 @@ class DeathLinkAmnesty(Range):
     default = 4
 
 
+class AmmoRelief(Toggle):
+    """Refill a gun the level has no ammo for.
+
+    A shuffled seed can hand you the crossbow in a map that holds no bolts, and
+    Half-Life will never give you any: the weapon is dead weight until the next
+    map. With this on, a gun that runs dry on ammo the level does not stock is
+    announced, and the suit synthesises more five minutes later.
+
+    Off by default. It is a comfort valve rather than part of the balance, and
+    with it on a patient player is never truly out of ammo.
+    """
+
+    display_name = "Ammo Relief"
+
+
 class TrapPercentage(Range):
     """Percentage of your filler items replaced by traps.
 
@@ -147,6 +162,7 @@ class HalfLifeOptions(PerGameCommonOptions):
     chargesanity: Chargesanity
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
+    ammo_relief: AmmoRelief
     trap_percentage: TrapPercentage
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

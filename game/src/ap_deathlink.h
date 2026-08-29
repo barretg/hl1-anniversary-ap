@@ -36,10 +36,25 @@ constexpr long kDeathLinkMaxAgeSeconds = 10;
 // after a DeathLink, which is the safer way to be wrong.
 constexpr float kDeathLinkImmuneSeconds = 1.5f;
 
+// How long after one `player_loadsaved` fade begins another is treated as the
+// same event. The fade runs for seconds with the player alive inside it, and a
+// map is free to fire the trigger every frame it is touched.
+constexpr float kRevertQuietSeconds = 15.0f;
+
 // From CBasePlayer::Killed. Reported whether or not DeathLink is on: the client
 // decides what becomes of it, because deciding here from a cached flag means a
 // stale snapshot silently swallows deaths.
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);
+
+// From `CRevertSaved::Use` (`player_loadsaved`), which is how Half-Life ends a
+// run of events without killing the player: the screen fades, a message shows,
+// and the engine reloads the last save. Falling into the void on Xen and letting
+// a scientist die both end there, and neither ever reaches `Killed`, so neither
+// was reported. It is a death by any measure the multiworld cares about.
+//
+// Ignored when the player is already dead, because `Killed` has then done the
+// reporting and a revert on top of it would send the same death twice.
+void OnRevertSaved();
 
 // A DEATHLINK event from the client. `stamp` is the client's clock, compared
 // against the `now` from the same snapshot rather than against ours.

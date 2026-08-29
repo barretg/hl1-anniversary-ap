@@ -237,6 +237,22 @@ CHARGER_CLASSNAMES: dict[str, str] = {
     "func_recharge": "HEV Charger",
 }
 
+# Xen's healing pools, which are checks for the same reason the wall units are:
+# fixed, obvious, and the only place on Xen that gives health back.
+#
+# They are not equipment and there is nothing to press. A pool is a `trigger_hurt`
+# with *negative* damage -- `CBaseTrigger::HurtTouch` calls `TakeHealth` instead
+# of `TakeDamage` when `dmg` is below zero -- so the entity is the same one Valve
+# uses for lava, and only the sign tells them apart. Every other `trigger_hurt`
+# in the campaign is left alone.
+#
+# Checked on touch rather than on use, and therefore exempt from the "somewhere
+# to stand within the use radius" test that drops decorative wall units: standing
+# in the pool is the whole interaction.
+HEALING_POOL_CLASSNAMES: dict[str, str] = {
+    "trigger_hurt": "Healing Pool",
+}
+
 # How coarsely a charger's world-space centre is rounded before it becomes part
 # of that charger's identity, in map units.
 #

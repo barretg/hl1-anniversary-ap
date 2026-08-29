@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "ap_ammo.h"
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
 #include "ap_deathlink.h"
@@ -48,6 +49,11 @@ struct Notice {
 };
 
 std::vector<Notice> g_notices;
+
+// The answer to the command being run right now, held until it is complete so
+// that its length can decide where it goes. See `BeginReply`.
+std::vector<std::string> g_reply;
+bool g_collecting = false;
 
 // How many of those to hold while the client is not ready. Large enough for a
 // whole `ap_tracker` listing, which is the longest thing this queue ever holds
@@ -166,12 +172,47 @@ void Queue(const std::string& text, bool hud) {
 }
 
 void Say(const std::string& text) {
+    // Held while a command is being answered, so that the whole reply can be
+    // measured before any of it is sent. See `BeginReply`.
+    if (g_collecting) {
+        g_reply.push_back(text);
+        return;
+    }
     // Console only. This is the voice for lists and command replies: `ap_tracker`
     // is a couple of hundred lines and belongs somewhere it can be scrolled.
     Queue(text, false);
 }
 
+void BeginReply() {
+    // Nested calls cannot happen -- one command is answered at a time -- but a
+    // reply left open by an early return would swallow the next one, so this
+    // always starts from empty.
+    g_reply.clear();
+    g_collecting = true;
+}
+
+void EndReply() {
+    g_collecting = false;
+
+    // A short answer goes to the HUD as well as the console, because the console
+    // is the one place a player has to leave the game to read. A long one is a
+    // listing -- `ap_tracker` runs to a couple of hundred lines -- and putting
+    // that on the message area would bury the screen and outrun the channel.
+    const bool hud = g_reply.size() <= kReplyHudMaxLines;
+    for (const std::string& line : g_reply) {
+        Queue(line, hud);
+    }
+    g_reply.clear();
+}
+
 void Notify(const std::string& text) {
+    // Part of a reply if one is being collected: `Warp` says one thing on
+    // success and several on failure, and the whole answer is measured together
+    // rather than half of it jumping the queue.
+    if (g_collecting) {
+        g_reply.push_back(text);
+        return;
+    }
     // Console and the chat overlay both. News the player should see without
     // opening the console: an item arriving, a check going out.
     Queue(text, true);
@@ -304,6 +345,8 @@ void Startup() {
     g_frames_this_map = 0;
     // A weapon Butterfingers threw on the floor went with the old level.
     ClearWithheld();
+    // What this level stocks, and the timers, are both level-scoped.
+    ResetAmmoRelief();
     // Anything still queued was timed against the previous level's clock, which
     // no longer exists. See `RearmQueuedTraps`.
     RearmQueuedTraps();
@@ -339,6 +382,7 @@ void RunFrame() {
     RunLoadout();
     RunSeamDoors();
     RunWarpSave();
+    RunAmmoRelief();
     RunDeferred();
     EnforceSuit();
     ClampArmour();

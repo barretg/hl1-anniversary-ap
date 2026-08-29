@@ -49,6 +49,12 @@ void SendChapterComplete(const Chapter& chapter);
 // classname and by where it stands.
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target);
 
+// From `CBaseTrigger::HurtTouch`, on the branch where the damage is negative.
+// Xen's healing pools are `trigger_hurt` brushes that heal, and they are
+// chargersanity checks like the wall units -- they are just touched rather than
+// pressed, so they cannot come through `OnPlayerUse`.
+void OnHealingTouch(CBaseEntity* toucher, CBaseEntity* pool);
+
 // A weapon entered the player's inventory.
 void OnWeaponCollected(CBasePlayer* player, const std::string& classname);
 

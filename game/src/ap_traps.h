@@ -15,6 +15,8 @@
 
 #include <string>
 
+class CBaseEntity;
+
 namespace ap {
 
 // Called during the map's precache pass, before any entity spawns.
@@ -39,6 +41,12 @@ void RearmQueuedTraps();
 // which happens whenever a check is sent -- and would otherwise hand the weapon
 // straight back and leave the trap doing nothing at all.
 bool Withheld(const std::string& classname);
+
+// Is this the copy Butterfingers threw on the floor? The pickup path asks
+// before it reports a weapon as found: the trap creates a fresh entity, so
+// walking back onto your own crowbar is otherwise indistinguishable from
+// finding the map's, and sends that map's weapon check.
+bool IsTrapDrop(CBaseEntity* pickup);
 
 // Forget any withheld weapon. Called on map load: the dropped copy is gone with
 // the level, and a player who arrives somewhere new should arrive whole.

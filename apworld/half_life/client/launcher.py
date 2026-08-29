@@ -259,6 +259,9 @@ class HalfLifeContext(SuperContext):
         # Deaths forgiven before one is reported to the multiworld. The game owns
         # the countdown; this is only the allowance it counts from.
         self.death_link_amnesty = 4
+        # Set by the seed. The game refuses to act on it until it arrives in a
+        # snapshot, so the default here is the same "off" the option defaults to.
+        self.ammo_relief = False
         self.goal_sent = False
         self.chat_relay = True
         self.bridge_failures = 0
@@ -433,6 +436,7 @@ class HalfLifeContext(SuperContext):
             self.death_link_amnesty = int(
                 slot_data.get("death_link_amnesty", self.death_link_amnesty)
             )
+            self.ammo_relief = bool(slot_data.get("ammo_relief", self.ammo_relief))
             if self.death_link_enabled:
                 asyncio.create_task(self.update_death_link(True), name="UpdateDeathLink")
 
@@ -777,6 +781,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
+        ammo_relief=ctx.ammo_relief,
         excluded=sorted(ctx.excluded_chapters),
         ungated=sorted(ctx.ungated_classnames),
         starting=list(ctx.starting_weapons),

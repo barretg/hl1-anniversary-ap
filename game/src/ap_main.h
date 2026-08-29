@@ -11,10 +11,12 @@
 //   dlls/client.cpp      ClientPrecache               -> ap::PrecacheTraps
 //   dlls/player.cpp      CBasePlayer::Spawn           -> ap::ApplyLoadout
 //   dlls/player.cpp      CBasePlayer::Killed          -> ap::OnPlayerKilled
+//   dlls/player.cpp      CRevertSaved::Use            -> ap::OnRevertSaved
 //   dlls/player.cpp      CBasePlayer::PlayerUse       -> ap::OnPlayerUse
 //   dlls/gamerules.cpp   CGameRules::CanHavePlayerItem-> ap::CanCollect
 //   dlls/singleplay_gamerules.cpp CHalfLifeRules::CanHaveItem -> ap::CanCollect
 //   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
+//   dlls/triggers.cpp    CTriggerHurt::HurtTouch      -> ap::OnHealingTouch
 
 #pragma once
 
@@ -42,6 +44,8 @@ void RequestLoadout();                                      // ap_items
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
+void OnRevertSaved();                                       // ap_deathlink
+void OnHealingTouch(CBaseEntity* player, CBaseEntity* pool);// ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool InterceptChangeLevel(const std::string& from_map,
                           const std::string& to_map);       // ap_hub
@@ -158,6 +162,22 @@ void Notify(const std::string& text);
 
 // Send everything `Notify` has queued. StartFrame only.
 void FlushNotices();
+
+// Collect the answer to one command instead of sending it line by line.
+//
+// A reply of a few lines is worth putting on the HUD, where it can be read
+// without leaving the game -- which matters more than it sounds, because opening
+// the console pauses single-player and a paused server runs no frames, so
+// nothing deferred happens until it is closed again. A listing is not: it would
+// bury the screen and overrun the message channel. The length decides, and the
+// length is only known once the command has finished talking.
+//
+// Every `Say` and `Notify` between the two lands in the reply.
+void BeginReply();
+void EndReply();
+
+// The longest reply that still goes to the HUD as well as the console.
+constexpr size_t kReplyHudMaxLines = 9;
 
 // A breadcrumb in `hlap/archipelago/ap_boot.txt`, flushed as it is written.
 //

@@ -496,7 +496,13 @@ def test_charger_triggers_are_keyed_by_position(campaign: dict) -> None:
 
     for entry in chargers:
         trigger = entry["trigger"]
-        assert trigger["classname"] in ("func_healthcharger", "func_recharge")
+        assert trigger["classname"] in (
+            "func_healthcharger",
+            "func_recharge",
+            # Xen's healing pools, which are the same location type: a
+            # `trigger_hurt` with negative damage heals whatever touches it.
+            "trigger_hurt",
+        )
         assert "model" not in trigger, entry["name"]
         parts = trigger["at"].split()
         assert len(parts) == 3, entry["name"]
@@ -526,6 +532,29 @@ def test_chargers_are_unique_within_a_map(campaign: dict) -> None:
         key = (entry["map"], trigger["classname"], trigger["at"])
         assert key not in seen, entry["name"]
         seen.add(key)
+
+
+def test_healing_pools_are_chargers_on_xen(campaign: dict) -> None:
+    """Xen's pools are chargersanity checks, matched exactly like a wall unit.
+
+    They are `trigger_hurt` brushes with negative damage, which is what makes
+    `CBaseTrigger::HurtTouch` heal instead of hurt. Nowhere but Xen has one, and
+    a `trigger_hurt` location appearing anywhere else would mean the sign test in
+    `charger_unit` had stopped working and every lava pit in the game had become
+    a check.
+    """
+    pools = [
+        entry
+        for entry in campaign["locations"]
+        if entry["trigger"].get("classname") == "trigger_hurt"
+    ]
+    assert pools
+
+    xen = {"c4a1", "c4a2", "c4a1a", "c4a3"}
+    for entry in pools:
+        assert entry["trigger"]["type"] == "charger", entry["name"]
+        assert "Healing Pool" in entry["name"], entry["name"]
+        assert entry["chapter"] in xen, entry["name"]
 
 
 def test_a_charger_key_is_near_its_own_position(campaign: dict) -> None:

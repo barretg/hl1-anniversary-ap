@@ -290,6 +290,7 @@ class HalfLifeWorld(World):
             "starting_weapons": list(STARTING_WEAPONS),
             "death_link": bool(self.options.death_link),
             "death_link_amnesty": self.options.death_link_amnesty.value,
+            "ammo_relief": bool(self.options.ammo_relief.value),
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),
             "shuffle_longjump": bool(self.options.shuffle_longjump),
         }

@@ -309,7 +309,11 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
     // and touches the player with it, so a granted weapon arrives through this
     // same path. Counting that as finding one would fire a weapon's check the
     // moment the multiworld sent it, in whatever map the player happened to be.
-    if (!g_granting) {
+    //
+    // Nor when it is the copy Butterfingers threw on the floor. That is the
+    // player's own weapon coming back, and counting it as a find sent the
+    // map's weapon check for a gun they had been carrying since the hub.
+    if (!g_granting && !IsTrapDrop(pickup)) {
         OnWeaponCollected(player, classname);
     }
 

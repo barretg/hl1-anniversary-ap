@@ -29,6 +29,17 @@ std::vector<Queued> g_queued;
 std::string g_owed_weapon;
 float g_owed_at = 0.0f;
 
+// The copy Butterfingers threw on the floor, held so that walking back onto it
+// is not mistaken for finding the weapon.
+//
+// The pickup path cannot tell the two apart on its own: the trap removes the
+// held weapon and creates a fresh entity, so collecting it enters
+// `CanCollect(player, pickup)` exactly as the map's own crowbar would, and
+// `OnWeaponCollected` sent "first crowbar" to the multiworld for a crowbar the
+// player had been carrying for an hour. An `EHANDLE` rather than a raw pointer
+// because the level can take the entity away underneath us.
+EHANDLE g_dropped;
+
 // Everything a trap can spawn. Fixed, and precached at map load whether or not a
 // trap ever arrives.
 const char* const kTrapMonsters[] = {"monster_scientist", "monster_headcrab"};
@@ -246,6 +257,7 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
             dropped->pev->velocity =
                 gpGlobals->v_forward * 180 + Vector(0, 0, 160);
         }
+        g_dropped = dropped;
 
         g_owed_weapon = classname;
         g_owed_at = gpGlobals->time + kButterfingersReturnSeconds;
@@ -333,11 +345,13 @@ void RunTrapTimers() {
     // weapon up off the floor speaks for itself.
     if (player != nullptr && player->HasNamedPlayerItem(g_owed_weapon.c_str())) {
         g_owed_weapon.clear();
+        g_dropped = nullptr;
         return;
     }
 
     if (gpGlobals->time >= g_owed_at) {
         g_owed_weapon.clear();
+        g_dropped = nullptr;
         if (player != nullptr) {
             // Through the loadout rather than by hand, so the reissue obeys the
             // same gate everything else does.
@@ -351,6 +365,17 @@ bool Withheld(const std::string& classname) {
     return !g_owed_weapon.empty() && g_owed_weapon == classname;
 }
 
-void ClearWithheld() { g_owed_weapon.clear(); }
+bool IsTrapDrop(CBaseEntity* pickup) {
+    if (pickup == nullptr) {
+        return false;
+    }
+    CBaseEntity* dropped = g_dropped;
+    return dropped != nullptr && dropped == pickup;
+}
+
+void ClearWithheld() {
+    g_owed_weapon.clear();
+    g_dropped = nullptr;
+}
 
 }  // namespace ap

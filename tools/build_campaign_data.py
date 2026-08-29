@@ -32,6 +32,7 @@ from campaign_layout import (
     CHAPTERS,
     CHARGER_CLASSNAMES,
     CHARGER_POSITION_GRID,
+    HEALING_POOL_CLASSNAMES,
     CLASSNAME_TO_ITEM,
     ENABLED_LOCATION_TYPES,
     GOAL_CHAPTER,
@@ -191,6 +192,27 @@ def charger_position(
         return None
     offset = entity_origin(entity.get("origin", ""))
     return tuple(centre[i] + offset[i] for i in range(3))
+
+
+def charger_unit(entity: dict[str, str]) -> tuple[str, str] | None:
+    """`(classname, display name)` if this entity is a chargersanity unit.
+
+    The wall units are themselves; a healing pool is a `trigger_hurt` that heals,
+    which is one with negative damage. The sign is the whole test, and it has to
+    be made here rather than by classname because every hazard in the campaign is
+    the same entity.
+    """
+    classname = entity.get("classname", "")
+    if classname in CHARGER_CLASSNAMES:
+        return classname, CHARGER_CLASSNAMES[classname]
+    if classname in HEALING_POOL_CLASSNAMES:
+        try:
+            damage = float(entity.get("dmg", "0"))
+        except ValueError:
+            return None
+        if damage < 0:
+            return classname, HEALING_POOL_CLASSNAMES[classname]
+    return None
 
 
 def weapon_display(classname: str) -> str:
@@ -433,22 +455,33 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 # rather than skipping a number; ids key on position, so nothing
                 # else moves.
                 sealed_here = sealed.get(map_name, set())
-                for classname, display in CHARGER_CLASSNAMES.items():
-                    found = []
-                    for entity in ents:
-                        if entity.get("classname", "") != classname:
-                            continue
-                        if f"{classname}:{entity.get('model', '')}" in sealed_here:
-                            continue
-                        at = charger_position(entity, centres[map_name])
-                        if at is None:
-                            # No brush model, so nothing in the running game can
-                            # ever be matched to it. Silently skipping would hide
-                            # a check that simply never fires.
-                            raise SystemExit(
-                                f"{map_name}: {classname} with no brush model"
-                            )
-                        found.append((entity, at))
+
+                # Grouped by classname first, so the numbering below runs per
+                # kind of unit -- "Health Charger 2" is the second health
+                # charger, not the second thing on the wall. Healing pools come
+                # through the same path as the wall units: they are the same
+                # location type, matched the same way, and differ only in that
+                # touching one is what fires the check.
+                units: dict[str, tuple[str, list]] = {}
+                for entity in ents:
+                    unit = charger_unit(entity)
+                    if unit is None:
+                        continue
+                    classname, display = unit
+                    if f"{classname}:{entity.get('model', '')}" in sealed_here:
+                        continue
+                    at = charger_position(entity, centres[map_name])
+                    if at is None:
+                        # No brush model, so nothing in the running game can
+                        # ever be matched to it. Silently skipping would hide
+                        # a check that simply never fires.
+                        raise SystemExit(
+                            f"{map_name}: {classname} with no brush model"
+                        )
+                    units.setdefault(classname, (display, []))[1].append((entity, at))
+
+                for classname in sorted(units):
+                    display, found = units[classname]
 
                     # Numbered by how far they are from where players arrive,
                     # not by compile order, which means nothing in play: Office
@@ -776,16 +809,18 @@ def sealed_seam_chargers(
             shift = [there[landmark_name][i] - landmark[i] for i in range(3)]
 
             for entity in ents:
-                classname = entity.get("classname", "")
-                if classname not in CHARGER_CLASSNAMES:
+                unit = charger_unit(entity)
+                if unit is None:
                     continue
+                classname = unit[0]
                 at = charger_position(entity, centres[map_name])
                 if at is None or not beyond_trigger(at, landmark, mins, maxs):
                     continue
 
                 twin = tuple(at[i] + shift[i] for i in range(3))
                 for other in entities[other_map]:
-                    if other.get("classname", "") != classname:
+                    other_unit = charger_unit(other)
+                    if other_unit is None or other_unit[0] != classname:
                         continue
                     other_at = charger_position(other, centres[other_map])
                     if other_at is None:
@@ -865,6 +900,10 @@ def unusable_chargers(
     This is deliberately *not* a reachability solver. It asks only whether a
     place to stand exists next to the charger, not whether a player can get to
     that place. A charger behind a locked door passes, and should.
+
+    Wall units only. A healing pool is checked by standing in it, so the use
+    radius says nothing about whether a player can reach one, and the test would
+    throw out pools the player swims through.
     """
     unusable: dict[str, set[str]] = {}
     all_maps = {m for chapter in chapters for m in chapter["maps"]}

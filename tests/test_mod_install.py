@@ -53,6 +53,33 @@ def test_install_writes_only_inside_the_mod_folder(install: Path) -> None:
     assert after == before
 
 
+def test_install_ships_command_binds(install: Path) -> None:
+    """The console pauses the game, so the commands need keys as well."""
+    mod.install(install)
+
+    binds = (install / MOD_DIR / "apbinds.cfg").read_text(encoding="utf-8")
+    assert "ap_hub" in binds
+    assert "ap_warps" in binds
+
+    autoexec = (install / MOD_DIR / "autoexec.cfg").read_text(encoding="utf-8")
+    assert "exec apbinds.cfg" in autoexec
+
+
+def test_reinstalling_keeps_the_players_own_binds(install: Path) -> None:
+    """A player edits these. An update that rebound their keys would be a bug."""
+    mod.install(install)
+
+    binds = install / MOD_DIR / "apbinds.cfg"
+    binds.write_text('bind "F5" "ap_hub"\n', encoding="utf-8")
+
+    mod.install(install)
+    assert binds.read_text(encoding="utf-8") == 'bind "F5" "ap_hub"\n'
+
+    # And uninstalling still takes them, because uninstalling means gone.
+    mod.uninstall(install)
+    assert not binds.exists()
+
+
 def test_install_puts_checkdata_where_the_bridge_looks(install: Path) -> None:
     mod.install(install)
     assert (find_store_dir(install) / "checkdata.txt").is_file()

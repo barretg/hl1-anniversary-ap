@@ -144,6 +144,15 @@ def test_snapshot_amnesty_is_never_negative(bridge: Bridge) -> None:
     assert "death_link_amnesty=0" in bridge.in_path.read_text(encoding="utf-8")
 
 
+def test_snapshot_carries_ammo_relief(bridge: Bridge) -> None:
+    """Off unless the seed asked for it, and never remembered by the game."""
+    snapshot(bridge)
+    assert "ammo_relief=0" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, ammo_relief=True) is True
+    assert "ammo_relief=1" in bridge.in_path.read_text(encoding="utf-8")
+
+
 def test_snapshot_carries_a_session_id(bridge: Bridge) -> None:
     snapshot(bridge)
     assert f"session={bridge.session}" in bridge.in_path.read_text(encoding="utf-8")

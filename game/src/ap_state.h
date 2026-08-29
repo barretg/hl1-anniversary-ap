@@ -35,6 +35,10 @@ struct Snapshot {
 
     bool goal_open = false;
     bool death_link = false;
+
+    // Refill a gun the level cannot feed. Off in every seed that does not ask
+    // for it, and read from here every time rather than cached: see ap_ammo.h.
+    bool ammo_relief = false;
     int death_link_amnesty = 0;
 
     std::set<long> checked;   // for ap_tracker

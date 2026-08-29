@@ -1,5 +1,5 @@
 {
- "data_version": "88d05f1ad7cd",
+ "data_version": "914a53a17ce2",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -3373,6 +3373,23 @@
    }
   },
   {
+   "id": 7760241,
+   "name": "Xen - Healing Pool",
+   "chapter": "c4a1",
+   "map": "c4a1",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1",
+    "classname": "trigger_hurt",
+    "at": "-632 -548 -124"
+   },
+   "position": [
+    -632,
+    -548,
+    -125
+   ]
+  },
+  {
    "id": 7760196,
    "name": "Gonarch's Lair - Part 1 Reached",
    "chapter": "c4a2",
@@ -3381,6 +3398,23 @@
     "type": "map_reached",
     "map": "c4a2"
    }
+  },
+  {
+   "id": 7760242,
+   "name": "Gonarch's Lair - Healing Pool (Part 1)",
+   "chapter": "c4a2",
+   "map": "c4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a2",
+    "classname": "trigger_hurt",
+    "at": "2180 -1864 4"
+   },
+   "position": [
+    2180,
+    -1864,
+    3
+   ]
   },
   {
    "id": 7760197,
@@ -3393,6 +3427,23 @@
    }
   },
   {
+   "id": 7760243,
+   "name": "Gonarch's Lair - Healing Pool (Part 2)",
+   "chapter": "c4a2",
+   "map": "c4a2a",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a2a",
+    "classname": "trigger_hurt",
+    "at": "-1668 224 -316"
+   },
+   "position": [
+    -1668,
+    224,
+    -317
+   ]
+  },
+  {
    "id": 7760198,
    "name": "Gonarch's Lair - Part 3 Reached",
    "chapter": "c4a2",
@@ -3401,6 +3452,23 @@
     "type": "map_reached",
     "map": "c4a2b"
    }
+  },
+  {
+   "id": 7760244,
+   "name": "Gonarch's Lair - Healing Pool (Part 3)",
+   "chapter": "c4a2",
+   "map": "c4a2b",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a2b",
+    "classname": "trigger_hurt",
+    "at": "-148 620 -484"
+   },
+   "position": [
+    -148,
+    620,
+    -485
+   ]
   },
   {
    "id": 7760199,
@@ -3413,6 +3481,23 @@
    }
   },
   {
+   "id": 7760245,
+   "name": "Interloper - Healing Pool (Part 1)",
+   "chapter": "c4a1a",
+   "map": "c4a1a",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1a",
+    "classname": "trigger_hurt",
+    "at": "1192 -484 -112"
+   },
+   "position": [
+    1192,
+    -484,
+    -110
+   ]
+  },
+  {
    "id": 7760200,
    "name": "Interloper - Part 2 Reached",
    "chapter": "c4a1a",
@@ -3421,6 +3506,40 @@
     "type": "map_reached",
     "map": "c4a1b"
    }
+  },
+  {
+   "id": 7760246,
+   "name": "Interloper - Healing Pool 1 (Part 2)",
+   "chapter": "c4a1a",
+   "map": "c4a1b",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1b",
+    "classname": "trigger_hurt",
+    "at": "-216 -2464 104"
+   },
+   "position": [
+    -216,
+    -2464,
+    104
+   ]
+  },
+  {
+   "id": 7760247,
+   "name": "Interloper - Healing Pool 2 (Part 2)",
+   "chapter": "c4a1a",
+   "map": "c4a1b",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1b",
+    "classname": "trigger_hurt",
+    "at": "2904 -188 100"
+   },
+   "position": [
+    2904,
+    -188,
+    100
+   ]
   },
   {
    "id": 7760201,
@@ -3433,6 +3552,23 @@
    }
   },
   {
+   "id": 7760248,
+   "name": "Interloper - Healing Pool (Part 3)",
+   "chapter": "c4a1a",
+   "map": "c4a1c",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1c",
+    "classname": "trigger_hurt",
+    "at": "-1672 -1848 -664"
+   },
+   "position": [
+    -1670,
+    -1850,
+    -664
+   ]
+  },
+  {
    "id": 7760202,
    "name": "Interloper - Part 4 Reached",
    "chapter": "c4a1a",
@@ -3443,6 +3579,40 @@
    }
   },
   {
+   "id": 7760249,
+   "name": "Interloper - Healing Pool 1 (Part 4)",
+   "chapter": "c4a1a",
+   "map": "c4a1d",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1d",
+    "classname": "trigger_hurt",
+    "at": "1080 -1328 -376"
+   },
+   "position": [
+    1081,
+    -1326,
+    -376
+   ]
+  },
+  {
+   "id": 7760250,
+   "name": "Interloper - Healing Pool 2 (Part 4)",
+   "chapter": "c4a1a",
+   "map": "c4a1d",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1d",
+    "classname": "trigger_hurt",
+    "at": "692 -1928 -904"
+   },
+   "position": [
+    692,
+    -1928,
+    -906
+   ]
+  },
+  {
    "id": 7760203,
    "name": "Interloper - Part 5 Reached",
    "chapter": "c4a1a",
@@ -3451,6 +3621,40 @@
     "type": "map_reached",
     "map": "c4a1e"
    }
+  },
+  {
+   "id": 7760251,
+   "name": "Interloper - Healing Pool 1 (Part 5)",
+   "chapter": "c4a1a",
+   "map": "c4a1e",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1e",
+    "classname": "trigger_hurt",
+    "at": "1656 -1200 -768"
+   },
+   "position": [
+    1656,
+    -1200,
+    -768
+   ]
+  },
+  {
+   "id": 7760252,
+   "name": "Interloper - Healing Pool 2 (Part 5)",
+   "chapter": "c4a1a",
+   "map": "c4a1e",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a1e",
+    "classname": "trigger_hurt",
+    "at": "192 272 192"
+   },
+   "position": [
+    192,
+    272,
+    192
+   ]
   },
   {
    "id": 7760204,
@@ -3471,6 +3675,57 @@
     "type": "map_reached",
     "map": "c4a3"
    }
+  },
+  {
+   "id": 7760253,
+   "name": "Nihilanth - Healing Pool 1 (Part 1)",
+   "chapter": "c4a3",
+   "map": "c4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a3",
+    "classname": "trigger_hurt",
+    "at": "272 1816 -220"
+   },
+   "position": [
+    272,
+    1816,
+    -220
+   ]
+  },
+  {
+   "id": 7760254,
+   "name": "Nihilanth - Healing Pool 2 (Part 1)",
+   "chapter": "c4a3",
+   "map": "c4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a3",
+    "classname": "trigger_hurt",
+    "at": "1632 -872 2264"
+   },
+   "position": [
+    1634,
+    -874,
+    2264
+   ]
+  },
+  {
+   "id": 7760255,
+   "name": "Nihilanth - Healing Pool 3 (Part 1)",
+   "chapter": "c4a3",
+   "map": "c4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "c4a3",
+    "classname": "trigger_hurt",
+    "at": "384 -36 -2828"
+   },
+   "position": [
+    384,
+    -36,
+    -2828
+   ]
   },
   {
    "id": 7760206,

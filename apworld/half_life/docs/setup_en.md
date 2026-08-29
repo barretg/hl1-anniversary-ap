@@ -56,6 +56,32 @@ want -- one key, no pause, no `ap_` prefix to type.
 
 A `/` works in chat too, if that is what your fingers do.
 
+### Keys
+
+The mod installs binds for the commands that need no argument, in
+`hlap/apbinds.cfg`:
+
+| Key | Command |
+| --- | --- |
+| `P` | the mission list |
+| `O` | the tracker |
+| `I` | the command list |
+| `L` | back to the hub |
+| `K` | your warp points |
+| `;` | `setwarp` for the part you are in |
+
+They are there because of what the console does to single-player: opening it
+pauses the game, and while the game is paused the mod runs no frames, so a
+command typed into the console does nothing until the console is closed again.
+Chat does not pause, and neither does a key.
+
+Rebind them freely -- the file is yours once it is written, and reinstalling the
+mod leaves it alone. Uninstalling removes it.
+
+A reply of a few lines is printed in the message area as well as the console, so
+most commands can be read without opening either. Long listings -- `!tracker` on
+a full seed -- go to the console alone, which is the only place they fit.
+
 `ap_warp` takes a mission number, a name, or a map name, and does not care about
 case or punctuation: `ap_warp 15`, `ap_warp Gonarch's Lair`, `ap_warp gonarch`
 and `ap_warp c4a2` are the same request.
@@ -128,17 +154,29 @@ server.
 | Option | Default | What it does |
 | --- | --- | --- |
 | `missions_required` | all of them | how many missions open Nihilanth |
-| `chargesanity` | on | every health and HEV wall unit is a check (111 of them) |
+| `chargesanity` | on | every health and HEV wall unit, and every Xen healing pool, is a check (123 of them) |
 | `exclude_intro_missions` | on | drop Black Mesa Inbound, the tram ride |
 | `logic_difficulty` | strict | whether logic expects a suitable weapon per mission |
 | `shuffle_hev_suit` | off | armour stays at zero until the item arrives |
 | `shuffle_longjump` | off | on: the module is an item. Off: Half-Life hands it out as it always did |
+| `ammo_relief` | off | a gun the level stocks no ammo for is refilled five minutes after it runs dry |
 | `trap_percentage` | 15 | share of your filler replaced by traps |
 | `death_link_amnesty` | 4 | deaths forgiven before one goes out to the multiworld |
 
 The HEV suit is never taken away from you, whatever `shuffle_hev_suit` says: in
 GoldSrc the suit draws the weapon HUD and owns weapon switching, so a player
 without one cannot use what they are holding. What the item controls is armour.
+
+`ammo_relief` is for the seed that hands you the crossbow in a map with no bolts
+in it. With it on, a gun that runs dry on ammo the level does not stock anywhere
+says so, and the suit synthesises more five minutes later; if it is empty again
+within ten seconds of a refill you get one more for free, which covers dying and
+reloading a save from before it. Off by default, because with it on a patient
+player is never really out of ammo.
+
+DeathLink counts the deaths Half-Life does not treat as deaths, too: falling into
+the void on Xen and losing a scientist you were supposed to protect both end in a
+fade to black and a reloaded save rather than in a corpse, and both are sent.
 
 ## Troubleshooting
 
