@@ -45,6 +45,11 @@ bool HandleChat(CBasePlayer* player, const std::string& said);
 // repeatable and independent of how the player got there.
 void RequestMap(const std::string& map_name);
 
+// Ask for a warp point instead: `load <save>`, landing on `map_name`. Deferred
+// the same way and recorded the same way, so the arrival is ours rather than a
+// save the engine restored on its own. See game/src/ap_warpsave.h.
+void RequestLoad(const std::string& save_name, const std::string& map_name);
+
 // Did we ask the engine for this map, as opposed to the engine arriving at it by
 // itself? True exactly once per request, and consumed by the asking.
 //
@@ -53,6 +58,11 @@ void RequestMap(const std::string& map_name);
 // second opinion -- and a second opinion is worse than none, because it is drawn
 // from a snapshot that may be a poll behind the warp that just happened.
 bool WasRequested(const std::string& map_name);
+
+// Did that request start the level cold? True for `map`, false for a restored
+// warp point, which carries the seam state and the carried monsters itself. Only
+// meaningful immediately after `WasRequested`.
+bool LastRequestCold();
 
 // A map we warped into arrives cold: `map` starts a level with an empty global
 // table, where `changelevel` carries the seam's state across. These reopen the

@@ -40,6 +40,24 @@ no-op on the server. The one thing that genuinely must outlive a map change is
 `ap_amnesty.txt`, how much DeathLink amnesty is left, and it only has to because
 the death message names the remaining allowance at the instant of the death.
 
+**Warp points are on the disk, not in the protocol.** A warp restores an engine
+savegame the game took at the mission's part boundary (`game/src/ap_warpsave.h`),
+so the player lands in the state the transition left them in rather than at a
+cold spawn. Those saves are machine-local by nature and carry no run state the
+bridge does not already carry, so they are not in the snapshot and not in the
+log: the game asks the directory whether one exists, every time it is asked.
+
+What the multiworld still owns is *permission*. `ap_warp` gates on the snapshot
+exactly as before -- the mission open, the part already `Visited` -- and the save
+answers only where to put the player, never whether. A save left on the disk by a
+run whose seed was reset is therefore unreachable until the new run opens that
+mission for itself.
+
+The only thing the two halves must agree on is the filename: `ap<key>_...`, where
+the key is eight hex digits of FNV-1a over the snapshot's `<seed>:<slot>`. The
+game writes them and the client deletes them -- this key's when the slot goals,
+every key's on `/uninstall` -- so `tests/test_warp_saves.py` pins the digest.
+
 **The snapshot is idempotent, events are not.** `ap_in.txt` is a complete
 picture, rewritten whenever it changes and safe to apply any number of times.
 Anything that must happen exactly once -- a filler item grant, an incoming

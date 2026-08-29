@@ -17,6 +17,7 @@
 #include "ap_locations.h"
 #include "ap_state.h"
 #include "ap_traps.h"
+#include "ap_warpsave.h"
 
 namespace ap {
 
@@ -337,6 +338,7 @@ void RunFrame() {
     FlushNotices();
     RunLoadout();
     RunSeamDoors();
+    RunWarpSave();
     RunDeferred();
     EnforceSuit();
     ClampArmour();

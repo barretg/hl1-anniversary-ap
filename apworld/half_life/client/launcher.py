@@ -38,7 +38,7 @@ except ModuleNotFoundError:
 
 from .. import mod
 from . import settings
-from .bridge import Bridge, find_store_dir, is_game_dir
+from .bridge import Bridge, find_store_dir, is_game_dir, warp_save_key
 
 GAME_NAME = "Half-Life"
 POLL_INTERVAL = 0.2
@@ -60,6 +60,9 @@ IN_GAME_COMMANDS = (
     ("!find [text]", "point at the nearest unfound check, or one you name"),
     ("!warp <number or name>", "travel to an unlocked mission"),
     ("!warp <mission> <part>", "back to a part of it you have already reached"),
+    ("!warp <name>", "back to a warp point of your own"),
+    ("!setwarp [name]", "make a warp point where you stand"),
+    ("!warps", "the warp points you have made"),
     ("!hub", "return to the hub"),
     ("!help", "show these commands in game"),
 )
@@ -144,7 +147,7 @@ class HalfLifeCommandProcessor(ClientCommandProcessor):
         return True
 
     def _cmd_uninstall(self) -> bool:
-        """Remove the `hlap` mod folder and its bridge files."""
+        """Remove the `hlap` mod folder, its bridge files and its warp points."""
         if not self.ctx.game_dir:
             logger.error("No game folder set. Run /gamedir first.")
             return True
@@ -154,7 +157,10 @@ class HalfLifeCommandProcessor(ClientCommandProcessor):
             logger.error(f"Uninstall failed: {exc}")
             return True
 
-        logger.info(f"Removed {removed} files, including the bridge directory.")
+        logger.info(
+            f"Removed {removed} files, including the bridge directory and every "
+            "warp point savegame. Your own saves were left alone."
+        )
         logger.info("Your own Half-Life install was never touched.")
         return True
 
@@ -594,6 +600,23 @@ class HalfLifeContext(SuperContext):
             return ""
         return f"{self.seed_name or ''}:{self.slot}"
 
+    def clear_warp_saves(self) -> None:
+        """Sweep this slot's warp point savegames, quietly if there are none.
+
+        Called when the slot goals. `/uninstall` sweeps every key's instead,
+        inside `mod.uninstall`.
+        """
+        key = warp_save_key(self.slot_identity)
+        if not key or not self.game_dir:
+            return
+        try:
+            removed = mod.clear_warp_saves(self.game_dir, key)
+        except (OSError, ValueError) as exc:
+            logger.warning(f"Could not clear this run's warp points ({exc}).")
+            return
+        if removed:
+            logger.info(f"Cleared {removed} warp point savegames for this run.")
+
     @property
     def held_item_names(self) -> set[str]:
         """Everything the game should treat as held, received or not.
@@ -790,6 +813,10 @@ async def pump(ctx: HalfLifeContext) -> None:
                     [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
                 )
                 logger.info("Goal complete!")
+                # The warp points this run wrote are savegames on the player's
+                # disk, one per part walked into, and the run is over: nothing
+                # will warp into them again. See mod.clear_warp_saves.
+                ctx.clear_warp_saves()
         elif event.kind == "ACK":
             ctx.bridge.acknowledge(int(event.arg))
         elif event.kind == "DEATH":

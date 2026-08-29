@@ -14,6 +14,7 @@
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
+#include "ap_warpsave.h"
 
 namespace ap {
 
@@ -32,7 +33,10 @@ const char* const kHubMap = "ap_lobby_alpha";
 
 namespace {
 
-std::string g_pending_map;
+// The level change we owe the engine, as the whole command line: `map c1a2` for
+// a cold start, `load ap<key>_mc1a2` for a warp point. Always deferred, whichever
+// it is. See `RequestMap`.
+std::string g_pending_command;
 
 // The map we last asked the engine to load. Survives the load, because only the
 // level reloads and not the dll, which is what makes it readable on the other
@@ -41,6 +45,11 @@ std::string g_intended_map;
 
 // A map we warped into needs its seam doors opened. See `RunSeamDoors`.
 bool g_seam_doors_wanted = false;
+
+// Did the last request start the map cold? A `map` warp does; a restored warp
+// point does not, and the difference is everything the cold-start patches exist
+// to paper over. Read through `LastRequestCold`, right after `WasRequested`.
+bool g_intended_cold = true;
 
 std::string ArgumentTail(int from) {
     std::string text;
@@ -243,6 +252,10 @@ void Help() {
     Say("!ap                       every mission and its unlock status");
     Say("!warp <number or name>    travel to an unlocked mission");
     Say("!warp <mission> <part>    to a part of it you have already reached");
+    Say("!warp <name>              to a warp point of your own");
+    Say("!setwarp                  reset this part's warp point to where you stand");
+    Say("!setwarp <name>           make a warp point here, called <name>");
+    Say("!warps                    the warp points you have made");
     Say("!hub                      return to the hub");
     Say("!tracker [filter]         every location in the seed, found and not");
     Say("!tracker office           narrowed to a mission or a map name");
@@ -252,13 +265,47 @@ void Help() {
     Say("In the hub you can press a mission's panel instead of typing anything.");
 }
 
+// Go to a map the player is allowed to be on, by the best route there is: a warp
+// point if one has been recorded, and a cold `map` if not.
+//
+// The cold route is the old behaviour and stays the fallback for every case a
+// save cannot cover -- the first part of a mission nobody has set a warp point
+// on, a run whose saves have been swept, a slot playing on a second machine.
+void GoTo(const std::string& map_name) {
+    const std::string save = AutoWarpName(map_name);
+    if (WarpSaveExists(save)) {
+        RequestLoad(save, map_name);
+        return;
+    }
+    RequestMap(map_name);
+}
+
+// One of the player's own `!setwarp` points. The gate is the seed's, not the
+// disk's: the save says where, and the server still says whether.
+void WarpToNamed(const WarpPoint& point) {
+    const Chapter* chapter = Data().ChapterOfMap(point.map);
+    if (chapter != nullptr) {
+        if (!MissionOpen(*chapter, false)) {
+            return;
+        }
+        const int part = PartOf(*chapter, point.map);
+        if (part > 1 && !Visited(point.map)) {
+            Say("That warp point is in a part of the mission this run has not "
+                "reached yet.");
+            return;
+        }
+    }
+    Notify("Warping to '" + point.label + "'.");
+    RequestLoad(point.save, point.map);
+}
+
 void Warp(const std::string& argument) {
     if (!Data().Loaded()) {
         Say("No checkdata.txt, so there is nowhere to warp to.");
         return;
     }
     if (argument.empty()) {
-        Say("Usage: ap_warp <number or name> [part]. ap lists them.");
+        Say("Usage: ap_warp <number, name or warp point> [part]. ap lists them.");
         return;
     }
 
@@ -280,7 +327,17 @@ void Warp(const std::string& argument) {
         chapter = Data().ChapterByName(argument);
     }
     if (chapter == nullptr) {
-        Say("No mission by that number or name.");
+        // Missions first, so a warp point cannot shadow one: `!warp office` is
+        // the mission whatever the player has named their own points.
+        // Both spellings, because `ParseWarp` has already split a trailing
+        // number off: `!warp lab` and `!warp lab 2` should both find `lab`.
+        WarpPoint point;
+        if (FindNamedWarp(argument, point) ||
+            FindNamedWarp(request.where, point)) {
+            WarpToNamed(point);
+            return;
+        }
+        Say("No mission, and no warp point of yours, by that number or name.");
         return;
     }
 
@@ -290,7 +347,7 @@ void Warp(const std::string& argument) {
 
     if (request.part <= 1) {
         Notify(std::string("Warping to ") + chapter->name + ".");
-        RequestMap(chapter->maps.front());
+        GoTo(chapter->maps.front());
         return;
     }
 
@@ -316,6 +373,12 @@ void Warp(const std::string& argument) {
     // half of a mission you have not played: the checks in a part you skipped to
     // would be free, and the fastest route through a mission would be to warp to
     // its last part.
+    //
+    // This stays the gate even though the warp point on disk would answer the
+    // same question locally. The server's record is the one that survives a
+    // reinstall, a second machine and a reset seed handing the same slot back,
+    // and a stale save from a previous run must not be a way into a mission this
+    // one has not opened.
     if (!Visited(map_name)) {
         char line[160];
         std::snprintf(line, sizeof(line),
@@ -330,7 +393,7 @@ void Warp(const std::string& argument) {
     std::snprintf(line, sizeof(line), "Warping to %s, part %d.",
                   chapter->name.c_str(), request.part);
     Notify(line);
-    RequestMap(map_name);
+    GoTo(map_name);
 }
 
 void ToHub() {
@@ -342,6 +405,8 @@ void Cmd_Ap() { ListMissions(); }
 void Cmd_ApHelp() { Help(); }
 void Cmd_ApWarp() { Warp(ArgumentTail(1)); }
 void Cmd_ApHub() { ToHub(); }
+void Cmd_ApSetWarp() { SetWarp(ArgumentTail(1)); }
+void Cmd_ApWarps() { ListWarps(); }
 void Cmd_ApFind() { Find(ArgumentTail(1)); }
 void Cmd_ApTracker() { Tracker(ArgumentTail(1)); }
 
@@ -355,6 +420,10 @@ bool Dispatch(const std::string& name, const std::string& rest) {
         Help();
     } else if (name == "warp" || name == "ap_warp") {
         Warp(rest);
+    } else if (name == "setwarp" || name == "ap_setwarp") {
+        SetWarp(rest);
+    } else if (name == "warps" || name == "ap_warps") {
+        ListWarps();
     } else if (name == "hub" || name == "ap_hub") {
         ToHub();
     } else if (name == "find" || name == "ap_find") {
@@ -386,6 +455,8 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_help", Cmd_ApHelp);
     g_engfuncs.pfnAddServerCommand((char*)"ap_warp", Cmd_ApWarp);
     g_engfuncs.pfnAddServerCommand((char*)"ap_hub", Cmd_ApHub);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_setwarp", Cmd_ApSetWarp);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_warps", Cmd_ApWarps);
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
     Trace("  commands registered");
@@ -457,10 +528,23 @@ void RequestMap(const std::string& map_name) {
     // Deferred, always. Even from a console command, which looks safe: the
     // engine is midway through its own command dispatch and a level change from
     // inside it is the same crash class as one from inside a level change.
-    g_pending_map = map_name;
+    g_pending_command = "map " + map_name;
     // Where we meant to end up. Anywhere else the engine drops us is somewhere
     // we did not ask to go, which is the question `AuthoriseMap` exists to ask.
     g_intended_map = map_name;
+    g_intended_cold = true;
+}
+
+void RequestLoad(const std::string& save_name, const std::string& map_name) {
+    if (save_name.empty() || map_name.empty()) {
+        return;
+    }
+    // `load` rather than `map`, and otherwise the same contract: one deferred
+    // command, and the map we mean to end up on recorded, so the arrival is
+    // recognised as ours rather than as a save the engine restored by itself.
+    g_pending_command = "load " + save_name;
+    g_intended_map = map_name;
+    g_intended_cold = false;
 }
 
 void RequestSeamDoors() { g_seam_doors_wanted = true; }
@@ -591,6 +675,8 @@ bool WasRequested(const std::string& map_name) {
     return true;
 }
 
+bool LastRequestCold() { return g_intended_cold; }
+
 bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map) {
     if (!Data().Loaded()) {
         return false;  // ordinary Half-Life; leave every transition alone
@@ -628,15 +714,15 @@ bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map
 }
 
 void RunDeferred() {
-    if (g_pending_map.empty()) {
+    if (g_pending_command.empty()) {
         return;
     }
-    const std::string map_name = g_pending_map;
-    g_pending_map.clear();
+    // The whole command line, built by whoever asked: `map` for a cold start,
+    // `load` for a warp point.
+    std::string command = g_pending_command + "\n";
+    g_pending_command.clear();
 
-    char command[80];
-    std::snprintf(command, sizeof(command), "map %s\n", map_name.c_str());
-    SERVER_COMMAND(command);
+    SERVER_COMMAND(&command[0]);
     SERVER_EXECUTE();
 }
 

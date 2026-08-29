@@ -121,6 +121,7 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon | `ServerActivate`, `CBasePlayer::PlayerUse` |
 | `src/ap_items.*` | the loadout, weapon refusal, armour | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
 | `src/ap_hub.*` | console commands, the lobby's panels, warps, the mission-boundary choke point | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CChangeLevel::ChangeLevelNow` |
+| `src/ap_warpsave.*` | warp points: the engine saves a warp lands on | the poll, `ap_hub`, `ap_locations` |
 | `src/ap_deathlink.*` | deaths out, deaths in | `CBasePlayer::Killed` |
 | `src/ap_traps.*` | the three traps, and their precache set | `ClientPrecache`, the poll |
 
@@ -297,6 +298,31 @@ a part skipped to would be free, and warping to the last part would be the
 fastest route through any mission. "Already reached" is answered by that map's
 own `map_reached` check being in the client's `checked` list, which is the one
 record that survives a restart and a reconnect.
+
+**A warp lands on a savegame, and falls back to `map` when there is none.**
+`map c1a2` starts a level cold at its `info_player_start`, which is not where
+part 2 of a mission begins: the transition into it lands at a landmark, with what
+part 1 left the player holding, in a seam room whose doors are already open. The
+seam-door pass and the carried-monster placement below are two patches over that
+same gap, and they only ever approximated it.
+
+So `ap_warpsave.cpp` takes an engine save the first time the player walks through
+a transition into a part, and `ap_warp` issues `load` instead of `map` when one
+exists. The state is then not an approximation of the mid-mission state; it *is*
+that state, down to the boss's remaining health. `LastRequestCold` is how the
+arrival tells the two apart: a restored warp point skips the cold-start patches,
+because the save already carries what they exist to put back.
+
+Only the *first* arrival is kept -- Half-Life's transitions are two-way, and
+walking back into part 2 from part 3 arrives at the far end of part 2. `!setwarp`
+is how a warp point is deliberately moved, and `!setwarp <name>` makes a separate
+one that `!warp <name>` returns to.
+
+The gate does not change. Whether the player may warp is still `MissionOpen` and
+`Visited` on the client's own record; the save answers only where. That is what
+keeps a stale save from a reset seed out of a mission the new run has not opened,
+and it is why the saves being machine-local costs nothing: a fresh install warps
+cold, exactly as it did before.
 
 **Everything the player is told goes through `Notify`,** which reaches the HUD's
 message area and the console. `Say` is console-only and is for the answer to a

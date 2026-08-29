@@ -32,6 +32,28 @@ OUT_NAME = "ap_out.txt"
 MOD_DIR = "hlap"
 STORE_SUBDIR = "archipelago"
 
+# Warp points are savegames the game writes into `<Half-Life>/hlap/SAVE`, named
+# `ap<key>_...`, where the key is eight hex digits of FNV-1a over the snapshot's
+# `<seed>:<slot>`. The game writes them and the client sweeps them, so both sides
+# have to spell the key the same way; `game/src/ap_warpsave.cpp` holds the other
+# copy of these four lines.
+WARP_SAVE_PREFIX = "ap"
+
+
+def warp_save_key(slot_identity: str) -> str:
+    """Eight hex digits keying one slot of one seed's warp points.
+
+    Empty for an empty identity, which is the disconnected case: no slot means no
+    warp points, rather than everybody sharing one set.
+    """
+    if not slot_identity:
+        return ""
+    digest = 2166136261
+    for byte in slot_identity.encode("utf-8"):
+        digest = ((digest ^ byte) * 16777619) & 0xFFFFFFFF
+    return f"{digest:08x}"
+
+
 # How many un-acked events may sit in the snapshot at once.
 #
 # Finishing a game releases every remaining item at once, which can be hundreds

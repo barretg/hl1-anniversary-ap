@@ -26,10 +26,26 @@ from __future__ import annotations
 
 import os
 import pkgutil
+import re
 from pathlib import Path
 
 # The mod folder's name, which is also what the player passes to `-game`.
 MOD_DIR = "hlap"
+
+# GoldSrc's savegame folder inside the mod, and what a warp point's savegame is
+# called in it.
+#
+# Warp points are engine saves the game takes at a mission's part boundaries and
+# wherever `!setwarp` is used, so that a warp lands the player in the state a
+# transition would have left them in rather than at a cold spawn. They are the
+# player's disk rather than the multiworld's, so somebody has to sweep them: this
+# is that somebody. See `game/src/ap_warpsave.h`.
+#
+# The pattern is deliberately narrow. This folder also holds the player's own
+# quicksave and every save they made by hand, and none of those begin `ap`
+# followed by exactly eight hex digits and an underscore.
+SAVE_SUBDIR = "SAVE"
+WARP_SAVE_PATTERN = re.compile(r"^ap([0-9a-f]{8})_.+\.(sav|tga|hl[0-9])$", re.IGNORECASE)
 
 # Where the bridge and the generated data live, under the mod folder.
 STORE_SUBDIR = "archipelago"
@@ -82,6 +98,40 @@ def mod_dir(game_dir: str | os.PathLike[str]) -> Path:
     return resolve_game_root(game_dir) / MOD_DIR
 
 
+def save_dir(game_dir: str | os.PathLike[str]) -> Path:
+    """Where the engine writes savegames for this mod."""
+    return mod_dir(game_dir) / SAVE_SUBDIR
+
+
+def clear_warp_saves(game_dir: str | os.PathLike[str], key: str = "") -> int:
+    """Delete warp point savegames. Returns how many files went.
+
+    With a key, only that slot of that seed: the run has goaled, and a few
+    hundred megabytes of savegames it will never warp into again is not something
+    to leave on somebody's disk. Without one, every key, which is what
+    `/uninstall` means.
+
+    Nothing else in the folder is touched, and the folder itself stays: the
+    player's own saves live in it.
+    """
+    directory = save_dir(game_dir)
+    if not directory.is_dir():
+        return 0
+
+    removed = 0
+    for path in sorted(directory.iterdir()):
+        if not path.is_file():
+            continue
+        match = WARP_SAVE_PATTERN.match(path.name)
+        if match is None:
+            continue
+        if key and match.group(1).lower() != key.lower():
+            continue
+        path.unlink()
+        removed += 1
+    return removed
+
+
 def install(game_dir: str | os.PathLike[str]) -> tuple[int, bool]:
     """Create the mod folder and fill it in.
 
@@ -120,9 +170,11 @@ def uninstall(game_dir: str | os.PathLike[str]) -> int:
     the new version being broken.
 
     Anything the player put in the folder by hand survives, and so does the
-    folder itself in that case.
+    folder itself in that case -- including the player's own savegames, of which
+    only the warp points this mod wrote are swept.
     """
-    return sweep(mod_dir(game_dir))
+    removed = clear_warp_saves(game_dir)
+    return removed + sweep(mod_dir(game_dir))
 
 
 def sweep(directory: Path) -> int:

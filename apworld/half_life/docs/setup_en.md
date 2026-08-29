@@ -46,6 +46,9 @@ want -- one key, no pause, no `ap_` prefix to type.
 | `!ap` | `ap` | every mission and its unlock status |
 | `!warp <number or name>` | `ap_warp …` | travel to an unlocked mission |
 | `!warp <mission> <part>` | `ap_warp …` | to a part you have already reached |
+| `!warp <name>` | `ap_warp …` | to a warp point of your own |
+| `!setwarp [name]` | `ap_setwarp …` | make a warp point where you stand |
+| `!warps` | `ap_warps` | the warp points you have made |
 | `!hub` | `ap_hub` | return to the hub |
 | `!tracker [map]` | `ap_tracker …` | locations found and still out there |
 | `!find [text]` | `ap_find …` | point at the nearest unfound check |
@@ -62,6 +65,30 @@ only for a part you have already reached. It is a way back after a death or an
 errand in the hub, not a way past the half of a mission you have not played: the
 checks in a part you skipped to would be free, and warping straight to a
 mission's last part would be the fastest way through it.
+
+### Warp points
+
+A warp takes you back to the state you were in, not to the top of the map. The
+first time you walk through a transition into a part of a mission, the game
+quietly saves that moment, and `!warp <mission> <part>` restores it: the same
+inventory, the same open doors, the same boss mid-fight. Only that first arrival
+is kept, so walking back and forth through a seam does not move it.
+
+`!setwarp` moves the current part's warp point to wherever you are standing.
+`!setwarp lab` instead makes a warp point of your own called `lab`, which
+`!warp lab` goes back to; `!warps` lists them. Your own quicksave is never
+touched, and neither is any save you made by hand.
+
+These saves live on this machine, in `hlap/SAVE`, keyed by the seed and the slot.
+That means:
+
+* A second machine, or a fresh install, has none of them. Warping still works
+  there; it just starts the map cold, the way it did before.
+* Whether you *may* warp somewhere is still the multiworld's answer and never the
+  save's. A mission this run has not opened stays shut even with an old save of
+  it sitting on the disk, so replaying a reset seed cannot skip ahead.
+* They go when the slot goals, and `/uninstall` removes every one of them. A full
+  run is a few hundred megabytes of savegames.
 
 Anything worth knowing -- a check found, an item received, a mission unlocked, a
 pickup refused -- appears in the message area at the bottom left as well as in

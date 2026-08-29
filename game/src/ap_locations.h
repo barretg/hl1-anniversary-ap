@@ -68,6 +68,10 @@ void SendCheck(long id);
 // warp is a way back rather than a way past.
 bool Visited(const std::string& map_name);
 
+// Which part of its mission a map is, 1-based, or 0 for a one-map mission. The
+// number the player types after `ap_warp <mission>`.
+int PartOf(const Chapter& chapter, const std::string& map_name);
+
 // `ap_find`: with no text, the nearest check on this map the seed still wants,
 // as a bearing and a distance. With text, whatever matches by name *anywhere in
 // the seed* -- this map is the default, not the limit, since asking where the

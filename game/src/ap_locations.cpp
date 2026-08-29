@@ -16,6 +16,7 @@
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
+#include "ap_warpsave.h"
 
 namespace ap {
 namespace {
@@ -137,6 +138,11 @@ bool Visited(const std::string& map_name) {
 }
 
 void OnMapStart(const std::string& map_name) {
+    // The map before this one. The dll outlives the level, so this is still the
+    // last map's name until it is overwritten below, and it is the only way to
+    // tell a transition into part 3 from a warp straight to it.
+    const std::string previous = g_map;
+
     if (map_name != g_map) {
         g_sent.clear();
         g_map = map_name;
@@ -148,6 +154,7 @@ void OnMapStart(const std::string& map_name) {
         // way to have got here that needs questioning.
         g_map_authorised = true;
         g_arrival_owed = false;
+        NoteArrival(previous, map_name, true);
         return;
     }
 
@@ -164,11 +171,17 @@ void OnMapStart(const std::string& map_name) {
     g_arrival_owed = true;
     g_bounce_announced = false;
 
-    if (requested) {
-        // A warp starts the level cold, without the seam state a transition
-        // would have carried in. See `RunSeamDoors`.
+    if (requested && LastRequestCold()) {
+        // A `map` warp starts the level cold, without the seam state a
+        // transition would have carried in. See `RunSeamDoors`. A warp that
+        // restored a savegame needs none of it: the save *is* that state.
         RequestSeamDoors();
     }
+
+    // Whether this arrival is worth keeping as a warp point. Only an engine
+    // transition from another part of this mission is, which is why it needs
+    // both names.
+    NoteArrival(previous, map_name, requested);
 }
 
 void SendArrival() {
