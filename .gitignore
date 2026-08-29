@@ -1,6 +1,7 @@
 *__pycache__
 *out
 .claude
+CLAUDE.md
 .vexp
 .vscode
 .pytest_cache/
