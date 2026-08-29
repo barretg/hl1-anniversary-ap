@@ -17,6 +17,7 @@ from typing import Any, ClassVar
 
 import settings
 from BaseClasses import Tutorial
+from Options import OptionGroup
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, Type, components, launch_subprocess
 
@@ -45,7 +46,7 @@ from .items import (
     weapon_items,
 )
 from .locations import location_name_groups, location_name_to_id
-from .options import HalfLifeOptions
+from .options import AmmoRelief, HalfLifeOptions
 from .regions import create_regions
 from .rules import chapter_is_startable
 
@@ -95,6 +96,14 @@ class HalfLifeWeb(WebWorld):
             "setup/en",
             ["hl1-anniversary-ap"],
         )
+    ]
+
+    # Anything here is off by default and known to be rough. Grouping it says so
+    # in the template YAML and on the website without the player having to read
+    # the option's own description first, and keeps it out of the run of settings
+    # that are safe to turn on without thinking about it.
+    option_groups = [
+        OptionGroup("Experimental Features", [AmmoRelief], start_collapsed=True)
     ]
 
 

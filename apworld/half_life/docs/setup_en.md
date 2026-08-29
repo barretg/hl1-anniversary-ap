@@ -67,20 +67,29 @@ The mod installs binds for the commands that need no argument, in
 | `O` | the tracker |
 | `I` | the command list |
 | `L` | back to the hub |
-| `K` | your warp points |
+| `[` | your warp points |
+| `]` | point at the nearest check on this map |
 | `;` | `setwarp` for the part you are in |
 
 They are there because of what the console does to single-player: opening it
 pauses the game, and while the game is paused the mod runs no frames, so a
 command typed into the console does nothing until the console is closed again.
-Chat does not pause, and neither does a key.
+Chat does not pause, and neither does a key. `K` is left alone on purpose --
+Half-Life uses it for voice chat.
+
+The binds are loaded by the mod itself when the map starts, not only by
+`autoexec.cfg`, because whether the engine runs a mod's autoexec has varied
+between builds. They load once per session, so a key you rebind mid-session stays
+rebound.
 
 Rebind them freely -- the file is yours once it is written, and reinstalling the
 mod leaves it alone. Uninstalling removes it.
 
 A reply of a few lines is printed in the message area as well as the console, so
 most commands can be read without opening either. Long listings -- `!tracker` on
-a full seed -- go to the console alone, which is the only place they fit.
+a full seed -- go to the console alone, which is the only place they fit, but the
+message area still says so: `ap_tracker: 214 lines in the console (~).` A key
+press always answers with something.
 
 `ap_warp` takes a mission number, a name, or a map name, and does not care about
 case or punctuation: `ap_warp 15`, `ap_warp Gonarch's Lair`, `ap_warp gonarch`
@@ -159,7 +168,7 @@ server.
 | `logic_difficulty` | strict | whether logic expects a suitable weapon per mission |
 | `shuffle_hev_suit` | off | armour stays at zero until the item arrives |
 | `shuffle_longjump` | off | on: the module is an item. Off: Half-Life hands it out as it always did |
-| `ammo_relief` | off | a gun the level stocks no ammo for is refilled five minutes after it runs dry |
+| `ammo_relief` | off | **experimental:** a gun the level stocks no ammo for is refilled five minutes after it runs dry |
 | `trap_percentage` | 15 | share of your filler replaced by traps |
 | `death_link_amnesty` | 4 | deaths forgiven before one goes out to the multiworld |
 
@@ -167,11 +176,18 @@ The HEV suit is never taken away from you, whatever `shuffle_hev_suit` says: in
 GoldSrc the suit draws the weapon HUD and owns weapon switching, so a player
 without one cannot use what they are holding. What the item controls is armour.
 
-`ammo_relief` is for the seed that hands you the crossbow in a map with no bolts
+`ammo_relief` sits under **Experimental Features** in the YAML and is exactly
+that: it works, and its timing is still rough in ways listed in the template's
+own description. Nothing it does can take anything away from you -- it only ever
+adds ammo -- so the worst case is a refill arriving when you did not need one.
+
+It is for the seed that hands you the crossbow in a map with no bolts
 in it. With it on, a gun that runs dry on ammo the level does not stock anywhere
 says so, and the suit synthesises more five minutes later; if it is empty again
 within ten seconds of a refill you get one more for free, which covers dying and
-reloading a save from before it. Off by default, because with it on a patient
+reloading a save from before it. The wait follows you through a mission's own
+transitions -- the next map has no bolts either -- but going to the hub or
+loading a save starts it again, since either can put ammo back in your hands. Off by default, because with it on a patient
 player is never really out of ammo.
 
 DeathLink counts the deaths Half-Life does not treat as deaths, too: falling into

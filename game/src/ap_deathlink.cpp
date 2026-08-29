@@ -100,18 +100,33 @@ float g_reverted_at = -1000.0f;
 }  // namespace
 
 void OnRevertSaved() {
+    // Traced, and traced in every branch, because this is the one hook whose
+    // failure is invisible: the screen is fading, the engine is about to reload,
+    // and nothing else survives to say whether the entity fired at all. A void
+    // fall that reported nothing is either a `player_loadsaved` we never saw or
+    // one we deliberately dropped, and the trace is what tells those apart.
+    Trace("CRevertSaved::Use: ap::OnRevertSaved");
+
     CBasePlayer* player = Player();
-    if (player == nullptr || !Live()) {
+    if (player == nullptr) {
+        Trace("  no player");
+        return;
+    }
+    if (!Live()) {
+        Trace("  not live; nothing reported");
         return;
     }
     // Already dead means `Killed` has been through here with the real cause.
     if (!player->IsAlive()) {
+        Trace("  already dead; Killed reported it");
         return;
     }
     const float since = gpGlobals->time - g_reverted_at;
     if (since >= 0.0f && since < kRevertQuietSeconds) {
+        Trace("  same revert as the last one");
         return;
     }
+    Trace("  reporting a death");
     g_reverted_at = gpGlobals->time;
 
     // Deliberately vague, because the entity does not know either: the same
@@ -161,6 +176,10 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
         remaining = configured;
     }
     WriteAmnesty(remaining, configured);
+
+    // Same reason as the trace in `OnRevertSaved`: a death is followed by a
+    // reload, and the console goes with it.
+    Trace(forgiven ? "  death forgiven by amnesty" : "  death sent");
 
     std::vector<std::string> args;
     args.push_back("Freeman");

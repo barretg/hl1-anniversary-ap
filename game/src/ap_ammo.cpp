@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 
+#include "ap_checkdata.h"
 #include "ap_items.h"
 #include "ap_main.h"
 #include "ap_state.h"
@@ -89,6 +90,23 @@ std::map<std::string, Watch> g_watch;
 
 float g_next_check = 0.0f;
 
+// The map the source list was built from, and the level time last seen.
+//
+// Both exist because level time is the only clock here and it is not monotonic:
+// it restarts near zero with a map and jumps *backwards* whenever a savegame is
+// restored, which is a quickload, a death, or a warp. Everything below is a
+// deadline in that clock, so a jump back leaves every one of them in a future
+// that will not arrive for as long as the jump was -- including the throttle,
+// which is how the whole watcher switched itself off for the rest of a map after
+// one quickload.
+//
+// A restore also hands back whatever ammo the save was holding, so the honest
+// answer to "time went backwards" is that this map's watch means nothing any
+// more. It is thrown away and rebuilt, which is the same rule the rest of the
+// game side follows.
+std::string g_scanned_map;
+float g_last_seen_time = 0.0f;
+
 // How much a refill hands over: two clips where the weapon has one, and a small
 // handful where it does not -- five rockets is the RPG's whole carry limit, so
 // the clipless weapons are counted rather than measured.
@@ -128,17 +146,39 @@ void Refill(CBasePlayer* player, CBasePlayerItem* item, const std::string& ammo)
     const char* name = item->pszName();
     Notify(std::string("The suit synthesises ammunition for your ") +
            (name != nullptr ? name : ammo.c_str()) + ".");
+    Trace(("  ammo refilled: " + ammo).c_str());
 }
 
-}  // namespace
+// Are these two maps parts of the same mission?
+//
+// Which is the question that decides whether a countdown survives a map change.
+// Walking through a seam in the middle of Surface Tension does not solve the
+// player's problem -- it is the same crossbow and the next map has no bolts
+// either -- so the wait carries. Leaving for the hub, or for another mission, is
+// a different situation entirely and starts again.
+bool SameMission(const std::string& before, const std::string& now) {
+    if (before.empty() || before == now) {
+        return before == now;
+    }
+    const Chapter* was = Data().ChapterOfMap(before);
+    const Chapter* is = Data().ChapterOfMap(now);
+    return was != nullptr && is != nullptr && was->key == is->key;
+}
 
-void ResetAmmoRelief() {
-    // Rebuilt, never carried: the timers below are level time, which restarts
-    // with the map, and what the level stocks is a different answer in every
-    // map. This is the same rule the rest of the game side follows.
+// Rebuild the source list for the map we are standing in.
+//
+// `keep_timers` carries the countdowns across, re-based onto the new level's
+// clock -- which has to be done by hand, because level time restarts near zero
+// with every map and an absolute deadline from the last one means nothing here.
+// A countdown for ammo the new map *does* stock is dropped rather than carried:
+// the problem it was waiting out is over.
+void Rebuild(bool keep_timers) {
+    const float previous_now = g_last_seen_time;
+
     g_available.clear();
-    g_watch.clear();
     g_next_check = 0.0f;
+    g_last_seen_time = gpGlobals->time;
+    g_scanned_map = std::string(STRING(gpGlobals->mapname));
 
     // One pass over the entity list, at map load, and never again. The
     // alternative -- asking during the check -- is a search of every entity in
@@ -158,13 +198,78 @@ void ResetAmmoRelief() {
             }
         }
     }
+
+    char line[96];
+    std::snprintf(line, sizeof(line), "  ammo sources in %s: %d",
+                  g_scanned_map.c_str(), static_cast<int>(g_available.size()));
+    Trace(line);
+
+    if (!keep_timers) {
+        g_watch.clear();
+        return;
+    }
+
+    std::map<std::string, Watch> carried;
+    for (const std::pair<const std::string, Watch>& entry : g_watch) {
+        if (entry.second.due <= 0.0f) {
+            continue;  // nothing was owed
+        }
+        if (g_available.find(entry.first) != g_available.end()) {
+            continue;  // this map stocks it; the wait is over
+        }
+        // What was left of the wait, measured against the clock it was set on,
+        // and set again against the one running now. The grace window is not
+        // carried: it exists for a save reloaded seconds after a refill, which a
+        // map change is not.
+        const float remaining = entry.second.due - previous_now;
+        Watch fresh;
+        fresh.due = gpGlobals->time + (remaining > 0.0f ? remaining : 0.0f);
+        carried[entry.first] = fresh;
+    }
+    g_watch.swap(carried);
+    if (!g_watch.empty()) {
+        Trace("  ammo countdowns carried across the transition");
+    }
+}
+
+}  // namespace
+
+void ResetAmmoRelief() {
+    // Called on every map load. A transition inside a mission keeps whatever
+    // the player was already waiting out; the hub, or another mission, does
+    // not -- that is a different situation and it starts again.
+    Rebuild(SameMission(g_scanned_map,
+                        std::string(STRING(gpGlobals->mapname))));
 }
 
 void RunAmmoRelief() {
+    // Before the throttle, because the throttle is itself a deadline in the
+    // clock this is checking. Level time moves backwards when a savegame is
+    // restored, and every deadline held in it -- this throttle included -- then
+    // sits in a future that will not arrive for as long as the jump was.
+    //
+    // Cleared rather than carried, unlike a transition: a restore hands the
+    // player back whatever ammo the save was holding, so what the old watch was
+    // waiting out may not be true any more. If the gun really is still empty the
+    // next second starts a fresh wait and says so.
+    if (gpGlobals->time < g_last_seen_time) {
+        Trace("ap::RunAmmoRelief: the clock moved back; rebuilding");
+        Rebuild(false);
+    }
+    g_last_seen_time = gpGlobals->time;
+
     if (gpGlobals->time < g_next_check) {
         return;
     }
     g_next_check = gpGlobals->time + kAmmoReliefCheckSeconds;
+
+    // Belt and braces, and deliberately down here where it costs one string
+    // comparison a second rather than one a frame: a map this list was not built
+    // from means the source scan belongs to somewhere else entirely.
+    if (g_scanned_map != std::string(STRING(gpGlobals->mapname))) {
+        Trace("ap::RunAmmoRelief: a map we never scanned; rebuilding");
+        ResetAmmoRelief();
+    }
 
     // Off unless the seed asked for it, and the seed says so in the snapshot --
     // never from a cached flag of our own. A client that has not connected yet
@@ -237,6 +342,7 @@ void RunAmmoRelief() {
                               name != nullptr ? name : ammo.c_str(), ammo.c_str(),
                               static_cast<int>(kAmmoReliefDelaySeconds / 60.0f));
                 Notify(line);
+                Trace(("  ammo watch started: " + ammo).c_str());
                 continue;
             }
 

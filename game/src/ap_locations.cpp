@@ -16,6 +16,7 @@
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
+#include "ap_traps.h"
 #include "ap_warpsave.h"
 
 namespace ap {
@@ -335,6 +336,12 @@ void OnWeaponCollected(CBasePlayer* player, const std::string& classname) {
     if (player == nullptr || !Live()) {
         return;
     }
+    // A weapon Butterfingers is holding a debt over is the player's own, wherever
+    // it is lying. Nothing about it is a discovery until the trap is settled, and
+    // this is the one place every route to a weapon check passes through.
+    if (Withheld(classname)) {
+        return;
+    }
     // Only in the map where Half-Life would first have handed this weapon over.
     // The same shotgun six missions later is not that moment, and the RPG lying
     // in the hub is not it at all.
@@ -361,6 +368,14 @@ void SweepNearbyPickups() {
         // model index, and standing next to a weapon we are carrying is not a
         // discovery.
         if (entity->pev->movetype == MOVETYPE_FOLLOW || entity->pev->modelindex == 0) {
+            continue;
+        }
+        // The copy Butterfingers threw on the floor is not a weapon the player
+        // has found: it is the one they were carrying a moment ago. This sweep
+        // is why guarding the pickup was not enough -- it fires on a weapon
+        // *lying near* the player, so the trap sent the map's weapon check
+        // without the player touching anything.
+        if (IsTrapDrop(entity)) {
             continue;
         }
         OnWeaponCollected(player, classname);

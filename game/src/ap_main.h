@@ -172,8 +172,13 @@ void FlushNotices();
 // bury the screen and overrun the message channel. The length decides, and the
 // length is only known once the command has finished talking.
 //
-// Every `Say` and `Notify` between the two lands in the reply.
-void BeginReply();
+// Every `Say` and `Notify` between the two lands in the reply. A reply too long
+// for the HUD still leaves one line there naming the command and saying where
+// the rest went, so a key press is never answered with nothing at all -- which,
+// with the console shut, is indistinguishable from a bind that did not work.
+//
+// `label` is the command as the player would say it: `!tracker`, `ap_tracker`.
+void BeginReply(const std::string& label);
 void EndReply();
 
 // The longest reply that still goes to the HUD as well as the console.

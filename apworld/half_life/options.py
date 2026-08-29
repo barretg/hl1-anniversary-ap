@@ -122,14 +122,23 @@ class DeathLinkAmnesty(Range):
 
 
 class AmmoRelief(Toggle):
-    """Refill a gun the level has no ammo for.
+    """EXPERIMENTAL AND BUGGY. Refill a gun the level has no ammo for.
 
     A shuffled seed can hand you the crossbow in a map that holds no bolts, and
     Half-Life will never give you any: the weapon is dead weight until the next
     map. With this on, a gun that runs dry on ammo the level does not stock is
-    announced, and the suit synthesises more five minutes later.
+    announced, and the suit synthesises more five minutes later. If it is empty
+    again within ten seconds of a refill you get one more for free, which covers
+    dying and reloading a save from just before it arrived.
 
-    Off by default. It is a comfort valve rather than part of the balance, and
+    Known rough edges: what a level stocks is read from the entities placed in
+    it, so ammo that only exists inside a breakable crate is not counted and the
+    game may offer you a refill you did not need. Loading a save or leaving the
+    mission restarts the wait from the beginning. Expect the timing to be wrong
+    occasionally rather than the run to be broken -- nothing here can take
+    anything away from you, it only ever adds ammo.
+
+    Off by default, and it is a comfort valve rather than part of the balance:
     with it on a patient player is never truly out of ammo.
     """
 

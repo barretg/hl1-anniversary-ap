@@ -406,24 +406,26 @@ void ToHub() {
 // the HUD as well as the console -- which is the only place a player can read it
 // without opening the console, and opening the console pauses the game.
 struct Reply {
-    Reply() { BeginReply(); }
+    explicit Reply(const std::string& label) { BeginReply(label); }
     ~Reply() { EndReply(); }
 };
 
-void Cmd_Ap() { Reply reply; ListMissions(); }
-void Cmd_ApHelp() { Reply reply; Help(); }
-void Cmd_ApWarp() { Reply reply; Warp(ArgumentTail(1)); }
-void Cmd_ApHub() { Reply reply; ToHub(); }
-void Cmd_ApSetWarp() { Reply reply; SetWarp(ArgumentTail(1)); }
-void Cmd_ApWarps() { Reply reply; ListWarps(); }
-void Cmd_ApFind() { Reply reply; Find(ArgumentTail(1)); }
-void Cmd_ApTracker() { Reply reply; Tracker(ArgumentTail(1)); }
+void Cmd_Ap() { Reply reply("ap"); ListMissions(); }
+void Cmd_ApHelp() { Reply reply("ap_help"); Help(); }
+void Cmd_ApWarp() { Reply reply("ap_warp"); Warp(ArgumentTail(1)); }
+void Cmd_ApHub() { Reply reply("ap_hub"); ToHub(); }
+void Cmd_ApSetWarp() { Reply reply("ap_setwarp"); SetWarp(ArgumentTail(1)); }
+void Cmd_ApWarps() { Reply reply("ap_warps"); ListWarps(); }
+void Cmd_ApFind() { Reply reply("ap_find"); Find(ArgumentTail(1)); }
+void Cmd_ApTracker() { Reply reply("ap_tracker"); Tracker(ArgumentTail(1)); }
 
 // One place that knows what every command is, whether it arrived from the
 // console or from chat. The console names are the long ones (`ap_warp`); chat
 // takes the short ones too, because `!warp 3` is what a player will type.
 bool Dispatch(const std::string& name, const std::string& rest) {
-    Reply reply;
+    // Named as the player said it, so the HUD line for a console-length reply
+    // names the command they actually typed.
+    Reply reply(StartsWith(name, "ap") ? name : "!" + name);
     if (name == "ap") {
         ListMissions();
     } else if (name == "help" || name == "ap_help") {

@@ -60,6 +60,9 @@ def test_install_ships_command_binds(install: Path) -> None:
     binds = (install / MOD_DIR / "apbinds.cfg").read_text(encoding="utf-8")
     assert "ap_hub" in binds
     assert "ap_warps" in binds
+    # K is Half-Life's own voice chat key. Binding over it takes something the
+    # player already had, which is not ours to do.
+    assert 'bind "k"' not in binds.lower()
 
     autoexec = (install / MOD_DIR / "autoexec.cfg").read_text(encoding="utf-8")
     assert "exec apbinds.cfg" in autoexec

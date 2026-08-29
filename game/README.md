@@ -369,8 +369,16 @@ change, which is any check the player sends.
 entity, so walking back onto it enters `CanCollect` exactly as the map's own
 crowbar would, and `OnWeaponCollected` sent "first crowbar" for a crowbar the
 player had been carrying since the hub. `ap_traps` keeps an `EHANDLE` on what it
-threw and `ap_items` asks before it reports. An `EHANDLE` because the level is
-free to take the entity away underneath us.
+threw -- an `EHANDLE` because the level is free to take the entity away
+underneath us.
+
+Guarding the pickup alone was not enough, and the reason is worth remembering:
+`SweepNearbyPickups` fires a weapon check for anything `weapon_*` *lying near*
+the player, touched or not, so the trap sent the check the moment the weapon hit
+the floor and the player never picked anything up. The sweep skips the trap's
+drop, and `OnWeaponCollected` -- the one point every route to a weapon check
+passes through -- ignores a classname the trap still owes, so no future route
+around either guard can bring it back.
 
 **Not every death is a `Killed`.** Falling into the void on Xen and letting a
 scientist die both end in a fade to black and a reloaded save, which is
@@ -398,7 +406,21 @@ stock at all is announced when it runs dry and refilled five minutes later. What
 the level stocks is one pass over the entity list at map load -- asking during the
 check would be a search of every entity in the level once a second -- and the
 timers are level time, so they are cleared on every load like everything else
-here. The ten-second grace after a refill covers dying to whatever emptied the
+here -- and *level time is not monotonic*, which is the trap this walked into
+once already. Restoring a savegame moves it backwards, so every deadline held in
+it lands in a future that will not arrive for as long as the jump was, the
+once-a-second throttle included: one quickload switched the whole watcher off for
+the rest of the map. `RunAmmoRelief` therefore watches the clock itself and
+rebuilds when it moves back, which is also the honest answer -- a restore hands
+back whatever ammo the save was holding, so the old watch meant nothing anyway.
+Anything else that keeps a deadline in `gpGlobals->time` across a load has the
+same bug waiting in it.
+
+What survives a map change is decided by the mission, not by the map: a seam in
+the middle of Surface Tension is the same crossbow and the same absent bolts, so
+the countdown carries across, re-based onto the new level's clock by hand. The
+hub, or another mission, starts again. A map that stocks the ammo drops the
+countdown for it entirely, because the wait it was serving is over. The ten-second grace after a refill covers dying to whatever emptied the
 gun and reloading a save from before the refill arrived.
 
 **A short command reply goes to the HUD as well as the console.** Opening the
@@ -406,9 +428,22 @@ console pauses single-player, and a paused server runs no frames, which is where
 this dll does everything it defers -- so a player reading a reply in the console
 is a player whose warp has not happened yet. `BeginReply`/`EndReply` hold
 everything a command says until it has finished saying it, and the length decides
-where it goes: nine lines or fewer to both, a listing to the console alone. The
+where it goes: nine lines or fewer to both, a listing to the console alone --
+and a listing still leaves one line on the HUD naming the command and the line
+count, because a bound key that appears to do nothing is indistinguishable from a
+bind that never took. A command that says nothing at all gets the same
+treatment. The
 mod also ships `apbinds.cfg`, because a bound key runs a command without pausing
 anything.
+
+**The dll execs the binds itself.** `hlap/autoexec.cfg` is supposed to do it and
+did not on the anniversary build -- whether the engine runs a mod's autoexec has
+varied between versions -- so `ExecBinds` in `ap_main.cpp` issues `exec
+apbinds.cfg` on the first frame it is allowed to write to the client. A listen
+server shares its console with the client, so that is the same `exec` the player
+would type. Once per process and never per map: re-running it on every level
+change would take back a key the player had rebound mid-session. `K` is not among
+the defaults because Half-Life binds it to `+voicerecord`.
 
 ## Rules that are not negotiable
 

@@ -5,6 +5,7 @@
 
 #include "ap_main.h"
 
+#include <cstdio>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -54,6 +55,7 @@ std::vector<Notice> g_notices;
 // that its length can decide where it goes. See `BeginReply`.
 std::vector<std::string> g_reply;
 bool g_collecting = false;
+std::string g_reply_label;
 
 // How many of those to hold while the client is not ready. Large enough for a
 // whole `ap_tracker` listing, which is the longest thing this queue ever holds
@@ -183,11 +185,12 @@ void Say(const std::string& text) {
     Queue(text, false);
 }
 
-void BeginReply() {
+void BeginReply(const std::string& label) {
     // Nested calls cannot happen -- one command is answered at a time -- but a
     // reply left open by an early return would swallow the next one, so this
     // always starts from empty.
     g_reply.clear();
+    g_reply_label = label;
     g_collecting = true;
 }
 
@@ -199,10 +202,31 @@ void EndReply() {
     // listing -- `ap_tracker` runs to a couple of hundred lines -- and putting
     // that on the message area would bury the screen and outrun the channel.
     const bool hud = g_reply.size() <= kReplyHudMaxLines;
+    const size_t lines = g_reply.size();
     for (const std::string& line : g_reply) {
         Queue(line, hud);
     }
     g_reply.clear();
+
+    // A long reply still says something on the HUD. Pressing a bound key with
+    // the console shut and seeing nothing happen is how a working command reads
+    // as a broken bind, and the console is exactly where the player is not
+    // looking -- opening it pauses the game.
+    if (!hud || lines == 0) {
+        const char* label =
+            g_reply_label.empty() ? "That command" : g_reply_label.c_str();
+        char line[128];
+        if (lines == 0) {
+            // A command that answered with nothing at all. Rare, but a bound key
+            // that does nothing visible is the one outcome worth never having.
+            std::snprintf(line, sizeof(line), "%s: nothing to report.", label);
+        } else {
+            std::snprintf(line, sizeof(line), "%s: %d lines in the console (~).",
+                          label, static_cast<int>(lines));
+        }
+        Queue(line, true);
+    }
+    g_reply_label.clear();
 }
 
 void Notify(const std::string& text) {
@@ -271,6 +295,31 @@ void FlushNotices() {
     }
 
     g_notices.erase(g_notices.begin(), g_notices.begin() + take);
+}
+
+// Load the command binds, once for the process.
+//
+// `hlap/autoexec.cfg` is meant to do this and cannot be relied on: whether the
+// engine execs a mod's autoexec at all has changed between builds, and on the
+// anniversary build the binds simply never arrived. Running it from here is the
+// one path that is ours. A listen server shares its console with the client, so
+// `exec` here is the same `exec` the player would type, and `bind` lands on the
+// player's keys.
+//
+// Once, never per map: a player who rebound a key mid-session should keep their
+// binding, and re-running the file every level change would take it back.
+static void ExecBinds() {
+    static bool done = false;
+    if (done || !ClientReady()) {
+        return;
+    }
+    done = true;
+    // Missing file is a console line and nothing else, which is the right
+    // outcome for a player who deleted it on purpose.
+    char command[] = "exec apbinds.cfg\n";
+    SERVER_COMMAND(command);
+    SERVER_EXECUTE();
+    Trace("  binds exec'd");
 }
 
 void Trace(const char* where) {
@@ -378,6 +427,7 @@ void RunFrame() {
     // charge panel would visibly fill the bar before we emptied it, and
     // anything a hook wanted to tell the player is sent from here rather than
     // from the hook.
+    ExecBinds();
     FlushNotices();
     RunLoadout();
     RunSeamDoors();
