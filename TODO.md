@@ -31,3 +31,9 @@ Not done because the savegame path covers the case that actually matters, and a
 second, permanently worse route to the same place is a maintenance cost with a
 small payoff. Deferred deliberately (2026-08-29); revisit only if the cold path
 turns out to be common in play.
+
+## More stuff
+
+* Crowbar throw from jac's thing
+* Movesanity: Lock crouch, strafe left/right/back, progressive air strafe
+* Flashlight unlock
