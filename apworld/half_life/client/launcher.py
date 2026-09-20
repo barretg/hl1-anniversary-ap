@@ -138,11 +138,17 @@ class HalfLifeCommandProcessor(ClientCommandProcessor):
 
         logger.info(f"Installed {written} files into {mod.mod_dir(self.ctx.game_dir)}.")
         if not has_dll:
+            # No "start the game" line here on purpose: without the dll there is
+            # nothing to start, and printing the next step anyway is what makes a
+            # half-install read like a working one.
             logger.warning(
-                "This build ships no server dll, so the mod will not run yet. "
-                "Build it from the game/ directory of the project and drop it in "
-                f"as {mod.DLL_NAME}."
+                "This build of the apworld ships no server dll, so the mod cannot "
+                "run. Nothing is missing from your Half-Life install -- the apworld "
+                "itself is incomplete. Get a release build, or build the dll from "
+                f"the game/ directory of the project and drop it in as {mod.DLL_NAME}."
             )
+            return True
+
         logger.info("Start Half-Life with -game hlap, then load a map.")
         return True
 

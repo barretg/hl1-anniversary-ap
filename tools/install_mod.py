@@ -40,10 +40,14 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"wrote {written} files into {mod.mod_dir(args.game)}")
     if not has_dll:
+        # Same reasoning as the client's /install: no next step is printed,
+        # because without the dll there is nothing to start.
         print(
-            f"\nNo server dll was bundled, so the mod will not run yet.\n"
+            f"\nNo server dll was bundled, so the mod cannot run.\n"
             f"Build it from game/ and copy it to {mod.mod_dir(args.game) / mod.DLL_NAME}."
         )
+        return 0
+
     print("\nStart the game with -game hlap, then launch the Half-Life Client")
     print("from the Archipelago Launcher.")
     return 0

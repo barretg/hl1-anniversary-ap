@@ -227,3 +227,23 @@ def test_uninstall_keeps_what_the_player_put_there(install: Path) -> None:
 
 def test_uninstall_is_a_no_op_when_nothing_is_installed(install: Path) -> None:
     assert mod.uninstall(install) == 0
+
+
+def test_packaging_refuses_a_build_with_no_dll(tmp_path: Path, monkeypatch) -> None:
+    """The dll is staged by hand, so forgetting it is the easy mistake.
+
+    A dll-less apworld installs cleanly and then does not run, which reads to a
+    player like the mod being broken rather than the download being incomplete.
+    Packaging is the last place that can still tell the difference.
+    """
+    sys.path.insert(0, str(REPO / "tools"))
+    import build_apworld
+
+    monkeypatch.setattr(build_apworld, "STAGED_DLL", tmp_path / "nowhere" / "hl.dll")
+
+    with pytest.raises(SystemExit):
+        build_apworld.build(tmp_path / "out")
+    assert not (tmp_path / "out").exists()  # nothing half-written to ship by mistake
+
+    build_apworld.build(tmp_path / "out", allow_no_dll=True)
+    assert (tmp_path / "out" / "half_life.apworld").is_file()

@@ -41,7 +41,37 @@ install. See `apworld/half_life/mod/` for the installer and `liblist.gam`.
     cmake -S game -B build/game-msvc -A Win32 -DHLSDK_DIR=../halflife
     cmake --build build/game-msvc --config Release
 
-The result is `hl.dll`, about 1.3 MB, which goes to
+### Cross-building on Linux
+
+clang-cl targets the same ABI as MSVC -- the same name decoration and the same
+export table -- so a Linux box with clang, lld and a splatted Windows SDK builds
+an equivalent dll, and CMake takes the `if(MSVC)` branch for it. `xwin` does the
+splatting; `game/toolchain-clangcl-x86.cmake` carries the paths and the 32-bit
+target, and its comments explain each thing it has to work around.
+
+    cmake -S game -B build/game-clangcl -G Ninja -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_TOOLCHAIN_FILE="$PWD/game/toolchain-clangcl-x86.cmake" \
+          -DHLSDK_DIR=../halflife
+    cmake --build build/game-clangcl
+
+The toolchain file path has to be absolute: CMake resolves a relative one
+against the build directory, not the source directory.
+
+Worth checking the result rather than trusting it, because the way a build of
+this dll goes wrong is in the export table rather than in the compile -- see
+"Why not MinGW". It should be `PE32 ... Intel i386`, and every live
+`LINK_ENTITY_TO_CLASS` name in the SDK should appear in its exports, along with
+`GiveFnptrsToDll`, `GetEntityAPI` and `GetEntityAPI2`. `trip_beam` (`#if
+_DEBUG`) and `my_monster` (`#if 0` in `tempmonster.cpp`) are the two that should
+not. `GetNewDLLFunctions` is in no SDK build: the shipped dll has it, this
+source tree does not define it.
+
+Not yet confirmed in play -- the export table matching is strong evidence, but
+only a save and a level transition in the real client settles it.
+
+## Where the dll goes
+
+The result is `hl.dll`, about 1.4 MB, which goes to
 `<Half-Life>/hlap/dlls/hl.dll`. Dropping it into
 `apworld/half_life/mod/files/dlls/` makes the apworld install it for the player;
 that path is gitignored, so a development checkout installs everything but the

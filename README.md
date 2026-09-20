@@ -154,7 +154,8 @@ python -m pytest tests -q
 python tools/build_campaign_data.py --maps "<Half-Life>/valve/maps"
 python tools/gen_checkdata.py
 
-# package, and optionally drop straight into an Archipelago install
+# package, and optionally drop straight into an Archipelago install.
+# Refuses to build without a staged server dll; --allow-no-dll for a dev build.
 python tools/build_apworld.py --install "<Archipelago>/custom_worlds"
 
 # the server dll, 32-bit, against a checkout of Valve's SDK with sdk.patch on it
@@ -171,7 +172,9 @@ python tools/install_mod.py --game "<Half-Life>"
 nor the client needs Half-Life installed -- only the generators do. The built
 `hl.dll` is *not* committed; drop one into `apworld/half_life/mod/files/dlls/`
 and packaging picks it up, so a released apworld installs a working mod while a
-development checkout installs everything but the dll and says so.
+development checkout installs everything but the dll and says so. Because that
+staging step is manual and easy to forget, `build_apworld.py` refuses to package
+without it -- a dll-less build takes an explicit `--allow-no-dll`.
 
 Playing needs the mod running: launch Half-Life with `-game hlap -console`, or
 pick Half-Life Archipelago from the Custom Game menu.
