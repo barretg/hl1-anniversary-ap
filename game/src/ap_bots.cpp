@@ -53,6 +53,16 @@ constexpr float kSwingHitAt = 0.2f;
 constexpr float kSwingTime = 0.55f;
 constexpr float kRecoverTime = 0.2f;
 
+// A bout is a few swings, not a stand-off: after 1 to 3 of them, rolled each
+// bout, the bot turns its back and runs, and ignores everything in reach for a
+// moment so that it actually gets somewhere before the next bump.
+constexpr int kBoutSwingsMin = 1;
+constexpr int kBoutSwingsMax = 3;
+constexpr float kFleeMinSeconds = 1.0f;
+constexpr float kFleeMaxSeconds = 2.0f;
+// How far either side of straight-away the bot runs off on.
+constexpr float kFleeSpread = 45.0f;
+
 // --- the body ----------------------------------------------------------------
 
 // A player's run speed and jump. The jump is the player's own: sqrt(2 * 800 *
@@ -152,6 +162,7 @@ private:
     MeleeState m_melee = kMeleeIdle;
     float m_meleeNext = 0.0f;
     bool m_hitPending = false;
+    int m_swingsLeft = 0;  // in this bout; 0 between bouts
     float m_diedAt = 0.0f;
 };
 
@@ -420,6 +431,9 @@ bool CApBot::MeleeThink(float& yaw) {
         if (victim == nullptr || gpGlobals->time < m_meleeNext) {
             return false;
         }
+        if (m_swingsLeft <= 0) {
+            m_swingsLeft = RANDOM_LONG(kBoutSwingsMin, kBoutSwingsMax);
+        }
         m_melee = kMeleeSwing;
         m_meleeNext = gpGlobals->time + kSwingTime;
         m_hitPending = true;
@@ -438,6 +452,7 @@ bool CApBot::MeleeThink(float& yaw) {
                 m_hitPending = false;
                 pev->angles.y = yaw;
                 Swing(victim);
+                --m_swingsLeft;
             }
             if (gpGlobals->time >= m_meleeNext) {
                 m_melee = kMeleeRecover;
@@ -447,10 +462,25 @@ bool CApBot::MeleeThink(float& yaw) {
         case kMeleeRecover:
             if (gpGlobals->time >= m_meleeNext) {
                 m_melee = kMeleeIdle;
-                // Straight into the next swing if there is still something
-                // there; otherwise back to wandering.
                 m_meleeNext = gpGlobals->time;
-                return victim != nullptr;
+                if (victim == nullptr) {
+                    // It left first. The next bump is a new bout.
+                    m_swingsLeft = 0;
+                    return false;
+                }
+                if (m_swingsLeft > 0) {
+                    return true;  // straight into the next swing
+                }
+                // Bout over: turn tail and run, and leave everything alone
+                // until well clear.
+                m_swingsLeft = 0;
+                m_yaw = UTIL_AngleMod(
+                    UTIL_VecToYaw(pev->origin - victim->pev->origin) +
+                    RANDOM_FLOAT(-kFleeSpread, kFleeSpread));
+                m_meleeNext = gpGlobals->time +
+                              RANDOM_FLOAT(kFleeMinSeconds, kFleeMaxSeconds);
+                SampleProgress();
+                return false;
             }
             break;
         default:
