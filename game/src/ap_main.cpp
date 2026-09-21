@@ -398,6 +398,9 @@ void Startup() {
     ResetAmmoRelief();
     // A lobby countdown was on the old level's clock. See `CancelHubWarp`.
     CancelHubWarp();
+    // The lobby's test chamber is dressed once the level is running. See
+    // `DressHubChamber`.
+    RequestHubChamber();
     // Anything still queued was timed against the previous level's clock, which
     // no longer exists. See `RearmQueuedTraps`.
     RearmQueuedTraps();
@@ -433,6 +436,7 @@ void RunFrame() {
     FlushNotices();
     RunLoadout();
     RunSeamDoors();
+    DressHubChamber();
     RunWarpSave();
     RunAmmoRelief();
     RunHubWarp();

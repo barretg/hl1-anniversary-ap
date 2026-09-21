@@ -25,6 +25,8 @@ namespace ap {
 //   ap                 every mission and its unlock status
 //   ap_tracker [text]  every location in the seed; filter by mission or map
 //   ap_find [text]     the nearest check here, or one named anywhere in the seed
+//   ap_nowarps [0|1]   for testing: the hub's walk-in warp triggers do nothing.
+//                      Console only, and left out of ap_help.
 //   ap_warp <n|name>   travel to an unlocked mission
 //   ap_hub             return to the hub
 //   ap_help            these, in game
@@ -123,6 +125,19 @@ bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);
 // clock.
 void RunHubWarp();
 void CancelHubWarp();
+
+// The lobby's test chamber is a copy of the one Unforeseen Consequences opens
+// in, minus the disaster. These put the disaster back: the arcing core at the
+// centre, the beams through it, and the sparks around it, read off `c1a0c` and
+// moved to where the lobby's chamber is.
+//
+// Spawned rather than compiled into the BSP so the lobby can be re-authored
+// without losing them. `PrecacheHubChamber` runs from `CWorld::Precache`, the
+// only window a sprite may be precached in; `RequestHubChamber` marks it wanted
+// at map start, and `DressHubChamber` spawns it from StartFrame.
+void PrecacheHubChamber();
+void RequestHubChamber();
+void DressHubChamber();
 
 // The hub map: one room, a labelled panel per mission, shipped in the mod
 // folder rather than inherited from `valve` because it is ours.

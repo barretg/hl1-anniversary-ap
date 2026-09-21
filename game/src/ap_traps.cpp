@@ -292,6 +292,7 @@ void PrecacheTraps() {
     // SDK patch calls this one function from `CWorld::Precache`; adding a second
     // call site there would mean repatching every SDK checkout for no gain.
     PrecacheCarriedMonsters();
+    PrecacheHubChamber();
 }
 
 void QueueTrap(const std::string& trap_name) {

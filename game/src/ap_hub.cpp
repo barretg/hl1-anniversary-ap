@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
 
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
@@ -90,6 +91,11 @@ const float kHubPressNoticeDelay = 0.3f;
 
 // A gap between touches longer than this means the player stepped out and back.
 const float kHubTouchGap = 0.5f;
+
+// `ap_nowarps`: the lobby's walk-in triggers do nothing, so the rooms behind them
+// can be walked around while testing. For the life of the process rather than
+// the level, since every trip back to the hub is a fresh load of it.
+bool g_hub_triggers_off = false;
 
 std::string ArgumentTail(int from) {
     std::string text;
@@ -459,6 +465,30 @@ void Cmd_ApWarps() { Reply reply("ap_warps"); ListWarps(); }
 void Cmd_ApFind() { Reply reply("ap_find"); Find(ArgumentTail(1)); }
 void Cmd_ApTracker() { Reply reply("ap_tracker"); Tracker(ArgumentTail(1)); }
 
+// A testing switch, and console only: not in `!help`, and not a chat command,
+// because a player has no reason to want it. `ap_nowarps` toggles; `1` or `0`
+// sets it outright.
+void Cmd_ApNoWarps() {
+    Reply reply("ap_nowarps");
+    const std::string arg = Trim(ArgumentTail(1));
+    if (arg == "1" || arg == "0") {
+        g_hub_triggers_off = arg == "1";
+    } else {
+        g_hub_triggers_off = !g_hub_triggers_off;
+    }
+    if (g_hub_triggers_off) {
+        // One already counting down would still go.
+        g_hub_warp_chapter.clear();
+        g_hub_warp_notice.clear();
+        Notify("Hub warp triggers off. ap_nowarps again to turn them back on.");
+    } else {
+        // Forget where the player is standing, so a trigger they are already
+        // inside counts as walked into rather than needing a step out and back.
+        g_hub_touching.clear();
+        Notify("Hub warp triggers on.");
+    }
+}
+
 // One place that knows what every command is, whether it arrived from the
 // console or from chat. The console names are the long ones (`ap_warp`); chat
 // takes the short ones too, because `!warp 3` is what a player will type.
@@ -511,6 +541,7 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_warps", Cmd_ApWarps);
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_nowarps", Cmd_ApNoWarps);
     Trace("  commands registered");
 }
 
@@ -609,7 +640,7 @@ bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger) {
     // Ours from here on, whoever touched it. Letting the game's own touch run
     // would fire a `trigger_once` and delete it, so a refused player could never
     // walk back in once the mission opened.
-    if (!(toucher->pev->flags & FL_CLIENT)) {
+    if (!(toucher->pev->flags & FL_CLIENT) || g_hub_triggers_off) {
         return true;
     }
 
@@ -791,6 +822,159 @@ void PlaceCarriedMonsters() {
         DispatchSpawn(edict);
 
         Trace(("  placed " + carried.classname + " on " + carried.netname).c_str());
+    }
+}
+
+namespace {
+
+// One entity of the chamber, as `c1a0c` has it: its classname, its origin in
+// that map, and the rest of its keyvalues. Copied rather than approximated, so
+// what the lobby shows is what the player saw on waking up in the real one.
+struct ChamberEntity {
+    const char* classname;
+    float origin[3];
+    const char* const* keyvalues;  // name, value, ..., nullptr
+};
+
+// Where `c1a0c`'s chamber sits in the lobby. The lobby's chamber was built from
+// the same geometry: the ring of four lights (z 16 there, 376 here), the hum
+// sound above the core (1656 625 208 there, -2558 1997 568 here), and the
+// floor-to-hum height all agree on this one offset.
+const float kChamberOffset[3] = {-4214.0f, 1372.0f, 360.0f};
+
+// Every name here is ours, so nothing in the lobby can trigger or be struck by
+// them by accident, and the first is how `DressHubChamber` tells a chamber it
+// already dressed -- a quickload in the hub restores these from the save.
+const char* const kArcKeys[] = {
+    "targetname", "ap_zap_core", "LightningStart", "ap_zap_core",
+    "texture", "sprites/lgtning.spr", "StrikeTime", "-1.5", "life", ".5",
+    "Radius", "1024", "NoiseAmplitude", "300", "BoltWidth", "35",
+    "TextureScroll", "35", "rendercolor", "117 74 2", "renderamt", "100",
+    "spawnflags", "1", nullptr};
+const char* const kColumnKeys[] = {
+    "LightningStart", "ap_zap_a_top", "LightningEnd", "ap_zap_a_bottom",
+    "texture", "sprites/lgtning.spr", "StrikeTime", "1", "life", "0",
+    "NoiseAmplitude", "0", "BoltWidth", "200", "TextureScroll", "10",
+    "rendercolor", "223 227 196", "renderamt", "20", "spawnflags", "1", nullptr};
+const char* const kShaftBlueKeys[] = {
+    "LightningStart", "ap_zap_d_top", "LightningEnd", "ap_zap_d_bottom",
+    "texture", "sprites/lgtning.spr", "StrikeTime", "4", "life", "1",
+    "NoiseAmplitude", "80", "BoltWidth", "25", "TextureScroll", "10",
+    "rendercolor", "38 49 244", "renderamt", "100", "spawnflags", "1", nullptr};
+const char* const kShaftWhiteKeys[] = {
+    "LightningStart", "ap_zap_d_top", "LightningEnd", "ap_zap_d_bottom",
+    "texture", "sprites/lgtning.spr", "StrikeTime", "5", "life", "1",
+    "NoiseAmplitude", "80", "BoltWidth", "30", "TextureScroll", "10",
+    "rendercolor", "210 213 253", "renderamt", "100", "spawnflags", "1", nullptr};
+const char* const kCrossKeys[] = {
+    "LightningStart", "ap_zap_e_top", "LightningEnd", "ap_zap_e_bottom",
+    "texture", "sprites/lgtning.spr", "StrikeTime", "5", "life", "2",
+    "NoiseAmplitude", "80", "BoltWidth", "30", "TextureScroll", "10",
+    "rendercolor", "38 49 244", "renderamt", "200", "spawnflags", "5", nullptr};
+
+const char* const kATop[] = {"targetname", "ap_zap_a_top", nullptr};
+const char* const kABottom[] = {"targetname", "ap_zap_a_bottom", nullptr};
+const char* const kDTop[] = {"targetname", "ap_zap_d_top", nullptr};
+const char* const kDBottom[] = {"targetname", "ap_zap_d_bottom", nullptr};
+const char* const kETop[] = {"targetname", "ap_zap_e_top", nullptr};
+const char* const kEBottom[] = {"targetname", "ap_zap_e_bottom", nullptr};
+
+const char* const kSpark1[] = {"MaxDelay", "1", nullptr};
+const char* const kSpark3[] = {"MaxDelay", "3", nullptr};
+const char* const kSpark4[] = {"MaxDelay", "4", nullptr};
+const char* const kSpark5[] = {"MaxDelay", "5", nullptr};
+
+// In spawn order: the targets before the beams that look them up, and the arc
+// first of all, since it is the name `DressHubChamber` checks for. Coordinates
+// are `c1a0c`'s own; a beam's origin is irrelevant to where it draws, so those
+// keep theirs only for the sake of matching the source.
+const ChamberEntity kChamber[] = {
+    {"env_beam", {1664, 626, 136}, kArcKeys},  // `pp`: the core, arcing at walls
+    {"info_target", {1632, 604, -28}, kATop},
+    {"info_target", {1632, 604, -344}, kABottom},
+    {"info_target", {1628, 592, 192}, kDTop},
+    {"info_target", {1640, 576, -320}, kDBottom},
+    {"info_target", {1628, 732, 192}, kETop},
+    {"info_target", {1644, 520, 152}, kEBottom},
+    {"env_beam", {1160, 464, -320}, kColumnKeys},     // the faint glow column
+    {"env_beam", {1272, 464, -320}, kShaftBlueKeys},  // the shaft to the floor
+    {"env_beam", {1320, 464, -320}, kShaftWhiteKeys},
+    {"env_beam", {1360, 464, -320}, kCrossKeys},  // random strikes across it
+    {"env_spark", {1660, 680, 148}, kSpark1},
+    {"env_spark", {1704, 624, 152}, kSpark4},
+    {"env_spark", {1696, 496, 280}, kSpark3},
+    {"env_spark", {1752, 712, 280}, kSpark3},
+    {"env_spark", {1560, 656, 280}, kSpark3},
+    {"env_spark", {1548, 632, -336}, kSpark1},
+    {"env_spark", {1624, 668, -303}, kSpark5},
+};
+
+bool g_chamber_wanted = false;
+
+bool OnHubMap() { return std::string(STRING(gpGlobals->mapname)) == kHubMap; }
+
+void SetKey(edict_t* edict, const char* classname, const char* key,
+            const char* value) {
+    // Through `DispatchKeyValue`, which is how the engine hands a map's own
+    // keyvalues over: the entvars fields first (targetname, rendercolor,
+    // spawnflags), then the entity's own `KeyValue` for the rest.
+    KeyValueData kvd;
+    kvd.szClassName = const_cast<char*>(classname);
+    kvd.szKeyName = const_cast<char*>(key);
+    kvd.szValue = const_cast<char*>(value);
+    kvd.fHandled = FALSE;
+    DispatchKeyValue(edict, &kvd);
+}
+
+}  // namespace
+
+void PrecacheHubChamber() {
+    if (!OnHubMap()) {
+        return;
+    }
+    // By hand for the beams: `UTIL_PrecacheOther("env_beam")` would precache a
+    // beam with no texture set, which is a precache of the empty string.
+    PRECACHE_MODEL((char*)"sprites/lgtning.spr");
+    UTIL_PrecacheOther("env_spark");
+}
+
+void RequestHubChamber() { g_chamber_wanted = OnHubMap(); }
+
+void DressHubChamber() {
+    if (!g_chamber_wanted) {
+        return;
+    }
+    g_chamber_wanted = false;
+
+    if (UTIL_FindEntityByTargetname(nullptr, "ap_zap_core") != nullptr) {
+        return;  // restored from a save made in the hub
+    }
+
+    std::vector<CBaseEntity*> spawned;
+    for (const ChamberEntity& source : kChamber) {
+        edict_t* edict = CREATE_NAMED_ENTITY(MAKE_STRING(source.classname));
+        if (FNullEnt(edict)) {
+            Trace((std::string("  could not create ") + source.classname).c_str());
+            continue;
+        }
+        edict->v.origin = Vector(source.origin[0] + kChamberOffset[0],
+                                 source.origin[1] + kChamberOffset[1],
+                                 source.origin[2] + kChamberOffset[2]);
+        for (const char* const* kv = source.keyvalues; *kv != nullptr; kv += 2) {
+            SetKey(edict, source.classname, kv[0], kv[1]);
+        }
+        DispatchSpawn(edict);
+        CBaseEntity* entity = CBaseEntity::Instance(edict);
+        if (entity != nullptr) {
+            spawned.push_back(entity);
+        }
+    }
+
+    // What the engine does for a map's own entities once they have all spawned.
+    // The glow column is a server-side beam, and it finds its two ends here;
+    // everything else is a no-op.
+    for (CBaseEntity* entity : spawned) {
+        entity->Activate();
     }
 }
 
