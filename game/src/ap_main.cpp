@@ -399,8 +399,8 @@ void Startup() {
     // A lobby countdown was on the old level's clock. See `CancelHubWarp`.
     CancelHubWarp();
     // The lobby's test chamber is dressed once the level is running. See
-    // `DressHubChamber`.
-    RequestHubChamber();
+    // `DressHubChamber`. Off for now: without the request, nothing spawns.
+    // RequestHubChamber();
     // Anything still queued was timed against the previous level's clock, which
     // no longer exists. See `RearmQueuedTraps`.
     RearmQueuedTraps();
