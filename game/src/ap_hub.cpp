@@ -58,6 +58,17 @@ bool g_intended_cold = true;
 std::string g_hub_warp_chapter;
 float g_hub_warp_at = 0.0f;
 
+// "Warping to ..." for the armed warp, held until this time. Empty once said.
+//
+// A panel's line cannot go out on the frame it is pressed. Pressing use plays
+// `common/wpn_select.wav` from the player, and the client parses a packet's
+// reliable messages -- the chat line, which starts `misc/talk.wav` -- before its
+// unreliable sounds. Both are on the player's own entity, and the talk sound's
+// "any channel" is exactly what the use click replaces, so the chat blip was cut
+// off before it began. A trigger has no click and says it at once.
+std::string g_hub_warp_notice;
+float g_hub_warp_notice_at = 0.0f;
+
 // The trigger the player was last inside, and when they last touched it. The
 // engine calls a trigger's touch every frame the player stands in it, so this is
 // what turns a stream of touches into one arrival: a refusal is said once per
@@ -73,6 +84,9 @@ const float kHubTriggerDelay = 2.0f;
 // before it leaves. Its doors take under a second; this leaves them shut for the
 // same two seconds a trigger gives.
 const float kHubAnimatedDelay = 3.5f;
+
+// How long a panel's "Warping to ..." waits for the use click to finish.
+const float kHubPressNoticeDelay = 0.3f;
 
 // A gap between touches longer than this means the player stepped out and back.
 const float kHubTouchGap = 0.5f;
@@ -541,16 +555,17 @@ namespace {
 // is asked a second time when the countdown runs out. A second entrance while
 // one is already counting is ignored rather than re-armed, so a player who
 // wanders from one trigger into the next goes where they were first told.
-void ArmHubWarp(const Chapter& chapter, float delay) {
+void ArmHubWarp(const Chapter& chapter, float delay, float notice_delay) {
     if (!g_hub_warp_chapter.empty()) {
         return;
     }
     if (!MissionOpen(chapter, true)) {
         return;
     }
-    Notify(std::string("Warping to ") + chapter.name);
     g_hub_warp_chapter = chapter.key;
     g_hub_warp_at = gpGlobals->time + delay;
+    g_hub_warp_notice = std::string("Warping to ") + chapter.name;
+    g_hub_warp_notice_at = gpGlobals->time + notice_delay;
 }
 
 }  // namespace
@@ -571,7 +586,7 @@ bool PressHubButton(CBasePlayer* player, CBaseEntity* target) {
     // elevator doors -- and the warp waits for it to finish rather than cutting
     // it off.
     if (!FStringNull(target->pev->target)) {
-        ArmHubWarp(*chapter, kHubAnimatedDelay);
+        ArmHubWarp(*chapter, kHubAnimatedDelay, kHubPressNoticeDelay);
     } else if (MissionOpen(*chapter, true)) {
         Notify(std::string("Entering ") + chapter->name + ".");
         RequestMap(chapter->maps.front());
@@ -603,12 +618,16 @@ bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger) {
     g_hub_touching = name;
     g_hub_last_touch = gpGlobals->time;
     if (arrived) {
-        ArmHubWarp(*chapter, kHubTriggerDelay);
+        ArmHubWarp(*chapter, kHubTriggerDelay, 0.0f);
     }
     return true;
 }
 
 void RunHubWarp() {
+    if (!g_hub_warp_notice.empty() && gpGlobals->time >= g_hub_warp_notice_at) {
+        Notify(g_hub_warp_notice);
+        g_hub_warp_notice.clear();
+    }
     if (g_hub_warp_chapter.empty() || gpGlobals->time < g_hub_warp_at) {
         return;
     }
@@ -623,6 +642,7 @@ void RunHubWarp() {
 
 void CancelHubWarp() {
     g_hub_warp_chapter.clear();
+    g_hub_warp_notice.clear();
     g_hub_touching.clear();
     g_hub_last_touch = -1.0f;
 }

@@ -160,8 +160,8 @@ python tools/build_apworld.py --install "<Archipelago>/custom_worlds"
 
 # the server dll, 32-bit, against a checkout of Valve's SDK with sdk.patch on it
 cmake -S game -B build/game-msvc -A Win32 -DHLSDK_DIR=../halflife
+# (the build stages hl.dll into apworld/half_life/mod/files/dlls/ itself)
 cmake --build build/game-msvc --config Release
-copy build/game-msvc/Release/hl.dll apworld/half_life/mod/files/dlls/
 
 # install the hlap mod folder, without going through the Launcher
 # (same code path as the client's /install)

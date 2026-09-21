@@ -345,10 +345,17 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
 
     const bool allowed = CanCollect(player, classname);
     if (!allowed) {
-        // Said once per pickup rather than on every touch: the entity stays
-        // where it is, so the player walks over it repeatedly.
-        static float last_said = 0.0f;
-        if (gpGlobals->time - last_said > 3.0f) {
+        // At most once every five seconds rather than on every touch: the
+        // entity stays where it is, so the player walks over it repeatedly.
+        //
+        // The clock restarts with each level while this does not, so a stamp
+        // from a later point in the last map would otherwise keep the refusal
+        // silent for that long into this one.
+        static float last_said = -1000.0f;
+        if (gpGlobals->time < last_said) {
+            last_said = -1000.0f;
+        }
+        if (gpGlobals->time - last_said >= 5.0f) {
             last_said = gpGlobals->time;
             const std::string item = Data().ItemGating(classname);
             Notify(item.empty()

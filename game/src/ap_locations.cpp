@@ -105,6 +105,16 @@ void SendCheck(long id) {
     if (g_sent.find(id) != g_sent.end()) {
         return;
     }
+    // Already on the server. `checked` is the client's `checked_locations`,
+    // resent with every snapshot and replaced wholesale when the slot changes,
+    // so it is the server's answer rather than a local memory that a restarted
+    // seed could leave stale. `Live` above means one has arrived. Sending it
+    // again would be a no-op; saying "Found:" again is the part that is wrong,
+    // every time the player walks back past a weapon they took an hour ago.
+    if (State().checked.find(id) != State().checked.end()) {
+        g_sent.insert(id);
+        return;
+    }
     // A location the seed does not contain -- chargesanity off, or an excluded
     // mission. The client would drop it anyway; not sending it keeps the log
     // readable.

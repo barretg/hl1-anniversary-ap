@@ -4,10 +4,11 @@ An .apworld is a zip whose single top-level folder matches the zip's stem, which
 is exactly the layout of `apworld/half_life`.
 
 A release has to carry the server dll, which is a build artifact rather than a
-source file: it is gitignored, staged into `mod/files/dlls/` by hand, and so the
-easiest mistake to make here is packaging a checkout that has never had one
-dropped in. The result installs cleanly and then does not run, which is why the
-dll is checked for by default and skipping it takes a flag.
+source file: it is gitignored, and the CMake build copies it into
+`mod/files/dlls/` after every link. The mistake left to make here is packaging a
+checkout that has never built one. The result installs cleanly and then does
+not run, which is why the dll is checked for by default and skipping it takes a
+flag.
 
 Usage:
     python tools/build_apworld.py [--install "F:/Archipelago/custom_worlds"]
