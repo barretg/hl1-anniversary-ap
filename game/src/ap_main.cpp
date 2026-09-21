@@ -396,6 +396,8 @@ void Startup() {
     ClearWithheld();
     // What this level stocks, and the timers, are both level-scoped.
     ResetAmmoRelief();
+    // A lobby countdown was on the old level's clock. See `CancelHubWarp`.
+    CancelHubWarp();
     // Anything still queued was timed against the previous level's clock, which
     // no longer exists. See `RearmQueuedTraps`.
     RearmQueuedTraps();
@@ -433,6 +435,7 @@ void RunFrame() {
     RunSeamDoors();
     RunWarpSave();
     RunAmmoRelief();
+    RunHubWarp();
     RunDeferred();
     EnforceSuit();
     ClampArmour();

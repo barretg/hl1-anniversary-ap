@@ -185,6 +185,10 @@ HUB_MAP = "ap_lobby_alpha"
 HUB_BUTTON_PREFIX = "chapter_"
 HUB_BUTTON_SUFFIX = "_button"
 
+# What a mission's entrance may be. The name is still `_button` either way, so
+# converting a panel to a walk-in volume is a change to the map alone.
+HUB_ENTRANCE_CLASSNAMES = ("func_button", "trigger_once", "trigger_multiple")
+
 
 def hub_button_index(targetname: str) -> int | None:
     """The mission index a lobby button is for, or None if it is not one.

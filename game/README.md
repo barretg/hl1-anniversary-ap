@@ -150,7 +150,7 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_text.*` | splitting, trimming, parsing | nothing |
 | `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon, healing pool | `ServerActivate`, `CBasePlayer::PlayerUse`, `CBaseTrigger::HurtTouch` |
 | `src/ap_items.*` | the loadout, weapon refusal, armour | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
-| `src/ap_hub.*` | console commands, the lobby's panels, warps, the mission-boundary choke point | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CChangeLevel::ChangeLevelNow` |
+| `src/ap_hub.*` | console commands, the lobby's panels and triggers, warps, the mission-boundary choke point | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CBaseTrigger::MultiTouch`, `CChangeLevel::ChangeLevelNow` |
 | `src/ap_warpsave.*` | warp points: the engine saves a warp lands on | the poll, `ap_hub`, `ap_locations` |
 | `src/ap_deathlink.*` | deaths out, deaths in | `CBasePlayer::Killed`, `CRevertSaved::Use` |
 | `src/ap_ammo.*` | refilling a gun the level cannot feed | the frame loop, once a second |

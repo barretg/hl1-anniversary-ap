@@ -17,6 +17,7 @@
 //   dlls/singleplay_gamerules.cpp CHalfLifeRules::CanHaveItem -> ap::CanCollect
 //   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
 //   dlls/triggers.cpp    CTriggerHurt::HurtTouch      -> ap::OnHealingTouch
+//   dlls/triggers.cpp    CBaseTrigger::MultiTouch     -> ap::TouchHubTrigger
 
 #pragma once
 
@@ -47,6 +48,7 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_death
 void OnRevertSaved();                                       // ap_deathlink
 void OnHealingTouch(CBaseEntity* player, CBaseEntity* pool);// ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
+bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub
 bool InterceptChangeLevel(const std::string& from_map,
                           const std::string& to_map);       // ap_hub
 

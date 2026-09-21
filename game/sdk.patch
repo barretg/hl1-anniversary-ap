@@ -186,7 +186,7 @@ index 3438f7c..84cc2e8 100644
  
  //=========================================================
 diff --git a/dlls/triggers.cpp b/dlls/triggers.cpp
-index 1f9ea5b..872d722 100644
+index 1f9ea5b..d94b2bc 100644
 --- a/dlls/triggers.cpp
 +++ b/dlls/triggers.cpp
 @@ -23,6 +23,7 @@
@@ -208,7 +208,18 @@ index 1f9ea5b..872d722 100644
  	}
  	else
  		pOther->TakeDamage( pev, pev, fldmg, m_bitsDamageInflict );
-@@ -1480,6 +1485,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
+@@ -1131,6 +1136,10 @@ void CBaseTrigger :: MultiTouch( CBaseEntity *pOther )
+ 
+ 	pevToucher = pOther->pev;
+ 
++	// Archipelago: a lobby trigger is a mission's entrance, and is ours.
++	if ( ap::TouchHubTrigger( pOther, this ) )
++		return;
++
+ 	// Only touch clients, monsters, or pushables (depending on flags)
+ 	if ( ((pevToucher->flags & FL_CLIENT) && !(pev->spawnflags & SF_TRIGGER_NOCLIENTS)) ||
+ 		 ((pevToucher->flags & FL_MONSTER) && (pev->spawnflags & SF_TRIGGER_ALLOWMONSTERS)) ||
+@@ -1480,6 +1489,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
  	edict_t	*pentLandmark;
  	LEVELLIST	levels[16];
  

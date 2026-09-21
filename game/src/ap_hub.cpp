@@ -51,6 +51,32 @@ bool g_seam_doors_wanted = false;
 // to paper over. Read through `LastRequestCold`, right after `WasRequested`.
 bool g_intended_cold = true;
 
+// A lobby entrance that has been set off and is counting down: the mission it
+// goes to, and when. Empty when nothing is armed. Cleared at every map start by
+// `CancelHubWarp`, because the time is on this level's clock and a warp armed in
+// the lobby has no business firing in whatever map the player went to instead.
+std::string g_hub_warp_chapter;
+float g_hub_warp_at = 0.0f;
+
+// The trigger the player was last inside, and when they last touched it. The
+// engine calls a trigger's touch every frame the player stands in it, so this is
+// what turns a stream of touches into one arrival: a refusal is said once per
+// walk-in rather than sixty times a second.
+std::string g_hub_touching;
+float g_hub_last_touch = -1.0f;
+
+// Walking into a lobby trigger: long enough to read the line and see where you
+// are going, short enough not to feel like the trigger missed.
+const float kHubTriggerDelay = 2.0f;
+
+// A panel that sets the map moving first -- chapter 3's elevator, which closes
+// before it leaves. Its doors take under a second; this leaves them shut for the
+// same two seconds a trigger gives.
+const float kHubAnimatedDelay = 3.5f;
+
+// A gap between touches longer than this means the player stepped out and back.
+const float kHubTouchGap = 0.5f;
+
 std::string ArgumentTail(int from) {
     std::string text;
     for (int i = from; i < CMD_ARGC(); ++i) {
@@ -508,6 +534,27 @@ bool HandleChat(CBasePlayer* player, const std::string& said) {
     return true;
 }
 
+namespace {
+
+// Set a lobby entrance counting down. Refused on the spot when the mission is
+// shut, so the player hears why while still standing in front of it; the gate
+// is asked a second time when the countdown runs out. A second entrance while
+// one is already counting is ignored rather than re-armed, so a player who
+// wanders from one trigger into the next goes where they were first told.
+void ArmHubWarp(const Chapter& chapter, float delay) {
+    if (!g_hub_warp_chapter.empty()) {
+        return;
+    }
+    if (!MissionOpen(chapter, true)) {
+        return;
+    }
+    Notify(std::string("Warping to ") + chapter.name);
+    g_hub_warp_chapter = chapter.key;
+    g_hub_warp_at = gpGlobals->time + delay;
+}
+
+}  // namespace
+
 bool PressHubButton(CBasePlayer* player, CBaseEntity* target) {
     if (player == nullptr || target == nullptr || !Data().Loaded()) {
         return false;
@@ -520,7 +567,12 @@ bool PressHubButton(CBasePlayer* player, CBaseEntity* target) {
         return false;
     }
 
-    if (MissionOpen(*chapter, true)) {
+    // A panel with a target of its own sets something in the map going -- the
+    // elevator doors -- and the warp waits for it to finish rather than cutting
+    // it off.
+    if (!FStringNull(target->pev->target)) {
+        ArmHubWarp(*chapter, kHubAnimatedDelay);
+    } else if (MissionOpen(*chapter, true)) {
         Notify(std::string("Entering ") + chapter->name + ".");
         RequestMap(chapter->maps.front());
     }
@@ -528,6 +580,51 @@ bool PressHubButton(CBasePlayer* player, CBaseEntity* target) {
     // is on screen. Returning false would let the press fall through to the
     // charger check below it, which is not what a lobby panel is.
     return true;
+}
+
+bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger) {
+    if (toucher == nullptr || trigger == nullptr || !Data().Loaded()) {
+        return false;
+    }
+    const std::string name(STRING(trigger->pev->targetname));
+    const Chapter* chapter = Data().ChapterOfButton(name);
+    if (chapter == nullptr) {
+        return false;
+    }
+    // Ours from here on, whoever touched it. Letting the game's own touch run
+    // would fire a `trigger_once` and delete it, so a refused player could never
+    // walk back in once the mission opened.
+    if (!(toucher->pev->flags & FL_CLIENT)) {
+        return true;
+    }
+
+    const bool arrived = name != g_hub_touching ||
+                         gpGlobals->time - g_hub_last_touch > kHubTouchGap;
+    g_hub_touching = name;
+    g_hub_last_touch = gpGlobals->time;
+    if (arrived) {
+        ArmHubWarp(*chapter, kHubTriggerDelay);
+    }
+    return true;
+}
+
+void RunHubWarp() {
+    if (g_hub_warp_chapter.empty() || gpGlobals->time < g_hub_warp_at) {
+        return;
+    }
+    const Chapter* chapter = Data().ChapterByKey(g_hub_warp_chapter);
+    g_hub_warp_chapter.clear();
+    // Asked again rather than trusted from when it was armed: the client can
+    // drop in the two seconds between, and that has to refuse like any warp.
+    if (chapter != nullptr && MissionOpen(*chapter, true)) {
+        RequestMap(chapter->maps.front());
+    }
+}
+
+void CancelHubWarp() {
+    g_hub_warp_chapter.clear();
+    g_hub_touching.clear();
+    g_hub_last_touch = -1.0f;
 }
 
 bool InHub() {

@@ -36,6 +36,7 @@ from campaign_layout import (
     CLASSNAME_TO_ITEM,
     ENABLED_LOCATION_TYPES,
     GOAL_CHAPTER,
+    HUB_ENTRANCE_CLASSNAMES,
     HUB_MAP,
     IGNORED_MONSTERS,
     INTRO_CHAPTER,
@@ -1022,6 +1023,10 @@ def carried_monsters(
 def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:
     """`chapter_<n>_button` in the lobby map -> the mission it travels to.
 
+    A "button" is whatever the lobby uses as that mission's entrance: a panel
+    pressed with use, or a trigger volume walked into. The game tells the two
+    apart by how it is set off, so the record does not need to.
+
     Read out of the BSP rather than written down here, so the map is the single
     authority on what it contains. Two things this catches at build time that
     would otherwise be found by pressing a panel in game: a button numbered for
@@ -1040,7 +1045,7 @@ def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:
     seen: dict[int, str] = {}
 
     for entity in load_map(lobby_path):
-        if entity.get("classname") != "func_button":
+        if entity.get("classname") not in HUB_ENTRANCE_CLASSNAMES:
             continue
         targetname = entity.get("targetname", "")
         index = hub_button_index(targetname)

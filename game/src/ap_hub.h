@@ -103,7 +103,26 @@ void RunDeferred();
 //
 // Matched on the entity's targetname against the `P` records, which is the one
 // handle the map and `checkdata.txt` share.
+//
+// A panel whose button also fires a target of its own (chapter 3's elevator
+// doors) does not leave at once: it says "Warping to <mission>" and leaves once
+// the map has finished moving. See `TouchHubTrigger` for the countdown.
 bool PressHubButton(CBasePlayer* player, CBaseEntity* target);
+
+// A lobby trigger was touched, from `CBaseTrigger::MultiTouch`. True when it is
+// one of ours, in which case the game's own touch must not run: that would fire
+// a `trigger_once` and remove it for the rest of the level.
+//
+// Walking in says "Warping to <mission>" and leaves two seconds later, or says
+// why not. Standing in it is one arrival, not one per frame; stepping out and
+// back in is a second.
+bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);
+
+// The countdown a lobby entrance armed, fired from StartFrame once it runs out.
+// `CancelHubWarp` drops it at map start, since it was timed on the old level's
+// clock.
+void RunHubWarp();
+void CancelHubWarp();
 
 // The hub map: one room, a labelled panel per mission, shipped in the mod
 // folder rather than inherited from `valve` because it is ours.
