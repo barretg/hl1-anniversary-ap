@@ -1,5 +1,5 @@
 {
- "data_version": "914a53a17ce2",
+ "data_version": "2795f934de1c",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -668,21 +668,28 @@
    "name": "Scientist Trap",
    "classification": "trap",
    "group": "trap",
-   "weight": 34
+   "weight": 25
   },
   {
    "id": 7750037,
    "name": "Headcrab Trap",
    "classification": "trap",
    "group": "trap",
-   "weight": 33
+   "weight": 25
   },
   {
    "id": 7750038,
    "name": "Butterfingers Trap",
    "classification": "trap",
    "group": "trap",
-   "weight": 33
+   "weight": 25
+  },
+  {
+   "id": 7750039,
+   "name": "Bot Swarm Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 25
   }
  ],
  "locations": [

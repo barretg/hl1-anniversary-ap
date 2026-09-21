@@ -5,6 +5,9 @@
 
 #include "ap_hub.h"
 
+#include "ap_bots.h"
+#include "ap_traps.h"
+
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -542,6 +545,8 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
     g_engfuncs.pfnAddServerCommand((char*)"ap_nowarps", Cmd_ApNoWarps);
+    RegisterTrapCommands();
+    RegisterBotCommands();
     Trace("  commands registered");
 }
 

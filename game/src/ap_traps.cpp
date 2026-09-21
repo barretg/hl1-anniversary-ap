@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "ap_bots.h"
 #include "ap_hub.h"
 #include "ap_items.h"
 #include "ap_main.h"
@@ -165,29 +166,12 @@ bool SpawnOne(CBasePlayer* player, const std::string& classname, int body,
         half_height = kHeadHullHalf;
     }
 
-    for (int attempt = 0; attempt < kTrapPlaceAttempts; ++attempt) {
-        const float bearing = RANDOM_FLOAT(0.0f, 360.0f);
-        const float range =
-            RANDOM_FLOAT(kTrapSpawnMinRadius, kTrapSpawnMaxRadius);
-
-        Vector spot;
-        if (!FindTrapSpot(player, hull, half_height, bearing, range, spot)) {
-            continue;
-        }
-        // Two monsters in one doorway read as a single lump and shove each other
-        // through it. Cheaper to roll again than to sort out afterwards.
-        if (TooCloseToPlaced(spot, placed)) {
-            continue;
-        }
-
-        if (CreateMonster(classname, spot, bearing, body) == nullptr) {
-            return false;
-        }
-        placed.push_back(spot);
-        return true;
+    Vector spot;
+    float bearing = 0.0f;
+    if (!PlaceNearPlayer(player, hull, half_height, placed, spot, bearing)) {
+        return false;
     }
-
-    return false;
+    return CreateMonster(classname, spot, bearing, body) != nullptr;
 }
 
 void SpawnAround(CBasePlayer* player, const std::string& classname, int count) {
@@ -223,6 +207,21 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
     } else if (name == "Headcrab Trap") {
         Notify("Headcrabs!");
         SpawnAround(player, "monster_headcrab", kTrapSpawnCount);
+    } else if (name == "Bot Swarm Trap") {
+        Notify("Bot swarm!");
+        std::vector<Vector> placed;
+        for (int i = 0; i < kBotSwarmCount; ++i) {
+            Vector spot;
+            float bearing = 0.0f;
+            // Same rule as the monsters: one that finds nowhere to stand in ten
+            // tries is left out, and the rest still come.
+            if (PlaceNearPlayer(player, human_hull, kHumanHullHalf, placed, spot,
+                                bearing)) {
+                // Facing back down the bearing, so the first thing each of them
+                // runs into is the player.
+                SpawnBot(spot, bearing + 180.0f, false);
+            }
+        }
     } else if (name == "Butterfingers Trap") {
         CBasePlayerItem* held = player->m_pActiveItem;
         if (held == nullptr) {
@@ -268,7 +267,53 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
     // which is the right outcome: the alternative is guessing.
 }
 
+// The console's trap_* commands: spring one now, skipping the queue and its
+// delay, so a trap can be tried without a multiworld to send it.
+void SpringFromConsole(const char* name) {
+    CBasePlayer* player = Player();
+    if (player == nullptr || !player->IsAlive()) {
+        ALERT(at_console, "%s: no living player to spring it on\n", name);
+        return;
+    }
+    SpringNow(player, name);
+}
+
+void Cmd_TrapScientist() { SpringFromConsole("Scientist Trap"); }
+void Cmd_TrapHeadcrab() { SpringFromConsole("Headcrab Trap"); }
+void Cmd_TrapButterfingers() { SpringFromConsole("Butterfingers Trap"); }
+void Cmd_TrapBotSwarm() { SpringFromConsole("Bot Swarm Trap"); }
+
 }  // namespace
+
+bool PlaceNearPlayer(CBasePlayer* player, int hull, float half_height,
+                     std::vector<Vector>& placed, Vector& spot,
+                     float& bearing) {
+    for (int attempt = 0; attempt < kTrapPlaceAttempts; ++attempt) {
+        bearing = RANDOM_FLOAT(0.0f, 360.0f);
+        const float range =
+            RANDOM_FLOAT(kTrapSpawnMinRadius, kTrapSpawnMaxRadius);
+
+        if (!FindTrapSpot(player, hull, half_height, bearing, range, spot)) {
+            continue;
+        }
+        // Two monsters in one doorway read as a single lump and shove each other
+        // through it. Cheaper to roll again than to sort out afterwards.
+        if (TooCloseToPlaced(spot, placed)) {
+            continue;
+        }
+        placed.push_back(spot);
+        return true;
+    }
+    return false;
+}
+
+void RegisterTrapCommands() {
+    g_engfuncs.pfnAddServerCommand((char*)"trap_scientist", Cmd_TrapScientist);
+    g_engfuncs.pfnAddServerCommand((char*)"trap_headcrab", Cmd_TrapHeadcrab);
+    g_engfuncs.pfnAddServerCommand((char*)"trap_butterfingers",
+                                   Cmd_TrapButterfingers);
+    g_engfuncs.pfnAddServerCommand((char*)"trap_bot_swarm", Cmd_TrapBotSwarm);
+}
 
 void PrecacheTraps() {
     Trace("CWorld::Precache: ap::PrecacheTraps");
@@ -292,6 +337,7 @@ void PrecacheTraps() {
     // SDK patch calls this one function from `CWorld::Precache`; adding a second
     // call site there would mean repatching every SDK checkout for no gain.
     PrecacheCarriedMonsters();
+    PrecacheBots();
     // Off for now; see `DressHubChamber`.
     // PrecacheHubChamber();
 }

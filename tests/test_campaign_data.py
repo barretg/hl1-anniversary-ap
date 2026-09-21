@@ -354,7 +354,8 @@ def test_locations_outnumber_progression_items(campaign: dict) -> None:
 def test_traps_exist_and_are_classified_as_traps(campaign: dict) -> None:
     traps = [item for item in campaign["items"] if item.get("group") == "trap"]
     assert {item["name"] for item in traps} == {
-        "Scientist Trap", "Headcrab Trap", "Butterfingers Trap"
+        "Scientist Trap", "Headcrab Trap", "Butterfingers Trap",
+        "Bot Swarm Trap",
     }
     for item in traps:
         assert item["classification"] == "trap", item["name"]

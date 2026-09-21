@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "ap_ammo.h"
+#include "ap_bots.h"
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
 #include "ap_deathlink.h"
@@ -404,6 +405,8 @@ void Startup() {
     // Anything still queued was timed against the previous level's clock, which
     // no longer exists. See `RearmQueuedTraps`.
     RearmQueuedTraps();
+    // The bot quota is per level. See `ResetBots`.
+    ResetBots();
 
     // The client answers a HELLO with a forced snapshot, so this is what gets
     // our unlocks back after any map load.
@@ -440,6 +443,7 @@ void RunFrame() {
     RunWarpSave();
     RunAmmoRelief();
     RunHubWarp();
+    RunBots();
     RunDeferred();
     EnforceSuit();
     ClampArmour();

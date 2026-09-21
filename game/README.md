@@ -154,7 +154,8 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_warpsave.*` | warp points: the engine saves a warp lands on | the poll, `ap_hub`, `ap_locations` |
 | `src/ap_deathlink.*` | deaths out, deaths in | `CBasePlayer::Killed`, `CRevertSaved::Use` |
 | `src/ap_ammo.*` | refilling a gun the level cannot feed | the frame loop, once a second |
-| `src/ap_traps.*` | the three traps, and their precache set | `ClientPrecache`, the poll |
+| `src/ap_traps.*` | the four traps, their precache set, and the `trap_*` test commands | `ClientPrecache`, the poll |
+| `src/ap_bots.*` | the `ap_bot` entity (the fun-with-bots brain on a monster rather than a fake client), the Bot Swarm Trap's bots, and `bot_quota`/`bot_autofill`/`bot_zombie` | `StartFrame`, `ap_traps` |
 
 `ap_text`, `ap_bridge`, `ap_checkdata` and `ap_state` depend on nothing but the
 C++ standard library, which is deliberate: they are the pieces that can be built

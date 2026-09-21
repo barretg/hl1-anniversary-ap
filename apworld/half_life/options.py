@@ -148,13 +148,16 @@ class AmmoRelief(Toggle):
 class TrapPercentage(Range):
     """Percentage of your filler items replaced by traps.
 
-    Three exist, all nuisances rather than punishments -- none can cost you a run:
+    Four exist, all nuisances rather than punishments -- none can cost you a run:
 
     - Scientist Trap: four scientists appear around you and start following you
       about.
     - Headcrab Trap: four headcrabs, same idea, considerably less friendly.
     - Butterfingers Trap: you drop the weapon you are holding. The suit reissues
       it after half a minute if you cannot find it again.
+    - Bot Swarm Trap: six crowbar-wielding bots appear around you, run about
+      crouch-jumping over things, and swing at whatever they bump into --
+      you included.
     """
 
     display_name = "Trap Percentage"

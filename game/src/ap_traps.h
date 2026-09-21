@@ -1,9 +1,15 @@
-// The three traps. All nuisances rather than punishments: none can cost a run.
+// The four traps. All nuisances rather than punishments: none can cost a run.
 //
 //   Scientist Trap      four scientists appear and follow the player about
 //   Headcrab Trap       four headcrabs, same idea, considerably less friendly
 //   Butterfingers Trap  the player loses what they are holding; the suit
 //                       reissues it after half a minute
+//   Bot Swarm Trap      six crowbar bots, which run about, crouch-jump whatever
+//                       is in their way and swing at whatever they bump into.
+//                       See game/src/ap_bots.h
+//
+// Each has a console command that springs it at once, for testing:
+// trap_scientist, trap_headcrab, trap_butterfingers, trap_bot_swarm.
 //
 // The hazard is precache. GoldSrc fatally errors on an unprecached model and the
 // precache table is finite, so everything a trap can spawn is precached at map
@@ -14,13 +20,25 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 class CBaseEntity;
+class CBasePlayer;
+class Vector;
 
 namespace ap {
 
 // Called during the map's precache pass, before any entity spawns.
 void PrecacheTraps();
+
+// The trap_* console commands. Registered once, at GameDLLInit.
+void RegisterTrapCommands();
+
+// Somewhere near the player a thing with this hull can stand, and not on top of
+// anything already in `placed`, which the spot is added to. `bearing` is the
+// direction from the player it was found in. False when ten tries found nowhere.
+bool PlaceNearPlayer(CBasePlayer* player, int hull, float half_height,
+                     std::vector<Vector>& placed, Vector& spot, float& bearing);
 
 // A TRAP delivery from the client. Queued rather than sprung: arriving during a
 // level load means spawning into geometry that is not settled yet.

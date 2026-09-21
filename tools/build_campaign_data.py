@@ -1114,9 +1114,12 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
     # Traps replace a share of the filler, set by `trap_percentage`. Each is a
     # nuisance rather than a punishment: nothing here can cost a run.
     for name, weight in (
-        ("Scientist Trap", 34),
-        ("Headcrab Trap", 33),
-        ("Butterfingers Trap", 33),
+        ("Scientist Trap", 25),
+        ("Headcrab Trap", 25),
+        ("Butterfingers Trap", 25),
+        # Newest, so last: ids are handed out in order of first appearance, and
+        # a seed from before it existed simply never sends one.
+        ("Bot Swarm Trap", 25),
     ):
         add(name, "trap", group="trap", weight=weight)
 
