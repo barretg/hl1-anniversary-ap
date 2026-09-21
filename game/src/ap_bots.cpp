@@ -60,15 +60,16 @@ constexpr float kRecoverTime = 0.2f;
 constexpr float kRunSpeed = 240.0f;
 constexpr float kJumpSpeed = 268.0f;
 
-// Standing and ducked heights, feet at the origin as every monster's are, and
-// where the eyes are in each. Ducking in the air tucks the legs up by the
-// difference between the player's two hull centres, which is what makes a
-// crouch jump clear more than a plain one.
-constexpr float kStandHeight = 72.0f;
-constexpr float kDuckHeight = 36.0f;
-constexpr float kStandEyes = 64.0f;
-constexpr float kDuckEyes = 30.0f;
-constexpr float kTuck = 18.0f;
+// The player's own hulls, origin at the centre rather than at the feet as a
+// monster's is. It has to be: the player model is drawn around its origin, and
+// with a monster's feet-origin every bot stood waist-deep in the floor.
+//
+// The same geometry gives the crouch jump for free. Ducking on the ground drops
+// the centre so the feet stay put; ducking in the air leaves the centre where
+// it is, so the legs tuck up 18 units -- which is what makes a crouch jump clear
+// more than a plain one.
+constexpr float kStandHalf = 36.0f;
+constexpr float kDuckHalf = 18.0f;
 
 // How often the brain runs. Movement is scaled by the real interval, so this
 // only sets how smooth it looks.
@@ -112,7 +113,8 @@ public:
     void SetFromQuota(bool from_quota) { m_fromQuota = from_quota ? TRUE : FALSE; }
 
 private:
-    bool Ducked() const { return pev->maxs.z < kStandHeight - 1.0f; }
+    bool Ducked() const { return pev->maxs.z < kStandHalf - 1.0f; }
+    Vector Feet() const { return pev->origin + Vector(0.0f, 0.0f, pev->mins.z); }
     void SetDucked(bool ducked);
     bool CanStand();
     bool PathClear(const Vector& forward, bool duck);
@@ -163,7 +165,10 @@ IMPLEMENT_SAVERESTORE(CApBot, CBaseMonster);
 
 void CApBot::Spawn() {
     SET_MODEL(ENT(pev), kBotModel);
-    UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
+    // Handed the feet, like any spawn spot; the origin is the hull's centre.
+    pev->origin.z += kStandHalf;
+    UTIL_SetOrigin(pev, pev->origin);
+    UTIL_SetSize(pev, VEC_HULL_MIN, VEC_HULL_MAX);
 
     // MOVETYPE_STEP is a monster's: `WALK_MOVE` steps it up stairs and along
     // floors, and when it is off the ground the engine flies it on its velocity
@@ -174,7 +179,7 @@ void CApBot::Spawn() {
     pev->max_health = ap::kBotHealth;
     pev->takedamage = DAMAGE_AIM;
     pev->deadflag = DEAD_NO;
-    pev->view_ofs = Vector(0.0f, 0.0f, kStandEyes);
+    pev->view_ofs = VEC_VIEW;
     // FL_MONSTER so other monsters see it, and so the crowbar sound code calls
     // hitting one a body rather than a wall.
     pev->flags |= FL_MONSTER;
@@ -193,14 +198,24 @@ void CApBot::SetDucked(bool ducked) {
     if (ducked == Ducked()) {
         return;
     }
-    UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN,
-                 ducked ? VEC_HUMAN_HULL_DUCK : VEC_HUMAN_HULL_MAX);
-    pev->view_ofs = Vector(0.0f, 0.0f, ducked ? kDuckEyes : kStandEyes);
+    const bool on_ground = (pev->flags & FL_ONGROUND) != 0;
+    const Vector feet = Feet();
+    UTIL_SetSize(pev, ducked ? VEC_DUCK_HULL_MIN : VEC_HULL_MIN,
+                 ducked ? VEC_DUCK_HULL_MAX : VEC_HULL_MAX);
+    // On the ground the feet stay on the floor; in the air the centre stays put
+    // and the legs tuck up or drop down. See kStandHalf.
+    if (on_ground) {
+        UTIL_SetOrigin(pev, feet - Vector(0.0f, 0.0f, pev->mins.z));
+    }
+    pev->view_ofs = ducked ? VEC_DUCK_VIEW : VEC_VIEW;
 }
 
 bool CApBot::CanStand() {
-    // The standing hull, centred where it would be with the feet where they are.
-    const Vector centre = pev->origin + Vector(0.0f, 0.0f, kStandHeight / 2.0f);
+    // The standing hull, where `SetDucked(false)` would put it: on the ground
+    // the feet stay where they are, in the air the centre does.
+    const Vector centre = (pev->flags & FL_ONGROUND) != 0
+                              ? Feet() + Vector(0.0f, 0.0f, kStandHalf)
+                              : pev->origin;
     TraceResult tr;
     UTIL_TraceHull(centre, centre, dont_ignore_monsters, human_hull, edict(),
                    &tr);
@@ -212,7 +227,7 @@ bool CApBot::CanStand() {
 // the whole point of the ducked answer is that the standing one does not.
 bool CApBot::PathClear(const Vector& forward, bool duck) {
     const int hull = duck ? head_hull : human_hull;
-    const float centre = (duck ? kDuckHeight : kStandHeight) / 2.0f;
+    const float centre = duck ? kDuckHalf : kStandHalf;
 
     // Flat along the floor first; if that is shut, the same trace from the top
     // of a step asks whether the thing in the way is something the engine walks
@@ -220,7 +235,7 @@ bool CApBot::PathClear(const Vector& forward, bool duck) {
     // never reaches it on its own.
     for (int pass = 0; pass < 2; ++pass) {
         const Vector start =
-            pev->origin + Vector(0.0f, 0.0f, centre + (pass ? kStepHeight : 0.0f));
+            Feet() + Vector(0.0f, 0.0f, centre + (pass ? kStepHeight : 0.0f));
         TraceResult tr;
         UTIL_TraceHull(start, start + forward * kLookahead, dont_ignore_monsters,
                        hull, edict(), &tr);
@@ -467,10 +482,7 @@ void CApBot::JumpThink(const Vector& forward) {
             // and the tuck adds the last 18 units of clearance. The ducked box
             // sits inside the standing one, so it always fits.
             m_airborne = true;
-            if (!Ducked()) {
-                SetDucked(true);
-                UTIL_SetOrigin(pev, pev->origin + Vector(0.0f, 0.0f, kTuck));
-            }
+            SetDucked(true);
         }
         return;
     }
@@ -478,7 +490,7 @@ void CApBot::JumpThink(const Vector& forward) {
     if (on_ground) {
         // Landed. It got somewhere if it came down higher, or further along the
         // heading than the wall it was standing against.
-        const Vector travel = pev->origin - m_jumpStart;
+        const Vector travel = Feet() - m_jumpStart;
         const bool gained = travel.z > kJumpGainZ ||
                             DotProduct(travel, forward) > kJumpGainForward;
         m_move = kMoveWander;
@@ -539,7 +551,7 @@ void CApBot::MoveThink(float dt, float yaw, bool fighting) {
             SetDucked(false);
         }
         m_move = kMoveJump;
-        m_jumpStart = pev->origin;
+        m_jumpStart = Feet();
         m_airborne = false;
         m_jumpExpire = gpGlobals->time + kJumpTimeout;
         pev->velocity = forward * kRunSpeed + Vector(0.0f, 0.0f, kJumpSpeed);
