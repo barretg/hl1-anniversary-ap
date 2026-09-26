@@ -740,10 +740,23 @@ class HalfLifeContext(SuperContext):
         """
         if not self.game_dir:
             return
+        # What the last /install mounted, which is what the game can load; the
+        # game's own files only say whether it is owned.
+        mounted = mod.installed_campaigns(self.game_dir)
         for entry in self.campaign.get("campaigns", ()):
             if entry["key"] not in self.campaigns or not entry.get("detect"):
                 continue
-            if not os.path.isfile(os.path.join(self.game_dir, entry["detect"])):
+            owned = os.path.isfile(os.path.join(self.game_dir, entry["detect"]))
+            if mounted is not None and mounted.get(entry["key"], False):
+                continue
+            if owned and mounted is None:
+                continue  # an install from before installed.txt: trust the files
+            if owned:
+                logger.warning(
+                    f"This seed includes {entry['name']}, which is installed but was "
+                    f"not linked in by the last /install. Run /install again."
+                )
+            else:
                 logger.warning(
                     f"This seed includes {entry['name']}, which is not installed in "
                     f"{self.game_dir}. Its missions cannot be played until it is; "

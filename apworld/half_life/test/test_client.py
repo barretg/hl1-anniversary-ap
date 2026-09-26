@@ -4,6 +4,7 @@ A seed generated before Opposing Force and Blue Shift existed has none of the
 new keys, and must play exactly as it did: Half-Life alone, one finale.
 """
 
+import logging
 import unittest
 
 from ..client.launcher import HALF_LIFE, HalfLifeContext, load_campaign
@@ -114,3 +115,49 @@ class TestEveryGameSeed(unittest.TestCase):
 
     def test_presentation_option(self) -> None:
         self.assertTrue(self.ctx.gordon_hands)
+
+
+class TestMissingGameWarning(unittest.TestCase):
+    """What the client says about a seed's games this install cannot load."""
+
+    def setUp(self) -> None:
+        import tempfile
+        from pathlib import Path
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "valve/maps").mkdir(parents=True)
+        (self.root / "valve/maps/c0a0.bsp").write_bytes(b"")
+        (self.root / "gearbox/maps").mkdir(parents=True)
+        (self.root / "gearbox/maps/of1a1.bsp").write_bytes(b"")
+        self.ctx = context()
+        self.ctx.game_dir = str(self.root)
+        self.ctx.campaigns = [HALF_LIFE, "opposing_force", "blue_shift"]
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def warnings(self) -> str:
+        with self.assertLogs("Client", level="WARNING") as logs:
+            self.ctx.warn_missing_games()
+            logging.getLogger("Client").warning("end")
+        return "\n".join(logs.output)
+
+    def write_installed(self, of: str) -> None:
+        store = self.root / "hlap/archipelago"
+        store.mkdir(parents=True, exist_ok=True)
+        (store / "installed.txt").write_text(
+            f"I|half_life|valve|installed\nI|opposing_force|gearbox|{of}\n"
+            "I|blue_shift|bshift|missing\n")
+
+    def test_before_any_install_the_files_decide(self) -> None:
+        out = self.warnings()
+        self.assertNotIn("Opposing Force", out)
+        self.assertIn("Blue Shift, which is not installed", out)
+
+    def test_owned_but_not_linked_asks_for_install(self) -> None:
+        self.write_installed("missing")
+        self.assertIn("Opposing Force, which is installed but was not linked", self.warnings())
+
+    def test_linked_says_nothing(self) -> None:
+        self.write_installed("installed")
+        self.assertNotIn("Opposing Force", self.warnings())

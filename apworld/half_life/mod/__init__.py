@@ -29,7 +29,7 @@ import pkgutil
 import re
 from pathlib import Path
 
-from .content import ContentReport, uninstall_content
+from .content import ContentReport, read_installed, uninstall_content
 from .content import install_content as _install_content
 
 # The mod folder's name, which is also what the player passes to `-game`.
@@ -201,6 +201,11 @@ def install_content(game_dir: str | os.PathLike[str]) -> ContentReport:
     that is not owned is not an error, just a campaign the seed cannot use.
     """
     return _install_content(resolve_game_root(game_dir))
+
+
+def installed_campaigns(game_dir: str | os.PathLike[str]) -> dict[str, bool] | None:
+    """`{campaign: mounted}` as the last `/install` recorded it, or None."""
+    return read_installed(resolve_game_root(game_dir))
 
 
 def uninstall(game_dir: str | os.PathLike[str]) -> int:

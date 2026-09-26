@@ -49,4 +49,7 @@ bool OnBlueShift();
 // Whether a map's campaign is mounted, i.e. installed and linked in.
 bool IsMountedMap(const std::string& map);
 
+// Whether a campaign ("opposing_force") is mounted. Half-Life always is.
+bool IsMountedCampaign(const std::string& campaign);
+
 }  // namespace ap

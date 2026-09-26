@@ -264,4 +264,9 @@ bool IsMountedMap(const std::string& map) {
     return g_map_campaign.count(Lower(map.c_str())) > 0;
 }
 
+bool IsMountedCampaign(const std::string& campaign) {
+    Load();
+    return campaign == kHalfLife || g_campaigns.count(campaign) > 0;
+}
+
 }  // namespace ap

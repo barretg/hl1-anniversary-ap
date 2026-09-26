@@ -214,7 +214,8 @@ there is no server dll, this build of the apworld does not ship one yet.
 **A mission says it needs Opposing Force or Blue Shift, which is not
 installed.** The seed includes a game this Half-Life folder does not have. Install
 it from Steam into the same library, then run `/install` again. The rest of the
-seed plays meanwhile.
+seed plays meanwhile. If the client says the game is installed but was not linked
+in, you bought it after your last `/install`; run `/install` again.
 
 **The game starts on the wrong content.** Check the launch option is `-game
 hlap`, and that `<Half-Life>/hlap/liblist.gam` exists.

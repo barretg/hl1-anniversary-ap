@@ -7,6 +7,7 @@
 #include "weapons.h"
 
 #include "ap_bots.h"
+#include "ap_content.h"
 
 #include <cmath>
 #include <vector>
@@ -119,6 +120,35 @@ const char* const kBotModels[] = {
     "models/player/zombie/zombie.mdl",
 };
 constexpr int kBotModelCount = sizeof(kBotModels) / sizeof(kBotModels[0]);
+
+// Opposing Force's multiplayer skins, which `/install` links in when OF is
+// owned. All carry the same skeleton and sequences. Its zombie is left out:
+// that path is Half-Life's zombie, and OF's copy is only visible on OF maps.
+// Blue Shift's player models are byte for byte Half-Life's, so it adds none.
+const char* const kOpForBotModels[] = {
+    "models/player/beret/beret.mdl",
+    "models/player/cl_suit/cl_suit.mdl",
+    "models/player/ctf_barney/ctf_barney.mdl",
+    "models/player/ctf_gina/ctf_gina.mdl",
+    "models/player/ctf_gordon/ctf_gordon.mdl",
+    "models/player/ctf_scientist/ctf_scientist.mdl",
+    "models/player/drill/drill.mdl",
+    "models/player/fassn/fassn.mdl",
+    "models/player/grunt/grunt.mdl",
+    "models/player/massn/massn.mdl",
+    "models/player/otis/otis.mdl",
+    "models/player/recruit/recruit.mdl",
+    "models/player/shephard/shephard.mdl",
+    "models/player/tower/tower.mdl",
+};
+constexpr int kOpForBotModelCount = sizeof(kOpForBotModels) / sizeof(kOpForBotModels[0]);
+
+// Every skin is a model slot on every map, and OF's biggest maps already use
+// most of the 512. So each map gets a few of OF's, picked by the map's name:
+// the same few every time it loads, which a restored bot's model relies on.
+constexpr int kOpForSkinsPerMap = 4;
+const char* g_mapSkins[kOpForSkinsPerMap];
+int g_mapSkinCount = 0;
 const char* const kCrowbarModel = "models/p_crowbar.mdl";
 
 enum MoveState { kMoveWander, kMoveJump };
@@ -198,7 +228,9 @@ IMPLEMENT_SAVERESTORE(CApBot, CBaseMonster);
 
 void CApBot::Spawn() {
     // A restore does not come through here: the saved model is kept.
-    SET_MODEL(ENT(pev), kBotModels[RANDOM_LONG(0, kBotModelCount - 1)]);
+    const int pick = RANDOM_LONG(0, kBotModelCount + g_mapSkinCount - 1);
+    SET_MODEL(ENT(pev), pick < kBotModelCount ? kBotModels[pick]
+                                               : g_mapSkins[pick - kBotModelCount]);
     // Shirt and trousers, as a player's topcolor and bottomcolor: a hue each,
     // low byte and high byte. The client remaps any studio model by it, and it
     // is saved with the rest of entvars.
@@ -770,6 +802,19 @@ bool BotZombie() { return bot_zombie.value != 0.0f; }
 void PrecacheBots() {
     for (const char* model : kBotModels) {
         PRECACHE_MODEL((char*)model);
+    }
+    g_mapSkinCount = 0;
+    if (IsMountedCampaign("opposing_force")) {
+        // FNV-1a of the map name, then consecutive skins from there.
+        unsigned int hash = 2166136261u;
+        for (const char* c = STRING(gpGlobals->mapname); *c; ++c) {
+            hash = (hash ^ static_cast<unsigned char>(*c)) * 16777619u;
+        }
+        for (int i = 0; i < kOpForSkinsPerMap; ++i) {
+            g_mapSkins[i] = kOpForBotModels[(hash + i) % kOpForBotModelCount];
+            PRECACHE_MODEL((char*)g_mapSkins[i]);
+        }
+        g_mapSkinCount = kOpForSkinsPerMap;
     }
     PRECACHE_MODEL((char*)kCrowbarModel);
     PRECACHE_SOUND((char*)"weapons/cbar_hit1.wav");

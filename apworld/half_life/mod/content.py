@@ -28,7 +28,9 @@ Text tables the engine loads once for the whole mod (`titles.txt`,
 key a mounted game adds. A key a game defines differently keeps Half-Life's text.
 
 Everything written is recorded in `archipelago/content_manifest.txt`, which is
-exactly what uninstall removes.
+exactly what uninstall removes. Which games were mounted is recorded in
+`archipelago/installed.txt`, one `I|<campaign>|<game dir>|installed|missing`
+line per game, for the client and the dll.
 """
 
 from __future__ import annotations
@@ -44,6 +46,7 @@ DOWNLOADS_DIR = "hlap_downloads"
 HD_DIR = "hlap_hd"
 CONTENT_FILE = "content.txt"
 MANIFEST_FILE = "content_manifest.txt"
+INSTALLED_FILE = "installed.txt"
 
 
 @dataclass(frozen=True)
@@ -218,6 +221,9 @@ class _Writer:
 
 def uninstall_content(game_root: Path) -> int:
     """Remove exactly what the last install wrote. Returns files removed."""
+    installed = game_root / "hlap" / "archipelago" / INSTALLED_FILE
+    if installed.is_file():
+        installed.unlink()
     manifest = game_root / "hlap" / "archipelago" / MANIFEST_FILE
     if not manifest.is_file():
         return 0
@@ -248,6 +254,29 @@ def uninstall_content(game_root: Path) -> int:
     return removed
 
 
+def write_installed(game_root: Path, mounted: list[str]) -> None:
+    """Record which games the last install mounted. Half-Life always is."""
+    store = game_root / "hlap" / "archipelago"
+    store.mkdir(parents=True, exist_ok=True)
+    lines = ["# written by /install; see mod/content.py", "I|half_life|valve|installed"]
+    lines += [f"I|{c.key}|{c.game_dir}|{'installed' if c.name in mounted else 'missing'}"
+              for c in CONTENT_CAMPAIGNS]
+    (store / INSTALLED_FILE).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def read_installed(game_root: Path) -> dict[str, bool] | None:
+    """`{campaign: mounted}` from the last install, or None before one ran."""
+    path = game_root / "hlap" / "archipelago" / INSTALLED_FILE
+    if not path.is_file():
+        return None
+    found: dict[str, bool] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        fields = line.strip().split("|")
+        if len(fields) >= 4 and fields[0] == "I":
+            found[fields[1]] = fields[3] == "installed"
+    return found
+
+
 def install_content(game_root: Path) -> ContentReport:
     """Mount every owned campaign's content. Replaces a previous install."""
     report = ContentReport()
@@ -256,6 +285,7 @@ def install_content(game_root: Path) -> ContentReport:
     present = [c for c in CONTENT_CAMPAIGNS if (game_root / c.detect).is_file()]
     report.missing = [c.name for c in CONTENT_CAMPAIGNS if c not in present]
     report.mounted = [c.name for c in present]
+    write_installed(game_root, report.mounted)
     if not present:
         return report
 

@@ -188,3 +188,25 @@ def test_a_relocated_model_takes_its_companions_along(game: Path) -> None:
     assert not (game / "hlap_downloads/models/zombie02.mdl").exists()
     # The game's own file is untouched.
     assert group_names(game / "gearbox/models/zombie.mdl")[0] == "models\\zombie01.mdl"
+
+
+def test_installed_records_what_was_mounted(game: Path) -> None:
+    assert content.read_installed(game) is None
+    content.install_content(game)
+    assert content.read_installed(game) == {
+        "half_life": True, "opposing_force": True, "blue_shift": True}
+    (game / "bshift/maps/ba_tram1.bsp").unlink()
+    content.install_content(game)
+    assert content.read_installed(game)["blue_shift"] is False
+    content.uninstall_content(game)
+    assert content.read_installed(game) is None
+
+
+def test_installed_is_written_with_neither_game(tmp_path: Path) -> None:
+    root = tmp_path / "Half-Life"
+    put(root, "valve/maps/c0a0.bsp", bsp(False))
+    content.install_content(root)
+    assert content.read_installed(root) == {
+        "half_life": True, "opposing_force": False, "blue_shift": False}
+    content.uninstall_content(root)
+    assert content.read_installed(root) is None
