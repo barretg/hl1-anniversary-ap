@@ -26,6 +26,8 @@ from pathlib import Path
 
 from bsp_entities import (
     CONTENTS_EMPTY,
+    CONTENTS_SOLID,
+    HULL_CROUCHING,
     ClipHull,
     brush_model_bounds,
     brush_model_centres,
@@ -443,6 +445,12 @@ def build(
         for key in sorted(unusable[map_name]):
             print(f"  nowhere to stand and use it: {map_name} {key}")
         sealed.setdefault(map_name, set()).update(unusable[map_name])
+
+    pocketed = pocketed_chargers(chapters, entities, bounds, bsp_paths)
+    for map_name in sorted(pocketed):
+        for key in sorted(pocketed[map_name]):
+            print(f"  only reachable through a transition: {map_name} {key}")
+        sealed.setdefault(map_name, set()).update(pocketed[map_name])
 
     enabled = ENABLED_LOCATION_TYPES
 
@@ -1000,6 +1008,160 @@ def unusable_chargers(
                 unusable.setdefault(map_name, set()).add(f"{classname}:{model}")
 
     return unusable
+
+
+# `trigger_changelevel` spawnflag: fired only by another entity, never by touch.
+CHANGELEVEL_USE_ONLY = 2
+
+# How close to a level change a charger must be before it is worth asking
+# whether it is walled in behind one. Seam rooms are small; the fill below is
+# the real test, this only saves running it across a whole map.
+POCKET_SEARCH_RADIUS = 1024.0
+# Cells the fill may visit before the space counts as open. A seam room is at
+# most a few hundred cells at this grid; anything joined to the rest of the map
+# passes this within moments.
+POCKET_GRID = 16
+POCKET_CELL_LIMIT = 20000
+
+
+def pocketed_chargers(
+    chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]],
+    bounds: dict[
+        str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]
+    ],
+    bsp_paths: dict[str, Path],
+) -> dict[str, set[str]]:
+    """`{map: {"classname:*model"}}` for chargers only reachable through a
+    `trigger_changelevel`.
+
+    The seam room at the end of a map belongs to the next map, and walking into
+    it loads that map. A charger in there cannot be used from this one.
+    `sealed_seam_chargers` catches the common case, where the next map has the
+    same charger; this catches the rest, like Power Up's, which has no twin.
+
+    The test is a fill of the space a crouched player fits in, from the places
+    to stand next to the charger, with every touchable level change as a wall.
+    If it runs out, the charger is walled in. It ignores gravity, so a route
+    that exists only by climbing still counts as a route: this only ever drops
+    what no route reaches.
+
+    A pocket can also be where a player arrives from another map. Lambda Core's
+    Part 4 HEV charger is walled in on that map's own side, but coming back from
+    Part 5 lands the player right beside it. So a pocket that holds where some
+    other map's transition sets the player down is reachable.
+    """
+    pocketed: dict[str, set[str]] = {}
+    all_maps = {m for chapter in chapters for m in chapter["maps"]}
+    step = POCKET_GRID
+
+    # Where each map's inbound transitions set the player down: the far map's
+    # trigger volume, carried over through the shared landmark. The player is
+    # standing at its edge when it fires, so it is widened by a body.
+    arrivals: dict[str, list] = {}
+    for source in sorted(all_maps):
+        here = landmark_origins(entities[source])
+        for trigger in entities[source]:
+            if trigger.get("classname") != "trigger_changelevel":
+                continue
+            target, name = trigger.get("map", ""), trigger.get("landmark", "")
+            box = bounds[source].get(trigger.get("model", ""))
+            if target not in all_maps or name not in here or box is None:
+                continue
+            there = landmark_origins(entities[target]).get(name)
+            if there is None:
+                continue
+            shift = [there[i] - here[name][i] for i in range(3)]
+            arrivals.setdefault(target, []).append((
+                tuple(box[0][i] + shift[i] - 32 for i in range(3)),
+                tuple(box[1][i] + shift[i] + 32 for i in range(3)),
+            ))
+
+    for map_name in sorted(all_maps):
+        ents = entities[map_name]
+        walls = [
+            bounds[map_name][e["model"]] for e in ents
+            if e.get("classname") == "trigger_changelevel"
+            and e.get("model") in bounds[map_name]
+            and not int(e.get("spawnflags", "0") or 0) & CHANGELEVEL_USE_ONLY
+        ]
+        if not walls:
+            continue
+        hull: ClipHull | None = None
+
+        def blocked_by_wall(p: tuple[float, float, float]) -> bool:
+            """Whether a neighbouring cell of `p` touches a level change."""
+            lo = (p[0] - 16 - step, p[1] - 16 - step, p[2] - 18 - step)
+            hi = (p[0] + 16 + step, p[1] + 16 + step, p[2] + 18 + step)
+            return any(
+                all(lo[i] <= box[1][i] and box[0][i] <= hi[i] for i in range(3))
+                for box in walls
+            )
+
+        def blocked(p: tuple[float, float, float]) -> bool:
+            if hull.contents(p, HULL_CROUCHING) == CONTENTS_SOLID:
+                return True
+            lo = (p[0] - 16, p[1] - 16, p[2] - 18)
+            hi = (p[0] + 16, p[1] + 16, p[2] + 18)
+            return any(
+                all(lo[i] <= box[1][i] and box[0][i] <= hi[i] for i in range(3))
+                for box in walls
+            )
+
+        for entity in ents:
+            classname = entity.get("classname", "")
+            model = entity.get("model", "")
+            if classname not in CHARGER_CLASSNAMES or model not in bounds[map_name]:
+                continue
+            mins, maxs = bounds[map_name][model]
+            centre = tuple((mins[i] + maxs[i]) / 2 for i in range(3))
+            near = min(
+                math.dist(centre, tuple(max(b[0][i], min(centre[i], b[1][i]))
+                                        for i in range(3)))
+                for b in walls
+            )
+            if near > POCKET_SEARCH_RADIUS:
+                continue
+            if hull is None:
+                hull = ClipHull(bsp_paths[map_name])
+
+            base = tuple(round(c / step) * step for c in centre)
+            reach = int(PLAYER_SEARCH_RADIUS // step) + 1
+            seeds = [
+                (base[0] + dx * step, base[1] + dy * step, base[2] + dz * step)
+                for dx in range(-reach, reach + 1)
+                for dy in range(-reach, reach + 1)
+                for dz in range(-reach, reach + 1)
+            ]
+            seeds = [
+                p for p in seeds
+                if math.dist(p, centre) <= PLAYER_SEARCH_RADIUS and not blocked(p)
+            ]
+            seen = set(seeds)
+            queue = collections.deque(seeds)
+            while queue and len(seen) <= POCKET_CELL_LIMIT:
+                x, y, z = queue.popleft()
+                for d in ((step, 0, 0), (-step, 0, 0), (0, step, 0),
+                          (0, -step, 0), (0, 0, step), (0, 0, -step)):
+                    q = (x + d[0], y + d[1], z + d[2])
+                    if q not in seen and not blocked(q):
+                        seen.add(q)
+                        queue.append(q)
+            # Walled in by the world alone is not this check's question: that is a
+            # room the grid could not find the way out of, not a charger past a
+            # transition.
+            bordering = any(
+                blocked_by_wall(cell) for cell in seen
+            )
+            entered = any(
+                all(box[0][i] <= cell[i] <= box[1][i] for i in range(3))
+                for cell in seen for box in arrivals.get(map_name, ())
+            )
+            if (seeds and len(seen) <= POCKET_CELL_LIMIT and bordering
+                    and not entered):
+                pocketed.setdefault(map_name, set()).add(f"{classname}:{model}")
+
+    return pocketed
 
 
 # The one boss Valve walks from map to map instead of placing in each one, and

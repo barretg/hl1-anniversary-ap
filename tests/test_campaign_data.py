@@ -118,6 +118,31 @@ def test_chargers_with_nowhere_to_stand_are_not_locations(
         assert at != position, f"{entry['name']} has nowhere to stand and use it"
 
 
+# We've Got Hostiles Part 2: walled in behind its level transition with no twin
+# next door. Once a hand-written entry; now derived by `pocketed_chargers`.
+POCKETED_CHARGERS = {
+    ("c1a3d", "func_healthcharger", (136, -780, 696)),
+}
+
+
+@pytest.mark.parametrize("map_name,classname,position", sorted(POCKETED_CHARGERS))
+def test_chargers_only_reachable_through_a_transition_are_not_locations(
+    campaign: dict, map_name: str, classname: str, position: tuple
+) -> None:
+    """A charger only reachable by crossing a level change must not be a check.
+
+    Walking into the transition loads the other map, so like the other two
+    cases this one would hold the seed under `accessibility: full`. Pinned
+    because nothing but the derivation keeps it out now.
+    """
+    for entry in campaign["locations"]:
+        trigger = entry["trigger"]
+        if trigger["type"] != "charger" or entry["map"] != map_name:
+            continue
+        at = tuple(int(v) for v in trigger["at"].split())
+        assert at != position, f"{entry['name']} is only reachable through a transition"
+
+
 def test_the_gonarch_is_placed_in_every_map_of_its_fight(campaign: dict) -> None:
     """Warping into a mid-mission map must not give an empty arena.
 
