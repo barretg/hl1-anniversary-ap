@@ -65,6 +65,24 @@ const AmmoSource kAmmoSources[] = {
     {"weapon_tripmine", "Trip Mine"},
     {"weapon_snark", "Snarks"},
 
+    // Opposing Force's. The Desert Eagle shares the .357's rounds and the
+    // displacer the Tau cannon's uranium.
+    {"ammo_556", "556"},
+    {"ammo_762", "762"},
+    {"ammo_spore", "spores"},
+    {"ammo_eagleclip", "357"},
+    {"weapon_eagle", "357"},
+    {"weapon_m249", "556"},
+    {"weapon_sniperrifle", "762"},
+    {"weapon_sporelauncher", "spores"},
+    {"weapon_displacer", "uranium"},
+    // Shephard's allies carry what Freeman's enemies do.
+    {"monster_human_grunt_ally", "9mm"},
+    {"monster_human_grunt_ally", "buckshot"},
+    {"monster_human_grunt_ally", "556"},
+    {"monster_male_assassin", "9mm"},
+    {"monster_male_assassin", "762"},
+
     // What the marines are carrying. Killing one leaves the gun and its ammo on
     // the floor, which is a supply the entity list would otherwise not show --
     // and a map full of grunts is exactly where "this level has no 9mm" would
@@ -74,8 +92,11 @@ const AmmoSource kAmmoSources[] = {
     {"monster_human_grunt", "ARgrenades"},
 };
 
-// The one ammo type nothing has to supply: the hivehand grows its own.
-const char* const kSelfFeedingAmmo = "Hornets";
+// The ammo types nothing has to supply: the hivehand grows its own, and the
+// shock roach recharges.
+bool SelfFeeding(const std::string& ammo) {
+    return ammo == "Hornets" || ammo == "shock";
+}
 
 // What this level can hand out, filled once per map load.
 std::set<std::string> g_available;
@@ -298,7 +319,7 @@ void RunAmmoRelief() {
         for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
              item != nullptr; item = item->m_pNext) {
             const std::string ammo = AmmoOf(item);
-            if (ammo.empty() || ammo == kSelfFeedingAmmo) {
+            if (ammo.empty() || SelfFeeding(ammo)) {
                 continue;
             }
             // The level stocks it. Finding it is the game's problem, which is

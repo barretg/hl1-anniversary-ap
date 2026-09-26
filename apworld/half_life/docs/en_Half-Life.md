@@ -21,13 +21,12 @@ number of other missions.
 ## What items and locations get shuffled?
 
 **Items:** one unlock per mission, one per weapon, optionally the HEV suit and
-the long jump module, plus filler (ammo, medkits, armour batteries) and three
-traps.
+the long jump module, plus filler (ammo, medkits, armour batteries) and traps.
 
-**Locations:** 253 of them.
+**Locations:** 252 for Half-Life.
 
 - reaching each map division of a mission, and finishing the mission
-- pressing use on each of the 108 health chargers and HEV charge panels, empty or
+- pressing use on each of the 107 health chargers and HEV charge panels, empty or
   not, and standing in each of Xen's 15 healing pools -- these can be switched
   off with `chargesanity`
 - reaching each weapon at the place Half-Life would first have given it to you
@@ -48,6 +47,14 @@ after the level has settled.
 
 Kill Nihilanth. It becomes available once `missions_required` other missions have
 been finished.
+
+## Opposing Force and Blue Shift (experimental)
+
+Either game can be added to a seed, or played alone, if you own it. Each brings
+its own missions, its own finale and its own armour item (the PCV, the Security
+Armor), and Opposing Force brings seven weapons and two more melee weapons. The
+goal is then every included game's finale. Half-Life's weapons are items in
+every seed, since all three games place them.
 
 ## Unique local commands
 

@@ -48,19 +48,49 @@ GOAL_CHAPTER: str = CAMPAIGN["goal_chapter"]
 # The tram ride in, dropped by `exclude_intro_missions`.
 INTRO_CHAPTER: str = CAMPAIGN["intro_chapter"]
 
-# Missions an item can open: everything but the finale. This is the list the
+# The games this world can include, in mission-numbering order: Half-Life
+# first. Data built before there was more than one has no list, and is
+# Half-Life alone.
+HALF_LIFE = "half_life"
+CAMPAIGNS: list[dict[str, Any]] = CAMPAIGN.get("campaigns") or [{
+    "key": HALF_LIFE, "name": "Half-Life", "goal_chapter": GOAL_CHAPTER,
+    "intro_chapter": INTRO_CHAPTER, "short": "hl", "armour_item": "HEV Suit",
+    "melee": list(STARTING_WEAPONS),
+}]
+CAMPAIGNS_BY_KEY: dict[str, dict[str, Any]] = {c["key"]: c for c in CAMPAIGNS}
+
+
+def campaign_of(entry: dict[str, Any]) -> str:
+    """The game a chapter or item belongs to. Absent means Half-Life."""
+    return entry.get("campaign", HALF_LIFE)
+
+
+# Missions an item can open: everything but the finales. This is the list the
 # unlock items are built from, so a mission leaving it is a mission with no item
 # anywhere in the pool.
 UNLOCKABLE_CHAPTERS: list[dict[str, Any]] = [
     c for c in CHAPTERS if not c["is_goal"]
 ]
 
-# The ceiling for `missions_required`: the missions that can be finished before
-# the finale's seal opens, which is every mission except the finale itself.
-MAX_MISSIONS: int = len(UNLOCKABLE_CHAPTERS)
+# The ceiling for each game's `missions_required`: the missions that can be
+# finished before its finale's seal opens.
+MAX_MISSIONS_BY_CAMPAIGN: dict[str, int] = {
+    c["key"]: len([ch for ch in UNLOCKABLE_CHAPTERS if campaign_of(ch) == c["key"]])
+    for c in CAMPAIGNS
+}
 
-# Items that only enter the pool when the matching YAML toggle is on.
-OPTIONAL_ITEM_NAMES = {"HEV Suit": "shuffle_hev_suit", "Long Jump Module": "shuffle_longjump"}
+# Half-Life's, which is what `missions_required` has always meant.
+MAX_MISSIONS: int = MAX_MISSIONS_BY_CAMPAIGN[HALF_LIFE]
+
+# Items that only enter the pool when the matching YAML toggle is on. Each
+# game's armour item follows the HEV suit's toggle, and only exists in a seed
+# that includes its game.
+OPTIONAL_ITEM_NAMES = {
+    "HEV Suit": "shuffle_hev_suit",
+    "Long Jump Module": "shuffle_longjump",
+    "PCV": "shuffle_hev_suit",
+    "Security Armor": "shuffle_hev_suit",
+}
 
 # Of those, the ones that stay where Half-Life puts them when the toggle is off,
 # rather than being handed over at the start of the run: item -> the location it
@@ -86,4 +116,15 @@ CHARGER_TRIGGER = "charger"
 MISSION_COMPLETE = "Mission Complete"
 VICTORY = "Victory"
 
-EVENT_ITEM_NAMES: frozenset[str] = frozenset([MISSION_COMPLETE, VICTORY])
+
+def mission_complete_event(campaign: str) -> str:
+    """What finishing one of this game's missions grants. Each finale counts
+    only its own game's missions, so each game has its own event."""
+    if campaign == HALF_LIFE:
+        return MISSION_COMPLETE
+    return f"{CAMPAIGNS_BY_KEY[campaign]['name']}: {MISSION_COMPLETE}"
+
+
+EVENT_ITEM_NAMES: frozenset[str] = frozenset(
+    [VICTORY, *(mission_complete_event(c["key"]) for c in CAMPAIGNS)]
+)

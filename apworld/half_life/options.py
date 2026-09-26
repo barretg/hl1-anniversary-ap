@@ -12,11 +12,11 @@ from Options import (
     Toggle,
 )
 
-from .data import MAX_MISSIONS
+from .data import MAX_MISSIONS, MAX_MISSIONS_BY_CAMPAIGN
 
 
 class MissionsRequired(Range):
-    """How many missions open Nihilanth.
+    """How many Half-Life missions open Nihilanth.
 
     Nihilanth is never unlocked by an item -- it becomes available once this many
     other missions have been finished. The default is every one of them.
@@ -26,6 +26,86 @@ class MissionsRequired(Range):
     range_start = 1
     range_end = MAX_MISSIONS
     default = MAX_MISSIONS
+
+
+class IncludeHalfLife(DefaultOnToggle):
+    """Include Half-Life's missions.
+
+    Turning every game off turns this one back on: a seed needs something to
+    play.
+    """
+
+    display_name = "Include Half-Life"
+
+
+class IncludeOpposingForce(Toggle):
+    """EXPERIMENTAL. Include Opposing Force's missions, and its weapons.
+
+    Needs Opposing Force installed alongside Half-Life, and `/install` run after
+    it was, so its maps and content are linked into the mod. Its finale, Worlds
+    Collide, becomes part of the goal.
+    """
+
+    display_name = "Include Opposing Force"
+
+
+class IncludeBlueShift(Toggle):
+    """EXPERIMENTAL. Include Blue Shift's missions.
+
+    Needs Blue Shift installed alongside Half-Life, and `/install` run after it
+    was. Its finale, Power Struggle (with A Leap Of Faith), becomes part of the
+    goal.
+    """
+
+    display_name = "Include Blue Shift"
+
+
+class OpposingForceMissionsRequired(Range):
+    """How many Opposing Force missions open Worlds Collide. Ignored unless
+    Opposing Force is included."""
+
+    display_name = "Opposing Force Missions Required"
+    range_start = 1
+    range_end = MAX_MISSIONS_BY_CAMPAIGN.get("opposing_force", 1)
+    default = range_end
+
+
+class BlueShiftMissionsRequired(Range):
+    """How many Blue Shift missions open Power Struggle. Ignored unless Blue
+    Shift is included."""
+
+    display_name = "Blue Shift Missions Required"
+    range_start = 1
+    range_end = MAX_MISSIONS_BY_CAMPAIGN.get("blue_shift", 1)
+    default = range_end
+
+
+class RandomStartingWeapon(DefaultOnToggle):
+    """EXPERIMENTAL. Start with a random melee weapon from the included games.
+
+    Half-Life and Blue Shift bring the crowbar, Opposing Force the combat knife
+    and the pipe wrench. The ones you do not start with become items. With only
+    Half-Life or Blue Shift included there is nothing to choose, and you start
+    with the crowbar as always. Off: the first included game's own (the crowbar,
+    or the knife for an Opposing Force-only seed).
+    """
+
+    display_name = "Random Starting Weapon"
+
+
+class ViewmodelStyle(Choice):
+    """EXPERIMENTAL. Whose hands hold the weapons in Opposing Force and Blue
+    Shift.
+
+    per_campaign: Shephard's on Opposing Force's maps, Barney's on Blue Shift's,
+    Gordon's on Half-Life's, as each game shipped. always_gordon: Gordon's
+    everywhere. Presentation only; nothing about the seed changes.
+    """
+
+    display_name = "Viewmodel Style"
+    option_per_campaign = 0
+    option_always_gordon = 1
+    default = 0
 
 
 class LogicDifficulty(Choice):
@@ -65,11 +145,12 @@ class Chargesanity(DefaultOnToggle):
 
 
 class ExcludeIntroMissions(DefaultOnToggle):
-    """Leave Black Mesa Inbound out of the seed.
+    """Leave each included game's opening ride out of the seed.
 
-    The tram ride in: minutes of riding and listening with nothing to fight.
-    Turned on it goes entirely -- no regions, no checks, no unlock item -- and it
-    stops counting toward Missions Required.
+    Black Mesa Inbound, Incoming and Living Quarters Outbound: minutes of riding
+    and listening with nothing to fight. Turned on they go entirely (no
+    regions, no checks, no unlock item) and they stop counting toward the
+    missions required.
     """
 
     display_name = "Exclude Intro Missions"
@@ -168,7 +249,14 @@ class TrapPercentage(Range):
 
 @dataclass
 class HalfLifeOptions(PerGameCommonOptions):
+    include_half_life: IncludeHalfLife
+    include_opposing_force: IncludeOpposingForce
+    include_blue_shift: IncludeBlueShift
     missions_required: MissionsRequired
+    opposing_force_missions_required: OpposingForceMissionsRequired
+    blue_shift_missions_required: BlueShiftMissionsRequired
+    random_starting_weapon: RandomStartingWeapon
+    viewmodel_style: ViewmodelStyle
     logic_difficulty: LogicDifficulty
     exclude_intro_missions: ExcludeIntroMissions
     chargesanity: Chargesanity

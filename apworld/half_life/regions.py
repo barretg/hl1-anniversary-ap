@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .data import MISSION_COMPLETE, VICTORY
+from .data import VICTORY, campaign_of, mission_complete_event
 from .locations import HalfLifeLocation, locations_by_map
 from .rules import chapter_entry_rule, location_rule
 
@@ -76,9 +76,10 @@ def add_event(world: "HalfLifeWorld", region: Region, chapter: dict) -> None:
 
     `Mission Complete` is what `missions_required` counts, so the finale is not
     one: it is the thing the count opens, and clearing it grants `Victory`
-    instead, which is the seed's win condition.
+    instead. Each included game's finale grants one, and the seed is won with
+    all of them. Other games count their own missions under their own event.
     """
-    name = VICTORY if chapter["is_goal"] else MISSION_COMPLETE
+    name = VICTORY if chapter["is_goal"] else mission_complete_event(campaign_of(chapter))
     location = HalfLifeLocation(
         world.player, f"{chapter['name']} - Mission Cleared", None, region
     )

@@ -19,14 +19,24 @@ from typing import TYPE_CHECKING, Callable
 
 from BaseClasses import CollectionState
 
-from .data import MISSION_COMPLETE, REQUIREMENT_GROUPS
+from .data import REQUIREMENT_GROUPS, campaign_of, mission_complete_event
 from .options import LogicDifficulty
 
 if TYPE_CHECKING:
     from . import HalfLifeWorld
 
-# Gate keys used by `gates["always"]` in the campaign data.
+# Gate keys used by `gates["always"]` in the campaign data. Anything else there
+# is a requirement group, needed at every logic difficulty: Opposing Force's
+# `barnacle_grapple`, without which Pit Worm's Nest cannot be crossed at all.
 EQUIPMENT_GATES = {"longjump": "Long Jump Module", "suit": "HEV Suit"}
+
+
+def always_items(world: "HalfLifeWorld", key: str) -> list[str]:
+    """The items in this pool that satisfy one `always` gate."""
+    if key in EQUIPMENT_GATES:
+        name = EQUIPMENT_GATES[key]
+        return [name] if name in world.available_item_names else []
+    return group_items(world, key)
 
 
 def group_items(world: "HalfLifeWorld", group: str) -> list[str]:
@@ -70,7 +80,7 @@ def chapter_is_startable(world: "HalfLifeWorld", chapter: dict) -> bool:
             return False
 
     for key in gates.get("always", []):
-        if EQUIPMENT_GATES[key] in world.available_item_names:
+        if always_items(world, key):
             return False
 
     return True
@@ -90,15 +100,20 @@ def chapter_entry_rule(
             conditions.append(strict)
 
     for key in gates.get("always", []):
-        item_name = EQUIPMENT_GATES[key]
-        if item_name in world.available_item_names:
-            conditions.append(lambda state, name=item_name: state.has(name, player))
+        names = always_items(world, key)
+        if names:
+            conditions.append(
+                lambda state, names=names: state.has_any(names, player)
+            )
 
     if chapter["is_goal"]:
-        # The seal: no item opens the finale, only finished missions do.
-        required = world.missions_required
+        # The seal: no item opens the finale, only finished missions of its own
+        # game do.
+        campaign = campaign_of(chapter)
+        required = world.missions_required_by_campaign[campaign]
+        event = mission_complete_event(campaign)
         conditions.append(
-            lambda state, count=required: state.has(MISSION_COMPLETE, player, count)
+            lambda state, count=required, event=event: state.has(event, player, count)
         )
     else:
         unlock = world.unlock_item_for_chapter[chapter["key"]]

@@ -157,8 +157,9 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_state.*` | what the client last said: unlocks, items, excluded missions | fed by `ap_bridge` |
 | `src/ap_text.*` | splitting, trimming, parsing | nothing |
 | `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon, healing pool | `ServerActivate`, `CBasePlayer::PlayerUse`, `CBaseTrigger::HurtTouch` |
-| `src/ap_items.*` | the loadout, weapon refusal, armour | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
-| `src/ap_hub.*` | console commands, the lobby's panels and triggers, warps, the mission-boundary choke point | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CBaseTrigger::MultiTouch`, `CChangeLevel::ChangeLevelNow` |
+| `src/ap_items.*` | the loadout, weapon refusal, armour (per game: HEV Suit, PCV, Security Armor) | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
+| `src/ap_hub.*` | console commands, the lobby's panels and triggers, warps, the mission-boundary choke point, Blue Shift's end-of-game trigger | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CBaseTrigger::MultiTouch`, `CChangeLevel::ChangeLevelNow`, `CTriggerEndSection` |
+| `src/ap_content.*` | Opposing Force and Blue Shift content: per-game model and sound redirects, titles and sentences | engine function table, `DispatchKeyValue`, spawn |
 | `src/ap_warpsave.*` | warp points: the engine saves a warp lands on | the poll, `ap_hub`, `ap_locations` |
 | `src/ap_deathlink.*` | deaths out, deaths in | `CBasePlayer::Killed`, `CRevertSaved::Use` |
 | `src/ap_ammo.*` | refilling a gun the level cannot feed | the frame loop, once a second |

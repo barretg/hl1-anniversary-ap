@@ -44,8 +44,13 @@ def test_registry_is_committed() -> None:
 
 def test_every_location_id_comes_from_the_registry(campaign: dict, registry_data: dict) -> None:
     table = registry_data["locations"]
+    # Campaign-wide checks are scoped by game: `*` for Half-Life, which had
+    # them first, the game's key for every later one.
+    owner = {c["key"]: c.get("campaign", "half_life") for c in campaign["chapters"]}
     for entry in campaign["locations"]:
-        key = location_key(entry["chapter"], entry["map"], entry["trigger"])
+        game = owner[entry["chapter"]]
+        key = location_key(entry["chapter"], entry["map"], entry["trigger"],
+                           "*" if game == "half_life" else game)
         assert key in table, key
         assert table[key] == entry["id"], key
 

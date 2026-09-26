@@ -30,6 +30,8 @@ trap_weights: list[int] = [e.get("weight", 1) for e in ITEMS if e["classificatio
 chapter_unlock_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "chapter"]
 weapon_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "weapon"]
 optional_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "optional"]
+# Starting-melee candidates that are items when they do not start the run.
+melee_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "melee"]
 
 # Chapter key -> the item that unlocks it. The finale has none: it is opened by
 # finishing missions, not by an item.
@@ -43,6 +45,7 @@ item_name_groups: dict[str, set[str]] = {
     "Weapons": set(weapon_items),
     "Mission Unlocks": set(chapter_unlock_items),
     "Equipment": set(optional_items),
+    "Melee Weapons": set(melee_items),
     "Filler": set(filler_items),
     "Traps": set(trap_items),
 }

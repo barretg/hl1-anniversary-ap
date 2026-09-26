@@ -5,6 +5,9 @@
 - **Half-Life** on Steam, current build. Not the `steam_legacy` beta branch.
 - **Archipelago** 0.6.7 or newer.
 - The **Half-Life apworld**, in `<Archipelago>/custom_worlds/`.
+- Optionally **Opposing Force** and/or **Blue Shift** on Steam, in the same
+  library as Half-Life, for a seed that includes them. Install them *before*
+  running `/install`, or run it again after buying one.
 
 The mod installs as its own game folder, `hlap`, alongside `valve`. Your own
 Half-Life is never modified: the mod folder inherits every map, model and sound
@@ -159,14 +162,27 @@ server.
 | Option | Default | What it does |
 | --- | --- | --- |
 | `missions_required` | all of them | how many missions open Nihilanth |
-| `chargesanity` | on | every health and HEV wall unit, and every Xen healing pool, is a check (123 of them) |
+| `chargesanity` | on | every health and HEV wall unit, and every Xen healing pool, is a check (122 in Half-Life) |
 | `exclude_intro_missions` | on | drop Black Mesa Inbound, the tram ride |
 | `logic_difficulty` | strict | whether logic expects a suitable weapon per mission |
 | `shuffle_hev_suit` | off | armour stays at zero until the item arrives |
 | `shuffle_longjump` | off | on: the module is an item. Off: Half-Life hands it out as it always did |
 | `ammo_relief` | off | **experimental:** a gun the level stocks no ammo for is refilled five minutes after it runs dry |
 | `trap_percentage` | 15 | share of your filler replaced by traps |
+| `include_half_life` | on | Half-Life's missions. Turning every game off turns this back on |
+| `include_opposing_force` | off | **experimental:** Opposing Force's 12 missions and 7 weapons. Needs the game installed |
+| `include_blue_shift` | off | **experimental:** Blue Shift's 6 missions. Needs the game installed |
+| `opposing_force_missions_required` | all of them | how many Opposing Force missions open Worlds Collide |
+| `blue_shift_missions_required` | all of them | how many Blue Shift missions open Power Struggle |
+| `random_starting_weapon` | on | with Opposing Force in, start with the crowbar, knife or pipe wrench at random; the others become items |
+| `viewmodel_style` | per_campaign | `always_gordon` keeps Gordon's hands on every game's maps |
 | `death_link_amnesty` | 4 | deaths forgiven before one goes out to the multiworld |
+
+With more than one game in the seed, you win by finishing every included
+game's finale; each opens on its own game's mission count. `shuffle_hev_suit`
+also covers each game's own armour item: the PCV on Opposing Force's maps, the
+Security Armor (Barney's vest and helmet) on Blue Shift's. `!ap` lists missions
+by game, and `!warp of 3` or `!warp bs 2` warps by a game's own mission number.
 
 The HEV suit is never taken away from you, whatever `shuffle_hev_suit` says: in
 GoldSrc the suit draws the weapon HUD and owns weapon switching, so a player
@@ -194,6 +210,11 @@ fade to black and a reloaded save rather than in a corpse, and both are sent.
 
 **The client says the mod folder is not installed.** Run `/install`. If it says
 there is no server dll, this build of the apworld does not ship one yet.
+
+**A mission says it needs Opposing Force or Blue Shift, which is not
+installed.** The seed includes a game this Half-Life folder does not have. Install
+it from Steam into the same library, then run `/install` again. The rest of the
+seed plays meanwhile.
 
 **The game starts on the wrong content.** Check the launch option is `-game
 hlap`, and that `<Half-Life>/hlap/liblist.gam` exists.

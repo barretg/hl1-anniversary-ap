@@ -46,6 +46,8 @@ class Campaign:
     # Merged in only when the campaign is built, so another campaign's seeds
     # keep their groups unchanged.
     groups: dict[str, list[str]] = field(default_factory=dict)
+    # The item that lets the player hold armour on this campaign's maps.
+    armour_item: str = ""
     # Equipment items behind YAML toggles, `{item: [classname, ...]}`.
     optional_items: dict[str, list[str]] = field(default_factory=dict)
     # Weapons that are a check but never an item.
@@ -80,6 +82,8 @@ class Campaign:
     # Lobby entrances are `<prefix>chapter_<n>_button`, `n` counted within this
     # campaign. Empty for Half-Life, which keeps `chapter_<n>_button`.
     hub_button_prefix: str = ""
+    # What a player types to name this campaign: `ap_warp of 3`.
+    short: str = ""
     # Half-Life predates every other campaign, and its location keys, check
     # names and item names were published without a campaign in them. It keeps
     # those forms; every later campaign's are prefixed with its key or name.

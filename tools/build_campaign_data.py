@@ -39,6 +39,7 @@ from campaigns import (
     CAMPAIGNS_BY_KEY,
     KNOWN_CAMPAIGNS,
     KNOWN_CAMPAIGNS_BY_KEY,
+    MELEE_ITEMS,
     CHARGER_CLASSNAMES,
     CHARGER_POSITION_GRID,
     HEALING_POOL_CLASSNAMES,
@@ -454,6 +455,12 @@ def build(
             print(f"  only reachable through a transition: {map_name} {key}")
         sealed.setdefault(map_name, set()).update(pocketed[map_name])
 
+    isolated = isolated_healing_pools(chapters, entities, bounds, bsp_paths)
+    for map_name in sorted(isolated):
+        for key in sorted(isolated[map_name]):
+            print(f"  healing volume in a sealed room: {map_name} {key}")
+        sealed.setdefault(map_name, set()).update(isolated[map_name])
+
     enabled = ENABLED_LOCATION_TYPES
 
     for chapter in chapters:
@@ -751,6 +758,11 @@ def build(
                 "goal_chapter": campaign.goal_chapter,
                 "intro_chapter": campaign.intro_chapter,
                 "detect": campaign.detect,
+                "short": campaign.short,
+                "armour_item": campaign.armour_item,
+                # Starting-melee candidates, in preference order: the first is
+                # this game's default when the start is not randomised.
+                "melee": list(campaign.melee),
             }
             for campaign in campaigns
         ],
@@ -1182,6 +1194,83 @@ def pocketed_chargers(
     return pocketed
 
 
+# How far a healing pool's fill may run before it counts as open. Reaching the
+# limit means a region far bigger than any sealed box; the sealed ones found in
+# Opposing Force run out below 191000 cells.
+POOL_CELL_LIMIT = 200_000
+
+
+def isolated_healing_pools(
+    chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]],
+    bounds: dict[
+        str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]
+    ],
+    bsp_paths: dict[str, Path],
+) -> dict[str, set[str]]:
+    """`{map: {"trigger_hurt:*model"}}` for healing volumes nobody can walk to.
+
+    Opposing Force has negative-damage `trigger_hurt`s in sealed rooms no route
+    leads into: the same box, at the same size, in `of4a1`, `of5a1` and `of6a1`,
+    and another in `of6a4`, `of6a4b` and `of5a2`: a prefab room compiled into
+    maps that never open it. Half-Life's and Blue Shift's pools are all real.
+
+    The test fills the space a crouched player fits in, from inside the volume,
+    ignoring gravity. A pool whose fill runs out without coming near where the
+    player enters the map (a start, a landmark) is sealed. One that runs on
+    past `POOL_CELL_LIMIT` is in open level and kept.
+    """
+    isolated: dict[str, set[str]] = {}
+    step = POCKET_GRID
+    for map_name in sorted({m for chapter in chapters for m in chapter["maps"]}):
+        ents = entities[map_name]
+        pools = [e for e in ents if charger_unit(e) is not None
+                 and e.get("classname") in HEALING_POOL_CLASSNAMES
+                 and e.get("model") in bounds[map_name]]
+        if not pools:
+            continue
+        hull = ClipHull(bsp_paths[map_name])
+        entries = [
+            origin for origin in (
+                origin_of(e) for e in ents
+                if e.get("classname") in ("info_player_start", "info_landmark")
+            ) if origin is not None
+        ]
+
+        def open_cell(p: tuple[float, float, float]) -> bool:
+            return hull.contents(p, HULL_CROUCHING) != CONTENTS_SOLID
+
+        for pool in pools:
+            lo, hi = bounds[map_name][pool["model"]]
+            seeds = [
+                (round((lo[0] + (hi[0] - lo[0]) * x / 8) / step) * step,
+                 round((lo[1] + (hi[1] - lo[1]) * y / 8) / step) * step,
+                 round((lo[2] + 18) / step) * step + dz)
+                for x in range(1, 8) for y in range(1, 8) for dz in (0, 16, 32)
+            ]
+            seeds = [s for s in seeds if open_cell(s)]
+            seen = set(seeds)
+            queue = collections.deque(seeds)
+            reached = False
+            while queue and len(seen) < POOL_CELL_LIMIT and not reached:
+                x, y, z = queue.popleft()
+                for d in ((step, 0, 0), (-step, 0, 0), (0, step, 0),
+                          (0, -step, 0), (0, 0, step), (0, 0, -step)):
+                    q = (x + d[0], y + d[1], z + d[2])
+                    if q in seen or not open_cell(q):
+                        continue
+                    seen.add(q)
+                    queue.append(q)
+                    if any(abs(q[0] - t[0]) < 48 and abs(q[1] - t[1]) < 48
+                           and abs(q[2] - t[2]) < 80 for t in entries):
+                        reached = True
+            if not reached and not queue:
+                isolated.setdefault(map_name, set()).add(
+                    f"{pool['classname']}:{pool['model']}"
+                )
+    return isolated
+
+
 # The one boss Valve walks from map to map instead of placing in each one, and
 # the node entity that says where it should be standing when you arrive. Keyed by
 # the monster so adding another is a line rather than a rewrite, though there is
@@ -1375,14 +1464,28 @@ def build_items(
             "progression",
             group="chapter",
             chapter=chapter["key"],
+            campaign=campaign.key,
         )
 
-    for name, classnames in weapon_items(campaigns).items():
-        add(name, "progression", group="weapon", classnames=classnames)
+    # `campaign` on a weapon or piece of equipment is the game whose content it
+    # needs, which decides whether a seed may contain it.
+    for campaign in campaigns:
+        for name, classnames in campaign.weapons.items():
+            add(name, "progression", group="weapon", classnames=classnames,
+                campaign=campaign.key)
 
     for campaign in campaigns:
         for name, classnames in campaign.optional_items.items():
-            add(name, "progression", group="optional", classnames=classnames)
+            add(name, "progression", group="optional", classnames=classnames,
+                campaign=campaign.key, armour=name == campaign.armour_item)
+
+    # Starting-melee candidates. At most one starts the run; the others are
+    # items when their game is in the seed. Newest, so after the equipment.
+    for name, classname in MELEE_ITEMS.items():
+        owner = next(c for c in CAMPAIGNS if classname in c.melee)
+        if owner.key in by_key:
+            add(name, "progression", group="melee", classnames=[classname],
+                campaign=owner.key)
 
     for name, classnames, weight in (
         ("Ammo Cache", ["ammo_generic"], 40),

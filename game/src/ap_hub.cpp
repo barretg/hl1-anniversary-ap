@@ -9,6 +9,7 @@
 #include "ap_traps.h"
 
 #include <cstdio>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -199,6 +200,20 @@ bool Finished(const Chapter& chapter) {
     return CompletionFound(chapter) || AllFound(chapter);
 }
 
+}  // namespace
+
+bool ChapterIsOpen(const Chapter& chapter) {
+    const Snapshot& state = State();
+    if (state.ChapterOpen(chapter.key)) {
+        return true;
+    }
+    return chapter.is_goal && chapter.key == Data().goal_chapter && state.goal_open;
+}
+
+namespace {
+
+bool Installed(const Chapter& chapter);
+
 // Where a refusal goes. Somebody who typed `ap_warp` is reading the console, and
 // `Say` is the answer to a command. Somebody who pressed a panel is looking at
 // the room, and a console-only refusal is indistinguishable from a dead button.
@@ -224,6 +239,18 @@ bool MissionOpen(const Chapter& chapter, bool on_screen) {
         return false;
     }
 
+    // Another game's mission whose maps this install does not have. Loading it
+    // anyway is an engine error and a trip to the main menu.
+    if (!Installed(chapter)) {
+        const Campaign* campaign = Data().CampaignByKey(chapter.campaign);
+        Refuse(on_screen,
+               chapter.name + " needs " +
+                   (campaign != nullptr ? campaign->name : chapter.campaign) +
+                   ", which is not installed. Install it, then run /install in "
+                   "the Archipelago client.");
+        return false;
+    }
+
     // Not connected means we do not know what is open, and "do not know" has to
     // refuse rather than allow. Warping freely while disconnected and connecting
     // afterwards would put a player inside a mission the seed had locked, with
@@ -238,9 +265,7 @@ bool MissionOpen(const Chapter& chapter, bool on_screen) {
         return false;
     }
 
-    const bool open = chapter.is_goal ? state.goal_open
-                                      : state.ChapterOpen(chapter.key);
-    if (!open) {
+    if (!ChapterIsOpen(chapter)) {
         Refuse(on_screen,
                chapter.name +
                    (chapter.is_goal
@@ -250,6 +275,35 @@ bool MissionOpen(const Chapter& chapter, bool on_screen) {
     }
 
     return true;
+}
+
+// Does this install have the mission's maps? Half-Life's always; another game's
+// only once `/install` has linked them in, which needs the game owned.
+bool Installed(const Chapter& chapter) {
+    if (chapter.maps.empty()) {
+        return true;
+    }
+    return IS_MAP_VALID(const_cast<char*>(chapter.maps.front().c_str())) != 0;
+}
+
+// `<game> <n>`: the game's n-th mission, from 0. Null for anything else.
+const Chapter* ChapterInGame(const std::string& text) {
+    const size_t space = text.find_last_of(" \t");
+    if (space == std::string::npos) {
+        return nullptr;
+    }
+    const std::string number = Trim(text.substr(space + 1));
+    const Campaign* campaign = Data().CampaignByName(Trim(text.substr(0, space)));
+    if (campaign == nullptr || !IsNumber(number)) {
+        return nullptr;
+    }
+    long wanted = ParseLong(number, -1);
+    for (const Chapter& chapter : Data().chapters) {
+        if (chapter.campaign == campaign->key && wanted-- == 0) {
+            return &chapter;
+        }
+    }
+    return nullptr;
 }
 
 const char* StatusOf(const Chapter& chapter) {
@@ -262,8 +316,11 @@ const char* StatusOf(const Chapter& chapter) {
     if (Finished(chapter)) {
         return "complete";
     }
+    if (!Installed(chapter)) {
+        return "not installed";
+    }
     if (chapter.is_goal) {
-        return state.goal_open ? "OPEN" : "sealed";
+        return ChapterIsOpen(chapter) ? "OPEN" : "sealed";
     }
     return state.ChapterOpen(chapter.key) ? "unlocked" : "locked";
 }
@@ -277,6 +334,16 @@ void ListMissions() {
         Say("The Archipelago client is not connected yet.");
     }
 
+    // Grouped by game when the seed has more than one, each headed by the
+    // short name `ap_warp <game> <n>` takes.
+    std::set<std::string> games;
+    for (const Chapter& chapter : Data().chapters) {
+        if (!State().ChapterExcluded(chapter.key)) {
+            games.insert(chapter.campaign);
+        }
+    }
+
+    std::string heading;
     for (const Chapter& chapter : Data().chapters) {
         // A mission the seed left out is not listed at all. It used to print as
         // "not in this seed", which with `exclude_intro_missions` on meant the
@@ -285,6 +352,13 @@ void ListMissions() {
         // not renumber the rest: `ap_warp 7` still means the same mission.
         if (State().ChapterExcluded(chapter.key)) {
             continue;
+        }
+        if (games.size() > 1 && chapter.campaign != heading) {
+            heading = chapter.campaign;
+            const Campaign* campaign = Data().CampaignByKey(heading);
+            if (campaign != nullptr) {
+                Say(campaign->name + " (" + campaign->shortname + "):");
+            }
         }
         char line[160];
         std::snprintf(line, sizeof(line), "  %2d. %-26s [%s]", chapter.index,
@@ -301,6 +375,7 @@ void Help() {
     Say("!ap                       every mission and its unlock status");
     Say("!warp <number or name>    travel to an unlocked mission");
     Say("!warp <mission> <part>    to a part of it you have already reached");
+    Say("!warp <game> <number>     a mission counted within one game: !warp of 3");
     Say("!warp <name>              to a warp point of your own");
     Say("!setwarp                  reset this part's warp point to where you stand");
     Say("!setwarp <name>           make a warp point here, called <name>");
@@ -354,14 +429,25 @@ void Warp(const std::string& argument) {
         return;
     }
     if (argument.empty()) {
-        Say("Usage: ap_warp <number, name or warp point> [part]. ap lists them.");
+        Say("Usage: ap_warp <number, name or warp point> [part], or ap_warp <game> "
+            "<number>. ap lists them.");
         return;
     }
 
-    const WarpRequest request = ParseWarp(argument);
+    WarpRequest request = ParseWarp(argument);
 
     const Chapter* chapter = nullptr;
-    if (IsNumber(request.where)) {
+    // `of 3`, `bs 2`, `hl 5`: a mission counted within one game, from 0 like
+    // the global numbers. With a part after it, `of 3 2`, ParseWarp has taken
+    // the part off already and left `of 3`.
+    chapter = ChapterInGame(request.where);
+    if (chapter == nullptr && request.part > 0) {
+        chapter = ChapterInGame(argument);
+        if (chapter != nullptr) {
+            request.part = 0;
+        }
+    }
+    if (chapter == nullptr && IsNumber(request.where)) {
         chapter = Data().ChapterByIndex(
             static_cast<int>(ParseLong(request.where, -1)));
     }
@@ -1030,6 +1116,25 @@ bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map
                ". Returning to the hub.");
     }
 
+    RequestMap(kHubMap);
+    return true;
+}
+
+bool InterceptEndSection(const std::string& map_name) {
+    if (!Data().Loaded()) {
+        return false;  // ordinary Half-Life: the game ends as it always did
+    }
+    const Chapter* chapter = Data().ChapterOfMap(map_name);
+    if (chapter == nullptr || !chapter->CompletesOnEndSection()) {
+        return false;
+    }
+
+    // Blue Shift's finale ends here rather than on a transition: `ba_outro`
+    // has nowhere further to go, and retail drops to the main menu. That is the
+    // mission finished, and the hub rather than the menu is where the run
+    // carries on.
+    SendChapterComplete(*chapter);
+    Notify(chapter->name + " complete. Returning to the hub.");
     RequestMap(kHubMap);
     return true;
 }

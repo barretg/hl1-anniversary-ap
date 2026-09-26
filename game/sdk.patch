@@ -3346,7 +3346,7 @@ index 3c1ff87..ed39cc8 100644
  };
  
 diff --git a/dlls/triggers.cpp b/dlls/triggers.cpp
-index 1f9ea5b..18e5447 100644
+index 1f9ea5b..7233b68 100644
 --- a/dlls/triggers.cpp
 +++ b/dlls/triggers.cpp
 @@ -23,10 +23,13 @@
@@ -3397,7 +3397,35 @@ index 1f9ea5b..18e5447 100644
  	ASSERT(!FStrEq(m_szMapName, ""));
  
  	// Don't work in deathmatch
-@@ -2440,3 +2456,205 @@ void CTriggerCamera::Move()
+@@ -2009,6 +2025,13 @@ void CTriggerEndSection::EndSectionUse( CBaseEntity *pActivator, CBaseEntity *pC
+     
+ 	SetUse( NULL );
+ 
++	// A finale that completes here goes back to the hub instead of the menu.
++	if ( ap::InterceptEndSection( STRING( gpGlobals->mapname ) ) )
++	{
++		UTIL_Remove( this );
++		return;
++	}
++
+ 	if ( pev->message )
+ 	{
+ 		g_engfuncs.pfnEndSection(STRING(pev->message));
+@@ -2040,6 +2063,13 @@ void CTriggerEndSection::EndSectionTouch( CBaseEntity *pOther )
+     
+ 	SetTouch( NULL );
+ 
++	// A finale that completes here goes back to the hub instead of the menu.
++	if ( ap::InterceptEndSection( STRING( gpGlobals->mapname ) ) )
++	{
++		UTIL_Remove( this );
++		return;
++	}
++
+ 	if (pev->message)
+ 	{
+ 		g_engfuncs.pfnEndSection(STRING(pev->message));
+@@ -2440,3 +2470,205 @@ void CTriggerCamera::Move()
  	float fraction = 2 * gpGlobals->frametime;
  	pev->velocity = ((pev->movedir * pev->speed) * fraction) + (pev->velocity * (1-fraction));
  }

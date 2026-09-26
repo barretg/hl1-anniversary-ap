@@ -160,3 +160,24 @@ def test_a_seam_twin_pair_is_never_dropped_on_both_sides() -> None:
     )
     assert "of4a2" not in sealed
     assert sealed["of4a3"] == {"func_healthcharger:*137", "func_healthcharger:*138"}
+
+
+def test_healing_volumes_in_sealed_rooms_are_dropped_and_real_pools_kept() -> None:
+    """`of5a1` carries a healing volume in a prefab room nothing leads into;
+    Xen's first pool is the real thing."""
+    from bsp_entities import brush_model_bounds
+    from campaigns.half_life import HALF_LIFE
+    from campaigns.opposing_force import OPPOSING_FORCE
+
+    found = {}
+    for campaign, map_name in ((OPPOSING_FORCE, "of5a1"), (HALF_LIFE, "c4a1")):
+        path = installed(campaign) / f"{map_name}.bsp"
+        chapters = [{"key": map_name, "maps": [map_name], "index": 0,
+                     "campaign": campaign.key}]
+        found.update(build_campaign_data.isolated_healing_pools(
+            chapters,
+            {map_name: [build_campaign_data.resolve_world_item(e) for e in entities(path)]},
+            {map_name: brush_model_bounds(path)},
+            {map_name: path},
+        ))
+    assert set(found) == {"of5a1"}

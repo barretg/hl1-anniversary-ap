@@ -39,6 +39,8 @@ struct Snapshot {
     // Refill a gun the level cannot feed. Off in every seed that does not ask
     // for it, and read from here every time rather than cached: see ap_ammo.h.
     bool ammo_relief = false;
+    // Half-Life's viewmodels everywhere, rather than each game's own hands.
+    bool gordon_hands = false;
     int death_link_amnesty = 0;
 
     std::set<long> checked;   // for ap_tracker

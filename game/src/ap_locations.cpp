@@ -236,9 +236,7 @@ void AuthoriseMap() {
             return;
         }
 
-        const bool open = chapter->is_goal ? state.goal_open
-                                           : state.ChapterOpen(chapter->key);
-        if (state.ChapterExcluded(chapter->key) || !open) {
+        if (state.ChapterExcluded(chapter->key) || !ChapterIsOpen(*chapter)) {
             // We did not ask to come here and the seed does not allow it: a save
             // the engine restored, possibly from another run. Nothing has fired
             // and nothing will.

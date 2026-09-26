@@ -71,6 +71,14 @@ struct Chapter {
     // arriving on the last map is the only signal there is and the right one.
     bool complete_on_arrival = false;
 
+    // Format 5. Which game the mission belongs to, and how it completes:
+    // "arrival", "forward_exit" or "endsection". An older file names neither,
+    // which is Half-Life and the arrival flag above.
+    std::string campaign = "half_life";
+    std::string complete_on;
+
+    bool CompletesOnEndSection() const { return complete_on == "endsection"; }
+
     bool HasMap(const std::string& map) const;
     bool IsLastMap(const std::string& map) const;
 };
@@ -93,6 +101,16 @@ struct CarriedMonster {
     float origin[3] = {0.0f, 0.0f, 0.0f};
     float angle = 0.0f;
     int spawnflags = 0;
+};
+
+// One game the seed may include (format 5's `N` record).
+struct Campaign {
+    std::string key;
+    std::string shortname;  // what a player types: `ap_warp of 3`
+    std::string name;
+    std::string goal_chapter;
+    // The item that lets the player hold armour on this game's maps.
+    std::string armour_item;
 };
 
 class CheckData {
@@ -119,6 +137,19 @@ public:
     // the ordinary way brings the real monster with it, and a second would be
     // two bosses in one arena.
     std::vector<CarriedMonster> carried_monsters;
+
+    // Every game in the file, in mission order. Empty in a file older than
+    // format 5, which is Half-Life alone; see `CampaignByKey`.
+    std::vector<Campaign> campaigns;
+
+    // Null for a key the file does not describe. Half-Life is always known,
+    // with or without an `N` record, so an older file still has armour.
+    const Campaign* CampaignByKey(const std::string& key) const;
+    // By its key, short form (`of`) or name, ignoring case and punctuation.
+    const Campaign* CampaignByName(const std::string& text) const;
+    // The game whose maps these are, or Half-Life for a map in no mission
+    // (the hub).
+    const Campaign& CampaignOfMap(const std::string& map) const;
 
     bool Load(const std::string& path);
     bool Loaded() const { return !locations.empty(); }

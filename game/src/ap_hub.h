@@ -21,6 +21,14 @@
 
 namespace ap {
 
+struct Chapter;
+
+// May this mission be walked into, by the client's answer? A finale is open
+// when the client lists it; the older `goal_open` flag still opens the finale
+// the `G` record names, which is how a client from before there was more than
+// one game says so.
+bool ChapterIsOpen(const Chapter& chapter);
+
 // Registered with the engine once, at GameDLLInit.
 //   ap                 every mission and its unlock status
 //   ap_tracker [text]  every location in the seed; filter by mission or map
@@ -28,6 +36,7 @@ namespace ap {
 //   ap_nowarps [0|1]   for testing: the hub's walk-in warp triggers do nothing.
 //                      Console only, and left out of ap_help.
 //   ap_warp <n|name>   travel to an unlocked mission
+//   ap_warp <game> <n> the same, counted within one game: `ap_warp of 3`
 //   ap_hub             return to the hub
 //   ap_help            these, in game
 void RegisterCommands();

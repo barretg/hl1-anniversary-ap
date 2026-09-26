@@ -34,16 +34,14 @@ from .shared import (  # re-exported: the facts every campaign shares
     hub_button_index,
 )
 
-CAMPAIGNS: list[Campaign] = [HALF_LIFE]
+CAMPAIGNS: list[Campaign] = [HALF_LIFE, OPPOSING_FORCE, BLUE_SHIFT]
 
 CAMPAIGNS_BY_KEY: dict[str, Campaign] = {c.key: c for c in CAMPAIGNS}
 
-# Scanned and buildable with `--only ... --out`, but not yet in the committed
-# data: the apworld and the game do not handle them until Phase 6 of the plan.
-# Moving one into CAMPAIGNS is what ships it.
-DRAFT_CAMPAIGNS: list[Campaign] = [OPPOSING_FORCE, BLUE_SHIFT]
-
-KNOWN_CAMPAIGNS: list[Campaign] = CAMPAIGNS + DRAFT_CAMPAIGNS
+# Every campaign the tools know. The same as CAMPAIGNS today; kept as its own
+# name so a game can be scanned and built with `--only ... --out` before it is
+# added to the committed data.
+KNOWN_CAMPAIGNS: list[Campaign] = CAMPAIGNS
 
 KNOWN_CAMPAIGNS_BY_KEY: dict[str, Campaign] = {c.key: c for c in KNOWN_CAMPAIGNS}
 
@@ -65,15 +63,27 @@ def requirement_groups(campaigns: list[Campaign] = CAMPAIGNS) -> dict[str, list[
 
 # Every classname the game must refuse until the matching item arrives.
 #
-# The crowbar is in here despite never being an item. It is also in
-# STARTING_WEAPONS, and starting weapons are checked first, so in practice it is
-# always allowed -- the entry exists so that the table is the single answer to
-# "is this pickup gated", with no classname falling through it unlisted.
-CLASSNAME_TO_ITEM: dict[str, str] = {
-    classname: item
-    for campaign in CAMPAIGNS
-    for table in (campaign.weapons, campaign.optional_items,
-                  campaign.unrandomised_weapons)
-    for item, classnames in table.items()
-    for classname in classnames
-}
+# The melee weapons are in here too. Whichever one starts the run is always
+# allowed, because starting weapons are checked first; the others are items and
+# are refused until they arrive.
+CLASSNAME_TO_ITEM: dict[str, str] = {}
+for _campaign in CAMPAIGNS:
+    for _table in (_campaign.weapons, _campaign.optional_items,
+                   _campaign.unrandomised_weapons):
+        for _item, _classnames in _table.items():
+            for _classname in _classnames:
+                # First campaign wins. `item_suit` is the HEV Suit to Half-Life
+                # and the PCV to Opposing Force; the game never gates the suit
+                # pickup itself (it gates armour per campaign), so the older
+                # meaning stays in the table.
+                CLASSNAME_TO_ITEM.setdefault(_classname, _item)
+
+# Every starting-melee candidate, `{item name: classname}`, in registry order:
+# the crowbar, then Shephard's knife and wrench. One of them starts the run; the
+# rest are items, gated like any weapon.
+MELEE_ITEMS: dict[str, str] = {}
+for _campaign in CAMPAIGNS:
+    for _item, _classnames in _campaign.unrandomised_weapons.items():
+        for _classname in _classnames:
+            if _classname in _campaign.melee:
+                MELEE_ITEMS.setdefault(_item, _classname)

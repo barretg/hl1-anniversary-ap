@@ -205,5 +205,7 @@ HALF_LIFE = Campaign(
         {"t0a0", "t0a0a", "t0a0b", "t0a0b1", "t0a0b2", "t0a0c", "t0a0d",
          "hldemo1", "hldemo2", "hldemo3", "lambda_bunker"}
     ),
+    armour_item="HEV Suit",
+    short="hl",
     legacy=True,
 )

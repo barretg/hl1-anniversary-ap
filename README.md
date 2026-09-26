@@ -25,8 +25,8 @@ done, [TODO.md](TODO.md) for deliberate deferrals and ideas, and
 ## The target
 
 Retail Half-Life on Steam, current build. Not `steam_legacy`, not WON, not Xash.
-Opposing Force and Blue Shift are separate games with their own dlls and are out
-of scope until this one ships.
+Opposing Force and Blue Shift can be added to a seed as experimental options; see
+below.
 
 The mod installs as its own game folder, `hlap`, with `fallback_dir "valve"`, so
 your Half-Life install is never written to and every map, model and sound is
@@ -47,6 +47,47 @@ are finished, and clearing it wins the seed.
 A mission is entered from the hub with a fresh `map` load, so it is repeatable
 and carries no state in from anywhere else. Transitions *inside* a mission are
 the game's own -- inventory and level state carry exactly as retail does.
+
+## Opposing Force and Blue Shift (experimental)
+
+`include_opposing_force` and `include_blue_shift` add each game's missions to the
+seed, and `include_half_life` can be turned off. They need the game installed in
+the same Steam library as Half-Life, and `/install` run after it was: the
+installer links the game's content into the mod (it never writes to `gearbox/`
+or `bshift/`), converts Blue Shift's maps to the standard lump order, and keeps
+content whose path collides with Half-Life's under its own name, so each game
+looks and sounds like itself. The server dll carries every entity those games'
+single-player maps use, ported from Sam Vanheer's Opposing Force and Blue Shift
+updated SDKs, and the mod ships its own client dll for the Opposing Force
+weapons.
+
+| Game | Missions | Finale | Armour item |
+| --- | --- | --- | --- |
+| Opposing Force | 12, Incoming to Worlds Collide | Worlds Collide | PCV |
+| Blue Shift | 6, Living Quarters Outbound to Power Struggle | Power Struggle (with A Leap Of Faith) | Security Armor |
+
+Each game's finale is sealed by a count of that game's own missions
+(`opposing_force_missions_required`, `blue_shift_missions_required`), and the
+seed is won with every included game's finale. Blue Shift's ends on the
+outro's end-of-game trigger, which the game turns into a return to the hub.
+
+Half-Life's weapons are always in the pool, since every game places them.
+Opposing Force adds seven: Desert Eagle, M249, Sniper Rifle, Displacer, Spore
+Launcher, Barnacle (needed from Pit Worm's Nest on, at any logic difficulty) and
+Shock Roach (its check is the first one a shock trooper drops in Vicarious
+Reality). With Opposing Force in, `random_starting_weapon` picks the starting
+melee weapon from the crowbar, combat knife and pipe wrench; the others become
+items. Each game has its own `First <weapon>` checks, named with the game in
+front. `viewmodel_style: always_gordon` keeps Gordon's hands everywhere.
+
+In game, `ap` groups missions by game, and `ap_warp of 3` / `ap_warp bs 2` warp
+by a game's own mission number. A mission of a game this install does not have
+is refused with that reason, and the client warns on connect.
+
+The lobby has panels for Half-Life only. Panels for the other games are named
+`of_chapter_<n>_button` and `bs_chapter_<n>_button`, `n` counting that game's
+missions from 0; the generator reads them from the map when they exist and
+reports the missing ones rather than failing.
 
 ## The hub
 
@@ -93,13 +134,14 @@ saves. See [docs/protocol.md](docs/protocol.md).
 
 ## Locations
 
-Three kinds, 253 in all against at most 32 progression items:
+Three kinds. For Half-Life, 252 in all against at most 32 progression items;
+Opposing Force adds 92 and Blue Shift 64:
 
-| Type | Count | Fires when |
-| --- | --- | --- |
-| `map_reached` / `chapter_complete` | 114 | you reach a map division, or finish a mission |
-| `charger` | 123 | you press use on a health or HEV wall unit, or stand in a Xen healing pool |
-| `weapon_pickup` | 16 | you reach the weapon Half-Life would first have given you |
+| Type | Half-Life | Opposing Force | Blue Shift | Fires when |
+| --- | --- | --- | --- | --- |
+| `map_reached` / `chapter_complete` | 114 | 50 | 37 | you reach a map division, or finish a mission |
+| `charger` | 122 | 24 | 17 | you press use on a health or HEV wall unit, or stand in a Xen healing pool |
+| `weapon_pickup` | 16 | 18 | 10 | you reach the weapon the game would first have given you |
 
 Chargers fire on the `+use`, empty or not, so they are about finding one rather
 than needing it. They can be switched off wholesale with `chargesanity: false`.
@@ -110,7 +152,9 @@ fires the check rather than pressing use. In the maps they are a `trigger_hurt`
 with *negative* damage -- `CBaseTrigger::HurtTouch` calls `TakeHealth` instead of
 `TakeDamage` when `dmg` is below zero -- so the sign is the whole of what tells a
 healing pool from a lava pit, and every other `trigger_hurt` in the game is left
-alone. Fifteen of them, all on Xen.
+alone. Fifteen of them in Half-Life, all on Xen. Opposing Force also has copies
+of a healing volume sealed inside prefab rooms nothing leads into; the generator
+drops those (`isolated_healing_pools`).
 
 **Chargers are identified by where they stand, not by brush model index.** They
 have no targetname, so the only two candidate handles are the brush model and the
@@ -138,9 +182,10 @@ off via `ENABLED_LOCATION_TYPES` in `tools/campaigns/shared.py`.
 
 Editorial decisions that *cannot* be derived from the maps -- mission grouping
 and names, which classnames map to which item, and the logic gates -- live in
-[`tools/campaigns/`](tools/campaigns/): one module per game (`half_life.py`)
-holding its `Campaign`, and `shared.py` for what every game shares (logic groups,
-charger rules, the hub). That is where to edit when tuning logic.
+[`tools/campaigns/`](tools/campaigns/): one module per game (`half_life.py`,
+`opposing_force.py`, `blue_shift.py`) holding its `Campaign`, and `shared.py`
+for what every game shares (logic groups, charger rules, the hub). That is where
+to edit when tuning logic.
 
 Chapter keys there are permanent: `data/ids.json` keys every location by chapter,
 so renaming one renumbers a location. Keys are the first map of the chapter;
@@ -180,6 +225,30 @@ without it -- a dll-less build takes an explicit `--allow-no-dll`.
 
 Playing needs the mod running: launch Half-Life with `-game hlap -console`, or
 pick Half-Life Archipelago from the Custom Game menu.
+
+## Adding a game
+
+A Half-Life mod with its own single-player maps goes in the same way Opposing
+Force and Blue Shift did:
+
+1. A module in `tools/campaigns/` building a `Campaign`: key, game directory, a
+   detect file, chapters from the maps' `chaptertitle` keys and changelevel
+   walk, finale, intro, gates, weapons, armour item, excluded maps. Add it to
+   `CAMPAIGNS` in `tools/campaigns/__init__.py`, after the existing ones so no
+   mission index moves.
+2. `pytest tests/test_campaign_scan.py` against the install: every map placed or
+   excluded, every chapter walkable, a forward exit from every mission but the
+   finale.
+3. `python tools/build_campaign_data.py --game-root "<Half-Life>"`, then read
+   the dropped-charger report (seam twins, nowhere to stand, walled in behind a
+   transition, sealed healing volumes).
+4. The entity gap against the dll: every classname the maps use needs a
+   `LINK_ENTITY_TO_CLASS`. Port what is missing into `game/src/port/`.
+5. Content: `apworld/half_life/mod/content.py` links the game's files in and
+   relocates any that collide with Half-Life's; add the game to its list.
+6. Options in the apworld (`include_<game>`, its missions required) and a
+   generation test for a seed of that game alone.
+7. `python tools/gen_checkdata.py`, then the full test suites.
 
 ## AI Usage Disclosure
 

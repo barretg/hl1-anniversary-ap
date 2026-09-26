@@ -53,9 +53,8 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "of3a1": _RANGED,
     "of3a4": _RANGED,
     "of4a1": _RANGED,
-    # The grapple lies in `of4a3`, the end of Vicarious Reality, and Pit Worm's
-    # Nest is the first mission built around it. Whether that mission itself
-    # needs it, or only later ones, is still to be confirmed in play.
+    # The grapple lies in `of4a3`, the end of Vicarious Reality, and from Pit
+    # Worm's Nest on progress needs it (confirmed in play).
     "of4a4": _HEAVY,
     "of5a1": _HEAVY,
     "of6a1": _HEAVY,
@@ -83,8 +82,8 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "barnacle_grapple": ["Barnacle"],
 }
 
-# Shephard's melee weapons. Checks now, items once starting-melee randomisation
-# lands (the location keys do not change when they do).
+# Shephard's melee weapons: a `First` check each, and starting-melee candidates
+# (see `MELEE_ITEMS`). Whichever does not start the run is an item.
 UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
     "Pipe Wrench": ["weapon_pipewrench"],
     "Combat Knife": ["weapon_knife"],
@@ -122,4 +121,6 @@ OPPOSING_FORCE = Campaign(
     # Boot camp: the training course, left out like Half-Life's hazard course.
     excluded_maps=frozenset({"ofboot0", "ofboot1", "ofboot2", "ofboot3", "ofboot4"}),
     hub_button_prefix="of_",
+    armour_item="PCV",
+    short="of",
 )

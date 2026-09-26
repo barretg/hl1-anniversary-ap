@@ -200,10 +200,11 @@ def test_every_mission_has_a_lobby_button(campaign: dict) -> None:
     generated file having been regenerated after the lobby changed.
     """
     buttons = campaign["hub_buttons"]
-    assert {button["chapter"] for button in buttons} == {
-        chapter["key"] for chapter in campaign["chapters"]
-    }
-    assert len(buttons) == len(campaign["chapters"])
+    # Half-Life's must be complete; the lobby has no panels for the other games
+    # yet, and their missions are reached by command.
+    half_life = {c["key"] for c in campaign["chapters"] if c["campaign"] == "half_life"}
+    assert {button["chapter"] for button in buttons} >= half_life
+    assert len(buttons) == len({button["chapter"] for button in buttons})
 
 
 def test_lobby_buttons_are_numbered_by_mission_index(campaign: dict) -> None:
@@ -217,6 +218,8 @@ def test_lobby_buttons_are_numbered_by_mission_index(campaign: dict) -> None:
 
     by_key = {chapter["key"]: chapter["index"] for chapter in campaign["chapters"]}
     for button in campaign["hub_buttons"]:
+        if hub_button_index(button["targetname"]) is None:
+            continue  # another game's panel, numbered within that game
         assert hub_button_index(button["targetname"]) == by_key[button["chapter"]]
 
 
@@ -252,17 +255,20 @@ def test_item_and_location_id_spaces_do_not_overlap(campaign: dict) -> None:
     assert not item_ids & location_ids
 
 
-def test_exactly_one_goal_chapter(campaign: dict) -> None:
+def test_exactly_one_goal_chapter_per_game(campaign: dict) -> None:
     goals = [c["key"] for c in campaign["chapters"] if c["is_goal"]]
-    assert goals == [campaign["goal_chapter"]]
+    assert goals == [entry["goal_chapter"] for entry in campaign["campaigns"]]
+    # The top-level one is Half-Life's, for every reader from before.
+    assert campaign["goal_chapter"] == campaign["campaigns"][0]["goal_chapter"] == "c4a3"
 
 
 def test_the_goal_chapter_has_no_unlock_item(campaign: dict) -> None:
     """Nothing unlocks the finale; finishing missions does."""
     chapter_items = [i for i in campaign["items"] if i.get("group") == "chapter"]
-    assert campaign["goal_chapter"] not in {item["chapter"] for item in chapter_items}
+    goals = {entry["goal_chapter"] for entry in campaign["campaigns"]}
+    assert not goals & {item["chapter"] for item in chapter_items}
     # Every other mission does have one.
-    assert len(chapter_items) == len(campaign["chapters"]) - 1
+    assert len(chapter_items) == len(campaign["chapters"]) - len(goals)
 
 
 def test_only_the_finale_completes_on_arrival(campaign: dict) -> None:
@@ -278,7 +284,10 @@ def test_only_the_finale_completes_on_arrival(campaign: dict) -> None:
     that chapter has no forward exit and the map table is wrong.
     """
     arrival = [c["key"] for c in campaign["chapters"] if c["complete_on_arrival"]]
-    assert arrival == [campaign["goal_chapter"]]
+    # Blue Shift's finale ends on `trigger_endsection` instead.
+    assert arrival == ["c4a3", "of6a4b"]
+    endsection = [c["key"] for c in campaign["chapters"] if c["complete_on"] == "endsection"]
+    assert endsection == ["ba_teleport2"]
 
 
 def test_checkdata_carries_the_completion_rule(
@@ -406,7 +415,8 @@ def test_chapter_gates_reference_real_groups(campaign: dict) -> None:
         for name in chapter["gates"].get("strict", []):
             assert name in groups, chapter["key"]
         for name in chapter["gates"].get("always", []):
-            assert name in ("longjump", "suit"), chapter["key"]
+            # Equipment by key, or a group needed at every difficulty.
+            assert name in ("longjump", "suit") or name in groups, chapter["key"]
 
 
 # --- checkdata.txt must mirror campaign.json ------------------------------
@@ -449,16 +459,19 @@ def test_the_crowbar_is_gated_but_starts_unlocked(
 ) -> None:
     """Both, and that pair is the mechanism rather than a contradiction.
 
-    Starting weapons are checked before gates, so the crowbar is always yours.
-    The gate exists so that the table is the single answer to "is this pickup
-    gated", with no classname falling through it unlisted.
+    Starting weapons are checked before gates, so whichever melee weapon starts
+    the run is always yours; the crowbar is the default. The others are items,
+    for seeds where Opposing Force's knife or wrench may start instead.
     """
     starting = {r[1] for r in checkdata if r[0] == "S"}
     locked = {r[1]: r[2] for r in checkdata if r[0] == "K"}
 
     assert "weapon_crowbar" in starting
     assert locked.get("weapon_crowbar") == "Crowbar"
-    assert "Crowbar" not in {item["name"] for item in campaign["items"]}
+    melee = {i["name"]: i for i in campaign["items"] if i.get("group") == "melee"}
+    assert set(melee) == {"Crowbar", "Pipe Wrench", "Combat Knife"}
+    assert locked.get("weapon_knife") == "Combat Knife"
+    assert locked.get("weapon_pipewrench") == "Pipe Wrench"
 
 
 def test_every_map_has_a_reached_location(campaign: dict) -> None:
@@ -576,7 +589,12 @@ def test_healing_pools_are_chargers_on_xen(campaign: dict) -> None:
     ]
     assert pools
 
-    xen = {"c4a1", "c4a2", "c4a1a", "c4a3"}
+    xen = {"c4a1", "c4a2", "c4a1a", "c4a3", "ba_xen1",
+           # Opposing Force's: the Xen trip out of We Are Not Alone, Vicarious
+           # Reality's and Worlds Collide's alien stretches, and Crush Depth's.
+           # Its copies sealed in unused prefab rooms are dropped by
+           # `isolated_healing_pools`.
+           "of3a1", "of3a4", "of4a1", "of6a4b"}
     for entry in pools:
         assert entry["trigger"]["type"] == "charger", entry["name"]
         assert "Healing Pool" in entry["name"], entry["name"]
@@ -614,24 +632,28 @@ def test_checkdata_charger_args_are_classname_and_position(
 
 def test_every_weapon_has_exactly_one_first_pickup(campaign: dict) -> None:
     """One check per weapon for the whole run, at its earliest copy."""
-    seen: set[str] = set()
+    owner = {c["key"]: c["campaign"] for c in campaign["chapters"]}
+    seen: set[tuple[str, str]] = set()
     for entry in campaign["locations"]:
         if entry["trigger"]["type"] != "weapon_pickup":
             continue
-        key = ",".join(sorted(entry["trigger"]["classnames"]))
+        # One per game: each has its own first shotgun.
+        key = (owner[entry["chapter"]], ",".join(sorted(entry["trigger"]["classnames"])))
         assert key not in seen, entry["name"]
         seen.add(key)
 
 
 def test_the_crowbar_is_a_location_but_never_an_item(campaign: dict) -> None:
-    """You start with one; finding the campaign's own is still worth a check."""
+    """You usually start with one; finding each game's own is still a check.
+
+    Its item exists only for seeds where another melee weapon may start the
+    run, and an item for the weapon that did start is never placed."""
     names = [
         entry["name"] for entry in campaign["locations"]
         if entry["trigger"]["type"] == "weapon_pickup"
         and "weapon_crowbar" in entry["trigger"]["classnames"]
     ]
-    assert names == ["First Crowbar"]
-    assert "Crowbar" not in {item["name"] for item in campaign["items"]}
+    assert names == ["First Crowbar", "Blue Shift: First Crowbar"]
 
 
 def test_first_pickups_are_at_the_earliest_map_holding_the_weapon(
@@ -681,7 +703,8 @@ def test_both_spellings_of_a_weapon_unlock_together(campaign: dict) -> None:
 
 def test_no_sven_only_weapon_survived_the_port(campaign: dict) -> None:
     """Sven Co-op's own spellings do not exist in retail and could never fire."""
-    absent = {"weapon_m16", "weapon_medkit", "weapon_pipewrench", "weapon_spanner"}
+    # `weapon_pipewrench` is real in Opposing Force, so it is not in this list.
+    absent = {"weapon_m16", "weapon_medkit", "weapon_spanner"}
 
     for entry in campaign["items"]:
         assert not absent & set(entry.get("classnames", ())), entry["name"]
@@ -729,9 +752,14 @@ def test_placeable_locations_carry_a_position(campaign: dict) -> None:
     Chargers and weapon pickups are somewhere; reaching a map or finishing a
     mission is not a place, so those carry nothing and `ap_find` says so.
     """
+    # Anchored checks have no copy lying in the map: the Shock Roach is only
+    # ever dropped by a shock trooper.
+    anchored = {"Opposing Force: First Shock Roach"}
     for entry in campaign["locations"]:
         kind = entry["trigger"]["type"]
-        if kind in ("charger", "weapon_pickup"):
+        if entry["name"] in anchored:
+            assert "position" not in entry, entry["name"]
+        elif kind in ("charger", "weapon_pickup"):
             assert "position" in entry, entry["name"]
             assert len(entry["position"]) == 3, entry["name"]
             assert all(isinstance(v, int) for v in entry["position"]), entry["name"]
@@ -771,7 +799,8 @@ def test_the_campaign_is_retail_half_life(campaign: dict) -> None:
     A stray `hl_c07_a1` would mean the layout table was half-ported, and the
     generator would happily produce a world for maps this game does not have.
     """
-    maps = [m for chapter in campaign["chapters"] for m in chapter["maps"]]
+    maps = [m for chapter in campaign["chapters"] for m in chapter["maps"]
+            if chapter["campaign"] == "half_life"]
     assert maps[0] == "c0a0"
     assert maps[-1] == "c5a1"
     for map_name in maps:

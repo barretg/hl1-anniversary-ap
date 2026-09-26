@@ -71,4 +71,6 @@ BLUE_SHIFT = Campaign(
     # arriving there is the doorstep, not the end.
     complete_on={"ba_teleport2": "endsection"},
     hub_button_prefix="bs_",
+    armour_item="Security Armor",
+    short="bs",
 )

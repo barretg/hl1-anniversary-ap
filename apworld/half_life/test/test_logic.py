@@ -6,6 +6,8 @@ Run these from an Archipelago source checkout:
     pytest worlds/half_life/test
 """
 
+from BaseClasses import CollectionState
+
 from . import HalfLifeTestBase
 from ..data import CHAPTERS, CHAPTERS_BY_KEY, LOCATIONS, MAX_MISSIONS
 from ..items import chapter_unlock_items, unlock_item_for_chapter
@@ -22,11 +24,11 @@ class StartingMissionMixin:
 
     def test_the_starting_mission_is_reachable_from_nothing(self) -> None:
         world = self.multiworld.worlds[self.player]
-        state = self.multiworld.get_state(self.multiworld)
+        state = CollectionState(self.multiworld)
 
         chapter = CHAPTERS_BY_KEY[world.starting_chapter]
         self.assertTrue(
-            self.can_reach_entrance(f"Enter {chapter['name']}", state),
+            state.can_reach_entrance(f"Enter {chapter['name']}", self.player),
             f"{chapter['name']} was handed out as the starting mission but "
             f"cannot be entered with only its unlock item",
         )
@@ -36,7 +38,7 @@ class StartingMissionMixin:
         self.assertNotIn(world.starting_chapter, world.excluded_chapters)
 
     def test_something_is_reachable_at_the_start(self) -> None:
-        state = self.multiworld.get_state(self.multiworld)
+        state = CollectionState(self.multiworld)
         reachable = [
             location for location in self.multiworld.get_locations(self.player)
             if location.can_reach(state)
@@ -68,9 +70,13 @@ class TestDefaults(StartingMissionMixin, HalfLifeTestBase):
                 self.assertNotIn(chapter["key"], unlock_item_for_chapter)
 
     def test_crowbar_is_not_an_item(self) -> None:
-        """You always have it, so nothing can be sent for it."""
-        names = self.multiworld.worlds[self.player].item_name_to_id
-        self.assertNotIn("Crowbar", names)
+        """A Half-Life-only seed always starts with it, so nothing can be sent
+        for it. (It is an item in the datapackage for seeds where Opposing
+        Force's knife or wrench may start the run instead.)"""
+        pool = [item.name for item in self.multiworld.itempool if item.player == self.player]
+        self.assertNotIn("Crowbar", pool)
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(world.starting_weapon, "weapon_crowbar")
 
     def test_victory_needs_every_mission_by_default(self) -> None:
         world = self.multiworld.worlds[self.player]
@@ -110,7 +116,7 @@ class TestEquipmentShuffled(StartingMissionMixin, HalfLifeTestBase):
         state.remove(world.create_item("Long Jump Module"))
         state.sweep_for_advancements()
 
-        self.assertFalse(self.can_reach_entrance("Enter Xen", state))
+        self.assertFalse(state.can_reach_entrance("Enter Xen", self.player))
 
 
 class TestXenWeapons(HalfLifeTestBase):
@@ -127,7 +133,7 @@ class TestXenWeapons(HalfLifeTestBase):
 
             for chapter in ("Xen", "Gonarch's Lair", "Interloper", "Nihilanth"):
                 self.assertFalse(
-                    self.can_reach_entrance(f"Enter {chapter}", state),
+                    state.can_reach_entrance(f"Enter {chapter}", self.player),
                     f"{chapter} is reachable without the {missing}",
                 )
 
@@ -138,7 +144,7 @@ class TestXenWeapons(HalfLifeTestBase):
         state.remove(world.create_item("Tau Cannon"))
         state.sweep_for_advancements()
 
-        self.assertTrue(self.can_reach_entrance("Enter Surface Tension", state))
+        self.assertTrue(state.can_reach_entrance("Enter Surface Tension", self.player))
 
 
 class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeTestBase):
@@ -151,7 +157,7 @@ class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeTestBase):
 
     def test_xen_is_reachable_without_equipment(self) -> None:
         state = self.multiworld.get_all_state(False)
-        self.assertTrue(self.can_reach_entrance("Enter Xen", state))
+        self.assertTrue(state.can_reach_entrance("Enter Xen", self.player))
 
     def test_long_jump_module_is_locked_to_its_vanilla_location(self) -> None:
         location = self.multiworld.get_location("First Long Jump Module", self.player)
@@ -287,10 +293,107 @@ class TestLooseLogic(StartingMissionMixin, HalfLifeTestBase):
 
     def test_weapon_gates_are_dropped(self) -> None:
         """Surface Tension with a crowbar is loose logic's whole proposition."""
-        state = self.multiworld.get_state(self.multiworld)
+        state = CollectionState(self.multiworld)
         world = self.multiworld.worlds[self.player]
         state.collect(
             world.create_item(unlock_item_for_chapter["c2a5"]), prevent_sweep=True
         )
 
-        self.assertTrue(self.can_reach_entrance("Enter Surface Tension", state))
+        self.assertTrue(state.can_reach_entrance("Enter Surface Tension", self.player))
+
+
+# --- More than one game -----------------------------------------------------
+
+HL_WEAPONS = {"Shotgun", "MP5", "Glock", "RPG"}
+OF_WEAPONS = {"Desert Eagle", "M249", "Sniper Rifle", "Displacer",
+              "Spore Launcher", "Barnacle", "Shock Roach"}
+
+
+class CampaignMixin:
+    campaigns: set[str] = set()
+
+    def pool(self) -> list[str]:
+        return [item.name for item in self.multiworld.itempool if item.player == self.player]
+
+    def test_only_included_games_have_missions(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(set(world.campaigns), self.campaigns)
+        for chapter in world.included_chapters:
+            self.assertIn(chapter.get("campaign", "half_life"), self.campaigns)
+
+    def test_half_life_weapons_are_always_items(self) -> None:
+        """Every game places them, so an Opposing Force- or Blue Shift-only
+        seed still needs them."""
+        self.assertTrue(HL_WEAPONS <= set(self.pool()))
+
+    def test_opposing_force_weapons_only_with_opposing_force(self) -> None:
+        present = OF_WEAPONS & set(self.pool())
+        self.assertEqual(present, OF_WEAPONS if "opposing_force" in self.campaigns else set())
+
+    def test_every_finale_is_needed(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        self.assertTrue(self.multiworld.completion_condition[self.player](state))
+        self.assertEqual(set(world.missions_required_by_campaign), self.campaigns)
+        slot = world.fill_slot_data()
+        self.assertEqual(set(slot["goal_chapters"]), self.campaigns)
+
+    def test_starting_weapon_is_never_also_an_item(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        melee = {"weapon_crowbar": "Crowbar", "weapon_knife": "Combat Knife",
+                 "weapon_pipewrench": "Pipe Wrench"}
+        self.assertNotIn(melee[world.starting_weapon], self.pool())
+        self.assertEqual(world.fill_slot_data()["starting_weapons"], [world.starting_weapon])
+
+
+class TestOpposingForceOnly(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
+    options = {"include_half_life": False, "include_opposing_force": True}
+    campaigns = {"opposing_force"}
+
+    def test_the_other_melee_weapon_is_an_item(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertIn(world.starting_weapon, ("weapon_knife", "weapon_pipewrench"))
+        other = "Pipe Wrench" if world.starting_weapon == "weapon_knife" else "Combat Knife"
+        self.assertIn(other, self.pool())
+        self.assertNotIn("Crowbar", self.pool())
+
+    def test_armour_is_the_pcv(self) -> None:
+        self.assertNotIn("HEV Suit", self.pool())
+
+
+class TestOpposingForceGrapple(HalfLifeTestBase):
+    options = {"include_half_life": False, "include_opposing_force": True,
+               "logic_difficulty": "loose"}
+
+    def test_pit_worms_nest_needs_the_barnacle_at_any_difficulty(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        state.remove(world.create_item("Barnacle"))
+        state.sweep_for_advancements()
+        self.assertFalse(state.can_reach_entrance("Enter Pit Worm's Nest", self.player))
+
+
+class TestBlueShiftOnly(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
+    options = {"include_half_life": False, "include_blue_shift": True,
+               "shuffle_hev_suit": True}
+    campaigns = {"blue_shift"}
+
+    def test_security_armor_replaces_the_suit(self) -> None:
+        self.assertIn("Security Armor", self.pool())
+        self.assertNotIn("HEV Suit", self.pool())
+
+
+class TestEveryGame(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
+    options = {"include_opposing_force": True, "include_blue_shift": True,
+               "shuffle_hev_suit": True}
+    campaigns = {"half_life", "opposing_force", "blue_shift"}
+
+    def test_each_game_brings_its_armour(self) -> None:
+        self.assertTrue({"HEV Suit", "PCV", "Security Armor"} <= set(self.pool()))
+
+
+class TestNothingIncluded(HalfLifeTestBase):
+    options = {"include_half_life": False}
+
+    def test_half_life_comes_back(self) -> None:
+        self.assertEqual(self.multiworld.worlds[self.player].campaigns, ["half_life"])

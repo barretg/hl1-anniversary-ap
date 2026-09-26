@@ -18,6 +18,7 @@
 //   dlls/gamerules.cpp   CGameRules::CanHavePlayerItem-> ap::CanCollect
 //   dlls/singleplay_gamerules.cpp CHalfLifeRules::CanHaveItem -> ap::CanCollect
 //   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
+//   dlls/triggers.cpp    CTriggerEndSection           -> ap::InterceptEndSection
 //   dlls/triggers.cpp    CTriggerHurt::HurtTouch      -> ap::OnHealingTouch
 //   dlls/triggers.cpp    CBaseTrigger::MultiTouch     -> ap::TouchHubTrigger
 
@@ -61,6 +62,7 @@ bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub
 bool InterceptChangeLevel(const std::string& from_map,
                           const std::string& to_map);       // ap_hub
+bool InterceptEndSection(const std::string& map_name);      // ap_hub
 
 // Once per map load: find the mod folder, read checkdata.txt, open the bridge,
 // and announce ourselves with HELLO so the client sends a full snapshot.

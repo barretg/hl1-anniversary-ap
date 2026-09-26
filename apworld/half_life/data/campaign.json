@@ -1,5 +1,5 @@
 {
- "data_version": "4311d1555b6b",
+ "data_version": "b5049a0419f6",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -9,7 +9,39 @@
    "game_dir": "valve",
    "goal_chapter": "c4a3",
    "intro_chapter": "c0a0",
-   "detect": "valve/maps/c0a0.bsp"
+   "detect": "valve/maps/c0a0.bsp",
+   "short": "hl",
+   "armour_item": "HEV Suit",
+   "melee": [
+    "weapon_crowbar"
+   ]
+  },
+  {
+   "key": "opposing_force",
+   "name": "Opposing Force",
+   "game_dir": "gearbox",
+   "goal_chapter": "of6a4b",
+   "intro_chapter": "of0a0",
+   "detect": "gearbox/maps/of1a1.bsp",
+   "short": "of",
+   "armour_item": "PCV",
+   "melee": [
+    "weapon_knife",
+    "weapon_pipewrench"
+   ]
+  },
+  {
+   "key": "blue_shift",
+   "name": "Blue Shift",
+   "game_dir": "bshift",
+   "goal_chapter": "ba_teleport2",
+   "intro_chapter": "ba_tram1",
+   "detect": "bshift/maps/ba_tram1.bsp",
+   "short": "bs",
+   "armour_item": "Security Armor",
+   "melee": [
+    "weapon_crowbar"
+   ]
   }
  ],
  "chapters": [
@@ -409,6 +441,351 @@
    "complete_on_arrival": true,
    "campaign": "half_life",
    "complete_on": "arrival"
+  },
+  {
+   "key": "of0a0",
+   "name": "Incoming",
+   "maps": [
+    "of0a0"
+   ],
+   "index": 18,
+   "is_goal": false,
+   "gates": {},
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of1a1",
+   "name": "Welcome To Black Mesa",
+   "maps": [
+    "of1a1",
+    "of1a2",
+    "of1a3",
+    "of1a4",
+    "of1a4b"
+   ],
+   "index": 19,
+   "is_goal": false,
+   "gates": {},
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of1a5",
+   "name": "We Are Pulling Out",
+   "maps": [
+    "of1a5",
+    "of1a5b",
+    "of1a6"
+   ],
+   "index": 20,
+   "is_goal": false,
+   "gates": {},
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of2a1",
+   "name": "Missing In Action",
+   "maps": [
+    "of2a1",
+    "of2a1b",
+    "of2a2",
+    "of2a3"
+   ],
+   "index": 21,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of2a4",
+   "name": "Friendly Fire",
+   "maps": [
+    "of2a4",
+    "of2a5",
+    "of2a6"
+   ],
+   "index": 22,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of3a1",
+   "name": "We Are Not Alone",
+   "maps": [
+    "of3a1",
+    "of3a1b",
+    "of3a2"
+   ],
+   "index": 23,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of3a4",
+   "name": "Crush Depth",
+   "maps": [
+    "of3a4",
+    "of3a5",
+    "of3a6"
+   ],
+   "index": 24,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of4a1",
+   "name": "Vicarious Reality",
+   "maps": [
+    "of4a1",
+    "of4a2",
+    "of4a3"
+   ],
+   "index": 25,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of4a4",
+   "name": "Pit Worm's Nest",
+   "maps": [
+    "of4a4",
+    "of4a5"
+   ],
+   "index": 26,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "barnacle_grapple"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of5a1",
+   "name": "Foxtrot Uniform",
+   "maps": [
+    "of5a1",
+    "of5a2",
+    "of5a3",
+    "of5a4"
+   ],
+   "index": 27,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "barnacle_grapple"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of6a1",
+   "name": "The Package",
+   "maps": [
+    "of6a1",
+    "of6a2",
+    "of6a3",
+    "of6a4"
+   ],
+   "index": 28,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "barnacle_grapple"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "opposing_force",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "of6a4b",
+   "name": "Worlds Collide",
+   "maps": [
+    "of6a4b",
+    "of6a5",
+    "of7a0"
+   ],
+   "index": 29,
+   "is_goal": true,
+   "gates": {
+    "strict": [
+     "heavy"
+    ],
+    "always": [
+     "barnacle_grapple"
+    ]
+   },
+   "complete_on_arrival": true,
+   "campaign": "opposing_force",
+   "complete_on": "arrival"
+  },
+  {
+   "key": "ba_tram1",
+   "name": "Living Quarters Outbound",
+   "maps": [
+    "ba_tram1",
+    "ba_tram2",
+    "ba_tram3"
+   ],
+   "index": 30,
+   "is_goal": false,
+   "gates": {},
+   "complete_on_arrival": false,
+   "campaign": "blue_shift",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "ba_security1",
+   "name": "Insecurity",
+   "maps": [
+    "ba_security1",
+    "ba_security2",
+    "ba_maint",
+    "ba_elevator"
+   ],
+   "index": 31,
+   "is_goal": false,
+   "gates": {},
+   "complete_on_arrival": false,
+   "campaign": "blue_shift",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "ba_canal1",
+   "name": "Duty Calls",
+   "maps": [
+    "ba_canal1",
+    "ba_canal1b",
+    "ba_canal2",
+    "ba_canal3"
+   ],
+   "index": 32,
+   "is_goal": false,
+   "gates": {},
+   "complete_on_arrival": false,
+   "campaign": "blue_shift",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "ba_yard1",
+   "name": "Captive Freight",
+   "maps": [
+    "ba_yard1",
+    "ba_yard2",
+    "ba_yard3a",
+    "ba_yard3b",
+    "ba_yard3",
+    "ba_yard4",
+    "ba_yard4a",
+    "ba_yard5",
+    "ba_yard5a",
+    "ba_teleport1"
+   ],
+   "index": 33,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "blue_shift",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "ba_xen1",
+   "name": "Focal Point",
+   "maps": [
+    "ba_xen1",
+    "ba_xen2",
+    "ba_xen3",
+    "ba_xen4",
+    "ba_xen5",
+    "ba_xen6"
+   ],
+   "index": 34,
+   "is_goal": false,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "blue_shift",
+   "complete_on": "forward_exit"
+  },
+  {
+   "key": "ba_teleport2",
+   "name": "Power Struggle",
+   "maps": [
+    "ba_teleport2",
+    "ba_power1",
+    "ba_power2",
+    "ba_outro"
+   ],
+   "index": 35,
+   "is_goal": true,
+   "gates": {
+    "strict": [
+     "ranged"
+    ]
+   },
+   "complete_on_arrival": false,
+   "campaign": "blue_shift",
+   "complete_on": "endsection"
   }
  ],
  "items": [
@@ -417,119 +794,264 @@
    "name": "Black Mesa Inbound Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c0a0"
+   "chapter": "c0a0",
+   "campaign": "half_life"
   },
   {
    "id": 7750001,
    "name": "Anomalous Materials Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c1a0"
+   "chapter": "c1a0",
+   "campaign": "half_life"
   },
   {
    "id": 7750002,
    "name": "Unforeseen Consequences Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c1a0c"
+   "chapter": "c1a0c",
+   "campaign": "half_life"
   },
   {
    "id": 7750003,
    "name": "Office Complex Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c1a2"
+   "chapter": "c1a2",
+   "campaign": "half_life"
   },
   {
    "id": 7750004,
    "name": "We've Got Hostiles Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c1a3"
+   "chapter": "c1a3",
+   "campaign": "half_life"
   },
   {
    "id": 7750005,
    "name": "Blast Pit Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c1a4"
+   "chapter": "c1a4",
+   "campaign": "half_life"
   },
   {
    "id": 7750006,
    "name": "Power Up Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c2a1"
+   "chapter": "c2a1",
+   "campaign": "half_life"
   },
   {
    "id": 7750007,
    "name": "On A Rail Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c2a2"
+   "chapter": "c2a2",
+   "campaign": "half_life"
   },
   {
    "id": 7750008,
    "name": "Apprehension Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c2a3"
+   "chapter": "c2a3",
+   "campaign": "half_life"
   },
   {
    "id": 7750009,
    "name": "Residue Processing Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c2a4"
+   "chapter": "c2a4",
+   "campaign": "half_life"
   },
   {
    "id": 7750010,
    "name": "Questionable Ethics Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c2a4d"
+   "chapter": "c2a4d",
+   "campaign": "half_life"
   },
   {
    "id": 7750011,
    "name": "Surface Tension Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c2a5"
+   "chapter": "c2a5",
+   "campaign": "half_life"
   },
   {
    "id": 7750012,
    "name": "Forget About Freeman Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c3a1"
+   "chapter": "c3a1",
+   "campaign": "half_life"
   },
   {
    "id": 7750013,
    "name": "Lambda Core Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c3a2e"
+   "chapter": "c3a2e",
+   "campaign": "half_life"
   },
   {
    "id": 7750014,
    "name": "Xen Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c4a1"
+   "chapter": "c4a1",
+   "campaign": "half_life"
   },
   {
    "id": 7750015,
    "name": "Gonarch's Lair Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c4a2"
+   "chapter": "c4a2",
+   "campaign": "half_life"
   },
   {
    "id": 7750016,
    "name": "Interloper Unlock",
    "classification": "progression",
    "group": "chapter",
-   "chapter": "c4a1a"
+   "chapter": "c4a1a",
+   "campaign": "half_life"
+  },
+  {
+   "id": 7750040,
+   "name": "Opposing Force: Incoming Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of0a0",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750041,
+   "name": "Opposing Force: Welcome To Black Mesa Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of1a1",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750042,
+   "name": "Opposing Force: We Are Pulling Out Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of1a5",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750043,
+   "name": "Opposing Force: Missing In Action Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of2a1",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750044,
+   "name": "Opposing Force: Friendly Fire Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of2a4",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750045,
+   "name": "Opposing Force: We Are Not Alone Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of3a1",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750046,
+   "name": "Opposing Force: Crush Depth Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of3a4",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750047,
+   "name": "Opposing Force: Vicarious Reality Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of4a1",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750048,
+   "name": "Opposing Force: Pit Worm's Nest Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of4a4",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750049,
+   "name": "Opposing Force: Foxtrot Uniform Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of5a1",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750050,
+   "name": "Opposing Force: The Package Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "of6a1",
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750051,
+   "name": "Blue Shift: Living Quarters Outbound Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "ba_tram1",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7750052,
+   "name": "Blue Shift: Insecurity Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "ba_security1",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7750053,
+   "name": "Blue Shift: Duty Calls Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "ba_canal1",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7750054,
+   "name": "Blue Shift: Captive Freight Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "ba_yard1",
+   "campaign": "blue_shift"
+  },
+  {
+   "id": 7750055,
+   "name": "Blue Shift: Focal Point Unlock",
+   "classification": "progression",
+   "group": "chapter",
+   "chapter": "ba_xen1",
+   "campaign": "blue_shift"
   },
   {
    "id": 7750017,
@@ -539,7 +1061,8 @@
    "classnames": [
     "weapon_glock",
     "weapon_9mmhandgun"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750018,
@@ -549,7 +1072,8 @@
    "classnames": [
     "weapon_357",
     "weapon_python"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750019,
@@ -559,7 +1083,8 @@
    "classnames": [
     "weapon_mp5",
     "weapon_9mmAR"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750020,
@@ -568,7 +1093,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_shotgun"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750021,
@@ -577,7 +1103,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_crossbow"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750022,
@@ -586,7 +1113,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_rpg"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750023,
@@ -595,7 +1123,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_gauss"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750024,
@@ -604,7 +1133,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_egon"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750025,
@@ -613,7 +1143,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_hornetgun"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750026,
@@ -622,7 +1153,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_satchel"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750027,
@@ -631,7 +1163,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_tripmine"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750028,
@@ -640,7 +1173,8 @@
    "group": "weapon",
    "classnames": [
     "weapon_snark"
-   ]
+   ],
+   "campaign": "half_life"
   },
   {
    "id": 7750029,
@@ -649,7 +1183,78 @@
    "group": "weapon",
    "classnames": [
     "weapon_handgrenade"
-   ]
+   ],
+   "campaign": "half_life"
+  },
+  {
+   "id": 7750056,
+   "name": "Desert Eagle",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_eagle"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750057,
+   "name": "M249",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_m249"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750058,
+   "name": "Sniper Rifle",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_sniperrifle"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750059,
+   "name": "Displacer",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_displacer"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750060,
+   "name": "Spore Launcher",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_sporelauncher"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750061,
+   "name": "Barnacle",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_grapple"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750062,
+   "name": "Shock Roach",
+   "classification": "progression",
+   "group": "weapon",
+   "classnames": [
+    "weapon_shockrifle"
+   ],
+   "campaign": "opposing_force"
   },
   {
    "id": 7750030,
@@ -658,7 +1263,9 @@
    "group": "optional",
    "classnames": [
     "item_suit"
-   ]
+   ],
+   "campaign": "half_life",
+   "armour": true
   },
   {
    "id": 7750031,
@@ -667,7 +1274,62 @@
    "group": "optional",
    "classnames": [
     "item_longjump"
-   ]
+   ],
+   "campaign": "half_life",
+   "armour": false
+  },
+  {
+   "id": 7750063,
+   "name": "PCV",
+   "classification": "progression",
+   "group": "optional",
+   "classnames": [
+    "item_suit"
+   ],
+   "campaign": "opposing_force",
+   "armour": true
+  },
+  {
+   "id": 7750064,
+   "name": "Security Armor",
+   "classification": "progression",
+   "group": "optional",
+   "classnames": [
+    "item_armorvest",
+    "item_helmet"
+   ],
+   "campaign": "blue_shift",
+   "armour": true
+  },
+  {
+   "id": 7750065,
+   "name": "Crowbar",
+   "classification": "progression",
+   "group": "melee",
+   "classnames": [
+    "weapon_crowbar"
+   ],
+   "campaign": "half_life"
+  },
+  {
+   "id": 7750066,
+   "name": "Pipe Wrench",
+   "classification": "progression",
+   "group": "melee",
+   "classnames": [
+    "weapon_pipewrench"
+   ],
+   "campaign": "opposing_force"
+  },
+  {
+   "id": 7750067,
+   "name": "Combat Knife",
+   "classification": "progression",
+   "group": "melee",
+   "classnames": [
+    "weapon_knife"
+   ],
+   "campaign": "opposing_force"
   },
   {
    "id": 7750032,
@@ -3774,6 +4436,1393 @@
    }
   },
   {
+   "id": 7760256,
+   "name": "Incoming - Reached",
+   "chapter": "of0a0",
+   "map": "of0a0",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of0a0"
+   }
+  },
+  {
+   "id": 7760257,
+   "name": "Welcome To Black Mesa - Part 1 Reached",
+   "chapter": "of1a1",
+   "map": "of1a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a1"
+   }
+  },
+  {
+   "id": 7760258,
+   "name": "Welcome To Black Mesa - Health Charger (Part 1)",
+   "chapter": "of1a1",
+   "map": "of1a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a1",
+    "classname": "func_healthcharger",
+    "at": "-584 2980 56"
+   },
+   "position": [
+    -584,
+    2980,
+    56
+   ]
+  },
+  {
+   "id": 7760259,
+   "name": "Welcome To Black Mesa - Part 2 Reached",
+   "chapter": "of1a1",
+   "map": "of1a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a2"
+   }
+  },
+  {
+   "id": 7760260,
+   "name": "Welcome To Black Mesa - Part 3 Reached",
+   "chapter": "of1a1",
+   "map": "of1a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a3"
+   }
+  },
+  {
+   "id": 7760261,
+   "name": "Welcome To Black Mesa - Part 4 Reached",
+   "chapter": "of1a1",
+   "map": "of1a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a4"
+   }
+  },
+  {
+   "id": 7760262,
+   "name": "Welcome To Black Mesa - Health Charger (Part 4)",
+   "chapter": "of1a1",
+   "map": "of1a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a4",
+    "classname": "func_healthcharger",
+    "at": "-1232 -572 184"
+   },
+   "position": [
+    -1232,
+    -572,
+    184
+   ]
+  },
+  {
+   "id": 7760263,
+   "name": "Welcome To Black Mesa - Part 5 Reached",
+   "chapter": "of1a1",
+   "map": "of1a4b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a4b"
+   }
+  },
+  {
+   "id": 7760264,
+   "name": "We Are Pulling Out - Part 1 Reached",
+   "chapter": "of1a5",
+   "map": "of1a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a5"
+   }
+  },
+  {
+   "id": 7760265,
+   "name": "We Are Pulling Out - Part 2 Reached",
+   "chapter": "of1a5",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a5b"
+   }
+  },
+  {
+   "id": 7760266,
+   "name": "We Are Pulling Out - HEV Charger (Part 2)",
+   "chapter": "of1a5",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a5b",
+    "classname": "func_recharge",
+    "at": "-1516 -3216 2264"
+   },
+   "position": [
+    -1516,
+    -3216,
+    2264
+   ]
+  },
+  {
+   "id": 7760267,
+   "name": "We Are Pulling Out - Part 3 Reached",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of1a6"
+   }
+  },
+  {
+   "id": 7760268,
+   "name": "We Are Pulling Out - Health Charger (Part 3)",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "charger",
+    "map": "of1a6",
+    "classname": "func_healthcharger",
+    "at": "636 -1584 8"
+   },
+   "position": [
+    636,
+    -1584,
+    8
+   ]
+  },
+  {
+   "id": 7760269,
+   "name": "Missing In Action - Part 1 Reached",
+   "chapter": "of2a1",
+   "map": "of2a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a1"
+   }
+  },
+  {
+   "id": 7760270,
+   "name": "Missing In Action - Health Charger (Part 1)",
+   "chapter": "of2a1",
+   "map": "of2a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of2a1",
+    "classname": "func_healthcharger",
+    "at": "500 8 -92"
+   },
+   "position": [
+    500,
+    8,
+    -93
+   ]
+  },
+  {
+   "id": 7760271,
+   "name": "Missing In Action - Part 2 Reached",
+   "chapter": "of2a1",
+   "map": "of2a1b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a1b"
+   }
+  },
+  {
+   "id": 7760272,
+   "name": "Missing In Action - Part 3 Reached",
+   "chapter": "of2a1",
+   "map": "of2a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a2"
+   }
+  },
+  {
+   "id": 7760273,
+   "name": "Missing In Action - Part 4 Reached",
+   "chapter": "of2a1",
+   "map": "of2a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a3"
+   }
+  },
+  {
+   "id": 7760274,
+   "name": "Friendly Fire - Part 1 Reached",
+   "chapter": "of2a4",
+   "map": "of2a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a4"
+   }
+  },
+  {
+   "id": 7760275,
+   "name": "Friendly Fire - Part 2 Reached",
+   "chapter": "of2a4",
+   "map": "of2a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a5"
+   }
+  },
+  {
+   "id": 7760276,
+   "name": "Friendly Fire - Part 3 Reached",
+   "chapter": "of2a4",
+   "map": "of2a6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of2a6"
+   }
+  },
+  {
+   "id": 7760277,
+   "name": "Friendly Fire - HEV Charger (Part 3)",
+   "chapter": "of2a4",
+   "map": "of2a6",
+   "trigger": {
+    "type": "charger",
+    "map": "of2a6",
+    "classname": "func_recharge",
+    "at": "-1232 2204 -556"
+   },
+   "position": [
+    -1230,
+    2205,
+    -556
+   ]
+  },
+  {
+   "id": 7760278,
+   "name": "We Are Not Alone - Part 1 Reached",
+   "chapter": "of3a1",
+   "map": "of3a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a1"
+   }
+  },
+  {
+   "id": 7760279,
+   "name": "We Are Not Alone - Health Charger (Part 1)",
+   "chapter": "of3a1",
+   "map": "of3a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a1",
+    "classname": "func_healthcharger",
+    "at": "592 1184 -204"
+   },
+   "position": [
+    592,
+    1186,
+    -204
+   ]
+  },
+  {
+   "id": 7760280,
+   "name": "We Are Not Alone - HEV Charger (Part 1)",
+   "chapter": "of3a1",
+   "map": "of3a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a1",
+    "classname": "func_recharge",
+    "at": "544 1184 -204"
+   },
+   "position": [
+    544,
+    1186,
+    -204
+   ]
+  },
+  {
+   "id": 7760281,
+   "name": "We Are Not Alone - Part 2 Reached",
+   "chapter": "of3a1",
+   "map": "of3a1b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a1b"
+   }
+  },
+  {
+   "id": 7760282,
+   "name": "We Are Not Alone - Healing Pool (Part 2)",
+   "chapter": "of3a1",
+   "map": "of3a1b",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a1b",
+    "classname": "trigger_hurt",
+    "at": "-632 -548 -124"
+   },
+   "position": [
+    -632,
+    -548,
+    -125
+   ]
+  },
+  {
+   "id": 7760283,
+   "name": "We Are Not Alone - Part 3 Reached",
+   "chapter": "of3a1",
+   "map": "of3a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a2"
+   }
+  },
+  {
+   "id": 7760284,
+   "name": "We Are Not Alone - Health Charger (Part 3)",
+   "chapter": "of3a1",
+   "map": "of3a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a2",
+    "classname": "func_healthcharger",
+    "at": "1204 2616 -3268"
+   },
+   "position": [
+    1204,
+    2614,
+    -3268
+   ]
+  },
+  {
+   "id": 7760285,
+   "name": "Crush Depth - Part 1 Reached",
+   "chapter": "of3a4",
+   "map": "of3a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a4"
+   }
+  },
+  {
+   "id": 7760286,
+   "name": "Crush Depth - Health Charger (Part 1)",
+   "chapter": "of3a4",
+   "map": "of3a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a4",
+    "classname": "func_healthcharger",
+    "at": "-1636 896 -56"
+   },
+   "position": [
+    -1636,
+    896,
+    -56
+   ]
+  },
+  {
+   "id": 7760287,
+   "name": "Crush Depth - HEV Charger (Part 1)",
+   "chapter": "of3a4",
+   "map": "of3a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a4",
+    "classname": "func_recharge",
+    "at": "-1636 832 -56"
+   },
+   "position": [
+    -1636,
+    832,
+    -56
+   ]
+  },
+  {
+   "id": 7760288,
+   "name": "Crush Depth - Healing Pool (Part 1)",
+   "chapter": "of3a4",
+   "map": "of3a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a4",
+    "classname": "trigger_hurt",
+    "at": "-2504 -3296 -408"
+   },
+   "position": [
+    -2504,
+    -3296,
+    -408
+   ]
+  },
+  {
+   "id": 7760289,
+   "name": "Crush Depth - Part 2 Reached",
+   "chapter": "of3a4",
+   "map": "of3a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a5"
+   }
+  },
+  {
+   "id": 7760290,
+   "name": "Crush Depth - HEV Charger (Part 2)",
+   "chapter": "of3a4",
+   "map": "of3a5",
+   "trigger": {
+    "type": "charger",
+    "map": "of3a5",
+    "classname": "func_recharge",
+    "at": "-3228 2340 -56"
+   },
+   "position": [
+    -3228,
+    2340,
+    -56
+   ]
+  },
+  {
+   "id": 7760291,
+   "name": "Crush Depth - Part 3 Reached",
+   "chapter": "of3a4",
+   "map": "of3a6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of3a6"
+   }
+  },
+  {
+   "id": 7760292,
+   "name": "Vicarious Reality - Part 1 Reached",
+   "chapter": "of4a1",
+   "map": "of4a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a1"
+   }
+  },
+  {
+   "id": 7760294,
+   "name": "Vicarious Reality - Part 2 Reached",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a2"
+   }
+  },
+  {
+   "id": 7760295,
+   "name": "Vicarious Reality - Health Charger 1 (Part 2)",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "at": "-2044 0 444"
+   },
+   "position": [
+    -2044,
+    2,
+    444
+   ]
+  },
+  {
+   "id": 7760296,
+   "name": "Vicarious Reality - Health Charger 2 (Part 2)",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "at": "-544 -1320 1148"
+   },
+   "position": [
+    -544,
+    -1318,
+    1148
+   ]
+  },
+  {
+   "id": 7760297,
+   "name": "Vicarious Reality - Health Charger 3 (Part 2)",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "func_healthcharger",
+    "at": "544 -1320 1148"
+   },
+   "position": [
+    544,
+    -1318,
+    1148
+   ]
+  },
+  {
+   "id": 7760298,
+   "name": "Vicarious Reality - Healing Pool (Part 2)",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a2",
+    "classname": "trigger_hurt",
+    "at": "-2192 -1456 260"
+   },
+   "position": [
+    -2192,
+    -1456,
+    262
+   ]
+  },
+  {
+   "id": 7760299,
+   "name": "Vicarious Reality - Part 3 Reached",
+   "chapter": "of4a1",
+   "map": "of4a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a3"
+   }
+  },
+  {
+   "id": 7760300,
+   "name": "Vicarious Reality - Health Charger (Part 3)",
+   "chapter": "of4a1",
+   "map": "of4a3",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a3",
+    "classname": "func_healthcharger",
+    "at": "176 -2116 356"
+   },
+   "position": [
+    176,
+    -2116,
+    356
+   ]
+  },
+  {
+   "id": 7760301,
+   "name": "Pit Worm's Nest - Part 1 Reached",
+   "chapter": "of4a4",
+   "map": "of4a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a4"
+   }
+  },
+  {
+   "id": 7760302,
+   "name": "Pit Worm's Nest - Part 2 Reached",
+   "chapter": "of4a4",
+   "map": "of4a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of4a5"
+   }
+  },
+  {
+   "id": 7760303,
+   "name": "Foxtrot Uniform - Part 1 Reached",
+   "chapter": "of5a1",
+   "map": "of5a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a1"
+   }
+  },
+  {
+   "id": 7760305,
+   "name": "Foxtrot Uniform - Part 2 Reached",
+   "chapter": "of5a1",
+   "map": "of5a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a2"
+   }
+  },
+  {
+   "id": 7760307,
+   "name": "Foxtrot Uniform - Part 3 Reached",
+   "chapter": "of5a1",
+   "map": "of5a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a3"
+   }
+  },
+  {
+   "id": 7760308,
+   "name": "Foxtrot Uniform - Part 4 Reached",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of5a4"
+   }
+  },
+  {
+   "id": 7760309,
+   "name": "Foxtrot Uniform - Health Charger (Part 4)",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of5a4",
+    "classname": "func_healthcharger",
+    "at": "-2624 124 -8"
+   },
+   "position": [
+    -2624,
+    124,
+    -8
+   ]
+  },
+  {
+   "id": 7760310,
+   "name": "Foxtrot Uniform - HEV Charger (Part 4)",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of5a4",
+    "classname": "func_recharge",
+    "at": "-2576 124 -8"
+   },
+   "position": [
+    -2576,
+    124,
+    -8
+   ]
+  },
+  {
+   "id": 7760311,
+   "name": "The Package - Part 1 Reached",
+   "chapter": "of6a1",
+   "map": "of6a1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a1"
+   }
+  },
+  {
+   "id": 7760313,
+   "name": "The Package - Part 2 Reached",
+   "chapter": "of6a1",
+   "map": "of6a2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a2"
+   }
+  },
+  {
+   "id": 7760314,
+   "name": "The Package - Part 3 Reached",
+   "chapter": "of6a1",
+   "map": "of6a3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a3"
+   }
+  },
+  {
+   "id": 7760315,
+   "name": "The Package - Part 4 Reached",
+   "chapter": "of6a1",
+   "map": "of6a4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a4"
+   }
+  },
+  {
+   "id": 7760317,
+   "name": "Worlds Collide - Part 1 Reached",
+   "chapter": "of6a4b",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a4b"
+   }
+  },
+  {
+   "id": 7760318,
+   "name": "Worlds Collide - Health Charger (Part 1)",
+   "chapter": "of6a4b",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a4b",
+    "classname": "func_healthcharger",
+    "at": "-1860 -1088 -488"
+   },
+   "position": [
+    -1860,
+    -1088,
+    -488
+   ]
+  },
+  {
+   "id": 7760319,
+   "name": "Worlds Collide - HEV Charger (Part 1)",
+   "chapter": "of6a4b",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a4b",
+    "classname": "func_recharge",
+    "at": "-1860 -1136 -488"
+   },
+   "position": [
+    -1860,
+    -1136,
+    -488
+   ]
+  },
+  {
+   "id": 7760321,
+   "name": "Worlds Collide - Part 2 Reached",
+   "chapter": "of6a4b",
+   "map": "of6a5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of6a5"
+   }
+  },
+  {
+   "id": 7760322,
+   "name": "Worlds Collide - Healing Pool (Part 2)",
+   "chapter": "of6a4b",
+   "map": "of6a5",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a5",
+    "classname": "trigger_hurt",
+    "at": "1264 -520 312"
+   },
+   "position": [
+    1264,
+    -518,
+    310
+   ]
+  },
+  {
+   "id": 7760323,
+   "name": "Worlds Collide - Part 3 Reached",
+   "chapter": "of6a4b",
+   "map": "of7a0",
+   "trigger": {
+    "type": "map_reached",
+    "map": "of7a0"
+   }
+  },
+  {
+   "id": 7760324,
+   "name": "Living Quarters Outbound - Part 1 Reached",
+   "chapter": "ba_tram1",
+   "map": "ba_tram1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_tram1"
+   }
+  },
+  {
+   "id": 7760325,
+   "name": "Living Quarters Outbound - Part 2 Reached",
+   "chapter": "ba_tram1",
+   "map": "ba_tram2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_tram2"
+   }
+  },
+  {
+   "id": 7760326,
+   "name": "Living Quarters Outbound - Part 3 Reached",
+   "chapter": "ba_tram1",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_tram3"
+   }
+  },
+  {
+   "id": 7760327,
+   "name": "Insecurity - Part 1 Reached",
+   "chapter": "ba_security1",
+   "map": "ba_security1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_security1"
+   }
+  },
+  {
+   "id": 7760328,
+   "name": "Insecurity - Part 2 Reached",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_security2"
+   }
+  },
+  {
+   "id": 7760329,
+   "name": "Insecurity - Health Charger (Part 2)",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_security2",
+    "classname": "func_healthcharger",
+    "at": "416 1712 244"
+   },
+   "position": [
+    416,
+    1710,
+    244
+   ]
+  },
+  {
+   "id": 7760330,
+   "name": "Insecurity - Part 3 Reached",
+   "chapter": "ba_security1",
+   "map": "ba_maint",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_maint"
+   }
+  },
+  {
+   "id": 7760331,
+   "name": "Insecurity - Part 4 Reached",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_elevator"
+   }
+  },
+  {
+   "id": 7760332,
+   "name": "Duty Calls - Part 1 Reached",
+   "chapter": "ba_canal1",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal1"
+   }
+  },
+  {
+   "id": 7760333,
+   "name": "Duty Calls - Health Charger (Part 1)",
+   "chapter": "ba_canal1",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal1",
+    "classname": "func_healthcharger",
+    "at": "1552 16 56"
+   },
+   "position": [
+    1554,
+    16,
+    56
+   ]
+  },
+  {
+   "id": 7760334,
+   "name": "Duty Calls - Part 2 Reached",
+   "chapter": "ba_canal1",
+   "map": "ba_canal1b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal1b"
+   }
+  },
+  {
+   "id": 7760335,
+   "name": "Duty Calls - Part 3 Reached",
+   "chapter": "ba_canal1",
+   "map": "ba_canal2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal2"
+   }
+  },
+  {
+   "id": 7760336,
+   "name": "Duty Calls - Health Charger (Part 3)",
+   "chapter": "ba_canal1",
+   "map": "ba_canal2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal2",
+    "classname": "func_healthcharger",
+    "at": "-360 708 452"
+   },
+   "position": [
+    -360,
+    708,
+    452
+   ]
+  },
+  {
+   "id": 7760337,
+   "name": "Duty Calls - Part 4 Reached",
+   "chapter": "ba_canal1",
+   "map": "ba_canal3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_canal3"
+   }
+  },
+  {
+   "id": 7760338,
+   "name": "Duty Calls - Health Charger (Part 4)",
+   "chapter": "ba_canal1",
+   "map": "ba_canal3",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_canal3",
+    "classname": "func_healthcharger",
+    "at": "-832 896 312"
+   },
+   "position": [
+    -832,
+    894,
+    312
+   ]
+  },
+  {
+   "id": 7760339,
+   "name": "Captive Freight - Part 1 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard1"
+   }
+  },
+  {
+   "id": 7760340,
+   "name": "Captive Freight - Part 2 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard2"
+   }
+  },
+  {
+   "id": 7760341,
+   "name": "Captive Freight - Part 3 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard3a",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard3a"
+   }
+  },
+  {
+   "id": 7760342,
+   "name": "Captive Freight - Health Charger (Part 3)",
+   "chapter": "ba_yard1",
+   "map": "ba_yard3a",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_yard3a",
+    "classname": "func_healthcharger",
+    "at": "-1188 -1920 -496"
+   },
+   "position": [
+    -1188,
+    -1920,
+    -496
+   ]
+  },
+  {
+   "id": 7760343,
+   "name": "Captive Freight - Part 4 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard3b",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard3b"
+   }
+  },
+  {
+   "id": 7760344,
+   "name": "Captive Freight - Part 5 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard3"
+   }
+  },
+  {
+   "id": 7760345,
+   "name": "Captive Freight - Part 6 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard4"
+   }
+  },
+  {
+   "id": 7760346,
+   "name": "Captive Freight - Part 7 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard4a",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard4a"
+   }
+  },
+  {
+   "id": 7760347,
+   "name": "Captive Freight - Part 8 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard5"
+   }
+  },
+  {
+   "id": 7760348,
+   "name": "Captive Freight - Part 9 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_yard5a",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_yard5a"
+   }
+  },
+  {
+   "id": 7760349,
+   "name": "Captive Freight - Part 10 Reached",
+   "chapter": "ba_yard1",
+   "map": "ba_teleport1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_teleport1"
+   }
+  },
+  {
+   "id": 7760350,
+   "name": "Captive Freight - Health Charger (Part 10)",
+   "chapter": "ba_yard1",
+   "map": "ba_teleport1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_teleport1",
+    "classname": "func_healthcharger",
+    "at": "-616 -792 52"
+   },
+   "position": [
+    -616,
+    -792,
+    52
+   ]
+  },
+  {
+   "id": 7760351,
+   "name": "Focal Point - Part 1 Reached",
+   "chapter": "ba_xen1",
+   "map": "ba_xen1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen1"
+   }
+  },
+  {
+   "id": 7760352,
+   "name": "Focal Point - Healing Pool (Part 1)",
+   "chapter": "ba_xen1",
+   "map": "ba_xen1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_xen1",
+    "classname": "trigger_hurt",
+    "at": "-2564 -1828 68"
+   },
+   "position": [
+    -2565,
+    -1828,
+    67
+   ]
+  },
+  {
+   "id": 7760353,
+   "name": "Focal Point - Part 2 Reached",
+   "chapter": "ba_xen1",
+   "map": "ba_xen2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen2"
+   }
+  },
+  {
+   "id": 7760354,
+   "name": "Focal Point - Healing Pool (Part 2)",
+   "chapter": "ba_xen1",
+   "map": "ba_xen2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_xen2",
+    "classname": "trigger_hurt",
+    "at": "764 2076 -28"
+   },
+   "position": [
+    764,
+    2074,
+    -29
+   ]
+  },
+  {
+   "id": 7760355,
+   "name": "Focal Point - Part 3 Reached",
+   "chapter": "ba_xen1",
+   "map": "ba_xen3",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen3"
+   }
+  },
+  {
+   "id": 7760356,
+   "name": "Focal Point - Healing Pool (Part 3)",
+   "chapter": "ba_xen1",
+   "map": "ba_xen3",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_xen3",
+    "classname": "trigger_hurt",
+    "at": "1764 -1936 4"
+   },
+   "position": [
+    1765,
+    -1937,
+    3
+   ]
+  },
+  {
+   "id": 7760357,
+   "name": "Focal Point - Part 4 Reached",
+   "chapter": "ba_xen1",
+   "map": "ba_xen4",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen4"
+   }
+  },
+  {
+   "id": 7760358,
+   "name": "Focal Point - Healing Pool (Part 4)",
+   "chapter": "ba_xen1",
+   "map": "ba_xen4",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_xen4",
+    "classname": "trigger_hurt",
+    "at": "-1712 -100 -12"
+   },
+   "position": [
+    -1712,
+    -100,
+    -13
+   ]
+  },
+  {
+   "id": 7760359,
+   "name": "Focal Point - Part 5 Reached",
+   "chapter": "ba_xen1",
+   "map": "ba_xen5",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen5"
+   }
+  },
+  {
+   "id": 7760360,
+   "name": "Focal Point - Healing Pool (Part 5)",
+   "chapter": "ba_xen1",
+   "map": "ba_xen5",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_xen5",
+    "classname": "trigger_hurt",
+    "at": "-244 -2128 -220"
+   },
+   "position": [
+    -243,
+    -2128,
+    -221
+   ]
+  },
+  {
+   "id": 7760361,
+   "name": "Focal Point - Part 6 Reached",
+   "chapter": "ba_xen1",
+   "map": "ba_xen6",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_xen6"
+   }
+  },
+  {
+   "id": 7760362,
+   "name": "Focal Point - Healing Pool (Part 6)",
+   "chapter": "ba_xen1",
+   "map": "ba_xen6",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_xen6",
+    "classname": "trigger_hurt",
+    "at": "-2564 -1828 68"
+   },
+   "position": [
+    -2565,
+    -1828,
+    67
+   ]
+  },
+  {
+   "id": 7760363,
+   "name": "Power Struggle - Part 1 Reached",
+   "chapter": "ba_teleport2",
+   "map": "ba_teleport2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_teleport2"
+   }
+  },
+  {
+   "id": 7760364,
+   "name": "Power Struggle - Health Charger (Part 1)",
+   "chapter": "ba_teleport2",
+   "map": "ba_teleport2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_teleport2",
+    "classname": "func_healthcharger",
+    "at": "-616 -792 52"
+   },
+   "position": [
+    -616,
+    -792,
+    52
+   ]
+  },
+  {
+   "id": 7760365,
+   "name": "Power Struggle - Part 2 Reached",
+   "chapter": "ba_teleport2",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_power1"
+   }
+  },
+  {
+   "id": 7760366,
+   "name": "Power Struggle - Health Charger 1 (Part 2)",
+   "chapter": "ba_teleport2",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power1",
+    "classname": "func_healthcharger",
+    "at": "128 -632 -452"
+   },
+   "position": [
+    128,
+    -632,
+    -452
+   ]
+  },
+  {
+   "id": 7760367,
+   "name": "Power Struggle - Health Charger 2 (Part 2)",
+   "chapter": "ba_teleport2",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power1",
+    "classname": "func_healthcharger",
+    "at": "40 120 -196"
+   },
+   "position": [
+    42,
+    120,
+    -196
+   ]
+  },
+  {
+   "id": 7760368,
+   "name": "Power Struggle - Part 3 Reached",
+   "chapter": "ba_teleport2",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_power2"
+   }
+  },
+  {
+   "id": 7760369,
+   "name": "Power Struggle - Health Charger 1 (Part 3)",
+   "chapter": "ba_teleport2",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power2",
+    "classname": "func_healthcharger",
+    "at": "-1560 696 80"
+   },
+   "position": [
+    -1560,
+    694,
+    80
+   ]
+  },
+  {
+   "id": 7760370,
+   "name": "Power Struggle - Health Charger 2 (Part 3)",
+   "chapter": "ba_teleport2",
+   "map": "ba_power2",
+   "trigger": {
+    "type": "charger",
+    "map": "ba_power2",
+    "classname": "func_healthcharger",
+    "at": "64 -1240 -356"
+   },
+   "position": [
+    64,
+    -1240,
+    -356
+   ]
+  },
+  {
+   "id": 7760371,
+   "name": "Power Struggle - Part 4 Reached",
+   "chapter": "ba_teleport2",
+   "map": "ba_outro",
+   "trigger": {
+    "type": "map_reached",
+    "map": "ba_outro"
+   }
+  },
+  {
    "id": 7760207,
    "name": "First Glock",
    "chapter": "c1a0c",
@@ -4065,6 +6114,511 @@
    ]
   },
   {
+   "id": 7760372,
+   "name": "Opposing Force: First Glock",
+   "chapter": "of1a5",
+   "map": "of1a5",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a5",
+    "classnames": [
+     "weapon_glock",
+     "weapon_9mmhandgun"
+    ]
+   },
+   "position": [
+    1824,
+    -3456,
+    1339
+   ]
+  },
+  {
+   "id": 7760373,
+   "name": "Opposing Force: First MP5",
+   "chapter": "of2a1",
+   "map": "of2a1b",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a1b",
+    "classnames": [
+     "weapon_mp5",
+     "weapon_9mmAR"
+    ]
+   },
+   "position": [
+    -516,
+    2300,
+    -784
+   ]
+  },
+  {
+   "id": 7760374,
+   "name": "Opposing Force: First Shotgun",
+   "chapter": "of1a1",
+   "map": "of1a3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a3",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   },
+   "position": [
+    808,
+    -2584,
+    832
+   ]
+  },
+  {
+   "id": 7760375,
+   "name": "Opposing Force: First RPG",
+   "chapter": "of2a4",
+   "map": "of2a6",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a6",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   },
+   "position": [
+    2988,
+    3084,
+    -576
+   ]
+  },
+  {
+   "id": 7760376,
+   "name": "Opposing Force: First Satchel Charge",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a6",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   },
+   "position": [
+    232,
+    -1284,
+    8
+   ]
+  },
+  {
+   "id": 7760377,
+   "name": "Opposing Force: First Tripmine",
+   "chapter": "of2a4",
+   "map": "of2a4",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of2a4",
+    "classnames": [
+     "weapon_tripmine"
+    ]
+   },
+   "position": [
+    64,
+    678,
+    22
+   ]
+  },
+  {
+   "id": 7760378,
+   "name": "Opposing Force: First Snarks",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a2",
+    "classnames": [
+     "weapon_snark"
+    ]
+   },
+   "position": [
+    -1768,
+    760,
+    417
+   ]
+  },
+  {
+   "id": 7760379,
+   "name": "Opposing Force: First Hand Grenade",
+   "chapter": "of1a1",
+   "map": "of1a4b",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a4b",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   },
+   "position": [
+    -544,
+    1856,
+    -976
+   ]
+  },
+  {
+   "id": 7760380,
+   "name": "Opposing Force: First Desert Eagle",
+   "chapter": "of1a1",
+   "map": "of1a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a2",
+    "classnames": [
+     "weapon_eagle"
+    ]
+   },
+   "position": [
+    1144,
+    1864,
+    -144
+   ]
+  },
+  {
+   "id": 7760381,
+   "name": "Opposing Force: First M249",
+   "chapter": "of5a1",
+   "map": "of5a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of5a1",
+    "classnames": [
+     "weapon_m249"
+    ]
+   },
+   "position": [
+    -2324,
+    2520,
+    96
+   ]
+  },
+  {
+   "id": 7760382,
+   "name": "Opposing Force: First Sniper Rifle",
+   "chapter": "of5a1",
+   "map": "of5a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of5a1",
+    "classnames": [
+     "weapon_sniperrifle"
+    ]
+   },
+   "position": [
+    -640,
+    -1408,
+    136
+   ]
+  },
+  {
+   "id": 7760383,
+   "name": "Opposing Force: First Displacer",
+   "chapter": "of3a4",
+   "map": "of3a5",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of3a5",
+    "classnames": [
+     "weapon_displacer"
+    ]
+   },
+   "position": [
+    1414,
+    302,
+    240
+   ]
+  },
+  {
+   "id": 7760384,
+   "name": "Opposing Force: First Spore Launcher",
+   "chapter": "of4a1",
+   "map": "of4a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a2",
+    "classnames": [
+     "weapon_sporelauncher"
+    ]
+   },
+   "position": [
+    -1624,
+    -432,
+    384
+   ]
+  },
+  {
+   "id": 7760385,
+   "name": "Opposing Force: First Barnacle",
+   "chapter": "of4a1",
+   "map": "of4a3",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a3",
+    "classnames": [
+     "weapon_grapple"
+    ]
+   },
+   "position": [
+    -338,
+    -504,
+    337
+   ]
+  },
+  {
+   "id": 7760386,
+   "name": "Opposing Force: First Shock Roach",
+   "chapter": "of4a1",
+   "map": "of4a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of4a1",
+    "classnames": [
+     "weapon_shockrifle"
+    ]
+   }
+  },
+  {
+   "id": 7760387,
+   "name": "Opposing Force: First PCV",
+   "chapter": "of1a1",
+   "map": "of1a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a1",
+    "classnames": [
+     "item_suit"
+    ]
+   },
+   "position": [
+    367,
+    2816,
+    48
+   ]
+  },
+  {
+   "id": 7760388,
+   "name": "Opposing Force: First Pipe Wrench",
+   "chapter": "of1a1",
+   "map": "of1a1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a1",
+    "classnames": [
+     "weapon_pipewrench"
+    ]
+   },
+   "position": [
+    -1152,
+    -560,
+    -112
+   ]
+  },
+  {
+   "id": 7760389,
+   "name": "Opposing Force: First Combat Knife",
+   "chapter": "of1a1",
+   "map": "of1a2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "of1a2",
+    "classnames": [
+     "weapon_knife"
+    ]
+   },
+   "position": [
+    544,
+    -2824,
+    80
+   ]
+  },
+  {
+   "id": 7760390,
+   "name": "Blue Shift: First Glock",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_security2",
+    "classnames": [
+     "weapon_glock",
+     "weapon_9mmhandgun"
+    ]
+   },
+   "position": [
+    592,
+    1684,
+    420
+   ]
+  },
+  {
+   "id": 7760391,
+   "name": "Blue Shift: First .357 Magnum",
+   "chapter": "ba_yard1",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard1",
+    "classnames": [
+     "weapon_357",
+     "weapon_python"
+    ]
+   },
+   "position": [
+    -72,
+    -1765,
+    0
+   ]
+  },
+  {
+   "id": 7760392,
+   "name": "Blue Shift: First MP5",
+   "chapter": "ba_teleport2",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_power1",
+    "classnames": [
+     "weapon_mp5",
+     "weapon_9mmAR"
+    ]
+   },
+   "position": [
+    -898,
+    -1882,
+    -112
+   ]
+  },
+  {
+   "id": 7760393,
+   "name": "Blue Shift: First Shotgun",
+   "chapter": "ba_canal1",
+   "map": "ba_canal2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_canal2",
+    "classnames": [
+     "weapon_shotgun"
+    ]
+   },
+   "position": [
+    400,
+    2184,
+    -88
+   ]
+  },
+  {
+   "id": 7760394,
+   "name": "Blue Shift: First RPG",
+   "chapter": "ba_yard1",
+   "map": "ba_yard5",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard5",
+    "classnames": [
+     "weapon_rpg"
+    ]
+   },
+   "position": [
+    -344,
+    2000,
+    93
+   ]
+  },
+  {
+   "id": 7760395,
+   "name": "Blue Shift: First Satchel Charge",
+   "chapter": "ba_yard1",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard1",
+    "classnames": [
+     "weapon_satchel"
+    ]
+   },
+   "position": [
+    -2662,
+    -1550,
+    92
+   ]
+  },
+  {
+   "id": 7760396,
+   "name": "Blue Shift: First Snarks",
+   "chapter": "ba_xen1",
+   "map": "ba_xen2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_xen2",
+    "classnames": [
+     "weapon_snark"
+    ]
+   },
+   "position": [
+    1160,
+    3384,
+    -3576
+   ]
+  },
+  {
+   "id": 7760397,
+   "name": "Blue Shift: First Hand Grenade",
+   "chapter": "ba_yard1",
+   "map": "ba_yard1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_yard1",
+    "classnames": [
+     "weapon_handgrenade"
+    ]
+   },
+   "position": [
+    -2635,
+    -1550,
+    92
+   ]
+  },
+  {
+   "id": 7760398,
+   "name": "Blue Shift: First Security Armor",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_security2",
+    "classnames": [
+     "item_armorvest",
+     "item_helmet"
+    ]
+   },
+   "position": [
+    651,
+    1352,
+    263
+   ]
+  },
+  {
+   "id": 7760399,
+   "name": "Blue Shift: First Crowbar",
+   "chapter": "ba_canal1",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "weapon_pickup",
+    "map": "ba_canal1",
+    "classnames": [
+     "weapon_crowbar"
+    ]
+   },
+   "position": [
+    2080,
+    288,
+    56
+   ]
+  },
+  {
    "id": 7760222,
    "name": "Black Mesa Inbound - Complete",
    "chapter": "c0a0",
@@ -4261,6 +6815,204 @@
     "chapter": "c4a3",
     "map": "c5a1"
    }
+  },
+  {
+   "id": 7760400,
+   "name": "Incoming - Complete",
+   "chapter": "of0a0",
+   "map": "of0a0",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of0a0",
+    "map": "of0a0"
+   }
+  },
+  {
+   "id": 7760401,
+   "name": "Welcome To Black Mesa - Complete",
+   "chapter": "of1a1",
+   "map": "of1a4b",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of1a1",
+    "map": "of1a4b"
+   }
+  },
+  {
+   "id": 7760402,
+   "name": "We Are Pulling Out - Complete",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of1a5",
+    "map": "of1a6"
+   }
+  },
+  {
+   "id": 7760403,
+   "name": "Missing In Action - Complete",
+   "chapter": "of2a1",
+   "map": "of2a3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of2a1",
+    "map": "of2a3"
+   }
+  },
+  {
+   "id": 7760404,
+   "name": "Friendly Fire - Complete",
+   "chapter": "of2a4",
+   "map": "of2a6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of2a4",
+    "map": "of2a6"
+   }
+  },
+  {
+   "id": 7760405,
+   "name": "We Are Not Alone - Complete",
+   "chapter": "of3a1",
+   "map": "of3a2",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of3a1",
+    "map": "of3a2"
+   }
+  },
+  {
+   "id": 7760406,
+   "name": "Crush Depth - Complete",
+   "chapter": "of3a4",
+   "map": "of3a6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of3a4",
+    "map": "of3a6"
+   }
+  },
+  {
+   "id": 7760407,
+   "name": "Vicarious Reality - Complete",
+   "chapter": "of4a1",
+   "map": "of4a3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of4a1",
+    "map": "of4a3"
+   }
+  },
+  {
+   "id": 7760408,
+   "name": "Pit Worm's Nest - Complete",
+   "chapter": "of4a4",
+   "map": "of4a5",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of4a4",
+    "map": "of4a5"
+   }
+  },
+  {
+   "id": 7760409,
+   "name": "Foxtrot Uniform - Complete",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of5a1",
+    "map": "of5a4"
+   }
+  },
+  {
+   "id": 7760410,
+   "name": "The Package - Complete",
+   "chapter": "of6a1",
+   "map": "of6a4",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of6a1",
+    "map": "of6a4"
+   }
+  },
+  {
+   "id": 7760411,
+   "name": "Worlds Collide - Complete",
+   "chapter": "of6a4b",
+   "map": "of7a0",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "of6a4b",
+    "map": "of7a0"
+   }
+  },
+  {
+   "id": 7760412,
+   "name": "Living Quarters Outbound - Complete",
+   "chapter": "ba_tram1",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "ba_tram1",
+    "map": "ba_tram3"
+   }
+  },
+  {
+   "id": 7760413,
+   "name": "Insecurity - Complete",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "ba_security1",
+    "map": "ba_elevator"
+   }
+  },
+  {
+   "id": 7760414,
+   "name": "Duty Calls - Complete",
+   "chapter": "ba_canal1",
+   "map": "ba_canal3",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "ba_canal1",
+    "map": "ba_canal3"
+   }
+  },
+  {
+   "id": 7760415,
+   "name": "Captive Freight - Complete",
+   "chapter": "ba_yard1",
+   "map": "ba_teleport1",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "ba_yard1",
+    "map": "ba_teleport1"
+   }
+  },
+  {
+   "id": 7760416,
+   "name": "Focal Point - Complete",
+   "chapter": "ba_xen1",
+   "map": "ba_xen6",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "ba_xen1",
+    "map": "ba_xen6"
+   }
+  },
+  {
+   "id": 7760417,
+   "name": "Power Struggle - Complete",
+   "chapter": "ba_teleport2",
+   "map": "ba_outro",
+   "trigger": {
+    "type": "chapter_complete",
+    "chapter": "ba_teleport2",
+    "map": "ba_outro"
+   }
   }
  ],
  "requirement_groups": {
@@ -4274,7 +7026,13 @@
    "Tau Cannon",
    "Gluon Gun",
    "Hivehand",
-   "Snarks"
+   "Snarks",
+   "Desert Eagle",
+   "M249",
+   "Sniper Rifle",
+   "Shock Roach",
+   "Spore Launcher",
+   "Displacer"
   ],
   "heavy": [
    "RPG",
@@ -4283,13 +7041,17 @@
    "Crossbow",
    ".357 Magnum",
    "Shotgun",
-   "MP5"
+   "MP5",
+   "Desert Eagle",
+   "M249",
+   "Sniper Rifle"
   ],
   "explosives": [
    "RPG",
    "Hand Grenade",
    "Satchel Charge",
-   "Tripmine"
+   "Tripmine",
+   "Spore Launcher"
   ],
   "underwater": [
    "Glock",
@@ -4298,13 +7060,17 @@
    "Crossbow",
    "Tau Cannon",
    "Gluon Gun",
-   "Hivehand"
+   "Hivehand",
+   "Desert Eagle"
   ],
   "tau_cannon": [
    "Tau Cannon"
   ],
   "rpg": [
    "RPG"
+  ],
+  "barnacle_grapple": [
+   "Barnacle"
   ]
  },
  "starting_weapons": [

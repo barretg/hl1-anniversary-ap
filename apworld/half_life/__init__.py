@@ -6,6 +6,10 @@ they can be picked up. The run opens with one mission playable and is won by
 finishing Nihilanth, which no item unlocks: it opens once `missions_required`
 other missions are done.
 
+Opposing Force (12 missions) and Blue Shift (6) can be added, or played without
+Half-Life. Each has its own finale, sealed by its own mission count, and a seed
+is won with every included game's finale.
+
 A mission is entered from a hub rather than by playing through, so warps load the
 map fresh and the loadout is reapplied on spawn. Transitions inside a mission are
 the game's own.
@@ -24,14 +28,16 @@ from worlds.LauncherComponents import Component, Type, components, launch_subpro
 from .client.settings import SETTINGS_KEY
 
 from .data import (
+    CAMPAIGNS,
+    CAMPAIGNS_BY_KEY,
     CHAPTERS,
     CHARGER_TRIGGER,
-    GOAL_CHAPTER,
-    INTRO_CHAPTER,
+    HALF_LIFE,
+    ITEMS,
     OPTIONAL_ITEM_NAMES,
-    STARTING_WEAPONS,
     VANILLA_WHEN_UNSHUFFLED,
     VICTORY,
+    campaign_of,
 )
 from .items import (
     HalfLifeItem,
@@ -40,6 +46,7 @@ from .items import (
     filler_weights,
     item_name_groups,
     item_name_to_id,
+    melee_items,
     optional_items,
     trap_items,
     trap_weights,
@@ -47,7 +54,16 @@ from .items import (
     weapon_items,
 )
 from .locations import location_name_groups, location_name_to_id
-from .options import AmmoRelief, HalfLifeOptions
+from .options import (
+    AmmoRelief,
+    BlueShiftMissionsRequired,
+    HalfLifeOptions,
+    IncludeBlueShift,
+    IncludeOpposingForce,
+    OpposingForceMissionsRequired,
+    RandomStartingWeapon,
+    ViewmodelStyle,
+)
 from .regions import create_regions
 from .rules import chapter_is_startable
 
@@ -104,7 +120,13 @@ class HalfLifeWeb(WebWorld):
     # the option's own description first, and keeps it out of the run of settings
     # that are safe to turn on without thinking about it.
     option_groups = [
-        OptionGroup("Experimental Features", [AmmoRelief], start_collapsed=True)
+        OptionGroup(
+            "Experimental Features",
+            [AmmoRelief, IncludeOpposingForce, IncludeBlueShift,
+             OpposingForceMissionsRequired, BlueShiftMissionsRequired,
+             RandomStartingWeapon, ViewmodelStyle],
+            start_collapsed=True,
+        )
     ]
 
 
@@ -144,6 +166,12 @@ class HalfLifeWorld(World):
         # first and assigns `self.options` afterwards, so reading an option in
         # `__init__` raises AttributeError before generation has begun.
         self.missions_required: int = 0
+        # The same, per included game. Each finale counts its own game only.
+        self.missions_required_by_campaign: dict[str, int] = {}
+        # Included games, in mission-numbering order.
+        self.campaigns: list[str] = []
+        # The melee weapon the run opens with.
+        self.starting_weapon: str = ""
 
     # -- generation ------------------------------------------------------
 
@@ -170,8 +198,29 @@ class HalfLifeWorld(World):
     def generate_early(self) -> None:
         passthrough = self.tracker_passthrough
 
+        # Which games are in. Half-Life comes back on when nothing is, since a
+        # seed needs something to play. Under the tracker, the seed's own list;
+        # a seed from before there was one is Half-Life alone.
+        toggles = {
+            HALF_LIFE: self.options.include_half_life,
+            "opposing_force": self.options.include_opposing_force,
+            "blue_shift": self.options.include_blue_shift,
+        }
+        self.campaigns = [c["key"] for c in CAMPAIGNS if toggles.get(c["key"])]
+        if not self.campaigns:
+            self.campaigns = [HALF_LIFE]
+        if passthrough:
+            self.campaigns = list(passthrough.get("campaigns", [HALF_LIFE]))
+
+        # A game that is out is out entirely: its missions are "not in this
+        # seed" to the game, exactly like an excluded intro.
+        self.excluded_chapters.update(
+            c["key"] for c in CHAPTERS if campaign_of(c) not in self.campaigns
+        )
         if self.options.exclude_intro_missions:
-            self.excluded_chapters.add(INTRO_CHAPTER)
+            self.excluded_chapters.update(
+                CAMPAIGNS_BY_KEY[key]["intro_chapter"] for key in self.campaigns
+            )
         if not self.options.chargesanity:
             self.excluded_triggers.add(CHARGER_TRIGGER)
 
@@ -179,14 +228,26 @@ class HalfLifeWorld(World):
         # working without the YAML, in which case its options are defaults and
         # would give it a different set of locations than the server has.
         if passthrough:
-            self.excluded_chapters = set(passthrough.get("excluded_chapters", ()))
+            self.excluded_chapters = set(passthrough.get("excluded_chapters", ())) | {
+                c["key"] for c in CHAPTERS if campaign_of(c) not in self.campaigns
+            }
             self.excluded_triggers = set(passthrough.get("excluded_triggers", ()))
 
-        self.available_item_names = set(weapon_items)
+        items_by_name = {entry["name"]: entry for entry in ITEMS}
+
+        # Half-Life's weapons are always in: every game places them, and their
+        # content is Half-Life's own, which every install has. Another game's
+        # weapons need that game's content, so only when it is included.
+        self.available_item_names = {
+            name for name in weapon_items
+            if campaign_of(items_by_name[name]) in (HALF_LIFE, *self.campaigns)
+        }
         # Unshuffled equipment that still exists as an item, locked to where the
         # campaign puts it. See `VANILLA_WHEN_UNSHUFFLED`.
         self.vanilla_placements: dict[str, str] = {}
         for name in optional_items:
+            if campaign_of(items_by_name[name]) not in self.campaigns:
+                continue
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
                 self.available_item_names.add(name)
             elif name in VANILLA_WHEN_UNSHUFFLED:
@@ -198,15 +259,57 @@ class HalfLifeWorld(World):
             if chapter["key"] in unlock_item_for_chapter
         )
 
-        # `missions_required` clamped to the missions this seed contains:
-        # excluding the tram ride leaves one fewer, and asking for more than
-        # exist would seal the finale permanently.
-        available = len([c for c in self.included_chapters if not c["is_goal"]])
-        self.missions_required = min(self.options.missions_required.value, available)
-        if passthrough and "missions_required" in passthrough:
-            # The server's number. A tracker running without the YAML would
-            # otherwise use the option default and seal the finale too long.
-            self.missions_required = int(passthrough["missions_required"])
+        # The starting melee weapon. Every included game offers its own, and
+        # with one candidate (Half-Life, Blue Shift, or both) there is nothing
+        # to roll: the crowbar, as always, and no RNG is drawn, so those seeds
+        # generate exactly as they did before. Every candidate that does not
+        # start the run is an item.
+        candidates: list[str] = []
+        for key in self.campaigns:
+            for classname in CAMPAIGNS_BY_KEY[key].get("melee", ()):
+                if classname not in candidates:
+                    candidates.append(classname)
+        if passthrough and passthrough.get("starting_weapons"):
+            self.starting_weapon = passthrough["starting_weapons"][0]
+        elif len(candidates) > 1 and self.options.random_starting_weapon:
+            self.starting_weapon = self.random.choice(candidates)
+        else:
+            self.starting_weapon = candidates[0]
+        melee_by_classname = {
+            items_by_name[name]["classnames"][0]: name for name in melee_items
+        }
+        self.available_item_names.update(
+            melee_by_classname[classname] for classname in candidates
+            if classname != self.starting_weapon and classname in melee_by_classname
+        )
+
+        # Each finale's seal, clamped to the missions this seed contains:
+        # excluding an intro leaves one fewer, and asking for more than exist
+        # would seal that finale permanently.
+        wanted = {
+            HALF_LIFE: self.options.missions_required.value,
+            "opposing_force": self.options.opposing_force_missions_required.value,
+            "blue_shift": self.options.blue_shift_missions_required.value,
+        }
+        for key in self.campaigns:
+            available = len([
+                c for c in self.included_chapters
+                if not c["is_goal"] and campaign_of(c) == key
+            ])
+            self.missions_required_by_campaign[key] = min(wanted[key], available)
+        if passthrough:
+            # The server's numbers. A tracker running without the YAML would
+            # otherwise use the option defaults and seal a finale too long.
+            self.missions_required_by_campaign.update(
+                passthrough.get("missions_required_by_campaign", {})
+            )
+            if "missions_required" in passthrough and HALF_LIFE in self.campaigns:
+                self.missions_required_by_campaign[HALF_LIFE] = int(
+                    passthrough["missions_required"]
+                )
+        self.missions_required = self.missions_required_by_campaign.get(
+            HALF_LIFE, next(iter(self.missions_required_by_campaign.values()))
+        )
 
         # The run opens with one mission playable, and it has to be one a player
         # with nothing but a crowbar can actually walk into. Picking a gated
@@ -283,8 +386,10 @@ class HalfLifeWorld(World):
         # Entrance rules are attached in `create_regions`; only the win condition
         # is left.
         player = self.player
+        # One Victory per included game's finale, and the seed wants them all.
+        finales = len(self.campaigns)
         self.multiworld.completion_condition[player] = (
-            lambda state: state.has(VICTORY, player)
+            lambda state: state.has(VICTORY, player, finales)
         )
 
     # -- runtime ---------------------------------------------------------
@@ -292,9 +397,17 @@ class HalfLifeWorld(World):
     def fill_slot_data(self) -> dict[str, Any]:
         """Everything the client needs to drive the game without shipping its own
         copy of the seed's settings."""
+        goals = {key: CAMPAIGNS_BY_KEY[key]["goal_chapter"] for key in self.campaigns}
         return {
+            # The first included game's seal and finale, under the names every
+            # client before there was more than one game reads.
             "missions_required": self.missions_required,
-            "goal_chapter": GOAL_CHAPTER,
+            "goal_chapter": goals.get(HALF_LIFE, next(iter(goals.values()))),
+            # Every included game, its finale and its seal. A seed without these
+            # is Half-Life alone.
+            "campaigns": list(self.campaigns),
+            "goal_chapters": goals,
+            "missions_required_by_campaign": dict(self.missions_required_by_campaign),
             "starting_chapters": [self.starting_chapter],
             # Missions that are not in this seed. The client tells the game, so
             # the in-game list says "not in this seed" rather than showing a
@@ -307,10 +420,11 @@ class HalfLifeWorld(World):
             "excluded_triggers": sorted(self.excluded_triggers),
             # What the run opens with, and what the game must therefore never
             # take away.
-            "starting_weapons": list(STARTING_WEAPONS),
+            "starting_weapons": [self.starting_weapon],
             "death_link": bool(self.options.death_link),
             "death_link_amnesty": self.options.death_link_amnesty.value,
             "ammo_relief": bool(self.options.ammo_relief.value),
+            "viewmodel_style": self.options.viewmodel_style.current_key,
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),
             "shuffle_longjump": bool(self.options.shuffle_longjump),
             # Unshuffled equipment that is a real item at its vanilla location,

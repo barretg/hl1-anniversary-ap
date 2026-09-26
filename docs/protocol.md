@@ -131,6 +131,7 @@ goal_open=0
 death_link=1
 death_link_amnesty=4
 ammo_relief=0
+gordon_hands=0
 chapters=c1a2,c1a4
 excluded=c0a0
 items=RPG;Shotgun
@@ -159,6 +160,17 @@ leaving the player waiting for a key that does not exist.
 it opens once `missions_required` other missions are finished, and the client
 owns that count.
 
+A seed with more than one game has one finale per game, each sealed by a count of
+its own game's missions. The client lists every open finale in `chapters`, and
+the game treats a finale as open when it is listed there. `goal_open` still
+opens the finale the `G` record names, which is how a client from before there
+was more than one game said so. The slot is won when every included game's
+finale is finished; the game sends `GOAL` for each, and the client sends the win
+once it has all of them.
+
+`gordon_hands` is the seed's `viewmodel_style`: 1 keeps Half-Life's first-person
+models on every map instead of Shephard's and Barney's hands on theirs.
+
 `ungated` is classnames, not item names, and it is the seed saying "this one is
 not mine". The game neither grants nor removes them and lets their pickups be
 collected, so the campaign hands them out on its own schedule. It exists because
@@ -177,7 +189,9 @@ game never has to infer progress from the checks it happens to have sent this
 session.
 
 `starting` is the classnames the run opens with and the game must never take
-away. It overrides the `S` records in `checkdata.txt`, which are the default
+away. With Opposing Force in the seed that may be the combat knife or the pipe
+wrench instead of the crowbar; the melee weapons that did not start the run are
+items, gated by their `K` records like any weapon. It overrides the `S` records in `checkdata.txt`, which are the default
 rather than the truth. An empty list means the client has nothing to say and the
 file's records stand -- never "start with nothing", since taking a player's only
 melee weapon away is not a state the bridge should be able to express.
@@ -238,15 +252,29 @@ Pipe-delimited so the game side can parse it with one pass and no JSON parser.
 
 | Record | Fields |
 | --- | --- |
-| `V` | format version (3 since the lobby; every addition so far is ignored harmlessly by an older reader) |
+| `V` | format version (5 since Opposing Force and Blue Shift; every addition so far is ignored harmlessly by an older reader) |
 | `D` | data version, the id-map fingerprint |
-| `G` | the goal chapter's key |
-| `C` | index, key, name, comma-separated maps, is_goal, complete-on-arrival |
+| `G` | Half-Life's goal chapter key |
+| `N` | a game: key, short name (`hl`, `of`, `bs`), display name, its goal chapter, its armour item |
+| `C` | index, key, name, comma-separated maps, is_goal, complete-on-arrival, game key, complete-on (`arrival`, `forward_exit`, `endsection`) |
 | `L` | id, map, trigger type, trigger arg, name |
 | | `map_reached` has no arg; `chapter_complete` carries the chapter key; `charger` carries `<classname>@<x y z>`; `weapon_pickup` carries the comma-separated classnames |
 | `K` | classname, item name — pickup refused until that item is held |
 | `S` | classname always granted (the crowbar), the default a snapshot's `starting` may override |
 | `P` | a lobby panel's targetname, and the mission it enters |
+| `M` | a monster a mid-mission map only gets by transition: map, classname, targetname, path node, origin, angle, spawnflags |
+
+Format 5 is additive. A format 4 reader sees Half-Life's records unchanged and
+the other games' missions as more chapters.
+
+`C`'s `complete-on` of `endsection` is Blue Shift's finale, which ends on
+`ba_outro`'s `trigger_endsection` rather than on arrival or a transition. The
+game completes the mission there and returns to the hub instead of the menu.
+
+Armour is per game: the `N` record's armour item is what lets the player hold
+armour on that game's maps (the HEV Suit on Half-Life's and the hub, the PCV on
+Opposing Force's, the Security Armor on Blue Shift's). `item_suit` itself is
+never refused, since it is what draws the HUD.
 
 `C`'s last field is 1 only for the mission nothing changelevels out of, the
 finale, where arriving on the last map is the only signal there is. Every other
@@ -312,7 +340,14 @@ landing somewhere logic never put it. (The Sven Co-op project matched these on
 classname alone, campaign-wide. That was a mistake carried across the fork before
 being caught.)
 
-`index` is what `ap_warp <n>` takes in game.
+`index` is what `ap_warp <n>` takes in game. `ap_warp <game> <n>` counts within
+one game from 0, by the `N` record's short name: `ap_warp of 3`. A mission of a
+game whose maps are not installed is refused with that reason.
+
+A `weapon_pickup` check is per game: Half-Life's keep their `*|*|...` keys and
+names (`First Shotgun`), and each later game has its own, keyed by the game and
+named `Opposing Force: First Shotgun`. Each is anchored to that game's earliest
+map holding the weapon, so the game's map filter above keeps them apart.
 
 A seed does not necessarily contain every location in this file --
 `chargesanity` and `exclude_intro_missions` drop whole groups. The game still

@@ -41,6 +41,7 @@ from . import settings
 from .bridge import Bridge, find_store_dir, is_game_dir, warp_save_key
 
 GAME_NAME = "Half-Life"
+HALF_LIFE = "half_life"
 POLL_INTERVAL = 0.2
 
 # The chosen install path is remembered in host.yaml (see client/settings.py), so
@@ -270,8 +271,20 @@ class HalfLifeContext(SuperContext):
         )
         self.completed_missions: set[str] = set()
         self.missions_required = len(
-            [c for c in self.campaign["chapters"] if not c["is_goal"]]
+            [c for c in self.campaign["chapters"]
+             if not c["is_goal"] and c.get("campaign", HALF_LIFE) == HALF_LIFE]
         )
+        # Every game in the seed, its finale and its seal. A seed from before
+        # there was more than one game names none of these and is Half-Life
+        # alone; `on_package` fills them from slot data.
+        self.campaigns: list[str] = [HALF_LIFE]
+        self.goal_chapters: dict[str, str] = {HALF_LIFE: self.goal_chapter}
+        self.missions_required_by_campaign: dict[str, int] = {
+            HALF_LIFE: self.missions_required
+        }
+        self.campaign_of_chapter: dict[str, str] = {
+            c["key"]: c.get("campaign", HALF_LIFE) for c in self.campaign["chapters"]
+        }
         self.death_link_enabled = False
         # Deaths forgiven before one is reported to the multiworld. The game owns
         # the countdown; this is only the allowance it counts from.
@@ -279,6 +292,9 @@ class HalfLifeContext(SuperContext):
         # Set by the seed. The game refuses to act on it until it arrives in a
         # snapshot, so the default here is the same "off" the option defaults to.
         self.ammo_relief = False
+        # Half-Life's viewmodels on every game's maps. Off in every seed that
+        # does not ask for it.
+        self.gordon_hands = False
         self.goal_sent = False
         self.chat_relay = True
         self.bridge_failures = 0
@@ -431,41 +447,19 @@ class HalfLifeContext(SuperContext):
             # much of it this client run has seen.
             self.items_synced = False
 
-            slot_data = args.get("slot_data", {})
-            self.missions_required = int(
-                slot_data.get("missions_required", self.missions_required)
-            )
-            self.excluded_chapters = set(slot_data.get("excluded_chapters", ()))
-            self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
-            # Absent from slot data reads as "not shuffled". An unshuffled item is
-            # either never sent, and the game has to be told, or locked to its
-            # vanilla location and sent like any other. See `unshuffled_grants`
-            # and `unshuffled_vanilla_classnames`.
-            unshuffled = {
-                name for name, option in optional_item_options().items()
-                if not slot_data.get(option, False)
-            }
-            placed = set(slot_data.get("placed_at_vanilla", ()))
-            self.always_unlocked = unshuffled_grants(unshuffled)
-            self.ungated_classnames = unshuffled_vanilla_classnames(unshuffled - placed)
-            self.starting_weapons = list(
-                slot_data.get("starting_weapons", self.starting_weapons)
-            )
-            self.death_link_enabled = bool(slot_data.get("death_link", False))
-            self.death_link_amnesty = int(
-                slot_data.get("death_link_amnesty", self.death_link_amnesty)
-            )
-            self.ammo_relief = bool(slot_data.get("ammo_relief", self.ammo_relief))
+            self.apply_slot_data(args.get("slot_data", {}))
             if self.death_link_enabled:
                 asyncio.create_task(self.update_death_link(True), name="UpdateDeathLink")
 
             # A mission we already finished before a reconnect still counts, and
             # `sync_completed_missions` above has already taken care of that.
 
-            logger.info(
-                f"Connected. {self.missions_required} missions needed to open "
-                f"{self.chapter_name(self.goal_chapter)}."
-            )
+            for key in self.campaigns:
+                logger.info(
+                    f"Connected. {self.missions_required_by_campaign.get(key, 0)} "
+                    f"missions needed to open "
+                    f"{self.chapter_name(self.goal_chapters.get(key, ''))}."
+                )
             self.print_in_game_commands()
 
         elif cmd == "ReceivedItems":
@@ -483,6 +477,55 @@ class HalfLifeContext(SuperContext):
                 # The game splits the event line on '|', so the two fields are
                 # joined with '~' instead.
                 self.bridge.queue_event("DEATHLINK", f"{source}~{cause}")
+
+    def apply_slot_data(self, slot_data: dict) -> None:
+        """Take in what the seed says about itself.
+
+        Every key is optional: a seed generated before a key existed must play
+        exactly as it did, so each default is the older behaviour. Above all,
+        no `campaigns` means Half-Life alone.
+        """
+        self.missions_required = int(
+            slot_data.get("missions_required", self.missions_required)
+        )
+        self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
+        self.campaigns = list(slot_data.get("campaigns", [HALF_LIFE]))
+        self.goal_chapters = dict(
+            slot_data.get("goal_chapters", {HALF_LIFE: self.goal_chapter})
+        )
+        self.missions_required_by_campaign = {
+            key: int(value) for key, value in slot_data.get(
+                "missions_required_by_campaign",
+                {HALF_LIFE: self.missions_required},
+            ).items()
+        }
+        # A game the seed does not include is out entirely, exactly like an
+        # excluded intro: the game lists its missions as not in this seed.
+        self.excluded_chapters = set(slot_data.get("excluded_chapters", ())) | {
+            key for key, owner in self.campaign_of_chapter.items()
+            if owner not in self.campaigns
+        }
+        self.warn_missing_games()
+        # Absent from slot data reads as "not shuffled". An unshuffled item is
+        # either never sent, and the game has to be told, or locked to its
+        # vanilla location and sent like any other. See `unshuffled_grants`
+        # and `unshuffled_vanilla_classnames`.
+        unshuffled = {
+            name for name, option in optional_item_options().items()
+            if not slot_data.get(option, False)
+        }
+        placed = set(slot_data.get("placed_at_vanilla", ()))
+        self.always_unlocked = unshuffled_grants(unshuffled)
+        self.ungated_classnames = unshuffled_vanilla_classnames(unshuffled - placed)
+        self.starting_weapons = list(
+            slot_data.get("starting_weapons", self.starting_weapons)
+        )
+        self.death_link_enabled = bool(slot_data.get("death_link", False))
+        self.death_link_amnesty = int(
+            slot_data.get("death_link_amnesty", self.death_link_amnesty)
+        )
+        self.ammo_relief = bool(slot_data.get("ammo_relief", self.ammo_relief))
+        self.gordon_hands = slot_data.get("viewmodel_style", "per_campaign") == "always_gordon"
 
     def relay_to_game(self, args: dict) -> None:
         """Show multiworld chat in the game.
@@ -555,7 +598,7 @@ class HalfLifeContext(SuperContext):
         group = entry.get("group")
         if group == "chapter":
             self.unlocked_chapters.add(entry["chapter"])
-        elif group in ("weapon", "optional"):
+        elif group in ("weapon", "optional", "melee"):
             self.unlocked_items.add(entry["name"])
         elif group == "filler" and deliver_filler and self.bridge:
             self.bridge.queue_event("ITEM", entry["name"])
@@ -649,28 +692,63 @@ class HalfLifeContext(SuperContext):
         """
         return self.unlocked_items | self.always_unlocked
 
+    def completed_in(self, campaign: str) -> int:
+        """Missions of one game finished, its finale aside."""
+        finales = set(self.goal_chapters.values())
+        return len([
+            key for key in self.completed_missions - finales
+            if self.campaign_of_chapter.get(key) == campaign
+        ])
+
     @property
     def completed_count(self) -> int:
-        """Missions finished, the finale aside."""
-        return len(self.completed_missions - {self.goal_chapter})
+        """Half-Life's missions finished, the finale aside."""
+        return self.completed_in(HALF_LIFE)
+
+    def seal_open(self, campaign: str) -> bool:
+        """Has this game's finale opened?"""
+        return self.completed_in(campaign) >= self.missions_required_by_campaign.get(
+            campaign, 0
+        )
 
     @property
     def goal_open(self) -> bool:
-        """Has the finale's seal opened?"""
-        return self.completed_count >= self.missions_required
+        """Has the first game's finale opened? The game's older field, kept for
+        the finale it names in checkdata; every open finale is also sent in
+        `open_chapters`."""
+        return self.seal_open(self.campaigns[0]) if self.campaigns else False
 
     @property
     def open_chapters(self) -> set[str]:
         """Every mission the game should let a player walk into."""
         chapters = set(self.unlocked_chapters)
-        if self.goal_open and self.goal_chapter not in self.excluded_chapters:
-            chapters.add(self.goal_chapter)
+        for campaign, finale in self.goal_chapters.items():
+            if self.seal_open(campaign) and finale not in self.excluded_chapters:
+                chapters.add(finale)
         return chapters
 
     @property
     def run_complete(self) -> bool:
-        """The finale is finished. This is what wins the slot."""
-        return self.goal_chapter in self.completed_missions
+        """Every included game's finale is finished. This is what wins the slot."""
+        return all(goal in self.completed_missions for goal in self.goal_chapters.values())
+
+    def warn_missing_games(self) -> None:
+        """Say which of the seed's games this install cannot play.
+
+        The seed still connects: the rest of it stays playable, and the game
+        refuses the missing game's missions with a reason.
+        """
+        if not self.game_dir:
+            return
+        for entry in self.campaign.get("campaigns", ()):
+            if entry["key"] not in self.campaigns or not entry.get("detect"):
+                continue
+            if not os.path.isfile(os.path.join(self.game_dir, entry["detect"])):
+                logger.warning(
+                    f"This seed includes {entry['name']}, which is not installed in "
+                    f"{self.game_dir}. Its missions cannot be played until it is; "
+                    f"install it, then run /install again."
+                )
 
     @staticmethod
     def print_in_game_commands() -> None:
@@ -681,17 +759,29 @@ class HalfLifeContext(SuperContext):
         logger.info("The same without the ! work in the console as ap, ap_warp, ...")
 
     def print_missions(self) -> None:
+        shown = ""
         for chapter in self.campaign["chapters"]:
             key = chapter["key"]
+            owner = chapter.get("campaign", HALF_LIFE)
+            if owner not in self.campaigns:
+                continue  # a whole game the seed leaves out is not listed
+            if len(self.campaigns) > 1 and owner != shown:
+                shown = owner
+                names = {c["key"]: c["name"] for c in self.campaign.get("campaigns", ())}
+                logger.info(f"{names.get(owner, owner)}:")
             if key in self.excluded_chapters:
                 status = "not in this seed"
             elif key in self.completed_missions:
                 status = "complete"
             elif chapter["is_goal"]:
-                if self.goal_open:
+                owner = chapter.get("campaign", HALF_LIFE)
+                if self.seal_open(owner):
                     status = "OPEN"
                 else:
-                    status = f"sealed ({self.completed_count}/{self.missions_required})"
+                    status = (
+                        f"sealed ({self.completed_in(owner)}/"
+                        f"{self.missions_required_by_campaign.get(owner, 0)})"
+                    )
             elif key in self.unlocked_chapters:
                 status = "unlocked"
             else:
@@ -802,6 +892,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
         ammo_relief=ctx.ammo_relief,
+        gordon_hands=ctx.gordon_hands,
         excluded=sorted(ctx.excluded_chapters),
         ungated=sorted(ctx.ungated_classnames),
         starting=list(ctx.starting_weapons),
@@ -832,7 +923,15 @@ async def pump(ctx: HalfLifeContext) -> None:
             ctx.completed_missions.add(event.arg)
         elif event.kind == "GOAL":
             ctx.completed_missions.add(event.arg)
-            if not ctx.goal_sent and ctx.server and not ctx.server.socket.closed:
+            if not ctx.run_complete:
+                # One finale of several. The slot is won with all of them.
+                left = [
+                    ctx.chapter_name(goal) for goal in ctx.goal_chapters.values()
+                    if goal not in ctx.completed_missions
+                ]
+                logger.info(f"{ctx.chapter_name(event.arg)} complete. Still to finish: "
+                            f"{', '.join(left)}.")
+            elif not ctx.goal_sent and ctx.server and not ctx.server.socket.closed:
                 ctx.goal_sent = True
                 await ctx.send_msgs(
                     [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]

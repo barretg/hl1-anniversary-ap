@@ -2,7 +2,8 @@
 # Record types:
 #   V|<format version>
 #   G|<goal chapter key>
-#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>
+#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>|<campaign>|<complete on>
+#   N|<campaign>|<short>|<name>|<goal chapter>|<armour item>
 #   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
@@ -15,27 +16,48 @@
 # A charger's <arg> is <classname>@<x y z>, the rounded world-space centre
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
-V|4
-D|4311d1555b6b
+V|5
+D|b5049a0419f6
 G|c4a3
-C|0|c0a0|Black Mesa Inbound|c0a0,c0a0a,c0a0b,c0a0c,c0a0d,c0a0e|0|0
-C|1|c1a0|Anomalous Materials|c1a0,c1a0d,c1a0a,c1a0b,c1a0e|0|0
-C|2|c1a0c|Unforeseen Consequences|c1a0c,c1a1,c1a1a,c1a1f,c1a1b,c1a1c,c1a1d|0|0
-C|3|c1a2|Office Complex|c1a2,c1a2a,c1a2b,c1a2c,c1a2d|0|0
-C|4|c1a3|We've Got Hostiles|c1a3,c1a3d,c1a3a,c1a3b,c1a3c|0|0
-C|5|c1a4|Blast Pit|c1a4,c1a4k,c1a4b,c1a4d,c1a4e,c1a4f,c1a4i,c1a4g,c1a4j|0|0
-C|6|c2a1|Power Up|c2a1,c2a1b,c2a1a|0|0
-C|7|c2a2|On A Rail|c2a2,c2a2a,c2a2b1,c2a2b2,c2a2c,c2a2d,c2a2e,c2a2f,c2a2g,c2a2h|0|0
-C|8|c2a3|Apprehension|c2a3,c2a3a,c2a3b,c2a3c,c2a3d,c2a3e|0|0
-C|9|c2a4|Residue Processing|c2a4,c2a4a,c2a4b,c2a4c|0|0
-C|10|c2a4d|Questionable Ethics|c2a4d,c2a4e,c2a4f,c2a4g|0|0
-C|11|c2a5|Surface Tension|c2a5,c2a5w,c2a5x,c2a5a,c2a5b,c2a5c,c2a5d,c2a5e,c2a5f,c2a5g|0|0
-C|12|c3a1|Forget About Freeman|c3a1,c3a1a,c3a1b|0|0
-C|13|c3a2e|Lambda Core|c3a2e,c3a2,c3a2a,c3a2b,c3a2c,c3a2f,c3a2d|0|0
-C|14|c4a1|Xen|c4a1|0|0
-C|15|c4a2|Gonarch's Lair|c4a2,c4a2a,c4a2b|0|0
-C|16|c4a1a|Interloper|c4a1a,c4a1b,c4a1c,c4a1d,c4a1e,c4a1f|0|0
-C|17|c4a3|Nihilanth|c4a3,c5a1|1|1
+N|half_life|hl|Half-Life|c4a3|HEV Suit
+N|opposing_force|of|Opposing Force|of6a4b|PCV
+N|blue_shift|bs|Blue Shift|ba_teleport2|Security Armor
+C|0|c0a0|Black Mesa Inbound|c0a0,c0a0a,c0a0b,c0a0c,c0a0d,c0a0e|0|0|half_life|forward_exit
+C|1|c1a0|Anomalous Materials|c1a0,c1a0d,c1a0a,c1a0b,c1a0e|0|0|half_life|forward_exit
+C|2|c1a0c|Unforeseen Consequences|c1a0c,c1a1,c1a1a,c1a1f,c1a1b,c1a1c,c1a1d|0|0|half_life|forward_exit
+C|3|c1a2|Office Complex|c1a2,c1a2a,c1a2b,c1a2c,c1a2d|0|0|half_life|forward_exit
+C|4|c1a3|We've Got Hostiles|c1a3,c1a3d,c1a3a,c1a3b,c1a3c|0|0|half_life|forward_exit
+C|5|c1a4|Blast Pit|c1a4,c1a4k,c1a4b,c1a4d,c1a4e,c1a4f,c1a4i,c1a4g,c1a4j|0|0|half_life|forward_exit
+C|6|c2a1|Power Up|c2a1,c2a1b,c2a1a|0|0|half_life|forward_exit
+C|7|c2a2|On A Rail|c2a2,c2a2a,c2a2b1,c2a2b2,c2a2c,c2a2d,c2a2e,c2a2f,c2a2g,c2a2h|0|0|half_life|forward_exit
+C|8|c2a3|Apprehension|c2a3,c2a3a,c2a3b,c2a3c,c2a3d,c2a3e|0|0|half_life|forward_exit
+C|9|c2a4|Residue Processing|c2a4,c2a4a,c2a4b,c2a4c|0|0|half_life|forward_exit
+C|10|c2a4d|Questionable Ethics|c2a4d,c2a4e,c2a4f,c2a4g|0|0|half_life|forward_exit
+C|11|c2a5|Surface Tension|c2a5,c2a5w,c2a5x,c2a5a,c2a5b,c2a5c,c2a5d,c2a5e,c2a5f,c2a5g|0|0|half_life|forward_exit
+C|12|c3a1|Forget About Freeman|c3a1,c3a1a,c3a1b|0|0|half_life|forward_exit
+C|13|c3a2e|Lambda Core|c3a2e,c3a2,c3a2a,c3a2b,c3a2c,c3a2f,c3a2d|0|0|half_life|forward_exit
+C|14|c4a1|Xen|c4a1|0|0|half_life|forward_exit
+C|15|c4a2|Gonarch's Lair|c4a2,c4a2a,c4a2b|0|0|half_life|forward_exit
+C|16|c4a1a|Interloper|c4a1a,c4a1b,c4a1c,c4a1d,c4a1e,c4a1f|0|0|half_life|forward_exit
+C|17|c4a3|Nihilanth|c4a3,c5a1|1|1|half_life|arrival
+C|18|of0a0|Incoming|of0a0|0|0|opposing_force|forward_exit
+C|19|of1a1|Welcome To Black Mesa|of1a1,of1a2,of1a3,of1a4,of1a4b|0|0|opposing_force|forward_exit
+C|20|of1a5|We Are Pulling Out|of1a5,of1a5b,of1a6|0|0|opposing_force|forward_exit
+C|21|of2a1|Missing In Action|of2a1,of2a1b,of2a2,of2a3|0|0|opposing_force|forward_exit
+C|22|of2a4|Friendly Fire|of2a4,of2a5,of2a6|0|0|opposing_force|forward_exit
+C|23|of3a1|We Are Not Alone|of3a1,of3a1b,of3a2|0|0|opposing_force|forward_exit
+C|24|of3a4|Crush Depth|of3a4,of3a5,of3a6|0|0|opposing_force|forward_exit
+C|25|of4a1|Vicarious Reality|of4a1,of4a2,of4a3|0|0|opposing_force|forward_exit
+C|26|of4a4|Pit Worm's Nest|of4a4,of4a5|0|0|opposing_force|forward_exit
+C|27|of5a1|Foxtrot Uniform|of5a1,of5a2,of5a3,of5a4|0|0|opposing_force|forward_exit
+C|28|of6a1|The Package|of6a1,of6a2,of6a3,of6a4|0|0|opposing_force|forward_exit
+C|29|of6a4b|Worlds Collide|of6a4b,of6a5,of7a0|1|1|opposing_force|arrival
+C|30|ba_tram1|Living Quarters Outbound|ba_tram1,ba_tram2,ba_tram3|0|0|blue_shift|forward_exit
+C|31|ba_security1|Insecurity|ba_security1,ba_security2,ba_maint,ba_elevator|0|0|blue_shift|forward_exit
+C|32|ba_canal1|Duty Calls|ba_canal1,ba_canal1b,ba_canal2,ba_canal3|0|0|blue_shift|forward_exit
+C|33|ba_yard1|Captive Freight|ba_yard1,ba_yard2,ba_yard3a,ba_yard3b,ba_yard3,ba_yard4,ba_yard4a,ba_yard5,ba_yard5a,ba_teleport1|0|0|blue_shift|forward_exit
+C|34|ba_xen1|Focal Point|ba_xen1,ba_xen2,ba_xen3,ba_xen4,ba_xen5,ba_xen6|0|0|blue_shift|forward_exit
+C|35|ba_teleport2|Power Struggle|ba_teleport2,ba_power1,ba_power2,ba_outro|1|0|blue_shift|endsection
 L|7760000|c0a0|map_reached||Black Mesa Inbound - Part 1 Reached
 L|7760001|c0a0a|map_reached||Black Mesa Inbound - Part 2 Reached
 L|7760002|c0a0b|map_reached||Black Mesa Inbound - Part 3 Reached
@@ -254,6 +276,116 @@ L|7760253|c4a3|charger|trigger_hurt@272 1816 -220|Nihilanth - Healing Pool 1 (Pa
 L|7760254|c4a3|charger|trigger_hurt@1632 -872 2264|Nihilanth - Healing Pool 2 (Part 1)|1634 -874 2264
 L|7760255|c4a3|charger|trigger_hurt@384 -36 -2828|Nihilanth - Healing Pool 3 (Part 1)|384 -36 -2828
 L|7760206|c5a1|map_reached||Nihilanth - Part 2 Reached
+L|7760256|of0a0|map_reached||Incoming - Reached
+L|7760257|of1a1|map_reached||Welcome To Black Mesa - Part 1 Reached
+L|7760258|of1a1|charger|func_healthcharger@-584 2980 56|Welcome To Black Mesa - Health Charger (Part 1)|-584 2980 56
+L|7760259|of1a2|map_reached||Welcome To Black Mesa - Part 2 Reached
+L|7760260|of1a3|map_reached||Welcome To Black Mesa - Part 3 Reached
+L|7760261|of1a4|map_reached||Welcome To Black Mesa - Part 4 Reached
+L|7760262|of1a4|charger|func_healthcharger@-1232 -572 184|Welcome To Black Mesa - Health Charger (Part 4)|-1232 -572 184
+L|7760263|of1a4b|map_reached||Welcome To Black Mesa - Part 5 Reached
+L|7760264|of1a5|map_reached||We Are Pulling Out - Part 1 Reached
+L|7760265|of1a5b|map_reached||We Are Pulling Out - Part 2 Reached
+L|7760266|of1a5b|charger|func_recharge@-1516 -3216 2264|We Are Pulling Out - HEV Charger (Part 2)|-1516 -3216 2264
+L|7760267|of1a6|map_reached||We Are Pulling Out - Part 3 Reached
+L|7760268|of1a6|charger|func_healthcharger@636 -1584 8|We Are Pulling Out - Health Charger (Part 3)|636 -1584 8
+L|7760269|of2a1|map_reached||Missing In Action - Part 1 Reached
+L|7760270|of2a1|charger|func_healthcharger@500 8 -92|Missing In Action - Health Charger (Part 1)|500 8 -93
+L|7760271|of2a1b|map_reached||Missing In Action - Part 2 Reached
+L|7760272|of2a2|map_reached||Missing In Action - Part 3 Reached
+L|7760273|of2a3|map_reached||Missing In Action - Part 4 Reached
+L|7760274|of2a4|map_reached||Friendly Fire - Part 1 Reached
+L|7760275|of2a5|map_reached||Friendly Fire - Part 2 Reached
+L|7760276|of2a6|map_reached||Friendly Fire - Part 3 Reached
+L|7760277|of2a6|charger|func_recharge@-1232 2204 -556|Friendly Fire - HEV Charger (Part 3)|-1230 2205 -556
+L|7760278|of3a1|map_reached||We Are Not Alone - Part 1 Reached
+L|7760279|of3a1|charger|func_healthcharger@592 1184 -204|We Are Not Alone - Health Charger (Part 1)|592 1186 -204
+L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone - HEV Charger (Part 1)|544 1186 -204
+L|7760281|of3a1b|map_reached||We Are Not Alone - Part 2 Reached
+L|7760282|of3a1b|charger|trigger_hurt@-632 -548 -124|We Are Not Alone - Healing Pool (Part 2)|-632 -548 -125
+L|7760283|of3a2|map_reached||We Are Not Alone - Part 3 Reached
+L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone - Health Charger (Part 3)|1204 2614 -3268
+L|7760285|of3a4|map_reached||Crush Depth - Part 1 Reached
+L|7760286|of3a4|charger|func_healthcharger@-1636 896 -56|Crush Depth - Health Charger (Part 1)|-1636 896 -56
+L|7760287|of3a4|charger|func_recharge@-1636 832 -56|Crush Depth - HEV Charger (Part 1)|-1636 832 -56
+L|7760288|of3a4|charger|trigger_hurt@-2504 -3296 -408|Crush Depth - Healing Pool (Part 1)|-2504 -3296 -408
+L|7760289|of3a5|map_reached||Crush Depth - Part 2 Reached
+L|7760290|of3a5|charger|func_recharge@-3228 2340 -56|Crush Depth - HEV Charger (Part 2)|-3228 2340 -56
+L|7760291|of3a6|map_reached||Crush Depth - Part 3 Reached
+L|7760292|of4a1|map_reached||Vicarious Reality - Part 1 Reached
+L|7760294|of4a2|map_reached||Vicarious Reality - Part 2 Reached
+L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality - Health Charger 1 (Part 2)|-2044 2 444
+L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality - Health Charger 2 (Part 2)|-544 -1318 1148
+L|7760297|of4a2|charger|func_healthcharger@544 -1320 1148|Vicarious Reality - Health Charger 3 (Part 2)|544 -1318 1148
+L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality - Healing Pool (Part 2)|-2192 -1456 262
+L|7760299|of4a3|map_reached||Vicarious Reality - Part 3 Reached
+L|7760300|of4a3|charger|func_healthcharger@176 -2116 356|Vicarious Reality - Health Charger (Part 3)|176 -2116 356
+L|7760301|of4a4|map_reached||Pit Worm's Nest - Part 1 Reached
+L|7760302|of4a5|map_reached||Pit Worm's Nest - Part 2 Reached
+L|7760303|of5a1|map_reached||Foxtrot Uniform - Part 1 Reached
+L|7760305|of5a2|map_reached||Foxtrot Uniform - Part 2 Reached
+L|7760307|of5a3|map_reached||Foxtrot Uniform - Part 3 Reached
+L|7760308|of5a4|map_reached||Foxtrot Uniform - Part 4 Reached
+L|7760309|of5a4|charger|func_healthcharger@-2624 124 -8|Foxtrot Uniform - Health Charger (Part 4)|-2624 124 -8
+L|7760310|of5a4|charger|func_recharge@-2576 124 -8|Foxtrot Uniform - HEV Charger (Part 4)|-2576 124 -8
+L|7760311|of6a1|map_reached||The Package - Part 1 Reached
+L|7760313|of6a2|map_reached||The Package - Part 2 Reached
+L|7760314|of6a3|map_reached||The Package - Part 3 Reached
+L|7760315|of6a4|map_reached||The Package - Part 4 Reached
+L|7760317|of6a4b|map_reached||Worlds Collide - Part 1 Reached
+L|7760318|of6a4b|charger|func_healthcharger@-1860 -1088 -488|Worlds Collide - Health Charger (Part 1)|-1860 -1088 -488
+L|7760319|of6a4b|charger|func_recharge@-1860 -1136 -488|Worlds Collide - HEV Charger (Part 1)|-1860 -1136 -488
+L|7760321|of6a5|map_reached||Worlds Collide - Part 2 Reached
+L|7760322|of6a5|charger|trigger_hurt@1264 -520 312|Worlds Collide - Healing Pool (Part 2)|1264 -518 310
+L|7760323|of7a0|map_reached||Worlds Collide - Part 3 Reached
+L|7760324|ba_tram1|map_reached||Living Quarters Outbound - Part 1 Reached
+L|7760325|ba_tram2|map_reached||Living Quarters Outbound - Part 2 Reached
+L|7760326|ba_tram3|map_reached||Living Quarters Outbound - Part 3 Reached
+L|7760327|ba_security1|map_reached||Insecurity - Part 1 Reached
+L|7760328|ba_security2|map_reached||Insecurity - Part 2 Reached
+L|7760329|ba_security2|charger|func_healthcharger@416 1712 244|Insecurity - Health Charger (Part 2)|416 1710 244
+L|7760330|ba_maint|map_reached||Insecurity - Part 3 Reached
+L|7760331|ba_elevator|map_reached||Insecurity - Part 4 Reached
+L|7760332|ba_canal1|map_reached||Duty Calls - Part 1 Reached
+L|7760333|ba_canal1|charger|func_healthcharger@1552 16 56|Duty Calls - Health Charger (Part 1)|1554 16 56
+L|7760334|ba_canal1b|map_reached||Duty Calls - Part 2 Reached
+L|7760335|ba_canal2|map_reached||Duty Calls - Part 3 Reached
+L|7760336|ba_canal2|charger|func_healthcharger@-360 708 452|Duty Calls - Health Charger (Part 3)|-360 708 452
+L|7760337|ba_canal3|map_reached||Duty Calls - Part 4 Reached
+L|7760338|ba_canal3|charger|func_healthcharger@-832 896 312|Duty Calls - Health Charger (Part 4)|-832 894 312
+L|7760339|ba_yard1|map_reached||Captive Freight - Part 1 Reached
+L|7760340|ba_yard2|map_reached||Captive Freight - Part 2 Reached
+L|7760341|ba_yard3a|map_reached||Captive Freight - Part 3 Reached
+L|7760342|ba_yard3a|charger|func_healthcharger@-1188 -1920 -496|Captive Freight - Health Charger (Part 3)|-1188 -1920 -496
+L|7760343|ba_yard3b|map_reached||Captive Freight - Part 4 Reached
+L|7760344|ba_yard3|map_reached||Captive Freight - Part 5 Reached
+L|7760345|ba_yard4|map_reached||Captive Freight - Part 6 Reached
+L|7760346|ba_yard4a|map_reached||Captive Freight - Part 7 Reached
+L|7760347|ba_yard5|map_reached||Captive Freight - Part 8 Reached
+L|7760348|ba_yard5a|map_reached||Captive Freight - Part 9 Reached
+L|7760349|ba_teleport1|map_reached||Captive Freight - Part 10 Reached
+L|7760350|ba_teleport1|charger|func_healthcharger@-616 -792 52|Captive Freight - Health Charger (Part 10)|-616 -792 52
+L|7760351|ba_xen1|map_reached||Focal Point - Part 1 Reached
+L|7760352|ba_xen1|charger|trigger_hurt@-2564 -1828 68|Focal Point - Healing Pool (Part 1)|-2565 -1828 67
+L|7760353|ba_xen2|map_reached||Focal Point - Part 2 Reached
+L|7760354|ba_xen2|charger|trigger_hurt@764 2076 -28|Focal Point - Healing Pool (Part 2)|764 2074 -29
+L|7760355|ba_xen3|map_reached||Focal Point - Part 3 Reached
+L|7760356|ba_xen3|charger|trigger_hurt@1764 -1936 4|Focal Point - Healing Pool (Part 3)|1765 -1937 3
+L|7760357|ba_xen4|map_reached||Focal Point - Part 4 Reached
+L|7760358|ba_xen4|charger|trigger_hurt@-1712 -100 -12|Focal Point - Healing Pool (Part 4)|-1712 -100 -13
+L|7760359|ba_xen5|map_reached||Focal Point - Part 5 Reached
+L|7760360|ba_xen5|charger|trigger_hurt@-244 -2128 -220|Focal Point - Healing Pool (Part 5)|-243 -2128 -221
+L|7760361|ba_xen6|map_reached||Focal Point - Part 6 Reached
+L|7760362|ba_xen6|charger|trigger_hurt@-2564 -1828 68|Focal Point - Healing Pool (Part 6)|-2565 -1828 67
+L|7760363|ba_teleport2|map_reached||Power Struggle - Part 1 Reached
+L|7760364|ba_teleport2|charger|func_healthcharger@-616 -792 52|Power Struggle - Health Charger (Part 1)|-616 -792 52
+L|7760365|ba_power1|map_reached||Power Struggle - Part 2 Reached
+L|7760366|ba_power1|charger|func_healthcharger@128 -632 -452|Power Struggle - Health Charger 1 (Part 2)|128 -632 -452
+L|7760367|ba_power1|charger|func_healthcharger@40 120 -196|Power Struggle - Health Charger 2 (Part 2)|42 120 -196
+L|7760368|ba_power2|map_reached||Power Struggle - Part 3 Reached
+L|7760369|ba_power2|charger|func_healthcharger@-1560 696 80|Power Struggle - Health Charger 1 (Part 3)|-1560 694 80
+L|7760370|ba_power2|charger|func_healthcharger@64 -1240 -356|Power Struggle - Health Charger 2 (Part 3)|64 -1240 -356
+L|7760371|ba_outro|map_reached||Power Struggle - Part 4 Reached
 L|7760207|c1a1f|weapon_pickup|weapon_glock,weapon_9mmhandgun|First Glock|-256 -984 -102
 L|7760208|c1a4g|weapon_pickup|weapon_357,weapon_python|First .357 Magnum|-783 -1218 -1888
 L|7760209|c1a3|weapon_pickup|weapon_mp5,weapon_9mmAR|First MP5|-888 -1080 64
@@ -270,6 +402,34 @@ L|7760219|c1a1b|weapon_pickup|weapon_handgrenade|First Hand Grenade|-120 -804 -1
 L|7760240|c1a0d|weapon_pickup|item_suit|First HEV Suit|-3648 960 -248
 L|7760220|c3a2d|weapon_pickup|item_longjump|First Long Jump Module|1806 -448 -209
 L|7760221|c1a1|weapon_pickup|weapon_crowbar|First Crowbar|1745 1847 -129
+L|7760372|of1a5|weapon_pickup|weapon_glock,weapon_9mmhandgun|Opposing Force: First Glock|1824 -3456 1339
+L|7760373|of2a1b|weapon_pickup|weapon_mp5,weapon_9mmAR|Opposing Force: First MP5|-516 2300 -784
+L|7760374|of1a3|weapon_pickup|weapon_shotgun|Opposing Force: First Shotgun|808 -2584 832
+L|7760375|of2a6|weapon_pickup|weapon_rpg|Opposing Force: First RPG|2988 3084 -576
+L|7760376|of1a6|weapon_pickup|weapon_satchel|Opposing Force: First Satchel Charge|232 -1284 8
+L|7760377|of2a4|weapon_pickup|weapon_tripmine|Opposing Force: First Tripmine|64 678 22
+L|7760378|of4a2|weapon_pickup|weapon_snark|Opposing Force: First Snarks|-1768 760 417
+L|7760379|of1a4b|weapon_pickup|weapon_handgrenade|Opposing Force: First Hand Grenade|-544 1856 -976
+L|7760380|of1a2|weapon_pickup|weapon_eagle|Opposing Force: First Desert Eagle|1144 1864 -144
+L|7760381|of5a1|weapon_pickup|weapon_m249|Opposing Force: First M249|-2324 2520 96
+L|7760382|of5a1|weapon_pickup|weapon_sniperrifle|Opposing Force: First Sniper Rifle|-640 -1408 136
+L|7760383|of3a5|weapon_pickup|weapon_displacer|Opposing Force: First Displacer|1414 302 240
+L|7760384|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force: First Spore Launcher|-1624 -432 384
+L|7760385|of4a3|weapon_pickup|weapon_grapple|Opposing Force: First Barnacle|-338 -504 337
+L|7760386|of4a1|weapon_pickup|weapon_shockrifle|Opposing Force: First Shock Roach
+L|7760387|of1a1|weapon_pickup|item_suit|Opposing Force: First PCV|367 2816 48
+L|7760388|of1a1|weapon_pickup|weapon_pipewrench|Opposing Force: First Pipe Wrench|-1152 -560 -112
+L|7760389|of1a2|weapon_pickup|weapon_knife|Opposing Force: First Combat Knife|544 -2824 80
+L|7760390|ba_security2|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift: First Glock|592 1684 420
+L|7760391|ba_yard1|weapon_pickup|weapon_357,weapon_python|Blue Shift: First .357 Magnum|-72 -1765 0
+L|7760392|ba_power1|weapon_pickup|weapon_mp5,weapon_9mmAR|Blue Shift: First MP5|-898 -1882 -112
+L|7760393|ba_canal2|weapon_pickup|weapon_shotgun|Blue Shift: First Shotgun|400 2184 -88
+L|7760394|ba_yard5|weapon_pickup|weapon_rpg|Blue Shift: First RPG|-344 2000 93
+L|7760395|ba_yard1|weapon_pickup|weapon_satchel|Blue Shift: First Satchel Charge|-2662 -1550 92
+L|7760396|ba_xen2|weapon_pickup|weapon_snark|Blue Shift: First Snarks|1160 3384 -3576
+L|7760397|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift: First Hand Grenade|-2635 -1550 92
+L|7760398|ba_security2|weapon_pickup|item_armorvest,item_helmet|Blue Shift: First Security Armor|651 1352 263
+L|7760399|ba_canal1|weapon_pickup|weapon_crowbar|Blue Shift: First Crowbar|2080 288 56
 L|7760222|c0a0e|chapter_complete|c0a0|Black Mesa Inbound - Complete
 L|7760223|c1a0e|chapter_complete|c1a0|Anomalous Materials - Complete
 L|7760224|c1a1d|chapter_complete|c1a0c|Unforeseen Consequences - Complete
@@ -288,6 +448,26 @@ L|7760236|c4a1|chapter_complete|c4a1|Xen - Complete
 L|7760237|c4a2b|chapter_complete|c4a2|Gonarch's Lair - Complete
 L|7760238|c4a1f|chapter_complete|c4a1a|Interloper - Complete
 L|7760239|c5a1|chapter_complete|c4a3|Nihilanth - Complete
+L|7760400|of0a0|chapter_complete|of0a0|Incoming - Complete
+L|7760401|of1a4b|chapter_complete|of1a1|Welcome To Black Mesa - Complete
+L|7760402|of1a6|chapter_complete|of1a5|We Are Pulling Out - Complete
+L|7760403|of2a3|chapter_complete|of2a1|Missing In Action - Complete
+L|7760404|of2a6|chapter_complete|of2a4|Friendly Fire - Complete
+L|7760405|of3a2|chapter_complete|of3a1|We Are Not Alone - Complete
+L|7760406|of3a6|chapter_complete|of3a4|Crush Depth - Complete
+L|7760407|of4a3|chapter_complete|of4a1|Vicarious Reality - Complete
+L|7760408|of4a5|chapter_complete|of4a4|Pit Worm's Nest - Complete
+L|7760409|of5a4|chapter_complete|of5a1|Foxtrot Uniform - Complete
+L|7760410|of6a4|chapter_complete|of6a1|The Package - Complete
+L|7760411|of7a0|chapter_complete|of6a4b|Worlds Collide - Complete
+L|7760412|ba_tram3|chapter_complete|ba_tram1|Living Quarters Outbound - Complete
+L|7760413|ba_elevator|chapter_complete|ba_security1|Insecurity - Complete
+L|7760414|ba_canal3|chapter_complete|ba_canal1|Duty Calls - Complete
+L|7760415|ba_teleport1|chapter_complete|ba_yard1|Captive Freight - Complete
+L|7760416|ba_xen6|chapter_complete|ba_xen1|Focal Point - Complete
+L|7760417|ba_outro|chapter_complete|ba_teleport2|Power Struggle - Complete
+K|item_armorvest|Security Armor
+K|item_helmet|Security Armor
 K|item_longjump|Long Jump Module
 K|item_suit|HEV Suit
 K|weapon_357|.357 Magnum
@@ -295,17 +475,26 @@ K|weapon_9mmAR|MP5
 K|weapon_9mmhandgun|Glock
 K|weapon_crossbow|Crossbow
 K|weapon_crowbar|Crowbar
+K|weapon_displacer|Displacer
+K|weapon_eagle|Desert Eagle
 K|weapon_egon|Gluon Gun
 K|weapon_gauss|Tau Cannon
 K|weapon_glock|Glock
+K|weapon_grapple|Barnacle
 K|weapon_handgrenade|Hand Grenade
 K|weapon_hornetgun|Hivehand
+K|weapon_knife|Combat Knife
+K|weapon_m249|M249
 K|weapon_mp5|MP5
+K|weapon_pipewrench|Pipe Wrench
 K|weapon_python|.357 Magnum
 K|weapon_rpg|RPG
 K|weapon_satchel|Satchel Charge
+K|weapon_shockrifle|Shock Roach
 K|weapon_shotgun|Shotgun
 K|weapon_snark|Snarks
+K|weapon_sniperrifle|Sniper Rifle
+K|weapon_sporelauncher|Spore Launcher
 K|weapon_tripmine|Tripmine
 S|weapon_crowbar
 P|chapter_0_button|c0a0

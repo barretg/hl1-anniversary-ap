@@ -222,11 +222,28 @@ bool IsStartingWeapon(const std::string& classname) {
 
 }  // namespace
 
+// Is this item one of the games' armour items (the HEV Suit, the PCV, the
+// Security Armor)? Those free armour and are never handed over as a pickup.
+bool IsArmourItem(const std::string& item) {
+    if (item == kSuitItem) {
+        return true;
+    }
+    for (const Campaign& campaign : Data().campaigns) {
+        if (campaign.armour_item == item) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ArmourAllowed() {
     if (!Gated()) {
         return true;  // no checkdata: this is ordinary Half-Life
     }
-    return State().Has(kSuitItem);
+    // Each game's own: the HEV Suit on Half-Life's maps and the hub, the PCV on
+    // Opposing Force's, the Security Armor on Blue Shift's.
+    const std::string& item = Data().CampaignOfMap(CurrentMap()).armour_item;
+    return State().Has(item.empty() ? std::string(kSuitItem) : item);
 }
 
 void EnforceSuit() {
@@ -444,8 +461,8 @@ void ApplyLoadout(CBasePlayer* player) {
     for (const std::string& item : state.held_items) {
         // Equipment, applied directly. Neither spawns a pickup: see the note on
         // `GrantLongJump`.
-        if (item == kSuitItem) {
-            continue;  // the suit bit is set above; this item only frees armour
+        if (IsArmourItem(item)) {
+            continue;  // the suit bit is set above; these only free armour
         }
         if (item == kLongJumpItem) {
             gave_something |= GrantLongJump(player);

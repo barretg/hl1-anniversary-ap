@@ -42,7 +42,12 @@ OUT_PATH = (
 # 4 adds `M`, the monsters a mid-mission map expects to have been walked in from
 # the map before it. Additive again: a reader of format 3 warps into Gonarch's
 # Lair Part 3 and finds an empty arena, which is what it did before.
-FORMAT_VERSION = 4
+#
+# 5 adds the campaigns. `C` gains two fields, the campaign key and how the
+# mission completes (`arrival`, `forward_exit`, `endsection`), and a new `N`
+# record describes each campaign. Additive: a format 4 reader sees Half-Life's
+# records unchanged and treats the other games' missions as more chapters.
+FORMAT_VERSION = 5
 
 
 def render(campaign: dict) -> str:
@@ -51,7 +56,9 @@ def render(campaign: dict) -> str:
         "# Record types:",
         "#   V|<format version>",
         "#   G|<goal chapter key>",
-        "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>",
+        "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>"
+        "|<campaign>|<complete on>",
+        "#   N|<campaign>|<short>|<name>|<goal chapter>|<armour item>",
         "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
@@ -69,9 +76,17 @@ def render(campaign: dict) -> str:
         f"G|{campaign['goal_chapter']}",
     ]
 
+    for entry in campaign.get("campaigns", ()):
+        lines.append(
+            "N|{key}|{short}|{name}|{goal}|{armour}".format(
+                key=entry["key"], short=entry.get("short", ""), name=entry["name"],
+                goal=entry["goal_chapter"], armour=entry.get("armour_item", ""),
+            )
+        )
+
     for chapter in campaign["chapters"]:
         lines.append(
-            "C|{index}|{key}|{name}|{maps}|{goal}|{arrival}".format(
+            "C|{index}|{key}|{name}|{maps}|{goal}|{arrival}|{campaign}|{on}".format(
                 index=chapter["index"],
                 key=chapter["key"],
                 name=chapter["name"],
@@ -81,6 +96,8 @@ def render(campaign: dict) -> str:
                 # only true of the mission nothing changelevels out of. Every
                 # other mission is finished by walking on into the next one.
                 arrival=1 if chapter.get("complete_on_arrival") else 0,
+                campaign=chapter.get("campaign", "half_life"),
+                on=chapter.get("complete_on", "forward_exit"),
             )
         )
 

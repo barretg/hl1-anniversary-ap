@@ -4,6 +4,7 @@
 
 #include "ap_content.h"
 #include "ap_main.h"
+#include "ap_state.h"
 
 #include <cctype>
 #include <fstream>
@@ -149,6 +150,11 @@ const char* Redirect(const char* name, const char* base) {
     }
     const std::string key = std::string(base) + Lower(path);
     if (!g_active->relocated.count(key)) {
+        return name;
+    }
+    // `viewmodel_style: always_gordon`: Half-Life's hands on every map. Only
+    // the first-person models; the world is still the other game's.
+    if (State().gordon_hands && key.rfind("models/v_", 0) == 0) {
         return name;
     }
     std::string rel = Lower(path);

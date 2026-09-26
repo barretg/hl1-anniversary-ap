@@ -47,6 +47,7 @@ bool CheckData::Load(const std::string& path) {
     format_version = 0;
     data_version.clear();
     goal_chapter.clear();
+    campaigns.clear();
 
     std::ifstream file(path.c_str());
     if (!file) {
@@ -79,7 +80,20 @@ bool CheckData::Load(const std::string& path) {
             // Format 2. Absent in an older file, which reads as false and gives
             // the old behaviour of never completing on arrival.
             chapter.complete_on_arrival = f.size() >= 7 && ParseBool(f[6]);
+            // Format 5.
+            if (f.size() >= 9) {
+                chapter.campaign = f[7];
+                chapter.complete_on = f[8];
+            }
             chapters.push_back(chapter);
+        } else if (record == "N" && f.size() >= 6) {
+            Campaign campaign;
+            campaign.key = f[1];
+            campaign.shortname = f[2];
+            campaign.name = f[3];
+            campaign.goal_chapter = f[4];
+            campaign.armour_item = f[5];
+            campaigns.push_back(campaign);
         } else if (record == "L" && f.size() >= 6) {
             Location location;
             location.id = ParseLong(f[1]);
@@ -230,6 +244,55 @@ const Chapter* CheckData::ChapterByName(const std::string& text) const {
         }
     }
     return nullptr;
+}
+
+namespace {
+
+// Half-Life as a file older than format 5 describes it: no `N` record, and its
+// finale the `G` record's.
+const Campaign& HalfLifeDefault(const std::string& goal) {
+    static Campaign half_life;
+    half_life.key = "half_life";
+    half_life.shortname = "hl";
+    half_life.name = "Half-Life";
+    half_life.goal_chapter = goal;
+    half_life.armour_item = "HEV Suit";
+    return half_life;
+}
+
+}  // namespace
+
+const Campaign* CheckData::CampaignByKey(const std::string& key) const {
+    for (const Campaign& campaign : campaigns) {
+        if (campaign.key == key) {
+            return &campaign;
+        }
+    }
+    if (key == "half_life") {
+        return &HalfLifeDefault(goal_chapter);
+    }
+    return nullptr;
+}
+
+const Campaign* CheckData::CampaignByName(const std::string& text) const {
+    const std::string wanted = Simplify(text);
+    if (wanted.empty()) {
+        return nullptr;
+    }
+    for (const Campaign& campaign : campaigns) {
+        if (Simplify(campaign.key) == wanted || Simplify(campaign.shortname) == wanted ||
+            Simplify(campaign.name) == wanted) {
+            return &campaign;
+        }
+    }
+    return nullptr;
+}
+
+const Campaign& CheckData::CampaignOfMap(const std::string& map) const {
+    const Chapter* chapter = ChapterOfMap(map);
+    const Campaign* campaign =
+        CampaignByKey(chapter != nullptr ? chapter->campaign : "half_life");
+    return campaign != nullptr ? *campaign : HalfLifeDefault(goal_chapter);
 }
 
 const Location* CheckData::LocationById(long id) const {
