@@ -26,6 +26,24 @@ index 7c4a6ea..61c9b5f 100644
 -	return NULL;
 +	return best;
  }
+diff --git a/cl_dll/cl_util.h b/cl_dll/cl_util.h
+index 54c283a..994c698 100644
+--- a/cl_dll/cl_util.h
++++ b/cl_dll/cl_util.h
+@@ -187,8 +187,13 @@ extern vec3_t vec3_origin;
+ // disable 'truncation from 'const double' to 'float' warning message
+ #pragma warning( disable: 4305 )
+ 
++// AP: the current game's HUD colour, replacing Half-Life's yellow (0 = keep it)
++extern unsigned long g_ulAPHudColor;
++
+ inline void UnpackRGB(int &r, int &g, int &b, unsigned long ulRGB)\
+ {\
++	if (ulRGB == 0x00FFA000 && g_ulAPHudColor)\
++		ulRGB = g_ulAPHudColor;\
+ 	r = (ulRGB & 0xFF0000) >>16;\
+ 	g = (ulRGB & 0xFF00) >> 8;\
+ 	b = ulRGB & 0xFF;\
 diff --git a/cl_dll/ev_hldm.cpp b/cl_dll/ev_hldm.cpp
 index 91aed0c..b6318ce 100644
 --- a/cl_dll/ev_hldm.cpp
@@ -500,7 +518,7 @@ index 5fd90c1..5e9c43f 100644
  #endif // EV_HLDMH
 \ No newline at end of file
 diff --git a/cl_dll/flashlight.cpp b/cl_dll/flashlight.cpp
-index d12cfbd..ee01a13 100644
+index d12cfbd..d94c5c9 100644
 --- a/cl_dll/flashlight.cpp
 +++ b/cl_dll/flashlight.cpp
 @@ -36,6 +36,7 @@ int CHudFlashlight::Init(void)
@@ -511,23 +529,46 @@ index d12cfbd..ee01a13 100644
  
  	HOOK_MESSAGE(Flashlight);
  	HOOK_MESSAGE(FlashBat);
-@@ -51,6 +52,7 @@ void CHudFlashlight::Reset(void)
+@@ -51,8 +52,11 @@ void CHudFlashlight::Reset(void)
  {
  	m_fFade = 0;
  	m_fOn = 0;
 +	m_fNightVision = 0;
  }
  
++client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes, int iCount);	// AP: ammo.cpp
++
  int CHudFlashlight::VidInit(void)
-@@ -66,6 +68,7 @@ int CHudFlashlight::VidInit(void)
+ {
+ 	int HUD_flash_empty = gHUD.GetSpriteIndex( "flash_empty" );
+@@ -66,6 +70,26 @@ int CHudFlashlight::VidInit(void)
  	m_prc2 = &gHUD.GetSpriteRect(HUD_flash_full);
  	m_prcBeam = &gHUD.GetSpriteRect(HUD_flash_beam);
  	m_iWidth = m_prc2->right - m_prc2->left;
 +	m_nvSprite = LoadSprite("sprites/of_nv_b.spr");
++
++	// AP: Opposing Force uses the same icon names on its own sheets, which the
++	// content installer relocates under sprites/ap_of. Its hud.txt stops at 640.
++	static const char *ofNames[3] = { "flash_empty", "flash_full", "flash_beam" };
++	int count;
++	client_sprite_t *list = SPR_GetList( "sprites/hud.txt", &count );
++	int res = gHUD.m_iRes > 640 ? 640 : gHUD.m_iRes;
++	for ( int i = 0; i < 3; i++ )
++	{
++		m_hOFSprite[i] = 0;
++		client_sprite_t *p = list ? GetSpriteList( list, ofNames[i], res, count ) : NULL;
++		if ( p )
++		{
++			char sz[256];
++			sprintf( sz, "sprites/ap_of/%s.spr", p->szSprite );
++			m_hOFSprite[i] = SPR_Load( sz );
++			m_rcOF[i] = p->rc;
++		}
++	}
  
  	return 1;
  };
-@@ -90,6 +93,7 @@ int CHudFlashlight:: MsgFunc_Flashlight(const char *pszName,  int iSize, void *p
+@@ -90,6 +114,7 @@ int CHudFlashlight:: MsgFunc_Flashlight(const char *pszName,  int iSize, void *p
  	int x = READ_BYTE();
  	m_iBat = x;
  	m_flBat = ((float)x)/100.0;
@@ -535,7 +576,24 @@ index d12cfbd..ee01a13 100644
  
  	return 1;
  }
-@@ -112,6 +116,8 @@ int CHudFlashlight::Draw(float flTime)
+@@ -102,6 +127,16 @@ int CHudFlashlight::Draw(float flTime)
+ 	int r, g, b, x, y, a;
+ 	wrect_t rc;
+ 
++	HSPRITE hEmpty = m_hSprite1, hFull = m_hSprite2, hBeam = m_hBeam;
++	wrect_t *prcEmpty = m_prc1, *prcFull = m_prc2, *prcBeam = m_prcBeam;
++	int width = m_iWidth;
++	if ( m_fNightVision && m_hOFSprite[0] && m_hOFSprite[1] && m_hOFSprite[2] )
++	{
++		hEmpty = m_hOFSprite[0]; hFull = m_hOFSprite[1]; hBeam = m_hOFSprite[2];
++		prcEmpty = &m_rcOF[0]; prcFull = &m_rcOF[1]; prcBeam = &m_rcOF[2];
++		width = prcFull->right - prcFull->left;
++	}
++
+ 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
+ 		return 1;
+ 
+@@ -112,38 +147,81 @@ int CHudFlashlight::Draw(float flTime)
  
  	if (m_flBat < 0.20)
  		UnpackRGB(r,g,b, RGB_REDISH);
@@ -544,17 +602,49 @@ index d12cfbd..ee01a13 100644
  	else
  		UnpackRGB(r,g,b, RGB_YELLOWISH);
  
-@@ -130,6 +136,9 @@ int CHudFlashlight::Draw(float flTime)
+ 	ScaleColors(r, g, b, a);
  
- 		SPR_Set( m_hBeam, r, g, b );
- 		SPR_DrawAdditive( 0, x, y, m_prcBeam );
+-	y = (m_prc1->bottom - m_prc2->top)/2;
+-	x = ScreenWidth - m_iWidth - m_iWidth/2 ;
++	y = (prcEmpty->bottom - prcFull->top)/2;
++	x = ScreenWidth - width - width/2 ;
+ 
+ 	// Draw the flashlight casing
+-	SPR_Set(m_hSprite1, r, g, b );
+-	SPR_DrawAdditive( 0,  x, y, m_prc1);
++	SPR_Set(hEmpty, r, g, b );
++	SPR_DrawAdditive( 0,  x, y, prcEmpty);
+ 
+ 	if ( m_fOn )
+ 	{  // draw the flashlight beam
+-		x = ScreenWidth - m_iWidth/2;
++		x = ScreenWidth - width/2;
+ 
+-		SPR_Set( m_hBeam, r, g, b );
+-		SPR_DrawAdditive( 0, x, y, m_prcBeam );
++		SPR_Set( hBeam, r, g, b );
++		SPR_DrawAdditive( 0, x, y, prcBeam );
 +
 +		if ( m_fNightVision )
 +			DrawNightVision();
  	}
  
  	// draw the flashlight energy level
-@@ -146,4 +155,42 @@ int CHudFlashlight::Draw(float flTime)
+-	x = ScreenWidth - m_iWidth - m_iWidth/2 ;
+-	int iOffset = m_iWidth * (1.0 - m_flBat);
+-	if (iOffset < m_iWidth)
++	x = ScreenWidth - width - width/2 ;
++	int iOffset = width * (1.0 - m_flBat);
++	if (iOffset < width)
+ 	{
+-		rc = *m_prc2;
++		rc = *prcFull;
+ 		rc.left += iOffset;
+ 
+-		SPR_Set(m_hSprite2, r, g, b );
++		SPR_Set(hFull, r, g, b );
+ 		SPR_DrawAdditive( 0, x + iOffset, y, &rc);
+ 	}
  
  
  	return 1;
@@ -599,6 +689,21 @@ index d12cfbd..ee01a13 100644
 +		}
 +	}
 +}
+diff --git a/cl_dll/health.cpp b/cl_dll/health.cpp
+index bb425d4..44d85c3 100644
+--- a/cl_dll/health.cpp
++++ b/cl_dll/health.cpp
+@@ -225,7 +225,9 @@ int CHudHealth::Draw(float flTime)
+ 
+ 		int iHeight = gHUD.m_iFontHeight;
+ 		int iWidth = HealthWidth/10;
+-		FillRGBA(x, y, iWidth, iHeight, 255, 160, 0, a);
++		int barR, barG, barB;
++		UnpackRGB(barR, barG, barB, RGB_YELLOWISH);	// AP: follows the game's HUD colour
++		FillRGBA(x, y, iWidth, iHeight, barR, barG, barB, a);
+ 	}
+ 
+ 	DrawDamage(flTime);
 diff --git a/cl_dll/hl/hl_baseentity.cpp b/cl_dll/hl/hl_baseentity.cpp
 index 0c2d539..b154ad2 100644
 --- a/cl_dll/hl/hl_baseentity.cpp
@@ -856,20 +961,197 @@ index d8215cb..082e1cc 100644
  
  		// Decrement weapon counters, server does this at same time ( during post think, after doing everything else )
  		pto->m_flNextReload				-= cmd->msec / 1000.0;
+diff --git a/cl_dll/hud.cpp b/cl_dll/hud.cpp
+index 41aa5cf..2879a2e 100644
+--- a/cl_dll/hud.cpp
++++ b/cl_dll/hud.cpp
+@@ -99,6 +99,23 @@ int __MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf)
+ 	return gHUD.MsgFunc_ResetHUD(pszName, iSize, pbuf );
+ }
+ 
++// AP: 0 Half-Life, 1 Opposing Force, 2 Blue Shift
++unsigned long g_ulAPHudColor = 0;
++int g_iAPCampaign = 0;
++
++int __MsgFunc_APCampaign(const char *pszName, int iSize, void *pbuf)
++{
++	BEGIN_READ( pbuf, iSize );
++	g_iAPCampaign = READ_BYTE();
++	if ( g_iAPCampaign == 1 )
++		g_ulAPHudColor = 0x0000A000;	// Opposing Force: 0,160,0
++	else if ( g_iAPCampaign == 2 )
++		g_ulAPHudColor = 0x005F5FFF;	// Blue Shift: 95,95,255
++	else
++		g_ulAPHudColor = 0;
++	return 1;
++}
++
+ int __MsgFunc_InitHUD(const char *pszName, int iSize, void *pbuf)
+ {
+ 	gHUD.MsgFunc_InitHUD( pszName, iSize, pbuf );
+@@ -288,6 +305,7 @@ void CHud :: Init( void )
+ 	HOOK_MESSAGE( ResetHUD );
+ 	HOOK_MESSAGE( GameMode );
+ 	HOOK_MESSAGE( InitHUD );
++	HOOK_MESSAGE( APCampaign );
+ 	HOOK_MESSAGE( ViewMode );
+ 	HOOK_MESSAGE( SetFOV );
+ 	HOOK_MESSAGE( Concuss );
 diff --git a/cl_dll/hud.h b/cl_dll/hud.h
-index 3519999..1e7431a 100644
+index 3519999..6564706 100644
 --- a/cl_dll/hud.h
 +++ b/cl_dll/hud.h
-@@ -367,6 +367,9 @@ private:
+@@ -367,6 +367,12 @@ private:
  	int	  m_fOn;
  	float m_fFade;
  	int	  m_iWidth;		// width of the battery innards
++	// AP: Opposing Force's own flashlight icons (a battery), from its relocated HUD sheet
++	HSPRITE m_hOFSprite[3];
++	wrect_t m_rcOF[3];
 +	int	  m_fNightVision;	// AP: Opposing Force map, flashlight is night vision
 +	HSPRITE m_nvSprite;
 +	void DrawNightVision( void );
  };
  
  //
+@@ -438,6 +444,10 @@ private:
+ 
+ 	int m_HUD_title_life;
+ 	int m_HUD_title_half;
++
++	// AP: Opposing Force and Blue Shift logos, from their own 640 art
++	HSPRITE m_hAPTitle[4];
++	void DrawAPTitle( int campaign, int r, int g, int b );
+ 	bool m_bEndAfterMessage;
+ };
+ 
+diff --git a/cl_dll/hud_msg.cpp b/cl_dll/hud_msg.cpp
+index e478d59..d13a521 100644
+--- a/cl_dll/hud_msg.cpp
++++ b/cl_dll/hud_msg.cpp
+@@ -141,7 +141,11 @@ int CHud :: MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf )
+ 	BEGIN_READ( pbuf, iSize );
+ 	m_iConcussionEffect = READ_BYTE();
+ 	if (m_iConcussionEffect)
+-		this->m_StatusIcons.EnableIcon("dmg_concuss",255,160,0);
++	{
++		int r, g, b;
++		UnpackRGB(r, g, b, RGB_YELLOWISH);	// AP: follows the game's HUD colour
++		this->m_StatusIcons.EnableIcon("dmg_concuss",r,g,b);
++	}
+ 	else
+ 		this->m_StatusIcons.DisableIcon("dmg_concuss");
+ 	return 1;
+diff --git a/cl_dll/message.cpp b/cl_dll/message.cpp
+index 199fb2c..5ebae1c 100644
+--- a/cl_dll/message.cpp
++++ b/cl_dll/message.cpp
+@@ -26,6 +26,8 @@
+ #include "parsemsg.h"
+ 
+ DECLARE_MESSAGE( m_Message, HudText )
++extern int g_iAPCampaign;	// AP: hud.cpp
++
+ DECLARE_MESSAGE( m_Message, GameTitle )
+ 
+ // 1 Global client_textmessage_t for custom messages that aren't in the titles.txt
+@@ -50,6 +52,11 @@ int CHudMessage::VidInit( void )
+ 	m_HUD_title_half = gHUD.GetSpriteIndex( "title_half" );
+ 	m_HUD_title_life = gHUD.GetSpriteIndex( "title_life" );
+ 
++	m_hAPTitle[0] = 0;
++	m_hAPTitle[1] = 0;
++	m_hAPTitle[2] = 0;
++	m_hAPTitle[3] = 0;
++
+ 	return 1;
+ };
+ 
+@@ -340,6 +347,11 @@ int CHudMessage::Draw( float fTime )
+ 		{
+ 			brightness = FadeBlend( m_pGameTitle->fadein, m_pGameTitle->fadeout, m_pGameTitle->holdtime, localTime );
+ 
++			if ( g_iAPCampaign != 0 )
++				DrawAPTitle( g_iAPCampaign, brightness * m_pGameTitle->r1, brightness * m_pGameTitle->g1, brightness * m_pGameTitle->b1 );
++			else
++			{
++
+ 			int halfWidth = gHUD.GetSpriteRect(m_HUD_title_half).right - gHUD.GetSpriteRect(m_HUD_title_half).left;
+ 			int fullWidth = halfWidth + gHUD.GetSpriteRect(m_HUD_title_life).right - gHUD.GetSpriteRect(m_HUD_title_life).left;
+ 			int fullHeight = gHUD.GetSpriteRect(m_HUD_title_half).bottom - gHUD.GetSpriteRect(m_HUD_title_half).top;
+@@ -353,6 +365,7 @@ int CHudMessage::Draw( float fTime )
+ 
+ 			SPR_Set( gHUD.GetSprite(m_HUD_title_life), brightness * m_pGameTitle->r1, brightness * m_pGameTitle->g1, brightness * m_pGameTitle->b1 );
+ 			SPR_DrawAdditive( 0, x + halfWidth, y, &gHUD.GetSpriteRect(m_HUD_title_life) );
++			}
+ 
+ 			drawn = 1;
+ 		}
+@@ -518,10 +531,17 @@ int CHudMessage::MsgFunc_HudText( const char *pszName,  int iSize, void *pbuf )
+ 
+ int CHudMessage::MsgFunc_GameTitle( const char *pszName,  int iSize, void *pbuf )
+ {
+-	m_pGameTitle = TextMessageGet( "GAMETITLE" );
++	m_pGameTitle = NULL;
++	if ( g_iAPCampaign == 1 )
++		m_pGameTitle = TextMessageGet( "AP_OF_GAMETITLE" );
++	else if ( g_iAPCampaign == 2 )
++		m_pGameTitle = TextMessageGet( "AP_BS_GAMETITLE" );
++	if ( m_pGameTitle == NULL )
++		m_pGameTitle = TextMessageGet( "GAMETITLE" );
+ 	if ( m_pGameTitle != NULL )
+ 	{
+-		m_gameTitleTime = gHUD.m_flTime;
++		// AP: the HUD clock can still be 0 on a fresh map, which reads as "no title"
++		m_gameTitleTime = gHUD.m_flTime > 0 ? gHUD.m_flTime : 0.001f;
+ 
+ 		// Turn on drawing
+ 		if ( !(m_iFlags & HUD_ACTIVE) )
+@@ -550,3 +570,44 @@ void CHudMessage::MessageAdd(client_textmessage_t * newMessage )
+ 	}
+ 
+ }
++
++// AP: "HALF-LIFE" from the game's own 640hud4/5, and for Opposing Force its
++// "OPPOSING FORCE" line beneath, as each game's client draws it.
++void CHudMessage::DrawAPTitle( int campaign, int r, int g, int b )
++{
++	const char *half = campaign == 1 ? "sprites/ap_of/640hud4.spr" : "sprites/ap_bs/640hud4.spr";
++	const char *life = campaign == 1 ? "sprites/ap_of/640hud5.spr" : "sprites/ap_bs/640hud5.spr";
++	static int loadedFor = 0;
++	if ( loadedFor != campaign || !m_hAPTitle[0] )
++	{
++		m_hAPTitle[0] = SPR_Load( half );
++		m_hAPTitle[1] = SPR_Load( life );
++		m_hAPTitle[2] = campaign == 1 ? SPR_Load( "sprites/640hudof05.spr" ) : 0;
++		m_hAPTitle[3] = campaign == 1 ? SPR_Load( "sprites/640hudof06.spr" ) : 0;
++		loadedFor = campaign;
++	}
++
++	wrect_t rcHalf = { 0, 256, 226, 256 };
++	wrect_t rcLife = { 0, 220, 226, 256 };
++	wrect_t rcLine = { 0, 256, 0, 32 };
++
++	const int halfWidth = rcHalf.right - rcHalf.left;
++	const int fullWidth = halfWidth + rcLife.right - rcLife.left;
++	const int fullHeight = rcHalf.bottom - rcHalf.top;
++
++	const int x = XPosition( m_pGameTitle->x, fullWidth, fullWidth );
++	const int y = YPosition( m_pGameTitle->y, fullHeight );
++
++	SPR_Set( m_hAPTitle[0], r, g, b );
++	SPR_DrawAdditive( 0, x, y, &rcHalf );
++	SPR_Set( m_hAPTitle[1], r, g, b );
++	SPR_DrawAdditive( 0, x + halfWidth, y, &rcLife );
++
++	if ( m_hAPTitle[2] && m_hAPTitle[3] )
++	{
++		SPR_Set( m_hAPTitle[2], r, g, b );
++		SPR_DrawAdditive( 0, x, y + fullHeight, &rcLine );
++		SPR_Set( m_hAPTitle[3], r, g, b );
++		SPR_DrawAdditive( 0, x + halfWidth, y + fullHeight, &rcLine );
++	}
++}
 diff --git a/common/mathlib.h b/common/mathlib.h
 index c765eb5..8afc4de 100644
 --- a/common/mathlib.h
@@ -2340,7 +2622,7 @@ index eacfd2c..465ec32 100644
  //
  // Track Train
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..4d22a38 100644
+index 85b67c4..5c192c7 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -2363,7 +2645,15 @@ index 85b67c4..4d22a38 100644
  	
  };	
  
-@@ -203,7 +209,7 @@ void LinkUserMessages( void )
+@@ -159,6 +165,7 @@ int gmsgFlashBattery = 0;
+ int gmsgResetHUD = 0;
+ int gmsgInitHUD = 0;
+ int gmsgShowGameTitle = 0;
++int gmsgAPCampaign = 0;
+ int gmsgCurWeapon = 0;
+ int gmsgHealth = 0;
+ int gmsgDamage = 0;
+@@ -203,7 +210,7 @@ void LinkUserMessages( void )
  	gmsgSelAmmo = REG_USER_MSG("SelAmmo", sizeof(SelAmmo));
  	gmsgCurWeapon = REG_USER_MSG("CurWeapon", 3);
  	gmsgGeigerRange = REG_USER_MSG("Geiger", 1);
@@ -2372,7 +2662,15 @@ index 85b67c4..4d22a38 100644
  	gmsgFlashBattery = REG_USER_MSG("FlashBat", 1);
  	gmsgHealth = REG_USER_MSG( "Health", 1 );
  	gmsgDamage = REG_USER_MSG( "Damage", 12 );
-@@ -928,6 +934,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
+@@ -217,6 +224,7 @@ void LinkUserMessages( void )
+ 	gmsgResetHUD = REG_USER_MSG("ResetHUD", 1);		// called every respawn
+ 	gmsgInitHUD = REG_USER_MSG("InitHUD", 0 );		// called every time a new player joins the server
+ 	gmsgShowGameTitle = REG_USER_MSG("GameTitle", 1);
++	gmsgAPCampaign = REG_USER_MSG("APCampaign", 1);
+ 	gmsgDeathMsg = REG_USER_MSG( "DeathMsg", -1 );
+ 	gmsgScoreInfo = REG_USER_MSG( "ScoreInfo", 9 );
+ 	gmsgTeamInfo = REG_USER_MSG( "TeamInfo", -1 );  // sets the name of a player's team
+@@ -928,6 +936,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
  {
  	CSound *pSound;
  
@@ -2382,7 +2680,7 @@ index 85b67c4..4d22a38 100644
  	// Holster weapon immediately, to allow it to cleanup
  	if ( m_pActiveItem )
  		m_pActiveItem->Holster( );
-@@ -1075,6 +1084,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
+@@ -1075,6 +1086,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
  			m_IdealActivity = ACT_WALK;
  		}
  		break;
@@ -2401,7 +2699,7 @@ index 85b67c4..4d22a38 100644
  	}
  
  	switch (m_IdealActivity)
-@@ -1204,6 +1225,8 @@ void CBasePlayer::TabulateAmmo()
+@@ -1204,6 +1227,8 @@ void CBasePlayer::TabulateAmmo()
  	ammo_rockets = AmmoInventory( GetAmmoIndex( "rockets" ) );
  	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
  	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
@@ -2410,7 +2708,7 @@ index 85b67c4..4d22a38 100644
  }
  
  
-@@ -1666,6 +1689,10 @@ void CBasePlayer::PlayerUse ( void )
+@@ -1666,6 +1691,10 @@ void CBasePlayer::PlayerUse ( void )
  		if ( m_afButtonPressed & IN_USE )
  			EMIT_SOUND( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM);
  
@@ -2421,7 +2719,7 @@ index 85b67c4..4d22a38 100644
  		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
  			 ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
  		{
-@@ -2001,6 +2028,9 @@ void CBasePlayer::PreThink(void)
+@@ -2001,6 +2030,9 @@ void CBasePlayer::PreThink(void)
  	else 
  		pev->flags &= ~FL_ONTRAIN;
  
@@ -2431,7 +2729,7 @@ index 85b67c4..4d22a38 100644
  	// Train speed control
  	if ( m_afPhysicsFlags & PFLAG_ONTRAIN )
  	{
-@@ -3085,6 +3115,12 @@ void CBasePlayer::Spawn( void )
+@@ -3085,6 +3117,12 @@ void CBasePlayer::Spawn( void )
  	m_flNextChatTime = gpGlobals->time;
  
  	g_pGameRules->PlayerSpawn( this );
@@ -2444,7 +2742,7 @@ index 85b67c4..4d22a38 100644
  }
  
  
-@@ -3507,7 +3543,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
+@@ -3507,7 +3545,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
  
  BOOL CBasePlayer :: FlashlightIsOn( void )
  {
@@ -2453,7 +2751,7 @@ index 85b67c4..4d22a38 100644
  }
  
  
-@@ -3521,10 +3557,12 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3521,10 +3559,12 @@ void CBasePlayer :: FlashlightTurnOn( void )
  	if ( (pev->weapons & (1<<WEAPON_SUIT)) )
  	{
  		EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -2467,7 +2765,7 @@ index 85b67c4..4d22a38 100644
  		MESSAGE_END();
  
  		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-@@ -3536,10 +3574,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3536,10 +3576,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
  void CBasePlayer :: FlashlightTurnOff( void )
  {
  	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -2480,7 +2778,19 @@ index 85b67c4..4d22a38 100644
  	MESSAGE_END();
  
  	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-@@ -4129,6 +4168,7 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4105,6 +4146,11 @@ void CBasePlayer :: UpdateClientData( void )
+ 			WRITE_BYTE( 0 );
+ 		MESSAGE_END();
+ 
++		// AP: which game this map belongs to, for the HUD colour and title logo
++		MESSAGE_BEGIN( MSG_ONE, gmsgAPCampaign, NULL, pev );
++			WRITE_BYTE( ap::OnOpposingForce() ? 1 : ap::OnBlueShift() ? 2 : 0 );
++		MESSAGE_END();
++
+ 		if ( !m_fGameHUDInitialized )
+ 		{
+ 			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
+@@ -4129,6 +4175,7 @@ void CBasePlayer :: UpdateClientData( void )
  		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
  			WRITE_BYTE( FlashlightIsOn() ? 1 : 0 );
  			WRITE_BYTE( m_iFlashBattery );
@@ -2488,7 +2798,7 @@ index 85b67c4..4d22a38 100644
  		MESSAGE_END();
  	}
  
-@@ -4425,6 +4465,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
+@@ -4425,6 +4472,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
  // set crosshair position to point to enemey
  //=========================================================
  Vector CBasePlayer :: GetAutoaimVector( float flDelta )
@@ -2501,7 +2811,7 @@ index 85b67c4..4d22a38 100644
  {
  	if (g_iSkillLevel == SKILL_HARD)
  	{
-@@ -4432,7 +4478,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+@@ -4432,7 +4485,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
  		return gpGlobals->v_forward;
  	}
  
@@ -2510,7 +2820,7 @@ index 85b67c4..4d22a38 100644
  	float flDist = 8192;
  
  	// always use non-sticky autoaim
-@@ -5015,6 +5061,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+@@ -5015,6 +5068,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
  
  void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
  {
