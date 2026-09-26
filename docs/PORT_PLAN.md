@@ -7,6 +7,9 @@ version of it.
 
 Read this file first.
 
+**Every phase is done, and multiple full runs have been completed without
+issue.** Everything below is kept as the record of how the port was made.
+
 **Phases 1 and 2 are done, and Phases 3 to 5 are written and building.**
 The strip list below has been executed, the layout table is retail's, the data is
 regenerated against `valve/maps`, the client and world are repointed at the
@@ -531,26 +534,13 @@ that the plan above did not anticipate:
 
 ### Next
 
-Confirmed in play: the hub, `ap`, `ap_warp`, arrival checks, charger checks,
-weapon refusal, item delivery, saves and intra-mission transitions.
+Confirmed in play, across multiple full runs completed without issue: the hub,
+`ap`, `ap_warp`, arrival checks, charger checks, weapon refusal, item delivery,
+saves and intra-mission transitions, the mission-boundary interception, the
+finale's seal and the goal, DeathLink in both directions with the amnesty
+countdown, every trap, and the known map facts from `game/README.md`.
 
-Not yet, in the order a run-through will reach them:
-
-1. **The mission boundary.** Play to the end of a mission's last map and let the
-   game's own `trigger_changelevel` fire. It should be intercepted, report the
-   mission complete, and return to the hub. Most moving parts, and the one place
-   a mistake can still crash the engine.
-2. **The finale's seal.** Finish `missions_required` missions and check that
-   Nihilanth opens, that `ap_warp` into it works, and that clearing it sends the
-   goal.
-3. **DeathLink**, both directions, and the amnesty countdown across a map change.
-4. **The traps.** Butterfingers is exercised; the two spawning traps are not, and
-   they are the ones that depend on the precache.
-5. **The known map facts**, from `game/README.md`. `c2a3d`'s mid-mission
-   `player_weaponstrip` is the first thing to test, and how `c1a0d` actually
-   grants the HEV suit is the first thing to find out.
-
-Data work with no game side to it, parked until the above is done: the map
+Data work with no game side to it, still open: the map
 divisions are much finer than the Sven project's (96 against 35), so the
 `map_reached` set wants a pass for whether every one of them earns a check.
 Regenerating keeps existing ids and appends new ones, so it can happen whenever.

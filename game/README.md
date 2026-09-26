@@ -3,14 +3,11 @@
 A Half-Life server dll, built from Valve's own SDK, that talks to the
 Archipelago client through the file bridge in `<Half-Life>/hlap/archipelago/`.
 
-**Status: it runs and a seed is playable.** Phase 0 is done. The dll builds
-32-bit with MSVC, installs through `tools/install_mod.py`, and in play: the mod
-loads, the hub comes up, `ap_warp` travels, checks fire and reach the server,
-items arrive and are announced, pickups are refused until the multiworld sends
-them, saves and level transitions work.
-
-Not yet confirmed in play: the mission-boundary interception, the finale's seal,
-DeathLink in either direction, and the traps beyond Butterfingers.
+**Status: complete and playable start to finish.** The dll builds 32-bit
+with MSVC, installs through `tools/install_mod.py`, and multiple full runs have
+been completed without issue: the hub, `ap_warp`, checks, item delivery, pickup
+refusal, saves and level transitions, the mission-boundary interception, the
+finale's seal, DeathLink in both directions and every trap.
 
 The headless route, `hlds.exe -game hlap +map c0a0`, is not available: the
 dedicated server shipped inside a Steam client install cannot mount its
@@ -66,8 +63,7 @@ _DEBUG`) and `my_monster` (`#if 0` in `tempmonster.cpp`) are the two that should
 not. `GetNewDLLFunctions` is in no SDK build: the shipped dll has it, this
 source tree does not define it.
 
-Not yet confirmed in play -- the export table matching is strong evidence, but
-only a save and a level transition in the real client settles it.
+Confirmed in play: saves and level transitions work in the real client.
 
 ## Where the dll goes
 

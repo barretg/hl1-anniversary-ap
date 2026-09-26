@@ -11,10 +11,6 @@ Half-Life is never modified: the mod folder inherits every map, model and sound
 from it through `fallback_dir "valve"`. Removing the mod is deleting one folder,
 and the client's `/uninstall` does exactly that.
 
-> **Early days.** This is playable but has not had a full run-through. Expect
-> rough edges past the first few missions, and see `docs/PORT_PLAN.md` in the
-> repository for what has been confirmed working and what has not.
-
 ## Installing
 
 1. Put the apworld in `<Archipelago>/custom_worlds/`.

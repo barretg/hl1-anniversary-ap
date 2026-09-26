@@ -14,13 +14,13 @@ data generators. What is new here is the mission layout against retail's own map
 and the game side, which is a Half-Life server dll rather than an AngelScript
 plugin.
 
-**Status: playable, unfinished.** The world, the client and the data pipeline
-are ported and tested. The game side is written and runs: the mod loads, missions
-warp, checks fire, items arrive, and pickups are refused until the multiworld
-sends them. What has not been proved in play is the far end of a run -- the
-mission-boundary interception, the finale's seal, DeathLink -- and nothing has
-had a full run-through yet. See [docs/PORT_PLAN.md](docs/PORT_PLAN.md) for what
-is left and [game/README.md](game/README.md) for how the game side is built. // TODO: update, all of these things are tested working
+**Status: playable start to finish.** Multiple full runs have been completed
+without issue: missions warp, checks fire, items arrive, pickups are refused
+until the multiworld sends them, mission boundaries return to the hub, the
+finale's seal opens Nihilanth and clearing it sends the goal, and DeathLink and
+the traps work. See [docs/PORT_PLAN.md](docs/PORT_PLAN.md) for how the port was
+done, [TODO.md](TODO.md) for deliberate deferrals and ideas, and
+[game/README.md](game/README.md) for how the game side is built.
 
 ## The target
 
