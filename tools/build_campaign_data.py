@@ -37,6 +37,8 @@ from bsp_entities import (
 from campaigns import (
     CAMPAIGNS,
     CAMPAIGNS_BY_KEY,
+    KNOWN_CAMPAIGNS,
+    KNOWN_CAMPAIGNS_BY_KEY,
     CHARGER_CLASSNAMES,
     CHARGER_POSITION_GRID,
     HEALING_POOL_CLASSNAMES,
@@ -51,8 +53,8 @@ from campaigns import (
     LOCATION_ID_BASE,
     MIN_LOCATIONS_PER_MAP,
     NOTABLE_MONSTERS,
-    REQUIREMENT_GROUPS,
     Campaign,
+    requirement_groups,
     weapon_items,
 )
 from campaigns.half_life import STARTING_WEAPONS
@@ -403,7 +405,7 @@ def build(
 
     `maps_dirs` maps a campaign key to the directory its BSPs are read from.
     """
-    campaigns = [c for c in CAMPAIGNS if c.key in maps_dirs]
+    campaigns = [c for c in KNOWN_CAMPAIGNS if c.key in maps_dirs]
     by_key = {c.key: c for c in campaigns}
 
     # `index` is what `ap_warp <n>` takes in game. Global and in registry order,
@@ -653,12 +655,13 @@ def build(
     #
     # Per campaign, since which campaigns a seed includes must not move a check:
     # each game has its own "first shotgun", anchored in its own chapter order.
-    # Every weapon any campaign brings is looked for, because a weapon placed in
-    # a game other than the one that brings it is still found there.
+    # Every weapon any known campaign brings is looked for, built or not: a
+    # weapon placed in a game other than the one that brings it is still found
+    # there, and the set of checks must not depend on what else is in the build.
     for campaign in campaigns if "weapon_pickup" in enabled else []:
         own = [c for c in chapters if c["campaign"] == campaign.key]
         for item_name, classnames in {
-            **weapon_items(), **campaign.optional_items,
+            **weapon_items(KNOWN_CAMPAIGNS), **campaign.optional_items,
             **campaign.unrandomised_weapons,
         }.items():
             if item_name in campaign.weapon_anchors:
@@ -781,7 +784,7 @@ def build(
         ],
         "items": items,
         "locations": builder.locations,
-        "requirement_groups": REQUIREMENT_GROUPS,
+        "requirement_groups": requirement_groups(campaigns),
         "starting_weapons": STARTING_WEAPONS,
         "hub_map": HUB_MAP,
         "hub_buttons": build_hub_buttons(chapters, campaigns, lobby_path),
@@ -862,6 +865,8 @@ def sealed_seam_chargers(
     survive being used as one.
     """
     sealed: dict[str, set[str]] = {}
+    # `(map, key, twin's map, twin's key)` for every copy dropped.
+    twins: list[tuple[str, str, str, str]] = []
     all_maps = {m for chapter in chapters for m in chapter["maps"]}
 
     for map_name in sorted(all_maps):
@@ -910,12 +915,25 @@ def sealed_seam_chargers(
                         continue
                     distance = math.dist(twin, other_at)
                     if distance <= SEAM_TWIN_RADIUS:
-                        sealed.setdefault(map_name, set()).add(
-                            f"{classname}:{entity.get('model', '')}"
-                        )
+                        key = f"{classname}:{entity.get('model', '')}"
+                        sealed.setdefault(map_name, set()).add(key)
+                        twins.append((map_name, key, other_map,
+                                      f"{classname}:{other.get('model', '')}"))
                         break
 
-    return sealed
+    # Two maps joined by more than one transition can each find the other's copy
+    # behind one of them: Vicarious Reality's `of4a2` and `of4a3` do, for the
+    # pair of units they share. Dropping both would lose the charger, which is
+    # the one thing this pass promises not to do, so the earlier map in campaign
+    # order keeps its copy.
+    order = {m: i for i, m in enumerate(m for c in chapters for m in c["maps"])}
+    for map_name, key, other_map, other_key in twins:
+        if key in sealed.get(map_name, set()) and other_key in sealed.get(other_map, set()):
+            keep = min((map_name, key), (other_map, other_key),
+                       key=lambda pair: order[pair[0]])
+            sealed[keep[0]].discard(keep[1])
+
+    return {m: keys for m, keys in sealed.items() if keys}
 
 
 # `PLAYER_SEARCH_RADIUS` from the SDK's `player.cpp`. `CBasePlayer::PlayerUse`
@@ -1405,7 +1423,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--only",
         action="append",
-        choices=sorted(CAMPAIGNS_BY_KEY),
+        choices=sorted(KNOWN_CAMPAIGNS_BY_KEY),
         help="build just these campaigns (repeatable), for development; "
              "needs --out, since the committed file describes all of them",
     )
@@ -1418,7 +1436,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         maps_dirs = {
             c.key: args.game_root / c.game_dir / "maps"
-            for c in CAMPAIGNS
+            for c in (CAMPAIGNS if args.only is None else KNOWN_CAMPAIGNS)
             if args.only is None or c.key in args.only
         }
     # The committed file is every campaign or nothing: a missing game would
@@ -1430,7 +1448,7 @@ def main(argv: list[str] | None = None) -> int:
             "file somewhere other than the committed one"
         )
     for key, maps_dir in maps_dirs.items():
-        detect = CAMPAIGNS_BY_KEY[key].detect
+        detect = KNOWN_CAMPAIGNS_BY_KEY[key].detect
         if args.game_root is not None and not (args.game_root / detect).is_file():
             parser.error(f"{key}: {args.game_root / detect} not found; "
                          "is it installed? (--only builds without it)")

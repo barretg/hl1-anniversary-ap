@@ -8,7 +8,9 @@ has. A new game is a module that builds a `Campaign` and a line here.
 from __future__ import annotations
 
 from .base import COMPLETE_ON, Campaign
+from .blue_shift import BLUE_SHIFT
 from .half_life import HALF_LIFE
+from .opposing_force import OPPOSING_FORCE
 from .shared import (  # re-exported: the facts every campaign shares
     CHARGER_CLASSNAMES,
     CHARGER_POSITION_GRID,
@@ -36,10 +38,29 @@ CAMPAIGNS: list[Campaign] = [HALF_LIFE]
 
 CAMPAIGNS_BY_KEY: dict[str, Campaign] = {c.key: c for c in CAMPAIGNS}
 
+# Scanned and buildable with `--only ... --out`, but not yet in the committed
+# data: the apworld and the game do not handle them until Phase 6 of the plan.
+# Moving one into CAMPAIGNS is what ships it.
+DRAFT_CAMPAIGNS: list[Campaign] = [OPPOSING_FORCE, BLUE_SHIFT]
+
+KNOWN_CAMPAIGNS: list[Campaign] = CAMPAIGNS + DRAFT_CAMPAIGNS
+
+KNOWN_CAMPAIGNS_BY_KEY: dict[str, Campaign] = {c.key: c for c in KNOWN_CAMPAIGNS}
+
 
 def weapon_items(campaigns: list[Campaign] = CAMPAIGNS) -> dict[str, list[str]]:
     """Every weapon item the given campaigns bring, in registry order."""
     return {name: cls for c in campaigns for name, cls in c.weapons.items()}
+
+
+def requirement_groups(campaigns: list[Campaign] = CAMPAIGNS) -> dict[str, list[str]]:
+    """The shared logic groups plus what the given campaigns add to them."""
+    groups = {name: list(items) for name, items in REQUIREMENT_GROUPS.items()}
+    for campaign in campaigns:
+        for name, items in campaign.groups.items():
+            members = groups.setdefault(name, [])
+            members.extend(item for item in items if item not in members)
+    return groups
 
 
 # Every classname the game must refuse until the matching item arrives.

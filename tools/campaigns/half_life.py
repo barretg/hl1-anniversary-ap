@@ -199,8 +199,11 @@ HALF_LIFE = Campaign(
     melee=STARTING_WEAPONS,
     unreachable=UNREACHABLE_CHARGERS,
     # The hazard course: a training course rather than part of the campaign.
+    # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and
+    # look single-player (no deathmatch spawns) without being campaign maps.
     excluded_maps=frozenset(
-        {"t0a0", "t0a0a", "t0a0b", "t0a0b1", "t0a0b2", "t0a0c", "t0a0d"}
+        {"t0a0", "t0a0a", "t0a0b", "t0a0b1", "t0a0b2", "t0a0c", "t0a0d",
+         "hldemo1", "hldemo2", "hldemo3", "lambda_bunker"}
     ),
     legacy=True,
 )

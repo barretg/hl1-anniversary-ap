@@ -42,6 +42,10 @@ class Campaign:
     # Weapon items this campaign brings, `{item: [classname, ...]}`. A weapon
     # shared with an earlier campaign is declared once, by the earlier one.
     weapons: dict[str, list[str]] = field(default_factory=dict)
+    # Items this campaign adds to the shared logic groups, `{group: [item]}`.
+    # Merged in only when the campaign is built, so another campaign's seeds
+    # keep their groups unchanged.
+    groups: dict[str, list[str]] = field(default_factory=dict)
     # Equipment items behind YAML toggles, `{item: [classname, ...]}`.
     optional_items: dict[str, list[str]] = field(default_factory=dict)
     # Weapons that are a check but never an item.
