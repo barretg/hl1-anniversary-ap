@@ -86,25 +86,52 @@ def chapter_is_startable(world: "HalfLifeWorld", chapter: dict) -> bool:
     return True
 
 
-def chapter_entry_rule(
-    world: "HalfLifeWorld", chapter: dict
-) -> Callable[[CollectionState], bool] | None:
-    """Rule for the Hub -> first map of a mission entrance."""
+def gate_conditions(
+    world: "HalfLifeWorld", gates: dict
+) -> list[Callable[[CollectionState], bool]]:
+    """One condition per `strict` / `always` requirement in a gates record."""
     player = world.player
     conditions: list[Callable[[CollectionState], bool]] = []
-
-    gates = chapter["gates"]
     if world.options.logic_difficulty.value == LogicDifficulty.option_strict:
         strict = any_of(world, gates.get("strict", []))
         if strict is not None:
             conditions.append(strict)
-
     for key in gates.get("always", []):
         names = always_items(world, key)
         if names:
             conditions.append(
                 lambda state, names=names: state.has_any(names, player)
             )
+    return conditions
+
+
+def all_of(
+    conditions: list[Callable[[CollectionState], bool]]
+) -> Callable[[CollectionState], bool] | None:
+    if not conditions:
+        return None
+    if len(conditions) == 1:
+        return conditions[0]
+
+    def rule(state: CollectionState) -> bool:
+        return all(condition(state) for condition in conditions)
+
+    return rule
+
+
+def map_entry_rule(
+    world: "HalfLifeWorld", chapter: dict, map_name: str
+) -> Callable[[CollectionState], bool] | None:
+    """Rule for walking on into one of a mission's later maps."""
+    return all_of(gate_conditions(world, chapter.get("map_gates", {}).get(map_name, {})))
+
+
+def chapter_entry_rule(
+    world: "HalfLifeWorld", chapter: dict
+) -> Callable[[CollectionState], bool] | None:
+    """Rule for the Hub -> first map of a mission entrance."""
+    player = world.player
+    conditions = gate_conditions(world, chapter["gates"])
 
     if chapter["is_goal"]:
         # The seal: no item opens the finale, only finished missions of its own
@@ -119,15 +146,7 @@ def chapter_entry_rule(
         unlock = world.unlock_item_for_chapter[chapter["key"]]
         conditions.append(lambda state, name=unlock: state.has(name, player))
 
-    if not conditions:
-        return None
-    if len(conditions) == 1:
-        return conditions[0]
-
-    def rule(state: CollectionState) -> bool:
-        return all(condition(state) for condition in conditions)
-
-    return rule
+    return all_of(conditions)
 
 
 def location_rule(

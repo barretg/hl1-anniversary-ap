@@ -774,6 +774,11 @@ def build(
                 "index": chapter["index"],
                 "is_goal": chapter["key"] == by_key[chapter["campaign"]].goal_chapter,
                 "gates": by_key[chapter["campaign"]].gates.get(chapter["key"], {}),
+                # Gates from a later map on, `{map: gates}`. Only written where
+                # a mission has any, so older chapter records are unchanged.
+                **({"map_gates": gated} if (gated := {
+                    m: by_key[chapter["campaign"]].map_gates[m] for m in chapter["maps"]
+                    if m in by_key[chapter["campaign"]].map_gates}) else {}),
                 # How the game knows this mission is over.
                 #
                 # Normally: the player walks on into the next mission, and that

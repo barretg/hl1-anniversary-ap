@@ -144,9 +144,9 @@ const char* const kOpForBotModels[] = {
 constexpr int kOpForBotModelCount = sizeof(kOpForBotModels) / sizeof(kOpForBotModels[0]);
 
 // Every skin is a model slot on every map, and OF's biggest maps already use
-// most of the 512. So each map gets a few of OF's, picked by the map's name:
-// the same few every time it loads, which a restored bot's model relies on.
-constexpr int kOpForSkinsPerMap = 4;
+// most of the 512. So each load gets a few of OF's, picked at random. A bot in
+// a save needs no help: CBaseEntity::Restore precaches its own model.
+constexpr int kOpForSkinsPerMap = 6;
 const char* g_mapSkins[kOpForSkinsPerMap];
 int g_mapSkinCount = 0;
 const char* const kCrowbarModel = "models/p_crowbar.mdl";
@@ -805,13 +805,17 @@ void PrecacheBots() {
     }
     g_mapSkinCount = 0;
     if (IsMountedCampaign("opposing_force")) {
-        // FNV-1a of the map name, then consecutive skins from there.
-        unsigned int hash = 2166136261u;
-        for (const char* c = STRING(gpGlobals->mapname); *c; ++c) {
-            hash = (hash ^ static_cast<unsigned char>(*c)) * 16777619u;
+        // A partial shuffle: the first few of a random ordering, no repeats.
+        const char* order[kOpForBotModelCount];
+        for (int i = 0; i < kOpForBotModelCount; ++i) {
+            order[i] = kOpForBotModels[i];
         }
         for (int i = 0; i < kOpForSkinsPerMap; ++i) {
-            g_mapSkins[i] = kOpForBotModels[(hash + i) % kOpForBotModelCount];
+            const int j = RANDOM_LONG(i, kOpForBotModelCount - 1);
+            const char* swap = order[i];
+            order[i] = order[j];
+            order[j] = swap;
+            g_mapSkins[i] = order[i];
             PRECACHE_MODEL((char*)g_mapSkins[i]);
         }
         g_mapSkinCount = kOpForSkinsPerMap;

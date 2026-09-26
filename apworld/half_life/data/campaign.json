@@ -715,6 +715,13 @@
    "index": 32,
    "is_goal": false,
    "gates": {},
+   "map_gates": {
+    "ba_canal1b": {
+     "always": [
+      "ranged"
+     ]
+    }
+   },
    "complete_on_arrival": false,
    "campaign": "blue_shift",
    "complete_on": "forward_exit"

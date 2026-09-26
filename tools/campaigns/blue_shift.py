@@ -38,6 +38,13 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "ba_teleport2": _RANGED,
 }
 
+# Duty Calls: past its first health charger and the crowbars, the way on is
+# opened by shooting an explosive barrel. Nothing melee reaches it, so from
+# `ba_canal1b` on the mission needs a ranged weapon at any logic difficulty.
+MAP_GATES: dict[str, dict[str, list[str]]] = {
+    "ba_canal1b": {"always": ["ranged"]},
+}
+
 # Barney's armour: the vest and helmet, gating armour on BS maps. Blue Shift's
 # `item_suit` in `ba_tram1` is not armour (it only turns the HUD on) and is not
 # a check.
@@ -59,6 +66,7 @@ BLUE_SHIFT = Campaign(
     goal_chapter="ba_teleport2",
     intro_chapter="ba_tram1",
     gates=CHAPTER_GATES,
+    map_gates=MAP_GATES,
     optional_items=OPTIONAL_ITEMS,
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     melee=["weapon_crowbar"],

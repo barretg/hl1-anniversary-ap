@@ -383,6 +383,24 @@ class TestBlueShiftOnly(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
         self.assertNotIn("HEV Suit", self.pool())
 
 
+class TestDutyCallsBarrel(HalfLifeTestBase):
+    options = {"include_half_life": False, "include_blue_shift": True,
+               "logic_difficulty": "loose"}
+
+    def test_past_the_barrel_needs_a_ranged_weapon_at_any_difficulty(self) -> None:
+        from ..data import REQUIREMENT_GROUPS
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        for item in state.multiworld.itempool:
+            if item.player == self.player and item.name in REQUIREMENT_GROUPS["ranged"]:
+                state.remove(item)
+        state.sweep_for_advancements()
+        self.assertTrue(state.can_reach_region("ba_canal1", self.player))
+        self.assertFalse(state.can_reach_region("ba_canal1b", self.player))
+        state.collect(world.create_item("Glock"))
+        self.assertTrue(state.can_reach_region("ba_canal1b", self.player))
+
+
 class TestEveryGame(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
     options = {"include_opposing_force": True, "include_blue_shift": True,
                "shuffle_hev_suit": True}

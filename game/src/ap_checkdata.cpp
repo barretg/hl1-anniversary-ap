@@ -344,13 +344,18 @@ const Location* CheckData::WeaponPickupFor(const std::string& classname,
     // Widening this cannot make a check available earlier than the anchor,
     // because the anchor *is* the earliest map in campaign order that has one --
     // so nothing comes into reach that logic did not already allow.
+    //
+    // It does have to be the same game's map: each game has its own "First
+    // Crowbar", and a Blue Shift crowbar is not Half-Life's.
     if (ChapterOfMap(map) == nullptr) {
         return nullptr;  // the hub or the hazard course: finding one here is not
                          // finding it in the campaign
     }
+    const std::string& game = CampaignOfMap(map).key;
 
     for (const Location& location : locations) {
         if (location.type != TriggerType::WeaponPickup) continue;
+        if (CampaignOfMap(location.map).key != game) continue;
         for (const std::string& name : location.classnames) {
             if (name == classname) {
                 return &location;

@@ -17,7 +17,7 @@ from BaseClasses import Region
 
 from .data import VICTORY, campaign_of, mission_complete_event
 from .locations import HalfLifeLocation, locations_by_map
-from .rules import chapter_entry_rule, location_rule
+from .rules import chapter_entry_rule, location_rule, map_entry_rule
 
 if TYPE_CHECKING:
     from . import HalfLifeWorld
@@ -64,7 +64,11 @@ def create_regions(world: "HalfLifeWorld") -> None:
                     chapter_entry_rule(world, chapter),
                 )
             else:
-                previous.connect(region, f"{chapter['name']}: {map_name}")
+                previous.connect(
+                    region,
+                    f"{chapter['name']}: {map_name}",
+                    map_entry_rule(world, chapter, map_name),
+                )
             previous = region
 
         assert previous is not None

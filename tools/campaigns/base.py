@@ -98,6 +98,12 @@ class Campaign:
         maps = [m for _, _, chapter_maps in self.chapters for m in chapter_maps]
         if len(maps) != len(set(maps)):
             raise ValueError(f"{self.key}: a map is in two chapters")
+        firsts = {chapter_maps[0] for _, _, chapter_maps in self.chapters}
+        for map_name in self.map_gates:
+            # A mission's first map is gated by the mission's own gates.
+            if map_name not in maps or map_name in firsts:
+                raise ValueError(f"{self.key}: map gate on {map_name!r}, which is "
+                                 "not a later map of one of its missions")
         for mode in self.complete_on.values():
             if mode not in COMPLETE_ON:
                 raise ValueError(f"{self.key}: unknown complete_on {mode!r}")
