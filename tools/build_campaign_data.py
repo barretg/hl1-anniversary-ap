@@ -800,7 +800,7 @@ def build(
             for chapter in chapters
         ],
         "items": items,
-        "locations": builder.locations,
+        "locations": gate_checks(builder.locations, campaigns),
         "requirement_groups": requirement_groups(campaigns),
         "starting_weapons": STARTING_WEAPONS,
         "hub_map": HUB_MAP,
@@ -1445,6 +1445,20 @@ def build_hub_buttons(
     return buttons
 
 
+def gate_checks(locations: list[dict], campaigns: list[Campaign]) -> list[dict]:
+    """Attach each campaign's `map_check_gates` to the checks in those maps.
+
+    Arriving on the map stays ungated: that is the point of the gate being on
+    the checks rather than the way in.
+    """
+    gates = {m: g for c in campaigns for m, g in c.map_check_gates.items()}
+    for location in locations:
+        gate = gates.get(location["map"])
+        if gate and location["trigger"]["type"] != "map_reached":
+            location["gates"] = gate
+    return locations
+
+
 def build_items(
     chapters: list[dict], campaigns: list[Campaign], registry: IdRegistry
 ) -> list[dict]:
@@ -1481,8 +1495,11 @@ def build_items(
 
     for campaign in campaigns:
         for name, classnames in campaign.optional_items.items():
-            add(name, "progression", group="optional", classnames=classnames,
-                campaign=campaign.key, armour=name == campaign.armour_item)
+            # Equipment with no pickup (the flashlight) gates nothing logic
+            # knows about.
+            add(name, "progression" if classnames else "useful", group="optional",
+                classnames=classnames, campaign=campaign.key,
+                armour=name == campaign.armour_item)
 
     # Starting-melee candidates. At most one starts the run; the others are
     # items when their game is in the seed. Newest, so after the equipment.
@@ -1491,6 +1508,9 @@ def build_items(
         if owner.key in by_key:
             add(name, "progression", group="melee", classnames=[classname],
                 campaign=owner.key)
+
+    # Abilities behind a YAML toggle, in any seed. Not needed by logic.
+    add("Melee Throw", "useful", group="ability")
 
     for name, classnames, weight in (
         ("Ammo Cache", ["ammo_generic"], 40),

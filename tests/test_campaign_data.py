@@ -726,8 +726,10 @@ def test_optional_equipment_carries_the_classnames_it_gates(campaign: dict) -> N
     }
 
     assert optional, "no optional equipment in the campaign data"
+    # The flashlight items have no pickup: the game gates impulse 100 on them.
+    pickupless = {"Flashlight", "Night Vision Goggles"}
     for name, classnames in optional.items():
-        assert classnames, name
+        assert bool(classnames) != (name in pickupless), name
 
 
 def test_optional_equipment_is_gated_by_classname(

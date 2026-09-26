@@ -13,6 +13,7 @@
 #include "ap_locations.h"
 #include "ap_main.h"
 #include "ap_state.h"
+#include "ap_throw.h"
 #include "ap_traps.h"
 
 namespace ap {
@@ -29,6 +30,8 @@ bool g_loadout_wanted = false;
 
 const char* const kSuitItem = "HEV Suit";
 const char* const kLongJumpItem = "Long Jump Module";
+const char* const kFlashlightItem = "Flashlight";
+const char* const kNightVisionItem = "Night Vision Goggles";
 
 // Equipment is applied to the player directly, never by spawning its pickup.
 //
@@ -178,6 +181,10 @@ bool Give(CBasePlayer* player, const std::string& classname) {
     if (Withheld(classname)) {
         return false;
     }
+    // Likewise one the player threw, which is in the air or on the floor.
+    if (Thrown(classname)) {
+        return false;
+    }
 
     {
         Granting guard;
@@ -276,6 +283,28 @@ void EnforceSuit() {
     // happened after the suit was picked up in Anomalous Materials.
     Trace("  suit bit was missing; restored");
     player->pev->weapons |= (1 << WEAPON_SUIT);
+}
+
+bool FlashlightAllowed() {
+    if (!Gated()) {
+        return true;  // no checkdata: this is ordinary Half-Life
+    }
+    const std::string& map = CurrentMap();
+    if (Data().ChapterOfMap(map) == nullptr) {
+        return true;  // the hub and the hazard courses
+    }
+    const bool night_vision = Data().CampaignOfMap(map).key == "opposing_force";
+    return State().Has(night_vision ? kNightVisionItem : kFlashlightItem);
+}
+
+void EnforceFlashlight() {
+    // Turning it off writes a user message, which must wait for the client;
+    // a transition carries the light over before the client is back in.
+    CBasePlayer* player = Player();
+    if (player != nullptr && ClientReady() && player->FlashlightIsOn() &&
+        !FlashlightAllowed()) {
+        player->FlashlightTurnOff();
+    }
 }
 
 void ClampArmour() {
@@ -518,6 +547,14 @@ void ApplyLoadout(CBasePlayer* player) {
     }
 
     ClampArmour();
+}
+
+void ReturnWeapon(CBasePlayer* player, const std::string& classname) {
+    if (player == nullptr || player->HasNamedPlayerItem(classname.c_str())) {
+        return;
+    }
+    Granting guard;
+    player->GiveNamedItem(Intern(classname));
 }
 
 void GrantFiller(CBasePlayer* player, const std::string& item_name) {

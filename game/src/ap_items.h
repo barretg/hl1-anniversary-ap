@@ -49,6 +49,17 @@ void ApplyLoadout(CBasePlayer* player);
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);
 bool CanCollect(CBasePlayer* player, const std::string& classname);
 
+// May the player turn the flashlight on here? The Flashlight item on Half-Life's
+// and Blue Shift's maps, the Night Vision Goggles on Opposing Force's, and free
+// on the hub. An unshuffled seed has the client send both from the start.
+bool FlashlightAllowed();
+// Every frame: turn it off on a map where it is not allowed.
+void EnforceFlashlight();
+
+// Hand back a weapon the player already owns (a Melee Throw coming home).
+// Never reported as finding one, and never refused by the gate.
+void ReturnWeapon(CBasePlayer* player, const std::string& classname);
+
 // One filler delivery: ammo, health, armour. Named as the item list names them.
 void GrantFiller(CBasePlayer* player, const std::string& item_name);
 

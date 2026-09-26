@@ -34,6 +34,8 @@ from .data import (
     CHARGER_TRIGGER,
     HALF_LIFE,
     ITEMS,
+    ABILITY_ITEM_NAMES,
+    OPTIONAL_ITEM_CAMPAIGNS,
     OPTIONAL_ITEM_NAMES,
     VANILLA_WHEN_UNSHUFFLED,
     VICTORY,
@@ -60,8 +62,10 @@ from .options import (
     HalfLifeOptions,
     IncludeBlueShift,
     IncludeOpposingForce,
+    MeleeThrow,
     OpposingForceMissionsRequired,
     RandomStartingWeapon,
+    ShuffleFlashlight,
     ViewmodelStyle,
 )
 from .regions import create_regions
@@ -124,7 +128,7 @@ class HalfLifeWeb(WebWorld):
             "Experimental Features",
             [AmmoRelief, IncludeOpposingForce, IncludeBlueShift,
              OpposingForceMissionsRequired, BlueShiftMissionsRequired,
-             RandomStartingWeapon, ViewmodelStyle],
+             RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow],
             start_collapsed=True,
         )
     ]
@@ -246,13 +250,18 @@ class HalfLifeWorld(World):
         # campaign puts it. See `VANILLA_WHEN_UNSHUFFLED`.
         self.vanilla_placements: dict[str, str] = {}
         for name in optional_items:
-            if campaign_of(items_by_name[name]) not in self.campaigns:
+            owners = OPTIONAL_ITEM_CAMPAIGNS.get(name, (campaign_of(items_by_name[name]),))
+            if not any(owner in self.campaigns for owner in owners):
                 continue
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
                 self.available_item_names.add(name)
             elif name in VANILLA_WHEN_UNSHUFFLED:
                 self.available_item_names.add(name)
                 self.vanilla_placements[name] = VANILLA_WHEN_UNSHUFFLED[name]
+        self.available_item_names.update(
+            name for name, option in ABILITY_ITEM_NAMES.items()
+            if getattr(self.options, option)
+        )
         self.available_item_names.update(
             unlock_item_for_chapter[chapter["key"]]
             for chapter in self.included_chapters
@@ -427,6 +436,8 @@ class HalfLifeWorld(World):
             "viewmodel_style": self.options.viewmodel_style.current_key,
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),
             "shuffle_longjump": bool(self.options.shuffle_longjump),
+            "shuffle_flashlight": bool(self.options.shuffle_flashlight),
+            "melee_throw": bool(self.options.melee_throw),
             # Unshuffled equipment that is a real item at its vanilla location,
             # so the client must gate its pickup like any other. Seeds from
             # before this existed left the long jump module ungated instead.

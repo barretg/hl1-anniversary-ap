@@ -87,6 +87,10 @@ class TestOldSeed(unittest.TestCase):
         # Shuffled suit: nothing granted up front, as before.
         self.assertNotIn("HEV Suit", self.ctx.always_unlocked)
 
+    def test_the_flashlight_works_as_before(self) -> None:
+        self.assertTrue({"Flashlight", "Night Vision Goggles"} <= self.ctx.always_unlocked)
+        self.assertNotIn("Melee Throw", self.ctx.always_unlocked)
+
 
 class TestEveryGameSeed(unittest.TestCase):
     def setUp(self) -> None:

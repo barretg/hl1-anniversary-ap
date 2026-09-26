@@ -23,6 +23,9 @@
 
 #include "CKnife.h"
 #include "port_compat.h"
+#ifndef CLIENT_DLL
+#include "ap_throw.h"
+#endif
 
 #define KNIFE_BODYHIT_VOLUME 128
 #define KNIFE_WALLHIT_VOLUME 512
@@ -82,6 +85,15 @@ void CKnife::PrimaryAttack()
 		pev->nextthink = gpGlobals->time + 0.1;
 #endif
 	}
+}
+
+// AP: Melee Throw, once the multiworld sends it. Server only.
+void CKnife::SecondaryAttack()
+{
+#ifndef CLIENT_DLL
+	if (ap::ThrowMelee(this))
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(0.5);
+#endif
 }
 
 bool CKnife::Swing(const bool bFirst)

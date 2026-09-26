@@ -46,6 +46,7 @@ public:
 	void Holster(int skiplocal = 0) override;
 
 	void PrimaryAttack() override;
+	void SecondaryAttack() override;	// AP: Melee Throw
 
 	bool Swing(const bool bFirst);
 

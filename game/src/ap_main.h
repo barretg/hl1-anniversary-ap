@@ -54,6 +54,7 @@ void RemapSpawn(entvars_t* pev);                            // ap_content
 void PrecacheTraps();                                       // ap_traps
 void RequestLoadout();                                      // ap_items
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
+bool FlashlightAllowed();                                   // ap_items
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
 void OnRevertSaved();                                       // ap_deathlink

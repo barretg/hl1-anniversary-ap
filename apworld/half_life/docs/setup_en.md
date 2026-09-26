@@ -167,6 +167,8 @@ server.
 | `logic_difficulty` | strict | whether logic expects a suitable weapon per mission |
 | `shuffle_hev_suit` | off | armour stays at zero until the item arrives |
 | `shuffle_longjump` | off | on: the module is an item. Off: Half-Life hands it out as it always did |
+| `shuffle_flashlight` | off | on: the flashlight key does nothing until the Flashlight arrives; with Opposing Force in, its maps need the Night Vision Goggles instead. The hub is always lit |
+| `melee_throw` | off | on: adds Melee Throw, which lets secondary fire throw the crowbar or knife. Walk over it to pick it up, or it comes back after ten seconds |
 | `ammo_relief` | off | **experimental:** a gun the level stocks no ammo for is refilled five minutes after it runs dry |
 | `trap_percentage` | 15 | share of your filler replaced by traps |
 | `include_half_life` | on | Half-Life's missions. Turning every game off turns this back on |

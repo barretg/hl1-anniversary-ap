@@ -152,10 +152,13 @@ def chapter_entry_rule(
 def location_rule(
     world: "HalfLifeWorld", entry: dict
 ) -> Callable[[CollectionState], bool] | None:
-    """Extra requirement on a single location, e.g. a boss that needs real damage."""
+    """Extra requirement on a single location, e.g. a boss that needs real damage,
+    or a check in a map that can be reached but not done without an item."""
+    conditions = gate_conditions(world, entry.get("gates", {}))
     requirement = entry.get("requires")
-    if not requirement:
-        return None
-    if world.options.logic_difficulty.value != LogicDifficulty.option_strict:
-        return None  # loose logic drops soft weapon gates
-    return any_of(world, [requirement])
+    # Loose logic drops soft weapon gates.
+    if requirement and world.options.logic_difficulty.value == LogicDifficulty.option_strict:
+        strict = any_of(world, [requirement])
+        if strict is not None:
+            conditions.append(strict)
+    return all_of(conditions)

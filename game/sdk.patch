@@ -1575,6 +1575,36 @@ index 5acd32b..5d8f9e4 100644
  				
  			case BULLET_NONE: // FIX 
  				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
+diff --git a/dlls/crowbar.cpp b/dlls/crowbar.cpp
+index 64c08dc..e286f74 100644
+--- a/dlls/crowbar.cpp
++++ b/dlls/crowbar.cpp
+@@ -21,6 +21,9 @@
+ #include "nodes.h"
+ #include "player.h"
+ #include "gamerules.h"
++#ifndef CLIENT_DLL
++#include "ap_throw.h"
++#endif
+ 
+ 
+ #define	CROWBAR_BODYHIT_VOLUME 128
+@@ -143,6 +146,15 @@ void FindHullIntersection( const Vector &vecSrc, TraceResult &tr, float *mins, f
+ }
+ 
+ 
++// AP: Melee Throw, once the multiworld sends it. Server only.
++void CCrowbar::SecondaryAttack()
++{
++#ifndef CLIENT_DLL
++	if ( ap::ThrowMelee( this ) )
++		m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay( 0.5 );
++#endif
++}
++
+ void CCrowbar::PrimaryAttack()
+ {
+ 	if (! Swing( 1 ))
 diff --git a/dlls/decals.h b/dlls/decals.h
 index e18ab71..872c52b 100644
 --- a/dlls/decals.h
@@ -2622,7 +2652,7 @@ index eacfd2c..465ec32 100644
  //
  // Track Train
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..5c192c7 100644
+index 85b67c4..4f30545 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -2751,7 +2781,16 @@ index 85b67c4..5c192c7 100644
  }
  
  
-@@ -3521,10 +3559,12 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3518,13 +3556,21 @@ void CBasePlayer :: FlashlightTurnOn( void )
+ 		return;
+ 	}
+ 
++	// AP: the Flashlight, or on Opposing Force the Night Vision Goggles
++	if ( !ap::FlashlightAllowed() )
++	{
++		return;
++	}
++
  	if ( (pev->weapons & (1<<WEAPON_SUIT)) )
  	{
  		EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -2765,7 +2804,7 @@ index 85b67c4..5c192c7 100644
  		MESSAGE_END();
  
  		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-@@ -3536,10 +3576,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3536,10 +3582,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
  void CBasePlayer :: FlashlightTurnOff( void )
  {
  	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -2778,7 +2817,7 @@ index 85b67c4..5c192c7 100644
  	MESSAGE_END();
  
  	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-@@ -4105,6 +4146,11 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4105,6 +4152,11 @@ void CBasePlayer :: UpdateClientData( void )
  			WRITE_BYTE( 0 );
  		MESSAGE_END();
  
@@ -2790,7 +2829,7 @@ index 85b67c4..5c192c7 100644
  		if ( !m_fGameHUDInitialized )
  		{
  			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
-@@ -4129,6 +4175,7 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4129,6 +4181,7 @@ void CBasePlayer :: UpdateClientData( void )
  		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
  			WRITE_BYTE( FlashlightIsOn() ? 1 : 0 );
  			WRITE_BYTE( m_iFlashBattery );
@@ -2798,7 +2837,7 @@ index 85b67c4..5c192c7 100644
  		MESSAGE_END();
  	}
  
-@@ -4425,6 +4472,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
+@@ -4425,6 +4478,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
  // set crosshair position to point to enemey
  //=========================================================
  Vector CBasePlayer :: GetAutoaimVector( float flDelta )
@@ -2811,7 +2850,7 @@ index 85b67c4..5c192c7 100644
  {
  	if (g_iSkillLevel == SKILL_HARD)
  	{
-@@ -4432,7 +4485,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+@@ -4432,7 +4491,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
  		return gpGlobals->v_forward;
  	}
  
@@ -2820,7 +2859,7 @@ index 85b67c4..5c192c7 100644
  	float flDist = 8192;
  
  	// always use non-sticky autoaim
-@@ -5015,6 +5068,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+@@ -5015,6 +5074,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
  
  void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
  {
@@ -3660,7 +3699,7 @@ index b9baa31..b0550c0 100644
  
  
 diff --git a/dlls/weapons.h b/dlls/weapons.h
-index ab2d2e7..a319bc4 100644
+index ab2d2e7..b2d6476 100644
 --- a/dlls/weapons.h
 +++ b/dlls/weapons.h
 @@ -17,6 +17,8 @@
@@ -3777,7 +3816,15 @@ index ab2d2e7..a319bc4 100644
  	
  	int	PrimaryAmmoIndex(); 
  	int	SecondaryAmmoIndex(); 
-@@ -669,6 +720,7 @@ private:
+@@ -512,6 +563,7 @@ public:
+ 	int GetItemInfo(ItemInfo *p);
+ 
+ 	void PrimaryAttack( void );
++	void SecondaryAttack( void );	// AP: Melee Throw
+ 	int Swing( int fFirst );
+ 	BOOL Deploy( void );
+ 	void Holster( int skiplocal = 0 );
+@@ -669,6 +721,7 @@ private:
  
  class CLaserSpot : public CBaseEntity
  {
@@ -3785,7 +3832,7 @@ index ab2d2e7..a319bc4 100644
  	void Spawn( void );
  	void Precache( void );
  
-@@ -1026,3 +1078,14 @@ private:
+@@ -1026,3 +1079,14 @@ private:
  
  
  #endif // WEAPONS_H

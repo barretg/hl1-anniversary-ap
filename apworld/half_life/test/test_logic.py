@@ -365,12 +365,21 @@ class TestOpposingForceGrapple(HalfLifeTestBase):
     options = {"include_half_life": False, "include_opposing_force": True,
                "logic_difficulty": "loose"}
 
-    def test_pit_worms_nest_needs_the_barnacle_at_any_difficulty(self) -> None:
+    def test_vicarious_reality_part_3_on_needs_the_barnacle_at_any_difficulty(self) -> None:
         world = self.multiworld.worlds[self.player]
         state = self.multiworld.get_all_state(False)
         state.remove(world.create_item("Barnacle"))
         state.sweep_for_advancements()
-        self.assertFalse(state.can_reach_entrance("Enter Pit Worm's Nest", self.player))
+        self.assertTrue(state.can_reach_region("of4a2", self.player))
+        self.assertTrue(state.can_reach_location("Vicarious Reality - Part 2 Reached",
+                                                 self.player))
+        self.assertFalse(state.can_reach_location(
+            "Vicarious Reality - Health Charger 1 (Part 2)", self.player))
+        self.assertFalse(state.can_reach_region("of4a3", self.player))
+        for mission in ("Pit Worm's Nest", "Foxtrot Uniform",
+                        "The Package"):
+            self.assertFalse(state.can_reach_entrance(f"Enter {mission}", self.player),
+                             mission)
 
 
 class TestBlueShiftOnly(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
@@ -415,3 +424,50 @@ class TestNothingIncluded(HalfLifeTestBase):
 
     def test_half_life_comes_back(self) -> None:
         self.assertEqual(self.multiworld.worlds[self.player].campaigns, ["half_life"])
+
+
+class EquipmentPoolMixin:
+    def pool(self) -> set[str]:
+        return {item.name for item in self.multiworld.itempool if item.player == self.player}
+
+
+class TestFlashlightDefault(EquipmentPoolMixin, HalfLifeTestBase):
+    options = {"include_opposing_force": True}
+
+    def test_neither_light_nor_throw_is_an_item(self) -> None:
+        self.assertFalse({"Flashlight", "Night Vision Goggles", "Melee Throw"} & self.pool())
+
+
+class TestFlashlightHalfLife(EquipmentPoolMixin, HalfLifeTestBase):
+    options = {"shuffle_flashlight": True, "melee_throw": True}
+
+    def test_flashlight_and_throw_without_goggles(self) -> None:
+        self.assertIn("Flashlight", self.pool())
+        self.assertIn("Melee Throw", self.pool())
+        self.assertNotIn("Night Vision Goggles", self.pool())
+
+
+class TestFlashlightEveryGame(EquipmentPoolMixin, HalfLifeTestBase):
+    options = {"include_opposing_force": True, "include_blue_shift": True,
+               "shuffle_flashlight": True}
+
+    def test_both_lights(self) -> None:
+        self.assertTrue({"Flashlight", "Night Vision Goggles"} <= self.pool())
+
+
+class TestFlashlightBlueShiftOnly(EquipmentPoolMixin, HalfLifeTestBase):
+    options = {"include_half_life": False, "include_blue_shift": True,
+               "shuffle_flashlight": True}
+
+    def test_blue_shift_brings_the_flashlight(self) -> None:
+        self.assertIn("Flashlight", self.pool())
+        self.assertNotIn("Night Vision Goggles", self.pool())
+
+
+class TestFlashlightOpposingForceOnly(EquipmentPoolMixin, HalfLifeTestBase):
+    options = {"include_half_life": False, "include_opposing_force": True,
+               "shuffle_flashlight": True}
+
+    def test_only_the_goggles(self) -> None:
+        self.assertIn("Night Vision Goggles", self.pool())
+        self.assertNotIn("Flashlight", self.pool())

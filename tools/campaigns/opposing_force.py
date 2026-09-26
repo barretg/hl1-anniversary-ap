@@ -47,14 +47,20 @@ CHAPTERS: list[tuple[str, str, list[str]]] = [
 # weapon can enter.
 _RANGED = {"strict": ["ranged"]}
 _HEAVY = {"strict": ["heavy"], "always": ["barnacle_grapple"]}
+# Vicarious Reality Part 2 can be reached without the grapple but not finished:
+# arriving there is in logic, everything else in it and on from Part 3 (where
+# the grapple lies) needs it at any logic difficulty (confirmed in play). Its
+# First Barnacle check is behind the item too.
+_GRAPPLE = {"always": ["barnacle_grapple"]}
+MAP_CHECK_GATES: dict[str, dict[str, list[str]]] = {"of4a2": _GRAPPLE}
+MAP_GATES: dict[str, dict[str, list[str]]] = {"of4a3": _GRAPPLE}
+
 CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "of2a1": _RANGED,
     "of2a4": _RANGED,
     "of3a1": _RANGED,
     "of3a4": _RANGED,
     "of4a1": _RANGED,
-    # The grapple lies in `of4a3`, the end of Vicarious Reality, and from Pit
-    # Worm's Nest on progress needs it (confirmed in play).
     "of4a4": _HEAVY,
     "of5a1": _HEAVY,
     "of6a1": _HEAVY,
@@ -93,6 +99,8 @@ UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
 # the way the HEV Suit does on Half-Life's.
 OPTIONAL_ITEMS: dict[str, list[str]] = {
     "PCV": ["item_suit"],
+    # Opposing Force's flashlight: impulse 100 on its maps. No pickup.
+    "Night Vision Goggles": [],
 }
 
 # The Shock Roach is never placed; it is dropped by a dying shock trooper. The
@@ -112,6 +120,8 @@ OPPOSING_FORCE = Campaign(
     goal_chapter="of6a4b",
     intro_chapter="of0a0",
     gates=CHAPTER_GATES,
+    map_gates=MAP_GATES,
+    map_check_gates=MAP_CHECK_GATES,
     weapons=WEAPON_ITEMS,
     groups=REQUIREMENT_GROUPS,
     optional_items=OPTIONAL_ITEMS,

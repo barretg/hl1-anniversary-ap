@@ -186,6 +186,33 @@ class ShuffleLongJump(Toggle):
     display_name = "Shuffle Long Jump Module"
 
 
+class ShuffleFlashlight(Toggle):
+    """Shuffle the flashlight into the item pool.
+
+    Until the Flashlight arrives, the flashlight key does nothing on Half-Life's
+    and Blue Shift's maps. With Opposing Force in the seed, its night vision is
+    a separate item, the Night Vision Goggles, needed on its maps. The hub is
+    always lit.
+
+    When off, you have both from the start, as in the retail games.
+    """
+
+    display_name = "Shuffle Flashlight"
+
+
+class MeleeThrow(Toggle):
+    """Add Melee Throw to the item pool.
+
+    Once it arrives, secondary fire throws the crowbar or the knife. It hits as
+    hard as a swing and lands on the floor; walk over it to pick it back up, or
+    it returns to you by itself after ten seconds.
+
+    When off, there is no throw at all.
+    """
+
+    display_name = "Add Melee Throw"
+
+
 class DeathLinkAmnesty(Range):
     """How many deaths are forgiven before one is sent to the multiworld.
 
@@ -262,6 +289,8 @@ class HalfLifeOptions(PerGameCommonOptions):
     chargesanity: Chargesanity
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
+    shuffle_flashlight: ShuffleFlashlight
+    melee_throw: MeleeThrow
     ammo_relief: AmmoRelief
     trap_percentage: TrapPercentage
     start_inventory_from_pool: StartInventoryPool

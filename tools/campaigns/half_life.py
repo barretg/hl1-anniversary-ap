@@ -173,6 +173,9 @@ UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
 OPTIONAL_ITEMS: dict[str, list[str]] = {
     "HEV Suit": ["item_suit"],
     "Long Jump Module": ["item_longjump"],
+    # No pickup: the item lets impulse 100 turn the flashlight on, on Half-Life's
+    # and Blue Shift's maps. Newest, so after the others.
+    "Flashlight": [],
 }
 
 # Chargers no player can reach without noclip that the automatic checks in

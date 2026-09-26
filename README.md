@@ -73,7 +73,7 @@ outro's end-of-game trigger, which the game turns into a return to the hub.
 
 Half-Life's weapons are always in the pool, since every game places them.
 Opposing Force adds seven: Desert Eagle, M249, Sniper Rifle, Displacer, Spore
-Launcher, Barnacle (needed from Pit Worm's Nest on, at any logic difficulty) and
+Launcher, Barnacle (needed for everything past arriving in Vicarious Reality Part 2, at any logic difficulty) and
 Shock Roach (its check is the first one a shock trooper drops in Vicarious
 Reality). With Opposing Force in, `random_starting_weapon` picks the starting
 melee weapon from the crowbar, combat knife and pipe wrench; the others become

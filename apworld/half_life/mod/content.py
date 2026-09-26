@@ -330,7 +330,8 @@ def install_content(game_root: Path) -> ContentReport:
         decisions = {rel: decide(rel) for rel in set(sd) | set(hd)}
         # A model's companion files are opened by the names stored inside it,
         # not through the dll, so a model and its companions move together.
-        for members in _model_families(sd, hd).values():
+        # Valve's copies count: one stands in for a model this game has only in HD.
+        for members in _model_families(sd, hd, valve_sd).values():
             if any(decisions.get(m) == "move" for m in members):
                 for member in members:
                     if member in sd or member in hd or member in valve_sd:

@@ -834,8 +834,10 @@ def optional_item_options() -> dict[str, str]:
 def unshuffled_grants(unshuffled: set[str] | None = None) -> set[str]:
     """Unshuffled equipment the game should treat as owned from the first spawn.
 
-    The HEV suit, and nothing else so far: armour is switched on by that item
-    alone, so a seed that never sends it has to say up front that it is held.
+    The HEV suit (armour is switched on by that item alone, so a seed that never
+    sends it has to say up front that it is held), and likewise the Flashlight
+    and Night Vision Goggles. A seed from before those existed has neither
+    toggle, so both are granted and the flashlight works as it always did.
     """
     from ..data import VANILLA_WHEN_UNSHUFFLED
 

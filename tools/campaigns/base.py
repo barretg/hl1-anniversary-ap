@@ -39,6 +39,9 @@ class Campaign:
     # `{map: {"strict"|"always": [group, ...]}}`. Lets a later mod gate one map
     # without splitting the mission around it.
     map_gates: dict[str, dict[str, list[str]]] = field(default_factory=dict)
+    # Gates on every check in a map except arriving there, in the same form.
+    # For a map that can be entered freely but not done without an item.
+    map_check_gates: dict[str, dict[str, list[str]]] = field(default_factory=dict)
     # Weapon items this campaign brings, `{item: [classname, ...]}`. A weapon
     # shared with an earlier campaign is declared once, by the earlier one.
     weapons: dict[str, list[str]] = field(default_factory=dict)
@@ -98,6 +101,10 @@ class Campaign:
         maps = [m for _, _, chapter_maps in self.chapters for m in chapter_maps]
         if len(maps) != len(set(maps)):
             raise ValueError(f"{self.key}: a map is in two chapters")
+        for map_name in self.map_check_gates:
+            if map_name not in maps:
+                raise ValueError(f"{self.key}: check gate on {map_name!r}, "
+                                 "which is not one of its maps")
         firsts = {chapter_maps[0] for _, _, chapter_maps in self.chapters}
         for map_name in self.map_gates:
             # A mission's first map is gated by the mission's own gates.

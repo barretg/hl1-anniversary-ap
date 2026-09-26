@@ -20,8 +20,9 @@ number of other missions.
 
 ## What items and locations get shuffled?
 
-**Items:** one unlock per mission, one per weapon, optionally the HEV suit and
-the long jump module, plus filler (ammo, medkits, armour batteries) and traps.
+**Items:** one unlock per mission, one per weapon, optionally the HEV suit, the
+long jump module, the flashlight (and Opposing Force's night vision goggles) and
+Melee Throw, plus filler (ammo, medkits, armour batteries) and traps.
 
 **Locations:** 252 for Half-Life.
 

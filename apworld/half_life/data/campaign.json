@@ -1,5 +1,5 @@
 {
- "data_version": "b5049a0419f6",
+ "data_version": "4bbfb24a950a",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -578,6 +578,13 @@
     "strict": [
      "ranged"
     ]
+   },
+   "map_gates": {
+    "of4a3": {
+     "always": [
+      "barnacle_grapple"
+     ]
+    }
    },
    "complete_on_arrival": false,
    "campaign": "opposing_force",
@@ -1286,6 +1293,15 @@
    "armour": false
   },
   {
+   "id": 7750068,
+   "name": "Flashlight",
+   "classification": "useful",
+   "group": "optional",
+   "classnames": [],
+   "campaign": "half_life",
+   "armour": false
+  },
+  {
    "id": 7750063,
    "name": "PCV",
    "classification": "progression",
@@ -1295,6 +1311,15 @@
    ],
    "campaign": "opposing_force",
    "armour": true
+  },
+  {
+   "id": 7750069,
+   "name": "Night Vision Goggles",
+   "classification": "useful",
+   "group": "optional",
+   "classnames": [],
+   "campaign": "opposing_force",
+   "armour": false
   },
   {
    "id": 7750064,
@@ -1337,6 +1362,12 @@
     "weapon_knife"
    ],
    "campaign": "opposing_force"
+  },
+  {
+   "id": 7750070,
+   "name": "Melee Throw",
+   "classification": "useful",
+   "group": "ability"
   },
   {
    "id": 7750032,
@@ -4935,7 +4966,12 @@
     -2044,
     2,
     444
-   ]
+   ],
+   "gates": {
+    "always": [
+     "barnacle_grapple"
+    ]
+   }
   },
   {
    "id": 7760296,
@@ -4952,7 +4988,12 @@
     -544,
     -1318,
     1148
-   ]
+   ],
+   "gates": {
+    "always": [
+     "barnacle_grapple"
+    ]
+   }
   },
   {
    "id": 7760297,
@@ -4969,7 +5010,12 @@
     544,
     -1318,
     1148
-   ]
+   ],
+   "gates": {
+    "always": [
+     "barnacle_grapple"
+    ]
+   }
   },
   {
    "id": 7760298,
@@ -4986,7 +5032,12 @@
     -2192,
     -1456,
     262
-   ]
+   ],
+   "gates": {
+    "always": [
+     "barnacle_grapple"
+    ]
+   }
   },
   {
    "id": 7760299,
@@ -6246,7 +6297,12 @@
     -1768,
     760,
     417
-   ]
+   ],
+   "gates": {
+    "always": [
+     "barnacle_grapple"
+    ]
+   }
   },
   {
    "id": 7760379,
@@ -6354,7 +6410,12 @@
     -1624,
     -432,
     384
-   ]
+   ],
+   "gates": {
+    "always": [
+     "barnacle_grapple"
+    ]
+   }
   },
   {
    "id": 7760385,

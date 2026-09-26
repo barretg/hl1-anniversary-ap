@@ -90,7 +90,19 @@ OPTIONAL_ITEM_NAMES = {
     "Long Jump Module": "shuffle_longjump",
     "PCV": "shuffle_hev_suit",
     "Security Armor": "shuffle_hev_suit",
+    "Flashlight": "shuffle_flashlight",
+    "Night Vision Goggles": "shuffle_flashlight",
 }
+
+# Optional items used on more than their own game's maps: the flashlight is
+# Half-Life's and Blue Shift's both, so either game brings it.
+OPTIONAL_ITEM_CAMPAIGNS: dict[str, tuple[str, ...]] = {
+    "Flashlight": ("half_life", "blue_shift"),
+}
+
+# Abilities that only exist when their YAML toggle is on. Unlike the equipment
+# above, off means the ability is absent, not granted.
+ABILITY_ITEM_NAMES: dict[str, str] = {"Melee Throw": "melee_throw"}
 
 # Of those, the ones that stay where Half-Life puts them when the toggle is off,
 # rather than being handed over at the start of the run: item -> the location it

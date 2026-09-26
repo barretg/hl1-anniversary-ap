@@ -154,13 +154,14 @@ def test_reinstall_is_idempotent(game: Path) -> None:
     assert (first.linked + first.copied) == (second.linked + second.copied)
 
 
-def studio(groups: list[str], label: bytes = b"") -> bytes:
-    """A studio header with these companion sequence groups after its own."""
+def studio(groups: list[str], label: bytes = b"", textures: int = 1) -> bytes:
+    """A studio header with these companion sequence groups after its own.
+    No textures means they live in the model's `T.mdl`."""
     header = bytearray(192)
     header[:4] = b"IDST"
     table = b"".join(b"default".ljust(32, b"\0") + name.encode().ljust(64, b"\0")
                      + bytes(8) for name in ["models\\self.mdl", *groups])
-    struct.pack_into("<iii", header, 172, len(groups) + 1, len(header), 1)
+    struct.pack_into("<iii", header, 172, len(groups) + 1, len(header), textures)
     return bytes(header) + table + label
 
 
@@ -210,3 +211,16 @@ def test_installed_is_written_with_neither_game(tmp_path: Path) -> None:
         "half_life": True, "opposing_force": False, "blue_shift": False}
     content.uninstall_content(root)
     assert content.read_installed(root) is None
+
+
+def test_valves_stand_in_for_an_hd_only_model_brings_its_textures(game: Path) -> None:
+    # Opposing Force's w_grenade is HD only; with HD off Half-Life's stands in,
+    # and that one keeps its textures in w_grenadet.mdl.
+    put(game, "valve/models/w_grenade.mdl", studio([], b"hl", textures=0))
+    put(game, "valve/models/w_grenadet.mdl", "hl textures")
+    put(game, "gearbox_hd/models/w_grenade.mdl", studio([], b"of hd"))
+    content.install_content(game)
+    moved = game / "hlap_downloads/models/ap_of"
+    assert (moved / "w_grenade.mdl").read_bytes().endswith(b"hl")
+    assert (moved / "w_grenadet.mdl").read_text() == "hl textures"
+    assert "R|opposing_force|models/w_grenadet.mdl" in records(game)

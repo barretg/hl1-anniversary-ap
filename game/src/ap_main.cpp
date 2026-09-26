@@ -19,6 +19,7 @@
 #include "ap_items.h"
 #include "ap_locations.h"
 #include "ap_state.h"
+#include "ap_throw.h"
 #include "ap_traps.h"
 #include "ap_warpsave.h"
 
@@ -404,6 +405,8 @@ void Startup() {
     g_frames_this_map = 0;
     // A weapon Butterfingers threw on the floor went with the old level.
     ClearWithheld();
+    // Likewise a thrown crowbar or knife.
+    ClearThrown();
     // What this level stocks, and the timers, are both level-scoped.
     ResetAmmoRelief();
     // A lobby countdown was on the old level's clock. See `CancelHubWarp`.
@@ -447,6 +450,7 @@ void RunFrame() {
     ExecBinds();
     FlushNotices();
     RunLoadout();
+    RunThrows();
     RunSeamDoors();
     DressHubChamber();
     RunWarpSave();
@@ -456,6 +460,7 @@ void RunFrame() {
     RunDeferred();
     EnforceSuit();
     ClampArmour();
+    EnforceFlashlight();
 
     if (gpGlobals->time < g_next_poll) {
         return;

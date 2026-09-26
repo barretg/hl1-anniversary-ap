@@ -5,6 +5,7 @@
 #include "weapons.h"
 
 #include "ap_traps.h"
+#include "ap_throw.h"
 
 #include <string>
 #include <vector>
@@ -338,6 +339,7 @@ void PrecacheTraps() {
     // call site there would mean repatching every SDK checkout for no gain.
     PrecacheCarriedMonsters();
     PrecacheBots();
+    PrecacheThrow();
     // Off for now; see `DressHubChamber`.
     // PrecacheHubChamber();
 }
