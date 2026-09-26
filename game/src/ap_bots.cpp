@@ -199,6 +199,10 @@ IMPLEMENT_SAVERESTORE(CApBot, CBaseMonster);
 void CApBot::Spawn() {
     // A restore does not come through here: the saved model is kept.
     SET_MODEL(ENT(pev), kBotModels[RANDOM_LONG(0, kBotModelCount - 1)]);
+    // Shirt and trousers, as a player's topcolor and bottomcolor: a hue each,
+    // low byte and high byte. The client remaps any studio model by it, and it
+    // is saved with the rest of entvars.
+    pev->colormap = RANDOM_LONG(0, 255) | (RANDOM_LONG(0, 255) << 8);
     // Handed the feet, like any spawn spot; the origin is the hull's centre.
     pev->origin.z += kStandHalf;
     UTIL_SetOrigin(pev, pev->origin);
