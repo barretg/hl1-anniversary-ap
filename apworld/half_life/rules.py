@@ -9,7 +9,7 @@ Two kinds of gate exist:
   or to an individual location, which is how a check that sits past the point
   where a weapon becomes necessary carries that requirement.
 
-The groups themselves live in `tools/campaign_layout.py` and are baked into
+The groups themselves live in `tools/campaigns/shared.py` and are baked into
 `data/campaign.json`; this module only turns them into callables.
 """
 

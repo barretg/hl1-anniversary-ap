@@ -323,6 +323,6 @@ rather than reporting a location the seed has never heard of.
 regenerate after any data change:
 
 ```
-python tools/build_campaign_data.py --maps "<Half-Life>/valve/maps"
+python tools/build_campaign_data.py --game-root "<Half-Life>"
 python tools/gen_checkdata.py
 ```

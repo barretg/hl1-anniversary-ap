@@ -232,7 +232,7 @@ reads those out of the BSP: `chapter_<n>_button` enters the mission with index
 `n`. Nothing is written down twice, so a panel renamed in the map moves its
 record with it, and a mission with no panel fails the build rather than being
 discovered in play. Four names have to agree -- `kHubMap` here, `startmap` in
-`liblist.gam`, `HUB_MAP` in `tools/campaign_layout.py`, and `hub_map` in the
+`liblist.gam`, `HUB_MAP` in `tools/campaigns/shared.py`, and `hub_map` in the
 generated data -- and `tests/test_mod_install.py` fails if they drift.
 
 **Commands arrive from two places and are handled in one.** `ClientCommand`

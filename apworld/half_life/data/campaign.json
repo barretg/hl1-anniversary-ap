@@ -2,6 +2,16 @@
  "data_version": "4311d1555b6b",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
+ "campaigns": [
+  {
+   "key": "half_life",
+   "name": "Half-Life",
+   "game_dir": "valve",
+   "goal_chapter": "c4a3",
+   "intro_chapter": "c0a0",
+   "detect": "valve/maps/c0a0.bsp"
+  }
+ ],
  "chapters": [
   {
    "key": "c0a0",
@@ -17,7 +27,9 @@
    "index": 0,
    "is_goal": false,
    "gates": {},
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c1a0",
@@ -32,7 +44,9 @@
    "index": 1,
    "is_goal": false,
    "gates": {},
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c1a0c",
@@ -49,7 +63,9 @@
    "index": 2,
    "is_goal": false,
    "gates": {},
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c1a2",
@@ -64,7 +80,9 @@
    "index": 3,
    "is_goal": false,
    "gates": {},
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c1a3",
@@ -83,7 +101,9 @@
      "ranged"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c1a4",
@@ -107,7 +127,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c2a1",
@@ -125,7 +147,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c2a2",
@@ -150,7 +174,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c2a3",
@@ -171,7 +197,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c2a4",
@@ -190,7 +218,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c2a4d",
@@ -209,7 +239,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c2a5",
@@ -234,7 +266,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c3a1",
@@ -252,7 +286,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c3a2e",
@@ -274,7 +310,9 @@
      "explosives"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c4a1",
@@ -294,7 +332,9 @@
      "suit"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c4a2",
@@ -316,7 +356,9 @@
      "suit"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c4a1a",
@@ -341,7 +383,9 @@
      "suit"
     ]
    },
-   "complete_on_arrival": false
+   "complete_on_arrival": false,
+   "campaign": "half_life",
+   "complete_on": "forward_exit"
   },
   {
    "key": "c4a3",
@@ -362,7 +406,9 @@
      "suit"
     ]
    },
-   "complete_on_arrival": true
+   "complete_on_arrival": true,
+   "campaign": "half_life",
+   "complete_on": "arrival"
   }
  ],
  "items": [

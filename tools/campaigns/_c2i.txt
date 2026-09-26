@@ -1,0 +1,12 @@
+# Every classname the game must refuse until the matching item arrives.
+#
+# The crowbar is in here despite never being an item. It is also in
+# STARTING_WEAPONS, and starting weapons are checked first, so in practice it is
+# always allowed -- the entry exists so that the table is the single answer to
+# "is this pickup gated", with no classname falling through it unlisted.
+CLASSNAME_TO_ITEM: dict[str, str] = {
+    classname: item
+    for table in (WEAPON_ITEMS, OPTIONAL_ITEMS, UNRANDOMISED_WEAPON_LOCATIONS)
+    for item, classnames in table.items()
+    for classname in classnames
+}

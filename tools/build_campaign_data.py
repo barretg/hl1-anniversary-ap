@@ -5,8 +5,13 @@ we only ever create a check for something that provably exists in the map file.
 The generated JSON is committed, so neither the apworld nor the client needs the
 game installed -- only this tool does.
 
+Every registered campaign is built from one Half-Life install, since retail
+puts each game's directory (`valve`, `gearbox`, `bshift`) side by side under it.
+
 Usage:
+    python tools/build_campaign_data.py --game-root "<...>/Half-Life"
     python tools/build_campaign_data.py --maps "<...>/Half-Life/valve/maps"
+        (the older form: Half-Life only, and only while it is the only campaign)
 """
 
 from __future__ import annotations
@@ -27,32 +32,28 @@ from bsp_entities import (
     load_map,
     origin_of,
 )
-from campaign_layout import (
-    CHAPTER_GATES,
-    CHAPTERS,
+from campaigns import (
+    CAMPAIGNS,
+    CAMPAIGNS_BY_KEY,
     CHARGER_CLASSNAMES,
     CHARGER_POSITION_GRID,
     HEALING_POOL_CLASSNAMES,
     CLASSNAME_TO_ITEM,
     ENABLED_LOCATION_TYPES,
-    GOAL_CHAPTER,
     HUB_ENTRANCE_CLASSNAMES,
     HUB_MAP,
     IGNORED_MONSTERS,
-    INTRO_CHAPTER,
     hub_button_index,
     ITEM_ID_BASE,
     KILL_MILESTONE_FRACTIONS,
     LOCATION_ID_BASE,
     MIN_LOCATIONS_PER_MAP,
     NOTABLE_MONSTERS,
-    OPTIONAL_ITEMS,
     REQUIREMENT_GROUPS,
-    STARTING_WEAPONS,
-    UNRANDOMISED_WEAPON_LOCATIONS,
-    UNREACHABLE_CHARGERS,
-    WEAPON_ITEMS,
+    Campaign,
+    weapon_items,
 )
+from campaigns.half_life import STARTING_WEAPONS
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_PATH = REPO_ROOT / "apworld" / "half_life" / "data" / "campaign.json"
@@ -272,7 +273,8 @@ class IdRegistry:
         return hashlib.sha1(payload).hexdigest()[:12]
 
 
-def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
+def location_key(chapter_key: str, map_name: str, trigger: dict,
+                 scope: str = "*") -> str:
     """Identity of a location, independent of its wording or list position."""
     kind = trigger["type"]
     if kind == "pickup":
@@ -288,8 +290,10 @@ def location_key(chapter_key: str, map_name: str, trigger: dict) -> str:
     elif kind == "weapon_pickup":
         # A campaign-wide location: its identity is the weapon, not where the
         # earliest copy happens to sit. Anchoring the key to the map would
-        # renumber it if a nearer pickup were ever found.
-        return f"*|*|{kind}|{','.join(sorted(trigger['classnames']))}"
+        # renumber it if a nearer pickup were ever found. The scope is the
+        # campaign: `*` for Half-Life, which had these before there was more
+        # than one, the campaign key for every later one.
+        return f"{scope}|*|{kind}|{','.join(sorted(trigger['classnames']))}"
     else:
         arg = ""
     return f"{chapter_key}|{map_name}|{kind}|{arg}"
@@ -305,11 +309,12 @@ class LocationBuilder:
 
     def add(self, chapter: dict, map_name: str, base_name: str, trigger: dict,
             requires: str | None = None, prefixed: bool = True,
-            position: tuple[float, float, float] | None = None) -> dict:
+            position: tuple[float, float, float] | None = None,
+            scope: str = "*") -> dict:
         # Campaign-wide locations skip the mission prefix: the mission is only
         # where logic hangs them, not where the player will find the thing.
         name = self._unique(f"{chapter['name']} - {base_name}" if prefixed else base_name)
-        key = location_key(chapter["key"], map_name, trigger)
+        key = location_key(chapter["key"], map_name, trigger, scope)
         location = {
             "id": self.registry.get("locations", key, LOCATION_ID_BASE),
             "name": name,
@@ -363,6 +368,7 @@ def has_forward_exit(
     """
     index_of = {
         map_name: c["index"] for c in chapters for map_name in c["maps"]
+        if c["campaign"] == chapter["campaign"]
     }
     own = set(chapter["maps"])
 
@@ -388,12 +394,26 @@ def earliest_map_with(
     return None
 
 
-def build(maps_dir: Path, registry: IdRegistry) -> dict:
-    # `index` is what `ap_warp <n>` takes in game.
-    chapters = [
-        {"key": key, "name": name, "maps": maps, "index": index}
-        for index, (key, name, maps) in enumerate(CHAPTERS)
-    ]
+def build(
+    maps_dirs: dict[str, Path], registry: IdRegistry, lobby_path: Path = LOBBY_PATH
+) -> dict:
+    """Campaign data for the campaigns keyed in `maps_dirs`, in registry order.
+
+    `maps_dirs` maps a campaign key to the directory its BSPs are read from.
+    """
+    campaigns = [c for c in CAMPAIGNS if c.key in maps_dirs]
+    by_key = {c.key: c for c in campaigns}
+
+    # `index` is what `ap_warp <n>` takes in game. Global and in registry order,
+    # so Half-Life's stay 0..17 whatever else is built alongside it.
+    chapters: list[dict] = []
+    bsp_paths: dict[str, Path] = {}
+    for campaign in campaigns:
+        for key, name, maps in campaign.chapters:
+            chapters.append({"key": key, "name": name, "maps": maps,
+                             "index": len(chapters), "campaign": campaign.key})
+            for map_name in maps:
+                bsp_paths[map_name] = maps_dirs[campaign.key] / f"{map_name}.bsp"
 
     entities: dict[str, list[dict[str, str]]] = {}
     # `*N` -> bounding box centre, per map. The only way to place a brush entity,
@@ -404,14 +424,12 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     bounds: dict[
         str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]
     ] = {}
-    for chapter in chapters:
-        for map_name in chapter["maps"]:
-            bsp = maps_dir / f"{map_name}.bsp"
-            if not bsp.exists():
-                raise SystemExit(f"missing map: {bsp}")
-            entities[map_name] = [resolve_world_item(e) for e in load_map(bsp)]
-            centres[map_name] = brush_model_centres(bsp)
-            bounds[map_name] = brush_model_bounds(bsp)
+    for map_name, bsp in bsp_paths.items():
+        if not bsp.exists():
+            raise SystemExit(f"missing map: {bsp}")
+        entities[map_name] = [resolve_world_item(e) for e in load_map(bsp)]
+        centres[map_name] = brush_model_centres(bsp)
+        bounds[map_name] = brush_model_bounds(bsp)
 
     builder = LocationBuilder(registry)
 
@@ -420,7 +438,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         for key in sorted(sealed[map_name]):
             print(f"  sealed behind a transition: {map_name} {key}")
 
-    unusable = unusable_chargers(chapters, entities, bounds, maps_dir)
+    unusable = unusable_chargers(chapters, entities, bounds, bsp_paths)
     for map_name in sorted(unusable):
         for key in sorted(unusable[map_name]):
             print(f"  nowhere to stand and use it: {map_name} {key}")
@@ -429,6 +447,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     enabled = ENABLED_LOCATION_TYPES
 
     for chapter in chapters:
+        campaign = by_key[chapter["campaign"]]
         chapter_maps = chapter["maps"]
         for map_name in chapter_maps:
             ents = entities[map_name]
@@ -470,12 +489,17 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                     if unit is None:
                         continue
                     classname, display = unit
+                    # A wall unit this game does not let the player use, like
+                    # Blue Shift's HEV-style ones.
+                    if (classname in CHARGER_CLASSNAMES
+                            and classname not in campaign.charger_classnames):
+                        continue
                     if f"{classname}:{entity.get('model', '')}" in sealed_here:
                         continue
                     at = charger_position(entity, centres[map_name])
                     if at is not None and (
                         (classname, charger_key_position(at))
-                        in UNREACHABLE_CHARGERS.get(map_name, set())
+                        in campaign.unreachable.get(map_name, set())
                     ):
                         continue
                     if at is None:
@@ -618,11 +642,30 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     # "anywhere": finding a shotgun six missions later is not the moment the
     # check is about, and the per-map `pickup` type that fired on every copy is
     # what read as noise. The crowbar is here too even though you start with one.
-    if "weapon_pickup" in enabled:
+    #
+    # Per campaign, since which campaigns a seed includes must not move a check:
+    # each game has its own "first shotgun", anchored in its own chapter order.
+    # Every weapon any campaign brings is looked for, because a weapon placed in
+    # a game other than the one that brings it is still found there.
+    for campaign in campaigns if "weapon_pickup" in enabled else []:
+        own = [c for c in chapters if c["campaign"] == campaign.key]
         for item_name, classnames in {
-            **WEAPON_ITEMS, **OPTIONAL_ITEMS, **UNRANDOMISED_WEAPON_LOCATIONS
+            **weapon_items(), **campaign.optional_items,
+            **campaign.unrandomised_weapons,
         }.items():
-            anchor = earliest_map_with(chapters, entities, classnames)
+            if item_name in campaign.weapon_anchors:
+                # Never lying in a map, only dropped by something that is.
+                anchor_map = campaign.weapon_anchors[item_name]
+                anchor = next(
+                    ((c, anchor_map) for c in own if anchor_map in c["maps"]), None
+                )
+                if anchor is None:
+                    raise SystemExit(
+                        f"{campaign.key}: {item_name} anchored to {anchor_map}, "
+                        "which is in none of its chapters"
+                    )
+            else:
+                anchor = earliest_map_with(own, entities, classnames)
             if anchor is None:
                 continue  # not in the campaign; the check could never fire
             chapter, map_name = anchor
@@ -638,11 +681,12 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
             builder.add(
                 chapter,
                 map_name,
-                f"First {item_name}",
+                campaign.display(f"First {item_name}"),
                 {"type": "weapon_pickup", "map": map_name,
                  "classnames": list(classnames)},
                 prefixed=False,
                 position=position,
+                scope=campaign.weapon_check_scope,
             )
 
     # Chapter completion always comes last so it reads last in the list.
@@ -663,7 +707,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
     # and the version therefore changed on the second run of an unchanged
     # generator -- a mismatch that pauses checks in game and reads as data
     # corruption rather than as a bug in this file.
-    items = build_items(chapters, registry)
+    items = build_items(chapters, campaigns, registry)
 
     # What this build actually ships, so that dropping a location moves the
     # version even though the append-only registry keeps its id forever.
@@ -672,19 +716,41 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         + [f"I{item['id']}" for item in items]
     )
 
+    for chapter in chapters:
+        campaign = by_key[chapter["campaign"]]
+        chapter["complete_on"] = campaign.complete_on.get(
+            chapter["key"],
+            "forward_exit" if has_forward_exit(chapter, chapters, entities)
+            else "arrival",
+        )
+
+    # Top-level goal and intro are the first campaign's: Half-Life's, and what
+    # every reader before there was more than one campaign expects there.
+    first = campaigns[0]
     return {
         "data_version": registry.fingerprint(live),
-        "goal_chapter": GOAL_CHAPTER,
+        "goal_chapter": first.goal_chapter,
         # The scene-setting mission `exclude_intro_missions` drops.
-        "intro_chapter": INTRO_CHAPTER,
+        "intro_chapter": first.intro_chapter,
+        "campaigns": [
+            {
+                "key": campaign.key,
+                "name": campaign.name,
+                "game_dir": campaign.game_dir,
+                "goal_chapter": campaign.goal_chapter,
+                "intro_chapter": campaign.intro_chapter,
+                "detect": campaign.detect,
+            }
+            for campaign in campaigns
+        ],
         "chapters": [
             {
                 "key": chapter["key"],
                 "name": chapter["name"],
                 "maps": chapter["maps"],
                 "index": chapter["index"],
-                "is_goal": chapter["key"] == GOAL_CHAPTER,
-                "gates": CHAPTER_GATES.get(chapter["key"], {}),
+                "is_goal": chapter["key"] == by_key[chapter["campaign"]].goal_chapter,
+                "gates": by_key[chapter["campaign"]].gates.get(chapter["key"], {}),
                 # How the game knows this mission is over.
                 #
                 # Normally: the player walks on into the next mission, and that
@@ -697,9 +763,11 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                 # The exception is the mission with nowhere further to go, which
                 # is the finale: nothing changelevels out of `c5a1`, so arriving
                 # there is the only signal there is, and it is the right one.
-                "complete_on_arrival": not has_forward_exit(
-                    chapter, chapters, entities
-                ),
+                "complete_on_arrival": chapter["complete_on"] == "arrival",
+                "campaign": chapter["campaign"],
+                # The same, as one of `arrival`, `forward_exit` or `endsection`:
+                # a finale can also end on `trigger_endsection` (Blue Shift's).
+                "complete_on": chapter["complete_on"],
             }
             for chapter in chapters
         ],
@@ -708,7 +776,7 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
         "requirement_groups": REQUIREMENT_GROUPS,
         "starting_weapons": STARTING_WEAPONS,
         "hub_map": HUB_MAP,
-        "hub_buttons": build_hub_buttons(chapters, LOBBY_PATH),
+        "hub_buttons": build_hub_buttons(chapters, campaigns, lobby_path),
         "carried_monsters": carried_monsters(chapters, entities),
     }
 
@@ -887,7 +955,7 @@ def unusable_chargers(
     bounds: dict[
         str, dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]]
     ],
-    maps_dir: Path,
+    bsp_paths: dict[str, Path],
 ) -> dict[str, set[str]]:
     """`{map: {"classname:*model"}}` for chargers no player can press use on.
 
@@ -925,7 +993,7 @@ def unusable_chargers(
             if model not in bounds[map_name]:
                 continue
             if hull is None:
-                hull = ClipHull(maps_dir / f"{map_name}.bsp")
+                hull = ClipHull(bsp_paths[map_name])
             mins, maxs = bounds[map_name][model]
             centre = tuple((mins[i] + maxs[i]) / 2 for i in range(3))
             if standing_distance(hull, centre) > PLAYER_SEARCH_RADIUS:
@@ -1026,7 +1094,9 @@ def carried_monsters(
     return placements
 
 
-def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:
+def build_hub_buttons(
+    chapters: list[dict], campaigns: list[Campaign], lobby_path: Path
+) -> list[dict]:
     """`chapter_<n>_button` in the lobby map -> the mission it travels to.
 
     A "button" is whatever the lobby uses as that mission's entrance: a panel
@@ -1041,48 +1111,71 @@ def build_hub_buttons(chapters: list[dict], lobby_path: Path) -> list[dict]:
     An absent lobby map is not an error. The map is authored separately and a
     checkout without it should still generate usable data; the game falls back
     to the console commands, which are the whole of the v1 hub.
+
+    Each campaign's buttons carry its `hub_button_prefix` and count its own
+    missions from 0. Only Half-Life's set must be complete: the lobby has no
+    panels for the other games yet, and a mission without one is reached by
+    command, so a missing one is reported rather than fatal.
     """
     if not lobby_path.exists():
         print(f"  note: no lobby map at {lobby_path}, so no hub buttons")
         return []
 
-    by_index = {chapter["index"]: chapter["key"] for chapter in chapters}
+    entrances = [
+        entity.get("targetname", "")
+        for entity in load_map(lobby_path)
+        if entity.get("classname") in HUB_ENTRANCE_CLASSNAMES
+    ]
     buttons: list[dict] = []
-    seen: dict[int, str] = {}
 
-    for entity in load_map(lobby_path):
-        if entity.get("classname") not in HUB_ENTRANCE_CLASSNAMES:
-            continue
-        targetname = entity.get("targetname", "")
-        index = hub_button_index(targetname)
-        if index is None:
-            continue
-        if index not in by_index:
-            raise ValueError(
-                f"{lobby_path.name}: {targetname} is for mission {index}, "
-                f"but the campaign has only {len(by_index)}"
+    for campaign in campaigns:
+        by_index = {
+            position: chapter["key"]
+            for position, chapter in enumerate(
+                c for c in chapters if c["campaign"] == campaign.key
             )
-        if index in seen:
-            raise ValueError(
-                f"{lobby_path.name}: {targetname} and {seen[index]} are both "
-                f"for mission {index}"
-            )
-        seen[index] = targetname
-        buttons.append({"targetname": targetname, "chapter": by_index[index]})
+        }
+        found: list[tuple[int, dict]] = []
+        seen: dict[int, str] = {}
 
-    missing = sorted(set(by_index) - set(seen))
-    if missing:
-        names = ", ".join(by_index[index] for index in missing)
-        raise ValueError(f"{lobby_path.name}: no button for {names}")
+        for targetname in entrances:
+            index = hub_button_index(targetname, campaign.hub_button_prefix)
+            if index is None:
+                continue
+            if index not in by_index:
+                raise ValueError(
+                    f"{lobby_path.name}: {targetname} is for mission {index}, "
+                    f"but {campaign.name} has only {len(by_index)}"
+                )
+            if index in seen:
+                raise ValueError(
+                    f"{lobby_path.name}: {targetname} and {seen[index]} are both "
+                    f"for mission {index}"
+                )
+            seen[index] = targetname
+            found.append((index, {"targetname": targetname,
+                                  "chapter": by_index[index]}))
 
-    # By mission order, so the file reads the way the lobby is walked and a diff
-    # of it stays legible.
-    buttons.sort(key=lambda button: hub_button_index(button["targetname"]) or 0)
+        missing = sorted(set(by_index) - set(seen))
+        if missing:
+            names = ", ".join(by_index[index] for index in missing)
+            if campaign.legacy:
+                raise ValueError(f"{lobby_path.name}: no button for {names}")
+            print(f"  note: {campaign.name} has no lobby button for {names}")
+
+        # By mission order, so the file reads the way the lobby is walked and
+        # a diff of it stays legible.
+        found.sort(key=lambda pair: pair[0])
+        buttons.extend(button for _, button in found)
+
     return buttons
 
 
-def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
+def build_items(
+    chapters: list[dict], campaigns: list[Campaign], registry: IdRegistry
+) -> list[dict]:
     items: list[dict] = []
+    by_key = {c.key: c for c in campaigns}
 
     def add(name: str, classification: str, **extra) -> None:
         # The item's name is already a stable identity.
@@ -1094,20 +1187,22 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
         })
 
     for chapter in chapters:
-        if chapter["key"] == GOAL_CHAPTER:
+        campaign = by_key[chapter["campaign"]]
+        if chapter["key"] == campaign.goal_chapter:
             continue  # opened by mission count, never by an item
         add(
-            f"{chapter['name']} Unlock",
+            campaign.display(f"{chapter['name']} Unlock"),
             "progression",
             group="chapter",
             chapter=chapter["key"],
         )
 
-    for name, classnames in WEAPON_ITEMS.items():
+    for name, classnames in weapon_items(campaigns).items():
         add(name, "progression", group="weapon", classnames=classnames)
 
-    for name, classnames in OPTIONAL_ITEMS.items():
-        add(name, "progression", group="optional", classnames=classnames)
+    for campaign in campaigns:
+        for name, classnames in campaign.optional_items.items():
+            add(name, "progression", group="optional", classnames=classnames)
 
     for name, classnames, weight in (
         ("Ammo Cache", ["ammo_generic"], 40),
@@ -1134,28 +1229,67 @@ def build_items(chapters: list[dict], registry: IdRegistry) -> list[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument(
+        "--game-root",
+        type=Path,
+        help="the Half-Life install, holding valve/, gearbox/, bshift/",
+    )
+    source.add_argument(
         "--maps",
         type=Path,
-        required=True,
-        help="path to the Half-Life valve/maps directory",
+        help="path to valve/maps: the older form, meaning Half-Life only",
     )
-    parser.add_argument("--out", type=Path, default=OUT_PATH)
+    parser.add_argument(
+        "--only",
+        action="append",
+        choices=sorted(CAMPAIGNS_BY_KEY),
+        help="build just these campaigns (repeatable), for development; "
+             "needs --out, since the committed file describes all of them",
+    )
+    parser.add_argument("--out", type=Path)
     parser.add_argument("--ids", type=Path, default=IDS_PATH)
     args = parser.parse_args(argv)
 
+    if args.maps is not None:
+        maps_dirs = {"half_life": args.maps}
+    else:
+        maps_dirs = {
+            c.key: args.game_root / c.game_dir / "maps"
+            for c in CAMPAIGNS
+            if args.only is None or c.key in args.only
+        }
+    # The committed file is every campaign or nothing: a missing game would
+    # otherwise drop its locations from the data without anyone asking.
+    partial = sorted(set(CAMPAIGNS_BY_KEY) - set(maps_dirs))
+    if partial and args.out is None:
+        parser.error(
+            f"not building {', '.join(partial)}; pass --out to write a partial "
+            "file somewhere other than the committed one"
+        )
+    for key, maps_dir in maps_dirs.items():
+        detect = CAMPAIGNS_BY_KEY[key].detect
+        if args.game_root is not None and not (args.game_root / detect).is_file():
+            parser.error(f"{key}: {args.game_root / detect} not found; "
+                         "is it installed? (--only builds without it)")
+    out = args.out or OUT_PATH
+
     registry = IdRegistry(args.ids)
+    if partial and args.ids == IDS_PATH:
+        # Seeded from the committed registry but saved beside the output, so a
+        # development build cannot hand out ids the committed data never uses.
+        registry.path = out.with_suffix(".ids.json")
     known = len(registry.data["locations"])
 
-    data = build(args.maps, registry)
+    data = build(maps_dirs, registry)
     registry.save()
 
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
 
     added = len(registry.data["locations"]) - known
     progression = sum(1 for i in data["items"] if i["classification"] == "progression")
-    print(f"wrote {args.out}")
+    print(f"wrote {out}")
     print(f"  data version: {data['data_version']}"
           + (f"  ({added} new location ids)" if added else ""))
     print(f"  chapters : {len(data['chapters'])}")

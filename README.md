@@ -134,12 +134,13 @@ themselves: `tools/bsp_entities.py` reads the entity lump out of each shipped
 `.bsp`, so a check can only exist where the entity behind it provably exists.
 That produced individual weapon pickups, notable-enemy kills and kill-count
 milestones, but too many of them read as arbitrary in play, so they are switched
-off via `ENABLED_LOCATION_TYPES` in `tools/campaign_layout.py`.
+off via `ENABLED_LOCATION_TYPES` in `tools/campaigns/shared.py`.
 
 Editorial decisions that *cannot* be derived from the maps -- mission grouping
-and names, which classnames map to which item, and the logic gates -- live in one
-file, [`tools/campaign_layout.py`](tools/campaign_layout.py). That is the file to
-edit when tuning logic.
+and names, which classnames map to which item, and the logic gates -- live in
+[`tools/campaigns/`](tools/campaigns/): one module per game (`half_life.py`)
+holding its `Campaign`, and `shared.py` for what every game shares (logic groups,
+charger rules, the hub). That is where to edit when tuning logic.
 
 Chapter keys there are permanent: `data/ids.json` keys every location by chapter,
 so renaming one renumbers a location. Keys are the first map of the chapter;
@@ -150,8 +151,8 @@ names are free to change.
 ```bash
 python -m pytest tests -q
 
-# after editing tools/campaign_layout.py
-python tools/build_campaign_data.py --maps "<Half-Life>/valve/maps"
+# after editing tools/campaigns/
+python tools/build_campaign_data.py --game-root "<Half-Life>"
 python tools/gen_checkdata.py
 
 # package, and optionally drop straight into an Archipelago install.

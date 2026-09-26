@@ -25,26 +25,54 @@ import json
 import struct
 import sys
 from pathlib import Path
+from typing import BinaryIO
 
 LUMP_ENTITIES = 0
+LUMP_PLANES = 1
 LUMP_COUNT = 15
 HEADER_FMT = "<i" + "ii" * LUMP_COUNT
 
 
+def lump_table(handle: BinaryIO, bsp_path: Path) -> list[tuple[int, int]]:
+    """`(offset, length)` per lump, indexed the way a standard v30 BSP is.
+
+    Blue Shift's maps are version 30 but store the planes in lump 0 and the
+    entities in lump 1, the other way round from every other GoldSrc game. The
+    engine copes; a reader taking the header at its word finds no entities and
+    walks the clip hulls against the wrong planes. The version number cannot
+    tell the two apart, so the content does: an entity lump is text and starts
+    with `{`, a plane lump is floats and never does. Swapped here, once, so
+    nothing that asks for a lump by its standard index has to know.
+    """
+    header = handle.read(struct.calcsize(HEADER_FMT))
+    if len(header) < struct.calcsize(HEADER_FMT):
+        raise ValueError(f"{bsp_path.name}: file too short to be a BSP")
+    fields = struct.unpack(HEADER_FMT, header)
+    if fields[0] != 30:
+        raise ValueError(f"{bsp_path.name}: unsupported BSP version {fields[0]}")
+    table = [(fields[1 + index * 2], fields[2 + index * 2]) for index in range(LUMP_COUNT)]
+
+    def starts_entity_text(offset: int) -> bool:
+        handle.seek(offset)
+        return handle.read(64).lstrip().startswith(b"{")
+
+    if not starts_entity_text(table[LUMP_ENTITIES][0]) and starts_entity_text(
+        table[LUMP_PLANES][0]
+    ):
+        table[LUMP_ENTITIES], table[LUMP_PLANES] = table[LUMP_PLANES], table[LUMP_ENTITIES]
+    return table
+
+
+def read_lump(bsp_path: Path, index: int) -> bytes:
+    with bsp_path.open("rb") as handle:
+        offset, length = lump_table(handle, bsp_path)[index]
+        handle.seek(offset)
+        return handle.read(length)
+
+
 def read_entity_lump(bsp_path: Path) -> str:
     """Return the raw entity lump text of a GoldSrc BSP."""
-    with bsp_path.open("rb") as handle:
-        header = handle.read(struct.calcsize(HEADER_FMT))
-        if len(header) < struct.calcsize(HEADER_FMT):
-            raise ValueError(f"{bsp_path.name}: file too short to be a BSP")
-        fields = struct.unpack(HEADER_FMT, header)
-        version = fields[0]
-        if version != 30:
-            raise ValueError(f"{bsp_path.name}: unsupported BSP version {version}")
-        offset = fields[1 + LUMP_ENTITIES * 2]
-        length = fields[2 + LUMP_ENTITIES * 2]
-        handle.seek(offset)
-        raw = handle.read(length)
+    raw = read_lump(bsp_path, LUMP_ENTITIES)
     return raw.split(b"\x00", 1)[0].decode("latin-1")
 
 
@@ -89,18 +117,10 @@ def brush_model_bounds(
     the point: a trigger volume a player has to be standing inside, or a button
     whose face has to be told apart from the wall it is set into.
     """
-    with bsp_path.open("rb") as handle:
-        header = handle.read(struct.calcsize(HEADER_FMT))
-        fields = struct.unpack(HEADER_FMT, header)
-        if fields[0] != 30:
-            raise ValueError(f"{bsp_path.name}: unsupported BSP version {fields[0]}")
-        offset = fields[1 + LUMP_MODELS * 2]
-        length = fields[2 + LUMP_MODELS * 2]
-        handle.seek(offset)
-        raw = handle.read(length)
+    raw = read_lump(bsp_path, LUMP_MODELS)
 
     bounds: dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]] = {}
-    for index in range(length // MODEL_STRUCT_SIZE):
+    for index in range(len(raw) // MODEL_STRUCT_SIZE):
         base = index * MODEL_STRUCT_SIZE
         mins = struct.unpack_from("<3f", raw, base)
         maxs = struct.unpack_from("<3f", raw, base + 12)
@@ -116,18 +136,10 @@ def brush_model_centres(bsp_path: Path) -> dict[str, tuple[float, float, float]]
     one is in the world is to read the bounding box the compiler recorded for its
     model. Returned keyed the way the entity refers to it, `*79`.
     """
-    with bsp_path.open("rb") as handle:
-        header = handle.read(struct.calcsize(HEADER_FMT))
-        fields = struct.unpack(HEADER_FMT, header)
-        if fields[0] != 30:
-            raise ValueError(f"{bsp_path.name}: unsupported BSP version {fields[0]}")
-        offset = fields[1 + LUMP_MODELS * 2]
-        length = fields[2 + LUMP_MODELS * 2]
-        handle.seek(offset)
-        raw = handle.read(length)
+    raw = read_lump(bsp_path, LUMP_MODELS)
 
     centres: dict[str, tuple[float, float, float]] = {}
-    for index in range(length // MODEL_STRUCT_SIZE):
+    for index in range(len(raw) // MODEL_STRUCT_SIZE):
         base = index * MODEL_STRUCT_SIZE
         mins = struct.unpack_from("<3f", raw, base)
         maxs = struct.unpack_from("<3f", raw, base + 12)
@@ -135,7 +147,6 @@ def brush_model_centres(bsp_path: Path) -> dict[str, tuple[float, float, float]]
     return centres
 
 
-LUMP_PLANES = 1
 LUMP_CLIPNODES = 9
 
 PLANE_STRUCT_SIZE = 20
@@ -166,16 +177,11 @@ class ClipHull:
 
     def __init__(self, bsp_path: Path) -> None:
         with bsp_path.open("rb") as handle:
-            header = handle.read(struct.calcsize(HEADER_FMT))
-            fields = struct.unpack(HEADER_FMT, header)
-            if fields[0] != 30:
-                raise ValueError(
-                    f"{bsp_path.name}: unsupported BSP version {fields[0]}"
-                )
+            table = lump_table(handle, bsp_path)
 
             def lump(index: int) -> bytes:
-                handle.seek(fields[1 + index * 2])
-                return handle.read(fields[2 + index * 2])
+                handle.seek(table[index][0])
+                return handle.read(table[index][1])
 
             planes_raw = lump(LUMP_PLANES)
             clipnodes_raw = lump(LUMP_CLIPNODES)
