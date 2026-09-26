@@ -39,6 +39,13 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(str(exc))
 
     print(f"wrote {written} files into {mod.mod_dir(args.game)}")
+    content = mod.install_content(args.game)
+    for name in content.mounted:
+        print(f"{name}: content linked in")
+    for name in content.missing:
+        print(f"{name}: not installed, skipped")
+    for warning in content.warnings:
+        print(f"warning: {warning}")
     if not has_dll:
         # Same reasoning as the client's /install: no next step is printed,
         # because without the dll there is nothing to start.

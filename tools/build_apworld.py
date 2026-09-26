@@ -10,8 +10,14 @@ checkout that has never built one. The result installs cleanly and then does
 not run, which is why the dll is checked for by default and skipping it takes a
 flag.
 
+Every build is also copied over the world in an Archipelago install, by default
+`/games/Archipelago/worlds`; point `--install` elsewhere on another machine, or
+pass `--no-install` to only build.
+
 Usage:
-    python tools/build_apworld.py [--install "F:/Archipelago/custom_worlds"]
+    python tools/build_apworld.py
+    python tools/build_apworld.py --install "F:/Archipelago/custom_worlds"
+    python tools/build_apworld.py --no-install
     python tools/build_apworld.py --allow-no-dll   # a dev build, mod won't run
 """
 
@@ -31,6 +37,7 @@ MANIFEST_COMPATIBLE_VERSION = 5
 REPO_ROOT = Path(__file__).resolve().parent.parent
 WORLD_DIR = REPO_ROOT / "apworld" / "half_life"
 BUILD_DIR = REPO_ROOT / "build"
+DEFAULT_INSTALL_DIR = Path("/games/Archipelago/worlds")
 
 # `mod` owns where the dll lives, both inside the package and inside the mod
 # folder. Importing it rather than spelling the path again keeps one definition.
@@ -99,10 +106,19 @@ def build(out_dir: Path, allow_no_dll: bool = False) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=BUILD_DIR)
-    parser.add_argument(
+    install = parser.add_mutually_exclusive_group()
+    install.add_argument(
         "--install",
         type=Path,
-        help="also copy the result here, e.g. <Archipelago>/custom_worlds",
+        default=DEFAULT_INSTALL_DIR,
+        help=f"copy the result over the world here (default {DEFAULT_INSTALL_DIR})",
+    )
+    install.add_argument(
+        "--no-install",
+        dest="install",
+        action="store_const",
+        const=None,
+        help="only build; copy nothing",
     )
     parser.add_argument(
         "--allow-no-dll",
@@ -118,7 +134,11 @@ def main(argv: list[str] | None = None) -> int:
         print("warning: no server dll in this build -- it installs but will not run")
 
     if args.install:
-        args.install.mkdir(parents=True, exist_ok=True)
+        if not args.install.is_dir():
+            # Not created: a missing worlds folder means the wrong machine or a
+            # typo, and a new empty directory would hide that.
+            raise SystemExit(f"{args.install} does not exist; pass --install <dir> "
+                             "or --no-install")
         destination = args.install / target.name
         shutil.copy2(target, destination)
         print(f"installed to {destination}")

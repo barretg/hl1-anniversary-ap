@@ -155,9 +155,10 @@ python -m pytest tests -q
 python tools/build_campaign_data.py --game-root "<Half-Life>"
 python tools/gen_checkdata.py
 
-# package, and optionally drop straight into an Archipelago install.
+# package, and copy it over the world in /games/Archipelago/worlds; on another
+# machine --install "<Archipelago>/custom_worlds", or --no-install to only build.
 # Refuses to build without a staged server dll; --allow-no-dll for a dev build.
-python tools/build_apworld.py --install "<Archipelago>/custom_worlds"
+python tools/build_apworld.py
 
 # the server dll, 32-bit, against a checkout of Valve's SDK with sdk.patch on it
 cmake -S game -B build/game-msvc -A Win32 -DHLSDK_DIR=../halflife

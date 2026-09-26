@@ -536,6 +536,8 @@ void RegisterCommands() {
 
     // pfnAddServerCommand directly: the SDK has no macro for it, and it takes a
     // non-const name, so the casts are the engine's ABI rather than sloppiness.
+    RegisterTestingCvar();
+
     g_engfuncs.pfnAddServerCommand((char*)"ap", Cmd_Ap);
     g_engfuncs.pfnAddServerCommand((char*)"ap_help", Cmd_ApHelp);
     g_engfuncs.pfnAddServerCommand((char*)"ap_warp", Cmd_ApWarp);

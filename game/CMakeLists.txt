@@ -67,11 +67,18 @@ set(SDK_C_SOURCES
 
 # Ours.
 file(GLOB AP_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+# Opposing Force and Blue Shift entities, ported from Sam Vanheer's
+# halflife-op4-updated / halflife-bs-updated to this SDK's conventions. Valve's
+# code under the same SDK license, kept apart from ours.
+file(GLOB PORT_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/port/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of/*.cpp")
 
-add_library(hl SHARED ${SDK_SOURCES} ${SDK_C_SOURCES} ${AP_SOURCES})
+add_library(hl SHARED ${SDK_SOURCES} ${SDK_C_SOURCES} ${AP_SOURCES} ${PORT_SOURCES})
 
 target_include_directories(hl PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of"
     "${HLSDK_DIR}/dlls"
     "${HLSDK_DIR}/engine"
     "${HLSDK_DIR}/common"
@@ -154,6 +161,68 @@ else()
         -static -static-libgcc -static-libstdc++ -Wl,--enable-stdcall-fixup)
     # See the comments in hl_mingw.def: GNU ld cannot parse the SDK's own.
     target_sources(hl PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/hl_mingw.def")
+endif()
+
+# The client dll: Valve's cl_dll, built the way hl_cdll.vcxproj builds it. Only
+# with MSVC or clang-cl, because it links Valve's prebuilt MSVC vgui libraries.
+option(HLAP_CLIENT "Build client.dll as well" ON)
+if(HLAP_CLIENT AND MSVC)
+    file(GLOB CL_SOURCES CONFIGURE_DEPENDS
+        "${HLSDK_DIR}/cl_dll/*.cpp"
+        "${HLSDK_DIR}/cl_dll/hl/*.cpp")
+    # In cl_dll/ but not in hl_cdll.vcxproj: samples and other mods' code.
+    foreach(name GameStudioModelRenderer_Sample.cpp MOTD.cpp overview.cpp
+                 scoreboard.cpp soundsystem.cpp vgui_ConsolePanel.cpp)
+        list(REMOVE_ITEM CL_SOURCES "${HLSDK_DIR}/cl_dll/${name}")
+    endforeach()
+    foreach(name crossbow crowbar egon gauss handgrenade hornetgun mp5 python
+                 rpg satchel shotgun squeakgrenade tripmine)
+        list(APPEND CL_SOURCES "${HLSDK_DIR}/dlls/${name}.cpp")
+    endforeach()
+    list(APPEND CL_SOURCES
+        "${HLSDK_DIR}/dlls/wpn_shared/hl_wpn_glock.cpp"
+        "${HLSDK_DIR}/common/parsemsg.cpp"
+        "${HLSDK_DIR}/public/interface.cpp")
+    # Opposing Force's weapons, predicted on the client like Valve's.
+    foreach(name CDisplacer CEagle CGrapple CGrappleTip CKnife CM249 CPipewrench
+                 CShockRifle CSniperRifle CSporeLauncher)
+        list(APPEND CL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of/${name}.cpp")
+    endforeach()
+    file(GLOB CL_SHARED CONFIGURE_DEPENDS "${HLSDK_DIR}/game_shared/vgui_*.cpp")
+    list(APPEND CL_SOURCES ${CL_SHARED} "${HLSDK_DIR}/game_shared/voice_banmgr.cpp")
+
+    add_library(client SHARED ${CL_SOURCES} ${SDK_C_SOURCES})
+    target_include_directories(client PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of"
+        "${HLSDK_DIR}/dlls" "${HLSDK_DIR}/cl_dll" "${HLSDK_DIR}/public"
+        "${HLSDK_DIR}/common" "${HLSDK_DIR}/pm_shared" "${HLSDK_DIR}/engine"
+        "${HLSDK_DIR}/utils/vgui/include" "${HLSDK_DIR}/game_shared"
+        "${HLSDK_DIR}/external")
+    target_compile_definitions(client PRIVATE
+        WIN32 _WINDOWS NDEBUG CLIENT_DLL CLIENT_WEAPONS HL_DLL
+        _CRT_SECURE_NO_WARNINGS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # SDL_endian.h defines `_m_prefetch` for old clangs; newer ones have it
+        # built in and reject the redefinition. Its own guard skips it.
+        target_compile_definitions(client PRIVATE __PRFCHWINTRIN_H)
+        # See src/client/cexception.h.
+        set_source_files_properties("${HLSDK_DIR}/cl_dll/vgui_TeamFortressViewport.cpp"
+            TARGET_DIRECTORY client PROPERTIES COMPILE_OPTIONS
+            "/FI${CMAKE_CURRENT_SOURCE_DIR}/src/client/cexception.h")
+    endif()
+    target_link_libraries(client PRIVATE
+        "${HLSDK_DIR}/utils/vgui/lib/win32_vc16/vgui.lib"
+        "${HLSDK_DIR}/lib/public/SDL2.lib"
+        "${HLSDK_DIR}/lib/public/game_controls.lib"
+        wsock32)
+    set_target_properties(client PROPERTIES OUTPUT_NAME "client" PREFIX "")
+    set_property(TARGET client PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    # Staged like hl.dll below; mod.CLIENT_DLL_NAME is the same path.
+    add_custom_command(TARGET client POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/cl_dlls"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:client>"
+                "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/cl_dlls/client.dll"
+        COMMENT "Staging client.dll into the apworld")
 endif()
 
 # Stage every build where `tools/build_apworld.py` packages it from, so the

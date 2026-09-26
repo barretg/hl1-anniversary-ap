@@ -137,6 +137,17 @@ class HalfLifeCommandProcessor(ClientCommandProcessor):
             return True
 
         logger.info(f"Installed {written} files into {mod.mod_dir(self.ctx.game_dir)}.")
+        try:
+            content = mod.install_content(self.ctx.game_dir)
+        except OSError as exc:
+            logger.error(f"Linking Opposing Force / Blue Shift content failed: {exc}")
+        else:
+            for name in content.mounted:
+                logger.info(f"{name}: installed, content linked in.")
+            for name in content.missing:
+                logger.info(f"{name}: not found in this Half-Life folder, skipped.")
+            for warning in content.warnings:
+                logger.warning(warning)
         if not has_dll:
             # No "start the game" line here on purpose: without the dll there is
             # nothing to start, and printing the next step anyway is what makes a

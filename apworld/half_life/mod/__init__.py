@@ -29,6 +29,9 @@ import pkgutil
 import re
 from pathlib import Path
 
+from .content import ContentReport, uninstall_content
+from .content import install_content as _install_content
+
 # The mod folder's name, which is also what the player passes to `-game`.
 MOD_DIR = "hlap"
 
@@ -55,6 +58,10 @@ STORE_SUBDIR = "archipelago"
 # installs a working mod and a development checkout installs everything but the
 # dll and says so.
 DLL_NAME = "dlls/hl.dll"
+
+# Our client dll, built beside the server one. Optional: without it the engine
+# falls back to `valve`'s client, which cannot draw Opposing Force's weapons.
+CLIENT_DLL_NAME = "cl_dlls/client.dll"
 
 # Files bundled in this package, as (path inside the package, path inside the mod
 # folder). The dll is looked up separately because it may legitimately be absent.
@@ -173,7 +180,27 @@ def install(game_dir: str | os.PathLike[str]) -> tuple[int, bool]:
         target.write_bytes(dll)
         written += 1
 
+    # The client has to match the server it was built with, so a package
+    # without one also takes away one an earlier install left.
+    client = read_mod_file(f"files/{CLIENT_DLL_NAME}")
+    target = target_root / CLIENT_DLL_NAME
+    if client is not None:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(client)
+        written += 1
+    elif target.is_file():
+        target.unlink()
+
     return written, dll is not None
+
+
+def install_content(game_dir: str | os.PathLike[str]) -> ContentReport:
+    """Link Opposing Force and Blue Shift in, for whichever are owned.
+
+    Separate from `install` so that its report can say what was found: a game
+    that is not owned is not an error, just a campaign the seed cannot use.
+    """
+    return _install_content(resolve_game_root(game_dir))
 
 
 def uninstall(game_dir: str | os.PathLike[str]) -> int:
@@ -189,6 +216,8 @@ def uninstall(game_dir: str | os.PathLike[str]) -> int:
     only the warp points this mod wrote are swept.
     """
     removed = clear_warp_saves(game_dir)
+    # Before the sweep: the manifest it reads lives in the bridge directory.
+    removed += uninstall_content(resolve_game_root(game_dir))
     return removed + sweep(mod_dir(game_dir))
 
 
@@ -197,7 +226,7 @@ def sweep(directory: Path) -> int:
     if not directory.is_dir():
         return 0
 
-    owned = {relative for _, relative in MOD_FILES} | {DLL_NAME}
+    owned = {relative for _, relative in MOD_FILES} | {DLL_NAME, CLIENT_DLL_NAME}
     removed = 0
     for relative in sorted(owned):
         path = directory / relative

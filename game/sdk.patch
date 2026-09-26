@@ -1,4 +1,876 @@
-﻿diff --git a/common/mathlib.h b/common/mathlib.h
+﻿diff --git a/cl_dll/ammo.cpp b/cl_dll/ammo.cpp
+index 7c4a6ea..61c9b5f 100644
+--- a/cl_dll/ammo.cpp
++++ b/cl_dll/ammo.cpp
+@@ -1223,12 +1223,20 @@ client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes
+ 	int i = iCount;
+ 	client_sprite_t *p = pList;
+ 	
++	// Opposing Force's lists stop at 640, so a missing resolution falls back
++	// to the largest one below it. Half-Life's always have an exact match.
++	client_sprite_t *best = NULL;
+ 	while(i--)
+ 	{
+-		if ((p->iRes == iRes) && (!strcmp(psz, p->szName)))
+-			return p;
++		if (!strcmp(psz, p->szName))
++		{
++			if (p->iRes == iRes)
++				return p;
++			if (p->iRes < iRes && (!best || p->iRes > best->iRes))
++				best = p;
++		}
+ 		p++;
+ 	}
+ 
+-	return NULL;
++	return best;
+ }
+diff --git a/cl_dll/ev_hldm.cpp b/cl_dll/ev_hldm.cpp
+index 91aed0c..b6318ce 100644
+--- a/cl_dll/ev_hldm.cpp
++++ b/cl_dll/ev_hldm.cpp
+@@ -35,6 +35,9 @@
+ #include "r_studioint.h"
+ #include "com_model.h"
+ 
++// Opposing Force weapons' animation enums (game/src/port/of).
++#include "of_weapon_anims.h"
++
+ extern engine_studio_api_t IEngineStudio;
+ 
+ static int tracerCount[ 32 ];
+@@ -71,6 +74,15 @@ void EV_EgonStop( struct event_args_s *args  );
+ void EV_HornetGunFire( struct event_args_s *args  );
+ void EV_TripmineFire( struct event_args_s *args  );
+ void EV_SnarkFire( struct event_args_s *args  );
++// Opposing Force
++void EV_FireEagle( struct event_args_s *args );
++void EV_Pipewrench( struct event_args_s *args );
++void EV_FireM249( struct event_args_s *args );
++void EV_FireDisplacer( struct event_args_s *args );
++void EV_FireShockRifle( struct event_args_s *args );
++void EV_FireSpore( struct event_args_s *args );
++void EV_SniperRifle( struct event_args_s *args );
++void EV_Knife( struct event_args_s *args );
+ 
+ 
+ void EV_TrainPitchAdjust( struct event_args_s *args );
+@@ -449,6 +461,9 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int
+ 			
+ 				break;
+ 			case BULLET_PLAYER_357:
++			case BULLET_PLAYER_556: // Opposing Force
++			case BULLET_PLAYER_762:
++			case BULLET_PLAYER_EAGLE:
+ 				
+ 				EV_HLDM_PlayTextureSound( idx, &tr, vecSrc, vecEnd, iBulletType );
+ 				EV_HLDM_DecalGunshot( &tr, iBulletType );
+@@ -1669,6 +1684,408 @@ void EV_SnarkFire( event_args_t *args )
+ //	   SQUEAK END
+ //======================
+ 
++// ap_port: Opposing Force, from halflife-op4-updated.
++//======================
++//	   SQUEAK END
++//======================
++
++void EV_FireEagle(event_args_t* args)
++{
++	const bool bEmpty = args->bparam1 != 0;
++
++	Vector up, right, forward;
++
++	AngleVectors(args->angles, forward, right, up);
++
++	const int iShell = gEngfuncs.pEventAPI->EV_FindModelIndex("models/shell.mdl");
++
++	if (EV_IsLocal(args->entindex))
++	{
++		EV_MuzzleFlash();
++
++		gEngfuncs.pEventAPI->EV_WeaponAnimation(bEmpty ? EAGLE_SHOOT_EMPTY : EAGLE_SHOOT, 0);
++		V_PunchAxis(0, -4.0);
++	}
++
++	Vector ShellVelocity;
++	Vector ShellOrigin;
++
++	EV_GetDefaultShellInfo(
++		args,
++		args->origin, args->velocity,
++		ShellVelocity,
++		ShellOrigin,
++		forward, right, up,
++		-9.0, 14.0, 9.0);
++
++	EV_EjectBrass(ShellOrigin, ShellVelocity, args->angles[1], iShell, TE_BOUNCE_SHELL);
++
++	gEngfuncs.pEventAPI->EV_PlaySound(
++		args->entindex,
++		args->origin, CHAN_WEAPON, "weapons/desert_eagle_fire.wav",
++		gEngfuncs.pfnRandomFloat(0.92, 1), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
++
++	Vector vecSrc;
++
++	EV_GetGunPosition(args, vecSrc, args->origin);
++
++	Vector vecAiming = forward;
++
++	EV_HLDM_FireBullets(
++		args->entindex,
++		forward, right, up,
++		1,
++		vecSrc, vecAiming,
++		8192.0,
++		BULLET_PLAYER_EAGLE,
++		0, nullptr,
++		args->fparam1, args->fparam2);
++}
++
++//======================
++//	PIPE WRENCH START
++//======================
++int g_iClub;
++
++//Only predict the miss sounds, hit sounds are still played
++//server side, so players don't get the wrong idea.
++void EV_Pipewrench(event_args_t* args)
++{
++	const int idx = args->entindex;
++	Vector origin = args->origin;
++	const bool iBigSwing = 0 != args->bparam1;
++	const bool hitSomething = 0 != args->bparam2;
++
++	if (!EV_IsLocal(idx))
++	{
++		return;
++	}
++
++	//Play Swing sound
++	if (iBigSwing)
++	{
++		if (hitSomething)
++		{
++			gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_BIG_SWING_HIT, 0);
++		}
++		else
++		{
++			gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_BIG_SWING_MISS, 0);
++		}
++
++		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pwrench_big_miss.wav", 1, ATTN_NORM, 0, PITCH_NORM);
++	}
++	else
++	{
++		if (hitSomething)
++		{
++			switch (g_iClub % 3)
++			{
++			case 0:
++				gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_ATTACK1HIT, 0);
++				break;
++			case 1:
++				gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_ATTACK2HIT, 0);
++				break;
++			case 2:
++				gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_ATTACK3HIT, 0);
++				break;
++			}
++		}
++		else
++		{
++			switch (g_iClub % 3)
++			{
++			case 0:
++				gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_ATTACK1MISS, 0);
++				break;
++			case 1:
++				gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_ATTACK2MISS, 0);
++				break;
++			case 2:
++				gEngfuncs.pEventAPI->EV_WeaponAnimation(PIPEWRENCH_ATTACK3MISS, 0);
++				break;
++			}
++
++			switch (g_iClub % 2)
++			{
++			case 0:
++				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pwrench_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM);
++				break;
++			case 1:
++				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pwrench_miss2.wav", 1, ATTN_NORM, 0, PITCH_NORM);
++				break;
++			}
++		}
++
++		++g_iClub;
++	}
++}
++//======================
++//	 PIPE WRENCH END
++//======================
++
++void EV_FireM249(event_args_t* args)
++{
++	int iBody = args->iparam1;
++
++	const bool bAlternatingEject = args->bparam1 != 0;
++
++	Vector up, right, forward;
++
++	AngleVectors(args->angles, forward, right, up);
++
++	int iShell =
++		bAlternatingEject ? gEngfuncs.pEventAPI->EV_FindModelIndex("models/saw_link.mdl") : gEngfuncs.pEventAPI->EV_FindModelIndex("models/saw_shell.mdl");
++
++	if (EV_IsLocal(args->entindex))
++	{
++		SetLocalBody(WEAPON_M249, iBody);
++		EV_MuzzleFlash();
++		gEngfuncs.pEventAPI->EV_WeaponAnimation(gEngfuncs.pfnRandomLong(0, 2) + M249_SHOOT1, iBody);
++		V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2, 2));
++		V_PunchAxis(1, gEngfuncs.pfnRandomFloat(-1, 1));
++	}
++
++	Vector ShellVelocity;
++	Vector ShellOrigin;
++
++	EV_GetDefaultShellInfo(
++		args,
++		args->origin, args->velocity,
++		ShellVelocity,
++		ShellOrigin,
++		forward, right, up,
++		-28.0, 24.0, 4.0);
++
++	EV_EjectBrass(ShellOrigin, ShellVelocity, args->angles[1], iShell, TE_BOUNCE_SHELL);
++
++	gEngfuncs.pEventAPI->EV_PlaySound(
++		args->entindex,
++		args->origin, CHAN_WEAPON, "weapons/saw_fire1.wav",
++		VOL_NORM, ATTN_NORM, 0, 94 + gEngfuncs.pfnRandomLong(0, 15));
++
++	Vector vecSrc;
++
++	EV_GetGunPosition(args, vecSrc, args->origin);
++
++	Vector vecAiming = forward;
++
++	EV_HLDM_FireBullets(
++		args->entindex,
++		forward, right, up,
++		1,
++		vecSrc, vecAiming,
++		8192.0,
++		BULLET_PLAYER_556,
++		0, nullptr,
++		args->fparam1, args->fparam2);
++}
++
++void EV_FireDisplacer(event_args_t* args)
++{
++	const auto mode = static_cast<DisplacerMode>(args->iparam1);
++
++	switch (mode)
++	{
++	case DisplacerMode::SPINNING_UP:
++	{
++		int iAttach = 0;
++
++		int iStartAttach, iEndAttach;
++
++		for (size_t uiIndex = 0; uiIndex < DISPLACER_NUM_BEAMS; ++uiIndex)
++		{
++			if (iAttach <= 2)
++			{
++				iStartAttach = iAttach++ + 2;
++				iEndAttach = iAttach % 2 + 2;
++			}
++			else
++			{
++				iStartAttach = 0;
++				iEndAttach = 0;
++			}
++
++			gEngfuncs.pEfxAPI->R_BeamEnts(
++				args->entindex | (iStartAttach << 12), args->entindex | (iEndAttach << 12),
++				gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/lgtning.spr"),
++				1,
++				1, 60 * 0.01, 190 / 255.0, 30, 0, 10,
++				96 / 255.0, 128 / 255.0, 16 / 255.0);
++		}
++
++		break;
++	}
++
++	case DisplacerMode::FIRED:
++	{
++		//bparam1 indicates whether it's a primary or secondary attack. - Solokiller
++		if (0 == args->bparam1)
++		{
++			gEngfuncs.pEventAPI->EV_PlaySound(
++				args->entindex, args->origin,
++				CHAN_WEAPON, "weapons/displacer_fire.wav",
++				gEngfuncs.pfnRandomFloat(0.8, 0.9), ATTN_NORM, 0, PITCH_NORM);
++		}
++		else
++		{
++			gEngfuncs.pEventAPI->EV_PlaySound(
++				args->entindex, args->origin,
++				CHAN_WEAPON, "weapons/displacer_self.wav",
++				gEngfuncs.pfnRandomFloat(0.8, 0.9), ATTN_NORM, 0, PITCH_NORM);
++		}
++
++		if (EV_IsLocal(args->entindex))
++		{
++			gEngfuncs.pEventAPI->EV_WeaponAnimation(DISPLACER_FIRE, 0);
++			V_PunchAxis(0, -2);
++		}
++
++		break;
++	}
++
++	default:
++		break;
++	}
++}
++
++void EV_FireShockRifle(event_args_t* args)
++{
++	gEngfuncs.pEventAPI->EV_PlaySound(args->entindex, args->origin, CHAN_WEAPON, "weapons/shock_fire.wav", 0.9, ATTN_NORM, 0, PITCH_NORM);
++
++	if (EV_IsLocal(args->entindex))
++		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOCKRIFLE_FIRE, 0);
++
++	for (size_t uiIndex = 0; uiIndex < 3; ++uiIndex)
++	{
++		gEngfuncs.pEfxAPI->R_BeamEnts(
++			args->entindex | 0x1000, args->entindex | ((uiIndex + 2) << 12),
++			gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/lgtning.spr"),
++			0.08,
++			1, 75 * 0.01, 190 / 255.0, 30, 0, 10,
++			0, 253 / 255.0, 253 / 255.0);
++	}
++}
++
++void EV_FireSpore(event_args_t* args)
++{
++	gEngfuncs.pEventAPI->EV_PlaySound(
++		args->entindex, args->origin,
++		CHAN_WEAPON, "weapons/splauncher_fire.wav",
++		0.9,
++		ATTN_NORM, 0, PITCH_NORM);
++
++	if (EV_IsLocal(args->entindex))
++	{
++		gEngfuncs.pEventAPI->EV_WeaponAnimation(SPLAUNCHER_FIRE, 0);
++
++		V_PunchAxis(0, -3.0);
++
++		if (cl_entity_t* pViewModel = gEngfuncs.GetViewModel())
++		{
++			Vector vecSrc = pViewModel->attachment[1];
++
++			Vector forward;
++
++			AngleVectors(args->angles, forward, nullptr, nullptr);
++
++			gEngfuncs.pEfxAPI->R_Sprite_Spray(
++				vecSrc, forward,
++				gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/tinyspit.spr"),
++				10, 10, 180);
++		}
++	}
++}
++
++void EV_SniperRifle(event_args_t* args)
++{
++	const int idx = args->entindex;
++	Vector vecOrigin = args->origin;
++	Vector vecAngles = args->angles;
++
++	const int iClip = args->iparam1;
++
++	Vector up, right, forward;
++
++	AngleVectors(vecAngles, forward, right, up);
++
++	if (EV_IsLocal(idx))
++	{
++		EV_MuzzleFlash();
++		gEngfuncs.pEventAPI->EV_WeaponAnimation(iClip <= 0 ? SNIPERRIFLE_FIRELASTROUND : SNIPERRIFLE_FIRE, 0);
++		V_PunchAxis(0, -2.0);
++	}
++
++	gEngfuncs.pEventAPI->EV_PlaySound(idx, vecOrigin,
++		CHAN_WEAPON, "weapons/sniper_fire.wav",
++		gEngfuncs.pfnRandomFloat(0.9f, 1.0f), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
++
++	Vector vecSrc;
++	Vector vecAiming = forward;
++
++	EV_GetGunPosition(args, vecSrc, vecOrigin);
++
++	EV_HLDM_FireBullets(
++		idx,
++		forward,
++		right,
++		up,
++		1,
++		vecSrc,
++		vecAiming,
++		8192.0,
++		BULLET_PLAYER_762,
++		0,
++		0,
++		args->fparam1,
++		args->fparam2);
++}
++
++//Only predict the miss sounds, hit sounds are still played
++//server side, so players don't get the wrong idea.
++void EV_Knife(event_args_t* args)
++{
++	const int idx = args->entindex;
++	Vector origin = args->origin;
++
++	const char* pszSwingSound;
++
++	switch (g_iSwing)
++	{
++	default:
++	case 0:
++		pszSwingSound = "weapons/knife1.wav";
++		break;
++	case 1:
++		pszSwingSound = "weapons/knife2.wav";
++		break;
++	case 2:
++		pszSwingSound = "weapons/knife3.wav";
++		break;
++	}
++
++	//Play Swing sound
++	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, pszSwingSound, 1, ATTN_NORM, 0, PITCH_NORM);
++
++	if (EV_IsLocal(idx))
++	{
++		switch ((g_iSwing++) % 3)
++		{
++		case 0:
++			gEngfuncs.pEventAPI->EV_WeaponAnimation(KNIFE_ATTACK1MISS, 0);
++			break;
++		case 1:
++			gEngfuncs.pEventAPI->EV_WeaponAnimation(KNIFE_ATTACK2, 0);
++			break;
++		case 2:
++			gEngfuncs.pEventAPI->EV_WeaponAnimation(KNIFE_ATTACK3, 0);
++			break;
++		}
++	}
++}
++
++
+ void EV_TrainPitchAdjust( event_args_t *args )
+ {
+ 	int idx;
+diff --git a/cl_dll/ev_hldm.h b/cl_dll/ev_hldm.h
+index 5fd90c1..5e9c43f 100644
+--- a/cl_dll/ev_hldm.h
++++ b/cl_dll/ev_hldm.h
+@@ -21,6 +21,11 @@ typedef	enum
+ 	BULLET_MONSTER_9MM,
+ 	BULLET_MONSTER_MP5,
+ 	BULLET_MONSTER_12MM,
++
++	// Archipelago: Opposing Force's, in dlls/weapons.h's order.
++	BULLET_PLAYER_556,
++	BULLET_PLAYER_762,
++	BULLET_PLAYER_EAGLE,
+ } Bullet;
+ 
+ enum glock_e {
+@@ -92,4 +97,6 @@ void EV_HLDM_DecalGunshot( pmtrace_t *pTrace, int iBulletType );
+ int EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, float *right, int iBulletType, int iTracerFreq, int *tracerCount );
+ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCount, float flSpreadX, float flSpreadY );
+ 
++void SetLocalBody( int id, int body ); // hl_weapons.cpp, for Opposing Force's events
++
+ #endif // EV_HLDMH
+\ No newline at end of file
+diff --git a/cl_dll/flashlight.cpp b/cl_dll/flashlight.cpp
+index d12cfbd..ee01a13 100644
+--- a/cl_dll/flashlight.cpp
++++ b/cl_dll/flashlight.cpp
+@@ -36,6 +36,7 @@ int CHudFlashlight::Init(void)
+ {
+ 	m_fFade = 0;
+ 	m_fOn = 0;
++	m_fNightVision = 0;
+ 
+ 	HOOK_MESSAGE(Flashlight);
+ 	HOOK_MESSAGE(FlashBat);
+@@ -51,6 +52,7 @@ void CHudFlashlight::Reset(void)
+ {
+ 	m_fFade = 0;
+ 	m_fOn = 0;
++	m_fNightVision = 0;
+ }
+ 
+ int CHudFlashlight::VidInit(void)
+@@ -66,6 +68,7 @@ int CHudFlashlight::VidInit(void)
+ 	m_prc2 = &gHUD.GetSpriteRect(HUD_flash_full);
+ 	m_prcBeam = &gHUD.GetSpriteRect(HUD_flash_beam);
+ 	m_iWidth = m_prc2->right - m_prc2->left;
++	m_nvSprite = LoadSprite("sprites/of_nv_b.spr");
+ 
+ 	return 1;
+ };
+@@ -90,6 +93,7 @@ int CHudFlashlight:: MsgFunc_Flashlight(const char *pszName,  int iSize, void *p
+ 	int x = READ_BYTE();
+ 	m_iBat = x;
+ 	m_flBat = ((float)x)/100.0;
++	m_fNightVision = iSize > 2 ? READ_BYTE() : 0;
+ 
+ 	return 1;
+ }
+@@ -112,6 +116,8 @@ int CHudFlashlight::Draw(float flTime)
+ 
+ 	if (m_flBat < 0.20)
+ 		UnpackRGB(r,g,b, RGB_REDISH);
++	else if (m_fOn && m_fNightVision)
++		r = g = b = 255;	// AP: Opposing Force draws HUD items white under night vision
+ 	else
+ 		UnpackRGB(r,g,b, RGB_YELLOWISH);
+ 
+@@ -130,6 +136,9 @@ int CHudFlashlight::Draw(float flTime)
+ 
+ 		SPR_Set( m_hBeam, r, g, b );
+ 		SPR_DrawAdditive( 0, x, y, m_prcBeam );
++
++		if ( m_fNightVision )
++			DrawNightVision();
+ 	}
+ 
+ 	// draw the flashlight energy level
+@@ -146,4 +155,42 @@ int CHudFlashlight::Draw(float flTime)
+ 
+ 
+ 	return 1;
+-}
+\ No newline at end of file
++}
++
++// AP: Opposing Force's night vision overlay, from halflife-op4-updated
++void CHudFlashlight::DrawNightVision( void )
++{
++	static int lastFrame = 0;
++
++	if ( !m_nvSprite )
++		return;
++
++	int frames = SPR_Frames( m_nvSprite );
++	int frameIndex = rand() % frames;
++
++	if ( frames > 1 && frameIndex == lastFrame )
++		frameIndex = ( frameIndex + 1 ) % frames;
++
++	lastFrame = frameIndex;
++
++	const int width = SPR_Width( m_nvSprite, 0 );
++	const int height = SPR_Height( m_nvSprite, 0 );
++
++	SPR_Set( m_nvSprite, 0, 170, 0 );
++
++	wrect_t rc;
++
++	for ( int x = 0; x < ScreenWidth; x += width )
++	{
++		rc.left = 0;
++		rc.right = x + width >= ScreenWidth ? ScreenWidth - x : width;
++
++		for ( int y = 0; y < ScreenHeight; y += height )
++		{
++			rc.top = 0;
++			rc.bottom = y + height >= ScreenHeight ? ScreenHeight - y : height;
++
++			SPR_DrawAdditive( frameIndex, x, y, &rc );
++		}
++	}
++}
+diff --git a/cl_dll/hl/hl_baseentity.cpp b/cl_dll/hl/hl_baseentity.cpp
+index 0c2d539..b154ad2 100644
+--- a/cl_dll/hl/hl_baseentity.cpp
++++ b/cl_dll/hl/hl_baseentity.cpp
+@@ -289,6 +289,7 @@ int CBasePlayer :: Illumination( void ) { return 0; }
+ void CBasePlayer :: EnableControl(BOOL fControl) { }
+ Vector CBasePlayer :: GetAutoaimVector( float flDelta ) { return g_vecZero; }
+ Vector CBasePlayer :: AutoaimDeflection( Vector &vecSrc, float flDist, float flDelta  ) { return g_vecZero; }
++Vector CBasePlayer::GetAutoaimVectorFromPoint( const Vector &vecSrc, float flDelta ) { return g_vecZero; }
+ void CBasePlayer :: ResetAutoaim( ) { }
+ void CBasePlayer :: SetCustomDecalFrames( int nFrames ) { }
+ int CBasePlayer :: GetCustomDecalFrames( void ) { return -1; }
+@@ -344,4 +345,59 @@ int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon ) { return 0; }
+ int CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon ) { return 0; }	
+ void CBasePlayerWeapon::RetireWeapon( void ) { }
+ void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration ) {}
+-void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType ){}
+\ No newline at end of file
++void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType ){}
++
++// EHANDLE, as dlls/cbase.cpp has it: Opposing Force's weapons hold handles on
++// the client too.
++edict_t * EHANDLE::Get( void ) 
++{ 
++	if (m_pent)
++	{
++		if (m_pent->serialnumber == m_serialnumber) 
++			return m_pent; 
++		else
++			return NULL;
++	}
++	return NULL; 
++};
++
++edict_t * EHANDLE::Set( edict_t *pent ) 
++{ 
++	m_pent = pent;  
++	if (pent) 
++		m_serialnumber = m_pent->serialnumber; 
++	return pent; 
++};
++
++
++EHANDLE :: operator CBaseEntity *() 
++{ 
++	return (CBaseEntity *)GET_PRIVATE( Get( ) ); 
++};
++
++
++CBaseEntity * EHANDLE :: operator = (CBaseEntity *pEntity)
++{
++	if (pEntity)
++	{
++		m_pent = ENT( pEntity->pev );
++		if (m_pent)
++			m_serialnumber = m_pent->serialnumber;
++	}
++	else
++	{
++		m_pent = NULL;
++		m_serialnumber = 0;
++	}
++	return pEntity;
++}
++
++EHANDLE :: operator int ()
++{
++	return Get() != NULL;
++}
++
++CBaseEntity * EHANDLE :: operator -> ()
++{
++	return (CBaseEntity *)GET_PRIVATE( Get( ) ); 
++}
+diff --git a/cl_dll/hl/hl_events.cpp b/cl_dll/hl/hl_events.cpp
+index 7e9c730..18d2e8b 100644
+--- a/cl_dll/hl/hl_events.cpp
++++ b/cl_dll/hl/hl_events.cpp
+@@ -37,6 +37,15 @@ void EV_EgonStop( struct event_args_s *args );
+ void EV_HornetGunFire( struct event_args_s *args );
+ void EV_TripmineFire( struct event_args_s *args );
+ void EV_SnarkFire( struct event_args_s *args );
++// Opposing Force
++void EV_FireEagle( struct event_args_s *args );
++void EV_Pipewrench( struct event_args_s *args );
++void EV_FireM249( struct event_args_s *args );
++void EV_FireDisplacer( struct event_args_s *args );
++void EV_FireShockRifle( struct event_args_s *args );
++void EV_FireSpore( struct event_args_s *args );
++void EV_SniperRifle( struct event_args_s *args );
++void EV_Knife( struct event_args_s *args );
+ 
+ 
+ 
+@@ -77,4 +86,12 @@ void Game_HookEvents( void )
+ 	gEngfuncs.pfnHookEvent( "events/firehornet.sc",				EV_HornetGunFire );
+ 	gEngfuncs.pfnHookEvent( "events/tripfire.sc",				EV_TripmineFire );
+ 	gEngfuncs.pfnHookEvent( "events/snarkfire.sc",				EV_SnarkFire );
++	gEngfuncs.pfnHookEvent( "events/eagle.sc", EV_FireEagle );
++	gEngfuncs.pfnHookEvent( "events/pipewrench.sc", EV_Pipewrench );
++	gEngfuncs.pfnHookEvent( "events/m249.sc", EV_FireM249 );
++	gEngfuncs.pfnHookEvent( "events/displacer.sc", EV_FireDisplacer );
++	gEngfuncs.pfnHookEvent( "events/shock.sc", EV_FireShockRifle );
++	gEngfuncs.pfnHookEvent( "events/spore.sc", EV_FireSpore );
++	gEngfuncs.pfnHookEvent( "events/sniper.sc", EV_SniperRifle );
++	gEngfuncs.pfnHookEvent( "events/knife.sc", EV_Knife );
+ }
+diff --git a/cl_dll/hl/hl_weapons.cpp b/cl_dll/hl/hl_weapons.cpp
+index d8215cb..082e1cc 100644
+--- a/cl_dll/hl/hl_weapons.cpp
++++ b/cl_dll/hl/hl_weapons.cpp
+@@ -19,6 +19,16 @@
+ #include "weapons.h"
+ #include "nodes.h"
+ #include "player.h"
++// Opposing Force (game/src/port/of).
++#include "CGrapple.h"
++#include "CEagle.h"
++#include "CPipewrench.h"
++#include "CM249.h"
++#include "CDisplacer.h"
++#include "CShockRifle.h"
++#include "CSporeLauncher.h"
++#include "CSniperRifle.h"
++#include "CKnife.h"
+ 
+ #include "usercmd.h"
+ #include "entity_state.h"
+@@ -66,6 +76,15 @@ CHandGrenade g_HandGren;
+ CSatchel g_Satchel;
+ CTripmine g_Tripmine;
+ CSqueak g_Snark;
++CGrapple g_Grapple;
++CEagle g_Eagle;
++CPipewrench g_Pipewrench;
++CM249 g_M249;
++CDisplacer g_Displacer;
++CShockRifle g_ShockRifle;
++CSporeLauncher g_SporeLauncher;
++CSniperRifle g_SniperRifle;
++CKnife g_Knife;
+ 
+ 
+ /*
+@@ -563,6 +582,19 @@ void UTIL_ParticleLine( CBasePlayer *player, float *start, float *end, float lif
+ 	gEngfuncs.pEfxAPI->R_ParticleLine( start, end, r, g, b, life );
+ }
+ 
++// Opposing Force's events set the predicted weapon's body (the M249's belt).
++void SetLocalBody( int id, int body )
++{
++	CBasePlayerWeapon *pWeapon = NULL;
++	switch ( id )
++	{
++	case WEAPON_M249: pWeapon = &g_M249; break;
++	case WEAPON_PYTHON: pWeapon = &g_Python; break;
++	}
++	if ( pWeapon )
++		pWeapon->pev->body = body;
++}
++
+ /*
+ =====================
+ HUD_InitClientWeapons
+@@ -619,6 +651,15 @@ void HUD_InitClientWeapons( void )
+ 	HUD_PrepEntity( &g_Satchel	, &player );
+ 	HUD_PrepEntity( &g_Tripmine	, &player );
+ 	HUD_PrepEntity( &g_Snark	, &player );
++	HUD_PrepEntity( &g_Grapple, &player );
++	HUD_PrepEntity( &g_Eagle, &player );
++	HUD_PrepEntity( &g_Pipewrench, &player );
++	HUD_PrepEntity( &g_M249, &player );
++	HUD_PrepEntity( &g_Displacer, &player );
++	HUD_PrepEntity( &g_ShockRifle, &player );
++	HUD_PrepEntity( &g_SporeLauncher, &player );
++	HUD_PrepEntity( &g_SniperRifle, &player );
++	HUD_PrepEntity( &g_Knife, &player );
+ }
+ 
+ /*
+@@ -739,6 +780,42 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+ 		case WEAPON_SNARK:
+ 			pWeapon = &g_Snark;
+ 			break;
++
++		case WEAPON_GRAPPLE:
++			pWeapon = &g_Grapple;
++			break;
++
++		case WEAPON_EAGLE:
++			pWeapon = &g_Eagle;
++			break;
++
++		case WEAPON_PIPEWRENCH:
++			pWeapon = &g_Pipewrench;
++			break;
++
++		case WEAPON_M249:
++			pWeapon = &g_M249;
++			break;
++
++		case WEAPON_DISPLACER:
++			pWeapon = &g_Displacer;
++			break;
++
++		case WEAPON_SHOCKRIFLE:
++			pWeapon = &g_ShockRifle;
++			break;
++
++		case WEAPON_SPORELAUNCHER:
++			pWeapon = &g_SporeLauncher;
++			break;
++
++		case WEAPON_SNIPERRIFLE:
++			pWeapon = &g_SniperRifle;
++			break;
++
++		case WEAPON_KNIFE:
++			pWeapon = &g_Knife;
++			break;
+ 	}
+ 
+ 	// Store pointer to our destination entity_state_t so we can get our origin, etc. from it
+@@ -790,6 +867,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+ 		pCurrent->m_chargeReady			= pfrom->iuser1;
+ 		pCurrent->m_fInAttack			= pfrom->iuser2;
+ 		pCurrent->m_fireState			= pfrom->iuser3;
++		pCurrent->SetWeaponData( *pfrom );
+ 
+ 		pCurrent->m_iSecondaryAmmoType		= (int)from->client.vuser3[ 2 ];
+ 		pCurrent->m_iPrimaryAmmoType		= (int)from->client.vuser4[ 0 ];
+@@ -839,6 +917,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+ 	player.ammo_uranium		= (int)from->client.ammo_cells;
+ 	player.ammo_hornets		= (int)from->client.vuser2[0];
+ 	player.ammo_rockets		= (int)from->client.ammo_rockets;
++	player.ammo_spores		= (int)from->client.vuser2[1]; // Opposing Force
++	player.ammo_762			= (int)from->client.vuser2[2];
+ 
+ 	
+ 	// Point to current weapon object
+@@ -914,6 +994,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+ 	to->client.ammo_cells				= player.ammo_uranium;
+ 	to->client.vuser2[0]				= player.ammo_hornets;
+ 	to->client.ammo_rockets				= player.ammo_rockets;
++	to->client.vuser2[1]				= player.ammo_spores; // Opposing Force
++	to->client.vuser2[2]				= player.ammo_762;
+ 
+ 	if ( player.m_pActiveItem->m_iId == WEAPON_RPG )
+ 	{
+@@ -964,6 +1046,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+ 		pto->iuser1						= pCurrent->m_chargeReady;
+ 		pto->iuser2						= pCurrent->m_fInAttack;
+ 		pto->iuser3						= pCurrent->m_fireState;
++		pCurrent->GetWeaponData( *pto );
+ 
+ 		// Decrement weapon counters, server does this at same time ( during post think, after doing everything else )
+ 		pto->m_flNextReload				-= cmd->msec / 1000.0;
+diff --git a/cl_dll/hud.h b/cl_dll/hud.h
+index 3519999..1e7431a 100644
+--- a/cl_dll/hud.h
++++ b/cl_dll/hud.h
+@@ -367,6 +367,9 @@ private:
+ 	int	  m_fOn;
+ 	float m_fFade;
+ 	int	  m_iWidth;		// width of the battery innards
++	int	  m_fNightVision;	// AP: Opposing Force map, flashlight is night vision
++	HSPRITE m_nvSprite;
++	void DrawNightVision( void );
+ };
+ 
+ //
+diff --git a/common/mathlib.h b/common/mathlib.h
 index c765eb5..8afc4de 100644
 --- a/common/mathlib.h
 +++ b/common/mathlib.h
@@ -13,8 +885,128 @@ index c765eb5..8afc4de 100644
  void __inline set_fpu_cw(void)
  {
  _asm	
+diff --git a/dlls/basemonster.h b/dlls/basemonster.h
+index 638d9fb..b0c9d46 100644
+--- a/dlls/basemonster.h
++++ b/dlls/basemonster.h
+@@ -331,6 +331,22 @@ public:
+ 	BOOL CineCleanup( );
+ 
+ 	CBaseEntity* DropItem ( char *pszItemName, const Vector &vecPos, const Vector &vecAng );// drop an item.
++
++	// Archipelago: from Opposing Force.
++	bool JumpToTarget(Activity movementAct, float waitTime);
++
++	//Shock rifle shock effect
++	float m_flShockDuration;
++	float m_flShockTime;
++	int m_iOldRenderMode;
++	int m_iOldRenderFX;
++	Vector m_OldRenderColor;
++	float m_flOldRenderAmt;
++	bool m_fShockEffect;
++
++	void AddShockEffect(float r, float g, float b, float size, float flShockDuration);
++	void UpdateShockEffect();
++	void ClearShockEffect();
+ };
+ 
+ 
+diff --git a/dlls/cbase.cpp b/dlls/cbase.cpp
+index a77605d..04e0c37 100644
+--- a/dlls/cbase.cpp
++++ b/dlls/cbase.cpp
+@@ -20,6 +20,7 @@
+ #include	"decals.h"
+ #include	"gamerules.h"
+ #include	"game.h"
++#include "ap_main.h"
+ 
+ void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
+ 
+@@ -132,6 +133,8 @@ int DispatchSpawn( edict_t *pent )
+ 
+ 	if (pEntity)
+ 	{
++		ap::RemapSpawn( pEntity->pev );
++
+ 		// Initialize these or entities who don't link to the world won't have anything in here
+ 		pEntity->pev->absmin = pEntity->pev->origin - Vector(1,1,1);
+ 		pEntity->pev->absmax = pEntity->pev->origin + Vector(1,1,1);
+diff --git a/dlls/cbase.h b/dlls/cbase.h
+index 4b7ad65..a2fbf98 100644
+--- a/dlls/cbase.h
++++ b/dlls/cbase.h
+@@ -111,11 +111,17 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
+ 
+ #define CLASS_VEHICLE			14
+ 
++// Archipelago: Opposing Force's classes. OF numbers them 14 and 15, but 14 is
++// CLASS_VEHICLE in this SDK.
++#define CLASS_HUMAN_MILITARY_FRIENDLY	15 // Opposing Force friendlies
++#define CLASS_ALIEN_RACE_X		16
++
+ class CBaseEntity;
+ class CBaseToggle;
+ class CBaseMonster;
+ class CBasePlayerItem;
+ class CSquadMonster;
++class COFSquadTalkMonster;
+ 
+ 
+ #define	SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+@@ -138,6 +144,12 @@ public:
+ 
+ 	CBaseEntity * operator = (CBaseEntity *pEntity);
+ 	CBaseEntity * operator ->();
++
++	template <typename T>
++	T* Entity()
++	{
++		return static_cast<T*>(operator CBaseEntity*());
++	}
+ };
+ 
+ 
+@@ -185,6 +197,11 @@ public:
+ 	virtual CBaseToggle* MyTogglePointer(void) { return NULL; }
+ 	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
+ 	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
++	virtual COFSquadTalkMonster* MySquadTalkMonsterPointer() { return NULL; }
++
++	// Archipelago: from halflife-updated; entity_state_t::eflags this entity
++	// always sends. Not saved.
++	byte m_EFlags = 0;
+ 	virtual	int		GetToggleState( void ) { return TS_AT_TOP; }
+ 	virtual void	AddPoints( int score, BOOL bAllowNegativeScore ) {}
+ 	virtual void	AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
+@@ -275,6 +292,15 @@ public:
+ 	static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
+ 	static CBaseEntity *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
+ 
++	template <typename T>
++	static T* Instance(edict_t* pent)
++	{
++		return static_cast<T*>(Instance(pent));
++	}
++
++	template <typename T>
++	static T* Instance(entvars_t* pev) { return Instance<T>(ENT(pev)); }
++
+ 	CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
+ 	{ 
+ 		CBaseEntity *pEntity = Instance( pevMonster );
+@@ -360,6 +386,8 @@ public:
+ 	int ammo_uranium;
+ 	int ammo_hornets;
+ 	int ammo_argrens;
++	int ammo_spores; // Opposing Force, for client prediction
++	int ammo_762;
+ 	//Special stuff for grenades and satchels.
+ 	float m_flStartThrow;
+ 	float m_flReleaseThrow;
 diff --git a/dlls/client.cpp b/dlls/client.cpp
-index e2f30b7..f2f4519 100644
+index e2f30b7..dae0c46 100644
 --- a/dlls/client.cpp
 +++ b/dlls/client.cpp
 @@ -26,6 +26,7 @@
@@ -60,8 +1052,510 @@ index e2f30b7..f2f4519 100644
  	gpGlobals->teamplay = teamplay.value;
  	g_ulFrameCount++;
  }
+@@ -1206,6 +1221,11 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
+ 		state->eflags |= EFLAG_SLERP;
+ 	}
+ 
++	// Archipelago: flags an entity asks for itself (Opposing Force's pit worm).
++	// Zero for everything of Half-Life's.
++	if ( CBaseEntity *pFlagged = static_cast<CBaseEntity*>( GET_PRIVATE( ent ) ) )
++		state->eflags |= pFlagged->m_EFlags;
++
+ 	state->scale	  = ent->v.scale;
+ 	state->solid	  = ent->v.solid;
+ 	state->colormap   = ent->v.colormap;
+@@ -1645,6 +1665,7 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
+ 						item->iuser1					= gun->m_chargeReady;
+ 						item->iuser2					= gun->m_fInAttack;
+ 						item->iuser3					= gun->m_fireState;
++						gun->GetWeaponData( *item );
+ 						
+ 											
+ //						item->m_flPumpTime				= max( gun->m_flPumpTime, -0.001f );
+@@ -1747,6 +1768,8 @@ void UpdateClientData ( const edict_t *ent, int sendweapons, struct clientdata_s
+ 			cd->ammo_rockets	= pl->ammo_rockets;
+ 			cd->ammo_cells		= pl->ammo_uranium;
+ 			cd->vuser2.x		= pl->ammo_hornets;
++			cd->vuser2.y		= pl->ammo_spores; // Opposing Force; the RPG's below wins
++			cd->vuser2.z		= pl->ammo_762;
+ 			
+ 
+ 			if ( pl->m_pActiveItem )
+diff --git a/dlls/combat.cpp b/dlls/combat.cpp
+index 5acd32b..5d8f9e4 100644
+--- a/dlls/combat.cpp
++++ b/dlls/combat.cpp
+@@ -29,6 +29,7 @@
+ #include "animation.h"
+ #include "weapons.h"
+ #include "func_break.h"
++#include <vector>
+ 
+ extern DLL_GLOBAL Vector		g_vecAttackDir;
+ extern DLL_GLOBAL int			g_iSkillLevel;
+@@ -252,6 +253,82 @@ void CGib :: SpawnRandomGibs( entvars_t *pevVictim, int cGibs, int human )
+ 	}
+ }
+ 
++// Archipelago: Opposing Force's gib spawner, for its monsters' own gib models.
++// Half-Life's overload above is left as it was.
++void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const GibData& gibData)
++{
++	// Track the number of uses of a particular submodel so we can avoid spawning too many of the same
++	std::vector<int> limitTracking(gibData.Limits ? gibData.SubModelCount : 0, 0);
++	int* pLimitTracking = gibData.Limits ? limitTracking.data() : nullptr;
++
++	int currentBody = 0;
++	int cSplat;
++
++	for ( cSplat = 0 ; cSplat < cGibs ; cSplat++ )
++	{
++		CGib *pGib = GetClassPtr( (CGib *)NULL );
++
++		pGib->Spawn(gibData.ModelName);
++
++		if (pLimitTracking)
++		{
++			if (pLimitTracking[currentBody] >= gibData.Limits[currentBody].MaxGibs)
++			{
++				++currentBody;
++			}
++
++			pGib->pev->body = currentBody;
++
++			++pLimitTracking[currentBody];
++		}
++		else
++		{
++			pGib->pev->body = RANDOM_LONG(gibData.FirstSubModel, gibData.SubModelCount - 1);
++		}
++
++		if ( pevVictim )
++		{
++			// spawn the gib somewhere in the monster's bounding volume
++			pGib->pev->origin.x = pevVictim->absmin.x + pevVictim->size.x * (RANDOM_FLOAT ( 0 , 1 ) );
++			pGib->pev->origin.y = pevVictim->absmin.y + pevVictim->size.y * (RANDOM_FLOAT ( 0 , 1 ) );
++			pGib->pev->origin.z = pevVictim->absmin.z + pevVictim->size.z * (RANDOM_FLOAT ( 0 , 1 ) ) + 1;	// absmin.z is in the floor because the engine subtracts 1 to enlarge the box
++
++			// make the gib fly away from the attack vector
++			pGib->pev->velocity = g_vecAttackDir * -1;
++
++			// mix in some noise
++			pGib->pev->velocity.x += RANDOM_FLOAT ( -0.25, 0.25 );
++			pGib->pev->velocity.y += RANDOM_FLOAT ( -0.25, 0.25 );
++			pGib->pev->velocity.z += RANDOM_FLOAT ( -0.25, 0.25 );
++
++			pGib->pev->velocity = pGib->pev->velocity * RANDOM_FLOAT ( 300, 400 );
++
++			pGib->pev->avelocity.x = RANDOM_FLOAT ( 100, 200 );
++			pGib->pev->avelocity.y = RANDOM_FLOAT ( 100, 300 );
++
++			// copy owner's blood color
++			pGib->m_bloodColor = (CBaseEntity::Instance(pevVictim))->BloodColor();
++			
++			if ( pevVictim->health > -50)
++			{
++				pGib->pev->velocity = pGib->pev->velocity * 0.7;
++			}
++			else if ( pevVictim->health > -200)
++			{
++				pGib->pev->velocity = pGib->pev->velocity * 2;
++			}
++			else
++			{
++				pGib->pev->velocity = pGib->pev->velocity * 4;
++			}
++
++			pGib->pev->solid = SOLID_BBOX;
++			UTIL_SetSize ( pGib->pev, Vector( 0 , 0 , 0 ), Vector ( 0, 0, 0 ) );
++		}
++		pGib->LimitVelocity();
++	}
++}
++
+ 
+ BOOL CBaseMonster :: HasHumanGibs( void )
+ {
+@@ -260,7 +337,8 @@ BOOL CBaseMonster :: HasHumanGibs( void )
+ 	if ( myClass == CLASS_HUMAN_MILITARY ||
+ 		 myClass == CLASS_PLAYER_ALLY	||
+ 		 myClass == CLASS_HUMAN_PASSIVE  ||
+-		 myClass == CLASS_PLAYER )
++		 myClass == CLASS_PLAYER ||
++		 myClass == CLASS_HUMAN_MILITARY_FRIENDLY )
+ 
+ 		 return TRUE;
+ 
+@@ -277,7 +355,8 @@ BOOL CBaseMonster :: HasAlienGibs( void )
+ 		 myClass == CLASS_ALIEN_PASSIVE  ||
+ 		 myClass == CLASS_INSECT  ||
+ 		 myClass == CLASS_ALIEN_PREDATOR  ||
+-		 myClass == CLASS_ALIEN_PREY )
++		 myClass == CLASS_ALIEN_PREY ||
++		 myClass == CLASS_ALIEN_RACE_X )
+ 
+ 		 return TRUE;
+ 
+@@ -635,6 +714,8 @@ void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib )
+ 	//pev->enemy = ENT( pevAttacker );//why? (sjb)
+ 	
+ 	m_IdealMonsterState = MONSTERSTATE_DEAD;
++
++	ClearShockEffect();
+ }
+ 
+ //
+@@ -1474,6 +1555,32 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
+ 					DecalGunshot( &tr, iBulletType );
+ 				}
+ 				break;
++
++			// Archipelago: Opposing Force's, for its monsters that fire player
++			// weapons. Half-Life passes none of these here.
++			case BULLET_PLAYER_MP5:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET);
++				break;
++
++			case BULLET_PLAYER_357:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET);
++				break;
++
++			case BULLET_PLAYER_556:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg556, vecDir, &tr, DMG_BULLET);
++				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
++				DecalGunshot(&tr, iBulletType);
++				break;
++
++			case BULLET_PLAYER_762:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg762, vecDir, &tr, DMG_BULLET);
++				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
++				DecalGunshot(&tr, iBulletType);
++				break;
++
++			case BULLET_PLAYER_EAGLE:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgEagle, vecDir, &tr, DMG_BULLET);
++				break;
+ 			
+ 			case BULLET_NONE: // FIX 
+ 				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
+@@ -1564,6 +1671,54 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
+ 			case BULLET_PLAYER_357:		
+ 				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET); 
+ 				break;
++
++			// Archipelago: Opposing Force's weapons.
++			case BULLET_PLAYER_556:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg556, vecDir, &tr, DMG_BULLET);
++				break;
++
++			case BULLET_PLAYER_762:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg762, vecDir, &tr, DMG_BULLET);
++
++				if (tr.pHit && tr.pHit->v.takedamage != DAMAGE_NO)
++				{
++					EMIT_SOUND_DYN(tr.pHit, CHAN_BODY, "weapons/xbow_hitbod2.wav", VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
++
++					CBaseEntity* pHitEntity = Instance(tr.pHit);
++
++					if (pHitEntity->BloodColor() != DONT_BLEED)
++					{
++						MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, EyePosition());
++						WRITE_BYTE(TE_BLOODSTREAM);
++
++						WRITE_COORD(tr.vecEndPos.x);
++						WRITE_COORD(tr.vecEndPos.y);
++						WRITE_COORD(tr.vecEndPos.z);
++
++						const Vector direction = vecSrc - tr.vecEndPos;
++
++						WRITE_COORD(direction.x);
++						WRITE_COORD(direction.y);
++						WRITE_COORD(direction.z);
++
++						if (pHitEntity->BloodColor() == BLOOD_COLOR_RED)
++						{
++							WRITE_BYTE(70);
++						}
++						else
++						{
++							WRITE_BYTE(pHitEntity->BloodColor());
++						}
++
++						WRITE_BYTE(150);
++						MESSAGE_END();
++					}
++				}
++				break;
++
++			case BULLET_PLAYER_EAGLE:
++				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgEagle, vecDir, &tr, DMG_BULLET);
++				break;
+ 				
+ 			case BULLET_NONE: // FIX 
+ 				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
+diff --git a/dlls/decals.h b/dlls/decals.h
+index e18ab71..872c52b 100644
+--- a/dlls/decals.h
++++ b/dlls/decals.h
+@@ -62,6 +62,16 @@ enum decal_e
+ 	DECAL_SMALLSCORCH3,	// Small scorch mark
+ 	DECAL_MOMMABIRTH,	// Big momma birth splatter
+ 	DECAL_MOMMASPLAT,
++	// Archipelago: from Opposing Force, appended so no Half-Life decal renumbers.
++	DECAL_SPR_SPLT1,
++	DECAL_SPR_SPLT2,
++	DECAL_SPR_SPLT3,
++	DECAL_OFSCORCH1,
++	DECAL_OFSCORCH2,
++	DECAL_OFSCORCH3,
++	DECAL_OFSMSCORCH1,
++	DECAL_OFSMSCORCH2,
++	DECAL_OFSMSCORCH3,
+ };
+ 
+ typedef struct 
+diff --git a/dlls/effects.cpp b/dlls/effects.cpp
+index 44e3f3b..586f8d1 100644
+--- a/dlls/effects.cpp
++++ b/dlls/effects.cpp
+@@ -2266,3 +2266,235 @@ void CItemSoda::CanTouch ( CBaseEntity *pOther )
+ 	SetThink ( &CItemSoda::SUB_Remove );
+ 	pev->nextthink = gpGlobals->time;
+ }
++
++//=========================================================
++// env_warpball: Blue Shift's alien teleport effect, ported from
++// halflife-bs-updated. Here rather than with the other ports because it drives
++// a CLightning, which only this file can see.
++//=========================================================
++#define SF_WARPBALL_FIRE_ONCE		1
++#define SF_WARPBALL_DELAYED_DAMAGE	2
++
++class CWarpBall : public CBaseEntity
++{
++public:
++	void	Precache( void );
++	void	Spawn( void );
++	void	KeyValue( KeyValueData *pkvd );
++	int		Classify( void ) { return CLASS_NONE; }
++
++	void EXPORT WarpBallUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
++	void EXPORT BallThink( void );
++
++	virtual int		Save( CSave &save );
++	virtual int		Restore( CRestore &restore );
++	static	TYPEDESCRIPTION m_SaveData[];
++
++	CLightning	*m_pBeams;
++	CSprite		*m_pSprite;
++	int			m_iBeams;
++	float		m_flLastTime;
++	float		m_flMaxFrame;
++	float		m_flBeamRadius;
++	string_t	m_iszWarpTarget;
++	float		m_flWarpStart;
++	float		m_flDamageDelay;
++	float		m_flTargetDelay;
++	BOOL		m_fPlaying;
++	BOOL		m_fDamageApplied;
++	BOOL		m_fBeamsCleared;
++};
++
++LINK_ENTITY_TO_CLASS( env_warpball, CWarpBall );
++
++TYPEDESCRIPTION CWarpBall::m_SaveData[] =
++{
++	DEFINE_FIELD( CWarpBall, m_iBeams, FIELD_INTEGER ),
++	DEFINE_FIELD( CWarpBall, m_flLastTime, FIELD_FLOAT ),
++	DEFINE_FIELD( CWarpBall, m_flMaxFrame, FIELD_FLOAT ),
++	DEFINE_FIELD( CWarpBall, m_flBeamRadius, FIELD_FLOAT ),
++	DEFINE_FIELD( CWarpBall, m_iszWarpTarget, FIELD_STRING ),
++	DEFINE_FIELD( CWarpBall, m_flWarpStart, FIELD_FLOAT ),
++	DEFINE_FIELD( CWarpBall, m_flDamageDelay, FIELD_FLOAT ),
++	DEFINE_FIELD( CWarpBall, m_flTargetDelay, FIELD_FLOAT ),
++	DEFINE_FIELD( CWarpBall, m_fPlaying, FIELD_BOOLEAN ),
++	DEFINE_FIELD( CWarpBall, m_fDamageApplied, FIELD_BOOLEAN ),
++	DEFINE_FIELD( CWarpBall, m_fBeamsCleared, FIELD_BOOLEAN ),
++	DEFINE_FIELD( CWarpBall, m_pBeams, FIELD_CLASSPTR ),
++	DEFINE_FIELD( CWarpBall, m_pSprite, FIELD_CLASSPTR ),
++};
++
++IMPLEMENT_SAVERESTORE( CWarpBall, CBaseEntity );
++
++void CWarpBall::KeyValue( KeyValueData *pkvd )
++{
++	if ( FStrEq( pkvd->szKeyName, "radius" ) )
++	{
++		m_flBeamRadius = atof( pkvd->szValue );
++		pkvd->fHandled = TRUE;
++	}
++	else if ( FStrEq( pkvd->szKeyName, "warp_target" ) )
++	{
++		m_iszWarpTarget = ALLOC_STRING( pkvd->szValue );
++		pkvd->fHandled = TRUE;
++	}
++	else if ( FStrEq( pkvd->szKeyName, "damage_delay" ) )
++	{
++		m_flDamageDelay = atof( pkvd->szValue );
++		pkvd->fHandled = TRUE;
++	}
++	else
++		CBaseEntity::KeyValue( pkvd );
++}
++
++void CWarpBall::Precache( void )
++{
++	PRECACHE_MODEL( "sprites/Fexplo1.spr" );
++	PRECACHE_MODEL( "sprites/XFlare1.spr" );
++	PRECACHE_MODEL( "sprites/lgtning.spr" );
++	PRECACHE_SOUND( "debris/alien_teleport.wav" );
++}
++
++void CWarpBall::Spawn( void )
++{
++	Precache();
++
++	pev->movetype = MOVETYPE_NONE;
++	pev->solid = SOLID_NOT;
++
++	UTIL_SetOrigin( pev, pev->origin );
++	UTIL_SetSize( pev, g_vecZero, g_vecZero );
++
++	pev->rendermode = kRenderGlow;
++	pev->renderamt = 255;
++	pev->renderfx = kRenderFxNoDissipation;
++	pev->framerate = 10;
++
++	m_pSprite = CSprite::SpriteCreate( "sprites/Fexplo1.spr", pev->origin, TRUE );
++	m_pSprite->TurnOff();
++
++	SetUse( &CWarpBall::WarpBallUse );
++}
++
++void CWarpBall::WarpBallUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
++{
++	if ( m_fPlaying )
++		return;
++
++	if ( !FStringNull( m_iszWarpTarget ) )
++	{
++		edict_t *pTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING( m_iszWarpTarget ) );
++		if ( !FNullEnt( pTarget ) )
++			UTIL_SetOrigin( pev, pTarget->v.origin );
++	}
++
++	SET_MODEL( ENT( pev ), "sprites/XFlare1.spr" );
++
++	m_flMaxFrame = MODEL_FRAMES( pev->modelindex ) - 1;
++
++	pev->rendercolor = Vector( 77, 210, 130 );
++	pev->scale = 1.2;
++	pev->frame = 0;
++
++	if ( m_pSprite )
++	{
++		m_pSprite->pev->rendermode = kRenderGlow;
++		m_pSprite->pev->rendercolor = Vector( 77, 210, 130 );
++		m_pSprite->pev->renderamt = 255;
++		m_pSprite->pev->renderfx = kRenderFxNoDissipation;
++		m_pSprite->pev->scale = 1;
++		m_pSprite->pev->framerate = 10;
++		m_pSprite->TurnOn();
++	}
++
++	if ( !m_pBeams )
++	{
++		m_pBeams = GetClassPtr( (CLightning *)NULL );
++		m_pBeams->BeamInit( "sprites/lgtning.spr", 18 );
++		m_pBeams->m_iszSpriteName = MAKE_STRING( "sprites/lgtning.spr" );
++
++		m_pBeams->pev->origin = pev->origin;
++		UTIL_SetOrigin( m_pBeams->pev, pev->origin );
++
++		m_pBeams->m_restrike = -0.5;
++		m_pBeams->m_noiseAmplitude = 65;
++		m_pBeams->m_boltWidth = 18;
++		m_pBeams->m_life = 0.5;
++
++		m_pBeams->pev->rendercolor = Vector( 0, 255, 0 );
++
++		m_pBeams->pev->spawnflags |= SF_BEAM_SPARKEND | SF_BEAM_TOGGLE;
++
++		m_pBeams->m_radius = m_flBeamRadius;
++		m_pBeams->m_iszStartEntity = pev->targetname;
++
++		m_pBeams->BeamUpdateVars();
++	}
++
++	m_pBeams->pev->solid = SOLID_NOT;
++	m_pBeams->Precache();
++	m_pBeams->SetThink( &CLightning::StrikeThink );
++	m_pBeams->pev->nextthink = gpGlobals->time + 0.1;
++
++	SetThink( &CWarpBall::BallThink );
++	pev->nextthink = gpGlobals->time + 0.1;
++
++	m_flLastTime = gpGlobals->time;
++	m_fBeamsCleared = FALSE;
++	m_fPlaying = TRUE;
++
++	if ( m_flDamageDelay == 0 )
++	{
++		::RadiusDamage( pev->origin, pev, pev, 300, 48, CLASS_NONE, DMG_SHOCK );
++		m_fDamageApplied = TRUE;
++	}
++	else
++	{
++		m_fDamageApplied = FALSE;
++	}
++
++	SUB_UseTargets( this, USE_TOGGLE, 0 );
++
++	UTIL_ScreenShake( pev->origin, 4, 100, 2, 1000 );
++
++	m_flWarpStart = gpGlobals->time;
++
++	EMIT_SOUND( ENT( pev ), CHAN_WEAPON, "debris/alien_teleport.wav", VOL_NORM, ATTN_NORM );
++}
++
++void CWarpBall::BallThink( void )
++{
++	pev->frame = ( ( gpGlobals->time - m_flLastTime ) * pev->framerate ) + pev->frame;
++
++	if ( pev->frame > m_flMaxFrame )
++	{
++		SET_MODEL( ENT( pev ), "" );
++
++		SetThink( NULL );
++
++		if ( pev->spawnflags & SF_WARPBALL_FIRE_ONCE )
++			UTIL_Remove( this );
++
++		if ( m_pSprite )
++			m_pSprite->TurnOff();
++
++		m_fPlaying = FALSE;
++	}
++	else
++	{
++		if ( ( pev->spawnflags & SF_WARPBALL_DELAYED_DAMAGE ) && !m_fDamageApplied && ( gpGlobals->time - m_flWarpStart ) >= m_flDamageDelay )
++		{
++			::RadiusDamage( pev->origin, pev, pev, 300, 48, CLASS_NONE, DMG_SHOCK );
++			m_fDamageApplied = TRUE;
++		}
++
++		if ( m_pBeams && pev->frame >= ( m_flMaxFrame - 4.0 ) )
++		{
++			m_pBeams->SetThink( NULL );
++			m_pBeams->pev->nextthink = gpGlobals->time;
++		}
++
++		pev->nextthink = gpGlobals->time + 0.1;
++		m_flLastTime = gpGlobals->time;
++	}
++}
 diff --git a/dlls/game.cpp b/dlls/game.cpp
-index 6f2db09..5c9998e 100644
+index 6f2db09..d129c62 100644
 --- a/dlls/game.cpp
 +++ b/dlls/game.cpp
 @@ -15,6 +15,7 @@
@@ -72,18 +1566,31 @@ index 6f2db09..5c9998e 100644
  #include "game.h"
  
  cvar_t	displaysoundlist = {"displaysoundlist","0"};
-@@ -459,6 +460,9 @@ cvar_t sv_busters = { "sv_busters", "0" };
+@@ -459,6 +460,11 @@ cvar_t sv_busters = { "sv_busters", "0" };
  // This gets called one time when the game is initialied
  void GameDLLInit( void )
  {
 +	// Archipelago: the ap_* console commands, once for the process.
 +	ap::RegisterCommands();
++	// Archipelago: OF/BS content redirects, on the engine function table.
++	ap::InstallContentHooks();
 +
  	// Register cvars here:
  
  	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
+@@ -895,6 +901,10 @@ void GameDLLInit( void )
+ 
+ 	CVAR_REGISTER ( &sv_pushable_fixed_tick_fudge );
+ 
++	// Archipelago: Opposing Force's skill cvars, and its values after Half-Life's.
++	ap::RegisterOpposingForceSkill();
++
+ 	SERVER_COMMAND( "exec skill.cfg\n" );
++	SERVER_COMMAND( "exec skillopfor.cfg\n" );
+ }
+ 
 diff --git a/dlls/gamerules.cpp b/dlls/gamerules.cpp
-index 3fab62a..edf4f60 100644
+index 3fab62a..ee98b7e 100644
 --- a/dlls/gamerules.cpp
 +++ b/dlls/gamerules.cpp
 @@ -19,6 +19,7 @@
@@ -106,8 +1613,734 @@ index 3fab62a..edf4f60 100644
  	// only living players can have items
  	if ( pPlayer->pev->deadflag != DEAD_NO )
  		return FALSE;
+@@ -303,6 +309,9 @@ void CGameRules::RefreshSkillData ( void )
+ 	gSkillData.plrStomach = GetSkillCvar( "sk_player_stomach" );
+ 	gSkillData.plrLeg = GetSkillCvar( "sk_player_leg" );
+ 	gSkillData.plrArm = GetSkillCvar( "sk_player_arm" );
++
++	// Archipelago: Opposing Force's monsters and weapons.
++	ap::RefreshOpposingForceSkill();
+ }
+ 
+ //=========================================================
+diff --git a/dlls/genericmonster.cpp b/dlls/genericmonster.cpp
+index bbf954b..dc06c46 100644
+--- a/dlls/genericmonster.cpp
++++ b/dlls/genericmonster.cpp
+@@ -20,9 +20,15 @@
+ #include	"cbase.h"
+ #include	"monsters.h"
+ #include	"schedule.h"
++#include	"ap_main.h"
+  
+ // For holograms, make them not solid so the player can walk through them
+ #define	SF_GENERICMONSTER_NOTSOLID					4 
++// Blue Shift: turns its head toward whoever it is scripted to talk to. The flag
++// is set on Opposing Force maps too, where it did nothing, so it only counts on
++// Blue Shift maps. The head state is not saved, keeping saves as they were; a
++// load just recentres the head.
++#define	SF_GENERICMONSTER_CONTROLLER				8
+ 
+ //=========================================================
+ // Monster's Anim Events Go Here
+@@ -37,6 +43,15 @@ public:
+ 	int  Classify ( void );
+ 	void HandleAnimEvent( MonsterEvent_t *pEvent );
+ 	int ISoundMask ( void );
++
++	void PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
++	void MonsterThink( void );
++	void IdleHeadTurn( const Vector &vecFriend );
++
++	float	m_talkTime;
++	EHANDLE	m_hTalkTarget;
++	float	m_flIdealYaw;
++	float	m_flCurrentYaw;
+ };
+ LINK_ENTITY_TO_CLASS( monster_generic, CGenericMonster );
+ 
+@@ -125,6 +140,66 @@ void CGenericMonster :: Spawn()
+ 		pev->solid = SOLID_NOT;
+ 		pev->takedamage = DAMAGE_NO;
+ 	}
++
++	if ( ( pev->spawnflags & SF_GENERICMONSTER_CONTROLLER ) && ap::OnBlueShift() )
++		m_afCapability = bits_CAP_TURN_HEAD;
++
++	m_flCurrentYaw = 0;
++	m_flIdealYaw = 0;
++}
++
++void CGenericMonster :: PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
++{
++	CBaseMonster::PlayScriptedSentence( pszSentence, duration, volume, attenuation, bConcurrent, pListener );
++	m_talkTime = gpGlobals->time + duration;
++	m_hTalkTarget = pListener;
++}
++
++void CGenericMonster :: MonsterThink( void )
++{
++	if ( m_afCapability & bits_CAP_TURN_HEAD )
++	{
++		if ( m_hTalkTarget != NULL )
++		{
++			if ( gpGlobals->time > m_talkTime )
++			{
++				m_flIdealYaw = 0;
++				m_hTalkTarget = NULL;
++			}
++			else
++			{
++				IdleHeadTurn( m_hTalkTarget->pev->origin );
++			}
++		}
++
++		if ( m_flCurrentYaw != m_flIdealYaw )
++		{
++			if ( m_flCurrentYaw <= m_flIdealYaw )
++				m_flCurrentYaw += min<float>( 20.0, m_flIdealYaw - m_flCurrentYaw );
++			else
++				m_flCurrentYaw -= min<float>( 20.0, m_flCurrentYaw - m_flIdealYaw );
++
++			SetBoneController( 0, m_flCurrentYaw );
++		}
++	}
++
++	CBaseMonster::MonsterThink();
++}
++
++// turn head towards supplied origin
++void CGenericMonster :: IdleHeadTurn( const Vector &vecFriend )
++{
++	if ( m_afCapability & bits_CAP_TURN_HEAD )
++	{
++		float yaw = VecToYaw( vecFriend - pev->origin ) - pev->angles.y;
++
++		if ( yaw > 180 )
++			yaw -= 360;
++		if ( yaw < -180 )
++			yaw += 360;
++
++		m_flIdealYaw = yaw;
++	}
+ }
+ 
+ //=========================================================
+diff --git a/dlls/h_cine.cpp b/dlls/h_cine.cpp
+index d606bd8..ee4ad55 100644
+--- a/dlls/h_cine.cpp
++++ b/dlls/h_cine.cpp
+@@ -169,6 +169,8 @@ void CLegacyCineMonster :: CineThink( void )
+ 
+ 	pev->nextthink = gpGlobals->time + 1.0;
+ 
++	UpdateShockEffect();
++
+ 	if (pev->spawnflags != 0 && m_fSequenceFinished)
+ 	{
+ 		Die();
+diff --git a/dlls/monsters.cpp b/dlls/monsters.cpp
+index 19e0e23..706d9a5 100644
+--- a/dlls/monsters.cpp
++++ b/dlls/monsters.cpp
+@@ -525,6 +525,8 @@ void CBaseMonster :: MonsterThink ( void )
+ 
+ 	RunAI();
+ 
++	UpdateShockEffect();
++
+ 	float flInterval = StudioFrameAdvance( ); // animate
+ // start or end a fidget
+ // This needs a better home -- switching animations over time should be encapsulated on a per-activity basis
+@@ -2198,22 +2200,29 @@ int CBaseMonster::TaskIsRunning( void )
+ //=========================================================
+ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
+ {
+-	static int iEnemy[14][14] =
+-	{			 //   NONE	 MACH	 PLYR	 HPASS	 HMIL	 AMIL	 APASS	 AMONST	APREY	 APRED	 INSECT	PLRALY	PBWPN	ABWPN
+-	/*NONE*/		{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
+-	/*MACHINE*/		{ R_NO	,R_NO	,R_DL	,R_DL	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_DL,	R_DL	},
+-	/*PLAYER*/		{ R_NO	,R_DL	,R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_DL,	R_DL	},
+-	/*HUMANPASSIVE*/{ R_NO	,R_NO	,R_AL	,R_AL	,R_HT	,R_FR	,R_NO	,R_HT	,R_DL	,R_FR	,R_NO	,R_AL,	R_NO,	R_NO	},
+-	/*HUMANMILITAR*/{ R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_HT	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_HT,	R_NO,	R_NO	},
+-	/*ALIENMILITAR*/{ R_NO	,R_DL	,R_HT	,R_DL	,R_HT	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
+-	/*ALIENPASSIVE*/{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
+-	/*ALIENMONSTER*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
+-	/*ALIENPREY   */{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
+-	/*ALIENPREDATO*/{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
+-	/*INSECT*/		{ R_FR	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR,	R_NO,	R_NO	},
+-	/*PLAYERALLY*/	{ R_NO	,R_DL	,R_AL	,R_AL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_NO,	R_NO	},
+-	/*PBIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_NO,	R_DL	},
+-	/*ABIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_AL	,R_NO	,R_DL	,R_DL	,R_NO	,R_NO	,R_DL,	R_DL,	R_NO	}
++	// Archipelago: Half-Life's table, plus an empty row and column for
++	// CLASS_VEHICLE (14), which Half-Life indexed past the end of, and Opposing
++	// Force's two classes with its relationships. Half-Life's own entries are
++	// unchanged.
++	static int iEnemy[17][17] =
++	{			 //   NONE	 MACH	 PLYR	 HPASS	 HMIL	 AMIL	 APASS	 AMONST	APREY	 APRED	 INSECT	PLRALY	PBWPN	ABWPN	VEHCL	HMILA	RACEX
++	/*NONE        */{ R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO	},
++	/*MACHINE     */{ R_NO,	R_NO,	R_DL,	R_DL,	R_NO,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_DL,	R_DL,	R_DL,	R_NO,	R_DL,	R_DL	},
++	/*PLAYER      */{ R_NO,	R_DL,	R_NO,	R_NO,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_NO,	R_DL,	R_DL,	R_NO,	R_NO,	R_DL	},
++	/*HUMANPASSIVE*/{ R_NO,	R_NO,	R_AL,	R_AL,	R_HT,	R_FR,	R_NO,	R_HT,	R_DL,	R_FR,	R_NO,	R_AL,	R_NO,	R_NO,	R_NO,	R_DL,	R_HT	},
++	/*HUMANMILITAR*/{ R_NO,	R_NO,	R_HT,	R_DL,	R_NO,	R_HT,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_HT,	R_NO,	R_NO,	R_NO,	R_HT,	R_HT	},
++	/*ALIENMILITAR*/{ R_NO,	R_DL,	R_HT,	R_DL,	R_HT,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO	},
++	/*ALIENPASSIVE*/{ R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO	},
++	/*ALIENMONSTER*/{ R_NO,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO	},
++	/*ALIENPREY   */{ R_NO,	R_NO,	R_DL,	R_DL,	R_DL,	R_NO,	R_NO,	R_NO,	R_NO,	R_FR,	R_NO,	R_DL,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO	},
++	/*ALIENPREDATO*/{ R_NO,	R_NO,	R_DL,	R_DL,	R_DL,	R_NO,	R_NO,	R_NO,	R_HT,	R_DL,	R_NO,	R_DL,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO	},
++	/*INSECT      */{ R_FR,	R_FR,	R_FR,	R_FR,	R_FR,	R_NO,	R_FR,	R_FR,	R_FR,	R_FR,	R_NO,	R_FR,	R_NO,	R_NO,	R_NO,	R_FR,	R_NO	},
++	/*PLAYERALLY  */{ R_NO,	R_DL,	R_AL,	R_AL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_DL,	R_DL	},
++	/*PBIOWEAPON  */{ R_NO,	R_NO,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_DL,	R_NO,	R_DL,	R_NO,	R_DL,	R_DL	},
++	/*ABIOWEAPON  */{ R_NO,	R_NO,	R_DL,	R_DL,	R_DL,	R_AL,	R_NO,	R_DL,	R_DL,	R_NO,	R_NO,	R_DL,	R_DL,	R_NO,	R_NO,	R_DL,	R_DL	},
++	/*VEHICLE     */{ R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO	},
++	/*HUMMILALLY  */{ R_NO,	R_DL,	R_AL,	R_HT,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_DL,	R_NO,	R_DL,	R_NO,	R_NO,	R_NO,	R_AL,	R_DL	},
++	/*RACEX       */{ R_NO,	R_DL,	R_HT,	R_DL,	R_HT,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_NO,	R_DL,	R_NO,	R_DL,	R_NO,	R_DL,	R_NO	}
+ 	};
+ 
+ 	return iEnemy[ Classify() ][ pTarget->Classify() ];
+@@ -2663,6 +2672,19 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+ 		EMIT_SOUND( edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE );
+ 		break;
+ 
++	// Archipelago: from Opposing Force.
++	case SCRIPT_EVENT_SOUND_VOICE_BODY:
++		EMIT_SOUND(edict(), CHAN_BODY, pEvent->options, VOL_NORM, ATTN_NORM);
++		break;
++
++	case SCRIPT_EVENT_SOUND_VOICE_VOICE:
++		EMIT_SOUND(edict(), CHAN_VOICE, pEvent->options, VOL_NORM, ATTN_NORM);
++		break;
++
++	case SCRIPT_EVENT_SOUND_VOICE_WEAPON:
++		EMIT_SOUND(edict(), CHAN_WEAPON, pEvent->options, VOL_NORM, ATTN_NORM);
++		break;
++
+ 	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
+ 		if (RANDOM_LONG(0,2) == 0)
+ 			break;
+@@ -3434,3 +3456,59 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
+ 
+ 	return FALSE;
+ }
++
++// Archipelago: Opposing Force's shock rifle glow.
++void CBaseMonster::AddShockEffect(float r, float g, float b, float size, float flShockDuration)
++{
++	if (pev->deadflag == DEAD_NO)
++	{
++		if (m_fShockEffect)
++		{
++			m_flShockDuration += flShockDuration;
++		}
++		else
++		{
++			m_iOldRenderMode = pev->rendermode;
++			m_iOldRenderFX = pev->renderfx;
++			m_OldRenderColor.x = pev->rendercolor.x;
++			m_OldRenderColor.y = pev->rendercolor.y;
++			m_OldRenderColor.z = pev->rendercolor.z;
++			m_flOldRenderAmt = pev->renderamt;
++
++			pev->rendermode = kRenderNormal;
++
++			pev->renderfx = kRenderFxGlowShell;
++			pev->rendercolor.x = r;
++			pev->rendercolor.y = g;
++			pev->rendercolor.z = b;
++			pev->renderamt = size;
++
++			m_fShockEffect = true;
++			m_flShockDuration = flShockDuration;
++			m_flShockTime = gpGlobals->time;
++		}
++	}
++}
++
++void CBaseMonster::UpdateShockEffect()
++{
++	if (m_fShockEffect && (gpGlobals->time - m_flShockTime > m_flShockDuration))
++	{
++		ClearShockEffect();
++	}
++}
++
++void CBaseMonster::ClearShockEffect()
++{
++	if (m_fShockEffect)
++	{
++		pev->rendermode = m_iOldRenderMode;
++		pev->renderfx = m_iOldRenderFX;
++		pev->rendercolor.x = m_OldRenderColor.x;
++		pev->rendercolor.y = m_OldRenderColor.y;
++		pev->rendercolor.z = m_OldRenderColor.z;
++		pev->renderamt = m_flOldRenderAmt;
++		m_flShockDuration = 0;
++		m_fShockEffect = false;
++	}
++}
+diff --git a/dlls/monsters.h b/dlls/monsters.h
+index 591ea52..3dc2880 100644
+--- a/dlls/monsters.h
++++ b/dlls/monsters.h
+@@ -141,6 +141,29 @@ enum
+ //
+ // A gib is a chunk of a body, or a piece of wood/metal/rocks/etc.
+ //
++// Archipelago: from Opposing Force.
++struct GibLimit
++{
++	const int MaxGibs;
++};
++
++/**
++*	@brief Data used to spawn gibs
++*/
++struct GibData
++{
++	const char* const ModelName;
++	const int FirstSubModel;
++	const int SubModelCount;
++
++	/**
++	*	@brief Optional list of limits to apply to each submodel
++	*	Must be SubModelCount elements large
++	*	If used, instead of randomly selecting a submodel each submodel is used until the requested number of gibs have been spawned
++	*/
++	const GibLimit* const Limits = nullptr;
++};
++
+ class CGib : public CBaseEntity
+ {
+ public:
+@@ -153,6 +176,7 @@ public:
+ 	virtual int	ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; }
+ 	static	void SpawnHeadGib( entvars_t *pevVictim );
+ 	static	void SpawnRandomGibs( entvars_t *pevVictim, int cGibs, int human );
++	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const GibData& gibData);
+ 	static  void SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs );
+ 
+ 	int		m_bloodColor;
+diff --git a/dlls/plats.cpp b/dlls/plats.cpp
+index eacfd2c..465ec32 100644
+--- a/dlls/plats.cpp
++++ b/dlls/plats.cpp
+@@ -929,6 +929,414 @@ void CFuncTrain::OverrideReset( void )
+ 
+ 
+ 
++// ap_port: Opposing Force, from halflife-op4-updated.
++/**
++*	@brief Sprite that can follow a path like a train
++*/
++class CSpriteTrain : public CBasePlatTrain
++{
++public:
++	void Spawn() override;
++	void Precache() override;
++	void Activate() override;
++	void OverrideReset() override;
++
++	void Blocked(CBaseEntity * pOther) override;
++	void Use(CBaseEntity * pActivator, CBaseEntity * pCaller, USE_TYPE useType, float value) override;
++
++
++	void EXPORT Wait();
++	void EXPORT Next();
++
++	void Think() override;
++
++	void Animate(float frames);
++
++	void LinearMove(const Vector& vecDest, float flSpeed);
++
++	int Save(CSave & save) override;
++	int Restore(CRestore & restore) override;
++	static TYPEDESCRIPTION m_SaveData[];
++
++	entvars_t* m_pevCurrentTarget;
++	int m_sounds;
++	bool m_activated;
++
++	float m_maxFrame;
++	float m_lastTime;
++	bool m_waiting;
++	bool m_nexting;
++	float m_nextTime;
++	float m_waitTime;
++	bool m_stopSprite;
++};
++
++LINK_ENTITY_TO_CLASS(env_spritetrain, CSpriteTrain);
++TYPEDESCRIPTION CSpriteTrain::m_SaveData[] =
++	{
++		DEFINE_FIELD(CSpriteTrain, m_sounds, FIELD_INTEGER),
++		DEFINE_FIELD(CSpriteTrain, m_pevCurrentTarget, FIELD_EVARS),
++		DEFINE_FIELD(CSpriteTrain, m_activated, FIELD_BOOLEAN),
++		DEFINE_FIELD(CSpriteTrain, m_maxFrame, FIELD_FLOAT),
++		DEFINE_FIELD(CSpriteTrain, m_lastTime, FIELD_TIME),
++		DEFINE_FIELD(CSpriteTrain, m_waiting, FIELD_BOOLEAN),
++		DEFINE_FIELD(CSpriteTrain, m_nexting, FIELD_BOOLEAN),
++		DEFINE_FIELD(CSpriteTrain, m_nextTime, FIELD_FLOAT),
++		DEFINE_FIELD(CSpriteTrain, m_waitTime, FIELD_FLOAT),
++};
++
++IMPLEMENT_SAVERESTORE(CSpriteTrain, CBasePlatTrain);
++
++void CSpriteTrain::Animate(float frames)
++{
++	if (m_maxFrame > 1)
++	{
++		if (pev->framerate == 0)
++		{
++			pev->framerate = 10;
++		}
++
++		pev->frame = fmod(pev->frame + frames, m_maxFrame);
++	}
++}
++
++void CSpriteTrain::LinearMove(const Vector& vecDest, float flSpeed)
++{
++	m_vecFinalDest = vecDest;
++
++	if (vecDest == pev->origin)
++	{
++		Wait();
++		return;
++	}
++
++	// set destdelta to the vector needed to move
++	Vector vecDestDelta = vecDest - pev->origin;
++
++	// divide vector length by speed to get time to reach dest
++	float flTravelTime = vecDestDelta.Length() / flSpeed;
++
++	// set nextthink to trigger a call to LinearMoveDone when dest is reached
++	m_waiting = true;
++	m_stopSprite = true;
++	m_waitTime = pev->ltime + flTravelTime;
++
++	// scale the destdelta vector by the time spent traveling to get velocity
++	pev->velocity = vecDestDelta / flTravelTime;
++}
++
++
++void CSpriteTrain::Blocked(CBaseEntity * pOther)
++
++{
++	if (pev->ltime < m_flActivateFinished)
++		return;
++
++	m_flActivateFinished = pev->ltime + 0.5;
++
++	pOther->TakeDamage(pev, pev, pev->dmg, DMG_CRUSH);
++}
++
++
++void CSpriteTrain::Use(CBaseEntity * pActivator, CBaseEntity * pCaller, USE_TYPE useType, float value)
++{
++	if ((pev->spawnflags & SF_TRAIN_WAIT_RETRIGGER) != 0)
++	{
++		// Move toward my target
++		pev->spawnflags &= ~SF_TRAIN_WAIT_RETRIGGER;
++		Next();
++	}
++	else
++	{
++		pev->spawnflags |= SF_TRAIN_WAIT_RETRIGGER;
++		// Pop back to last target if it's available
++		if (pev->enemy)
++			pev->target = pev->enemy->v.targetname;
++
++		pev->velocity = g_vecZero;
++		if (!FStringNull(pev->noiseStopMoving))
++			EMIT_SOUND(ENT(pev), CHAN_VOICE, (char*)STRING(pev->noiseStopMoving), m_volume, ATTN_NORM);
++
++		m_nexting = true;
++		m_nextTime = pev->ltime + m_flWait;
++	}
++}
++
++
++void CSpriteTrain::Wait()
++{
++	// Fire the pass target if there is one
++	if (!FStringNull(m_pevCurrentTarget->message))
++	{
++		FireTargets(STRING(m_pevCurrentTarget->message), this, this, USE_TOGGLE, 0);
++		if (FBitSet(m_pevCurrentTarget->spawnflags, SF_CORNER_FIREONCE))
++			m_pevCurrentTarget->message = 0;
++	}
++
++	// need pointer to LAST target.
++	if (FBitSet(m_pevCurrentTarget->spawnflags, SF_TRAIN_WAIT_RETRIGGER) || (pev->spawnflags & SF_TRAIN_WAIT_RETRIGGER) != 0)
++	{
++		pev->spawnflags |= SF_TRAIN_WAIT_RETRIGGER;
++		// clear the sound channel.
++		if (!FStringNull(pev->noiseMovement))
++			STOP_SOUND(edict(), CHAN_STATIC, (char*)STRING(pev->noiseMovement));
++		if (!FStringNull(pev->noiseStopMoving))
++			EMIT_SOUND(ENT(pev), CHAN_VOICE, (char*)STRING(pev->noiseStopMoving), m_volume, ATTN_NORM);
++		return;
++	}
++
++	// ALERT ( at_console, "%f\n", m_flWait );
++
++	if (m_flWait != 0)
++	{ // -1 wait will wait forever!
++		pev->nextthink = pev->ltime + m_flWait;
++		if (!FStringNull(pev->noiseMovement))
++			STOP_SOUND(edict(), CHAN_STATIC, (char*)STRING(pev->noiseMovement));
++		if (!FStringNull(pev->noiseStopMoving))
++			EMIT_SOUND(ENT(pev), CHAN_VOICE, (char*)STRING(pev->noiseStopMoving), m_volume, ATTN_NORM);
++
++		m_nexting = true;
++		m_nextTime = pev->ltime + m_flWait;
++	}
++	else
++	{
++		Next(); // do it RIGHT now!
++	}
++}
++
++
++//
++// Train next - path corner needs to change to next target
++//
++void CSpriteTrain::Next()
++{
++	CBaseEntity* pTarg;
++
++
++	// now find our next target
++	pTarg = GetNextTarget();
++
++	if (!pTarg)
++	{
++		if (!FStringNull(pev->noiseMovement))
++			STOP_SOUND(edict(), CHAN_STATIC, (char*)STRING(pev->noiseMovement));
++		// Play stop sound
++		if (!FStringNull(pev->noiseStopMoving))
++			EMIT_SOUND(ENT(pev), CHAN_VOICE, (char*)STRING(pev->noiseStopMoving), m_volume, ATTN_NORM);
++		return;
++	}
++
++	// Save last target in case we need to find it again
++	pev->message = pev->target;
++
++	pev->target = pTarg->pev->target;
++	m_flWait = pTarg->GetDelay();
++
++	if (m_pevCurrentTarget && m_pevCurrentTarget->speed != 0)
++	{ // don't copy speed from target if it is 0 (uninitialized)
++		pev->speed = m_pevCurrentTarget->speed;
++		ALERT(at_aiconsole, "Train %s speed to %4.2f\n", STRING(pev->targetname), pev->speed);
++	}
++	m_pevCurrentTarget = pTarg->pev; // keep track of this since path corners change our target for us.
++
++	pev->enemy = pTarg->edict(); //hack
++
++	if (FBitSet(m_pevCurrentTarget->spawnflags, SF_CORNER_TELEPORT))
++	{
++		// Path corner has indicated a teleport to the next corner.
++		SetBits(pev->effects, EF_NOINTERP);
++		UTIL_SetOrigin(pev, pTarg->pev->origin - (pev->mins + pev->maxs) * 0.5);
++		Wait(); // Get on with doing the next path corner.
++	}
++	else
++	{
++		// Normal linear move.
++
++		// CHANGED this from CHAN_VOICE to CHAN_STATIC around OEM beta time because trains should
++		// use CHAN_STATIC for their movement sounds to prevent sound field problems.
++		// this is not a hack or temporary fix, this is how things should be. (sjb).
++		if (!FStringNull(pev->noiseMovement))
++			STOP_SOUND(edict(), CHAN_STATIC, (char*)STRING(pev->noiseMovement));
++		if (!FStringNull(pev->noiseMovement))
++			EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMovement), m_volume, ATTN_NORM);
++		ClearBits(pev->effects, EF_NOINTERP);
++
++		LinearMove(pTarg->pev->origin - (pev->mins + pev->maxs) * 0.5, pev->speed);
++	}
++}
++
++
++void CSpriteTrain::Activate()
++{
++	// Not yet active, so teleport to first target
++	if (!m_activated)
++	{
++		m_activated = true;
++		entvars_t* pevTarg = VARS(FIND_ENTITY_BY_TARGETNAME(NULL, STRING(pev->target)));
++
++		pev->target = pevTarg->target;
++		m_pevCurrentTarget = pevTarg; // keep track of this since path corners change our target for us.
++
++		UTIL_SetOrigin(pev, pevTarg->origin - (pev->mins + pev->maxs) * 0.5);
++
++		if (FStringNull(pev->targetname))
++		{ // not triggered, so start immediately
++			m_nexting = true;
++			pev->nextthink = pev->ltime + 0.1;
++			g_engfuncs.pfnAlertMessage(at_console, "time=%f, nexttime=%f\n", pev->ltime, m_nextTime);
++		}
++		else
++			pev->spawnflags |= SF_TRAIN_WAIT_RETRIGGER;
++	}
++}
++
++/*QUAKED func_train (0 .5 .8) ?
++Trains are moving platforms that players can ride.
++The targets origin specifies the min point of the train at each corner.
++The train spawns at the first target it is pointing at.
++If the train is the target of a button or trigger, it will not begin moving until activated.
++speed	default 100
++dmg		default	2
++sounds
++1) ratchet metal
++*/
++
++void CSpriteTrain::Spawn()
++{
++	Precache();
++	if (pev->speed == 0)
++		pev->speed = 100;
++
++	pev->rendermode = kRenderTransAdd;
++	pev->renderamt = 255;
++
++	if (FStringNull(pev->target))
++		ALERT(at_console, "FuncTrain with no target");
++
++	if (pev->dmg == 0)
++		pev->dmg = 2;
++
++	pev->movetype = MOVETYPE_PUSH;
++
++	pev->solid = SOLID_NOT;
++
++	SET_MODEL(ENT(pev), STRING(pev->model));
++	UTIL_SetSize(pev, pev->mins, pev->maxs);
++	UTIL_SetOrigin(pev, pev->origin);
++
++	m_activated = false;
++
++	if (m_volume == 0)
++		m_volume = 0.85;
++
++	m_maxFrame = MODEL_FRAMES(pev->modelindex) - 1;
++	m_lastTime = pev->ltime;
++	pev->nextthink = pev->ltime + 0.1;
++	m_waiting = false;
++	m_nexting = false;
++	m_waitTime = pev->ltime;
++	m_nextTime = pev->ltime;
++	m_stopSprite = false;
++}
++
++
++void CSpriteTrain::Precache()
++{
++	PRECACHE_MODEL(const_cast<char*>(STRING(pev->model)));
++
++	CBasePlatTrain::Precache();
++
++#if 0 // obsolete
++	// otherwise use preset sound
++	switch( m_sounds )
++	{
++	case 0:
++		pev->noise = 0;
++		pev->noise1 = 0;
++		break;
++
++	case 1:
++		PRECACHE_SOUND( "plats/train2.wav" );
++		PRECACHE_SOUND( "plats/train1.wav" );
++		pev->noise = MAKE_STRING( "plats/train2.wav" );
++		pev->noise1 = MAKE_STRING( "plats/train1.wav" );
++		break;
++
++	case 2:
++		PRECACHE_SOUND( "plats/platmove1.wav" );
++		PRECACHE_SOUND( "plats/platstop1.wav" );
++		pev->noise = MAKE_STRING( "plats/platstop1.wav" );
++		pev->noise1 = MAKE_STRING( "plats/platmove1.wav" );
++		break;
++	}
++#endif
++}
++
++
++void CSpriteTrain::OverrideReset()
++{
++	CBaseEntity* pTarg;
++
++	// Are we moving?
++	if (pev->velocity != g_vecZero && pev->nextthink != 0)
++	{
++		pev->target = pev->message;
++		// now find our next target
++		pTarg = GetNextTarget();
++		if (!pTarg)
++		{
++			pev->nextthink = 0.1;
++			pev->velocity = g_vecZero;
++		}
++		else // Keep moving for 0.1 secs, then find path_corner again and restart
++		{
++			m_nextTime = pev->ltime + 0.1;
++			m_nexting = true;
++		}
++	}
++}
++
++void CSpriteTrain::Think()
++{
++	Animate(pev->framerate * (pev->ltime - m_lastTime));
++
++	if (m_flWait != -1)
++	{
++		if (m_waiting && pev->ltime >= m_waitTime)
++		{
++			if (m_stopSprite)
++			{
++				pev->velocity = g_vecZero;
++				m_stopSprite = false;
++			}
++
++			m_waiting = false;
++
++			Wait();
++		}
++	}
++
++	if (m_flWait != -1)
++	{
++		if (m_nexting && pev->ltime >= m_nextTime)
++		{
++			if (m_stopSprite)
++			{
++				pev->velocity = g_vecZero;
++				m_stopSprite = false;
++			}
++
++			m_nexting = false;
++
++			Next();
++		}
++	}
++
++	pev->nextthink = pev->ltime + 0.1;
++	m_lastTime = pev->ltime;
++}
++
++
+ // ---------------------------------------------------------------------
+ //
+ // Track Train
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..2805091 100644
+index 85b67c4..4d22a38 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -118,7 +2351,28 @@ index 85b67c4..2805091 100644
  #include "player.h"
  #include "trains.h"
  #include "nodes.h"
-@@ -928,6 +929,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
+@@ -146,6 +147,11 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
+ 	//DEFINE_ARRAY( CBasePlayer, m_rgAmmoLast, FIELD_INTEGER, MAX_AMMO_SLOTS ), // Don't need to restore
+ 	//DEFINE_FIELD( CBasePlayer, m_fOnTarget, FIELD_BOOLEAN ), // Don't need to restore
+ 	//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't need to restore
++	DEFINE_FIELD( CBasePlayer, m_pRope, FIELD_CLASSPTR ), // Opposing Force; absent from older saves
++	DEFINE_FIELD( CBasePlayer, m_flLastClimbTime, FIELD_TIME ),
++	DEFINE_FIELD( CBasePlayer, m_bIsClimbing, FIELD_BOOLEAN ),
++	DEFINE_FIELD( CBasePlayer, m_DisplacerReturn, FIELD_POSITION_VECTOR ),
++	DEFINE_FIELD( CBasePlayer, m_DisplacerSndRoomtype, FIELD_FLOAT ),
+ 	
+ };	
+ 
+@@ -203,7 +209,7 @@ void LinkUserMessages( void )
+ 	gmsgSelAmmo = REG_USER_MSG("SelAmmo", sizeof(SelAmmo));
+ 	gmsgCurWeapon = REG_USER_MSG("CurWeapon", 3);
+ 	gmsgGeigerRange = REG_USER_MSG("Geiger", 1);
+-	gmsgFlashlight = REG_USER_MSG("Flashlight", 2);
++	gmsgFlashlight = REG_USER_MSG("Flashlight", 3);
+ 	gmsgFlashBattery = REG_USER_MSG("FlashBat", 1);
+ 	gmsgHealth = REG_USER_MSG( "Health", 1 );
+ 	gmsgDamage = REG_USER_MSG( "Damage", 12 );
+@@ -928,6 +934,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
  {
  	CSound *pSound;
  
@@ -128,7 +2382,35 @@ index 85b67c4..2805091 100644
  	// Holster weapon immediately, to allow it to cleanup
  	if ( m_pActiveItem )
  		m_pActiveItem->Holster( );
-@@ -1666,6 +1670,10 @@ void CBasePlayer::PlayerUse ( void )
+@@ -1075,6 +1084,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
+ 			m_IdealActivity = ACT_WALK;
+ 		}
+ 		break;
++
++	case PLAYER_GRAPPLE: // Opposing Force
++		if ( FBitSet( pev->flags, FL_ONGROUND ) )
++		{
++			if ( pev->waterlevel > 1 )
++				m_IdealActivity = speed == 0 ? ACT_HOVER : ACT_SWIM;
++			else
++				m_IdealActivity = ACT_WALK;
++		}
++		else
++			m_IdealActivity = speed == 0 ? ACT_HOVER : ACT_SWIM;
++		break;
+ 	}
+ 
+ 	switch (m_IdealActivity)
+@@ -1204,6 +1225,8 @@ void CBasePlayer::TabulateAmmo()
+ 	ammo_rockets = AmmoInventory( GetAmmoIndex( "rockets" ) );
+ 	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
+ 	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
++	ammo_spores = AmmoInventory( GetAmmoIndex( "spores" ) ); // Opposing Force
++	ammo_762 = AmmoInventory( GetAmmoIndex( "762" ) );
+ }
+ 
+ 
+@@ -1666,6 +1689,10 @@ void CBasePlayer::PlayerUse ( void )
  		if ( m_afButtonPressed & IN_USE )
  			EMIT_SOUND( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM);
  
@@ -139,7 +2421,17 @@ index 85b67c4..2805091 100644
  		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
  			 ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
  		{
-@@ -3085,6 +3093,12 @@ void CBasePlayer::Spawn( void )
+@@ -2001,6 +2028,9 @@ void CBasePlayer::PreThink(void)
+ 	else 
+ 		pev->flags &= ~FL_ONTRAIN;
+ 
++	if ( RopeThink() )
++		return;
++
+ 	// Train speed control
+ 	if ( m_afPhysicsFlags & PFLAG_ONTRAIN )
+ 	{
+@@ -3085,6 +3115,12 @@ void CBasePlayer::Spawn( void )
  	m_flNextChatTime = gpGlobals->time;
  
  	g_pGameRules->PlayerSpawn( this );
@@ -152,7 +2444,73 @@ index 85b67c4..2805091 100644
  }
  
  
-@@ -5015,6 +5029,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+@@ -3507,7 +3543,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
+ 
+ BOOL CBasePlayer :: FlashlightIsOn( void )
+ {
+-	return FBitSet(pev->effects, EF_DIMLIGHT);
++	return FBitSet(pev->effects, EF_DIMLIGHT | EF_BRIGHTLIGHT);
+ }
+ 
+ 
+@@ -3521,10 +3557,12 @@ void CBasePlayer :: FlashlightTurnOn( void )
+ 	if ( (pev->weapons & (1<<WEAPON_SUIT)) )
+ 	{
+ 		EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM );
+-		SetBits(pev->effects, EF_DIMLIGHT);
++		// AP: Opposing Force's flashlight is night vision
++		SetBits(pev->effects, ap::OnOpposingForce() ? EF_BRIGHTLIGHT : EF_DIMLIGHT);
+ 		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
+ 		WRITE_BYTE(1);
+ 		WRITE_BYTE(m_iFlashBattery);
++		WRITE_BYTE(ap::OnOpposingForce() ? 1 : 0);
+ 		MESSAGE_END();
+ 
+ 		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
+@@ -3536,10 +3574,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
+ void CBasePlayer :: FlashlightTurnOff( void )
+ {
+ 	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
+-    ClearBits(pev->effects, EF_DIMLIGHT);
++    ClearBits(pev->effects, EF_DIMLIGHT | EF_BRIGHTLIGHT);
+ 	MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
+ 	WRITE_BYTE(0);
+ 	WRITE_BYTE(m_iFlashBattery);
++	WRITE_BYTE(ap::OnOpposingForce() ? 1 : 0);
+ 	MESSAGE_END();
+ 
+ 	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
+@@ -4129,6 +4168,7 @@ void CBasePlayer :: UpdateClientData( void )
+ 		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
+ 			WRITE_BYTE( FlashlightIsOn() ? 1 : 0 );
+ 			WRITE_BYTE( m_iFlashBattery );
++			WRITE_BYTE( ap::OnOpposingForce() ? 1 : 0 );
+ 		MESSAGE_END();
+ 	}
+ 
+@@ -4425,6 +4465,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
+ // set crosshair position to point to enemey
+ //=========================================================
+ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
++{
++	return GetAutoaimVectorFromPoint( GetGunPosition( ), flDelta );
++}
++
++// Opposing Force: the displacer aims from a point other than the gun.
++Vector CBasePlayer :: GetAutoaimVectorFromPoint( const Vector &vecSrcIn, float flDelta )
+ {
+ 	if (g_iSkillLevel == SKILL_HARD)
+ 	{
+@@ -4432,7 +4478,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+ 		return gpGlobals->v_forward;
+ 	}
+ 
+-	Vector vecSrc = GetGunPosition( );
++	Vector vecSrc = vecSrcIn;
+ 	float flDist = 8192;
+ 
+ 	// always use non-sticky autoaim
+@@ -5015,6 +5061,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
  
  void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
  {
@@ -163,6 +2521,257 @@ index 85b67c4..2805091 100644
  	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
  	pev->nextthink = gpGlobals->time + MessageTime();
  	SetThink( &CRevertSaved::MessageThink );
+diff --git a/dlls/player.h b/dlls/player.h
+index e7c7ced..3a722c3 100644
+--- a/dlls/player.h
++++ b/dlls/player.h
+@@ -35,6 +35,7 @@
+ #define		PFLAG_DUCKING		( 1<<3 )		// In the process of ducking, but totally squatted yet
+ #define		PFLAG_USING			( 1<<4 )		// Using a continuous entity
+ #define		PFLAG_OBSERVER		( 1<<5 )		// player is locked in stationary cam mode. Spectators can move, observers can't.
++#define		PFLAG_ONROPE		( 1<<6 )		// Opposing Force: attached to an env_rope
+ 
+ //
+ // generic player
+@@ -70,6 +71,7 @@ typedef enum
+ 	PLAYER_SUPERJUMP,
+ 	PLAYER_DIE,
+ 	PLAYER_ATTACK1,
++	PLAYER_GRAPPLE, // Opposing Force
+ } PLAYER_ANIM;
+ 
+ #define MAX_ID_RANGE 2048
+@@ -299,6 +301,7 @@ public:
+ 
+ 	void ResetAutoaim( void );
+ 	Vector GetAutoaimVector( float flDelta  );
++	Vector GetAutoaimVectorFromPoint( const Vector &vecSrc, float flDelta );
+ 	Vector AutoaimDeflection( Vector &vecSrc, float flDist, float flDelta  );
+ 
+ 	void ForceClientDllUpdate( void );  // Forces all client .dll specific data to be resent to client.
+@@ -327,6 +330,19 @@ public:
+ 	float m_flNextChatTime;
+ 	
+ 	int	m_iAutoWepSwitch;
++
++	// Opposing Force: ropes and the displacer.
++	bool IsOnRope() const { return ( m_afPhysicsFlags & PFLAG_ONROPE ) != 0; }
++	void SetOnRopeState( bool bOnRope ) { if ( bOnRope ) m_afPhysicsFlags |= PFLAG_ONROPE; else m_afPhysicsFlags &= ~PFLAG_ONROPE; }
++	class CRope *GetRope() { return m_pRope; }
++	void SetRope( class CRope *pRope ) { m_pRope = pRope; }
++	void SetIsClimbing( bool bIsClimbing ) { m_bIsClimbing = bIsClimbing; }
++	bool RopeThink( void ); // ap_port: true while on a rope (PreThink returns)
++	class CRope *m_pRope = nullptr;
++	float m_flLastClimbTime = 0;
++	bool m_bIsClimbing = false;
++	Vector m_DisplacerReturn;
++	float m_DisplacerSndRoomtype;
+ };
+ 
+ #define AUTOAIM_2DEGREES  0.0348994967025
+diff --git a/dlls/schedule.cpp b/dlls/schedule.cpp
+index 488a770..922b3fe 100644
+--- a/dlls/schedule.cpp
++++ b/dlls/schedule.cpp
+@@ -25,6 +25,7 @@
+ #include "nodes.h"
+ #include "defaultai.h"
+ #include "soundent.h"
++#include "ap_main.h"
+ 
+ extern CGraph WorldGraph;
+ 
+@@ -78,6 +79,13 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
+ {
+ 	ASSERT( pNewSchedule != NULL );
+ 
++	// Archipelago: Opposing Force keeps a dying monster on its death schedule.
++	if (ap::OnOpposingForce() && m_pSchedule && m_pSchedule->pTasklist && m_pSchedule->pTasklist[m_iScheduleIndex].iTask == TASK_DIE)
++	{
++		ALERT(at_aiconsole, "ChangeSchedule called for dead monster class %s\n", STRING(pev->classname));
++		return;
++	}
++
+ 	m_pSchedule			= pNewSchedule;
+ 	m_iScheduleIndex	= 0;
+ 	m_iTaskStatus		= TASKSTATUS_NEW;
+@@ -448,6 +456,15 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
+ 			}
+ 			break;
+ 		}
++
++	// Archipelago: from Opposing Force.
++	case TASK_WAIT_FOR_JUMP:
++		if ((pev->flags & FL_ONGROUND) != 0)
++		{
++			if (!HasConditions(bits_COND_TASK_FAILED))
++				TaskIsComplete();
++		}
++		break;
+ 	case TASK_DIE:
+ 		{
+ 			if ( m_fSequenceFinished && pev->frame >= 255 )
+@@ -1191,6 +1208,34 @@ case TASK_GET_PATH_TO_BESTSCENT:
+ 			break;
+ 		}
+ 
++	// Archipelago: from Opposing Force.
++	case TASK_JUMP_TO_TARGET:
++	{
++		if ((m_hTargetEnt->pev->origin - pev->origin).Length() >= 1.0)
++		{
++			if (!m_hTargetEnt || !JumpToTarget(ACT_LEAP, 2.0))
++			{
++				TaskFail();
++				ALERT(at_aiconsole, "%s Failed to reach target!!!\n", STRING(pev->classname));
++				RouteClear();
++			}
++		}
++
++		TaskComplete();
++		break;
++	}
++
++	case TASK_WAIT_FOR_JUMP:
++	{
++		if ((pev->flags & FL_ONGROUND) != 0)
++		{
++			if (!HasConditions(bits_COND_TASK_FAILED))
++				TaskIsComplete();
++		}
++
++		break;
++	}
++
+ 	case TASK_EAT:
+ 		{
+ 			Eat( pTask->flData );
+@@ -1512,3 +1557,22 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
+ 
+ 	return &slError[ 0 ];
+ }
++
++// Archipelago: from Opposing Force.
++bool CBaseMonster::JumpToTarget(Activity movementAct, float waitTime)
++{
++	m_movementGoal = MOVEGOAL_TARGETENT;
++	m_movementActivity = movementAct;
++	m_moveWaitTime = waitTime;
++
++	pev->origin.z += 1;
++
++	if ((pev->flags & FL_ONGROUND) != 0)
++		pev->flags &= ~FL_ONGROUND;
++
++	pev->velocity = m_hTargetEnt->pev->origin + Vector(0, 0, 160) - pev->origin;
++
++	pev->velocity.z *= pev->origin.z * sqrt(160.0 / (pev->origin.z * 0.5)) / 160.0;
++
++	return true;
++}
+diff --git a/dlls/schedule.h b/dlls/schedule.h
+index 0c09441..d658b2e 100644
+--- a/dlls/schedule.h
++++ b/dlls/schedule.h
+@@ -172,6 +172,9 @@ typedef enum
+ 		TASK_REMEMBER,
+ 		TASK_FORGET,
+ 		TASK_WAIT_FOR_MOVEMENT,			// wait until MovementIsComplete()
++		// Archipelago: from Opposing Force, appended so no Half-Life task renumbers.
++		TASK_JUMP_TO_TARGET,
++		TASK_WAIT_FOR_JUMP,
+ 		LAST_COMMON_TASK, // LEAVE THIS AT THE BOTTOM!! (sjb)
+ } SHARED_TASKS;
+ 
+diff --git a/dlls/scientist.cpp b/dlls/scientist.cpp
+index 540ebc3..cd8b985 100644
+--- a/dlls/scientist.cpp
++++ b/dlls/scientist.cpp
+@@ -26,9 +26,14 @@
+ #include	"scripted.h"
+ #include	"animation.h"
+ #include	"soundent.h"
++#include "ap_main.h"
+ 
+ 
+ #define		NUM_SCIENTIST_HEADS		4 // four heads available for scientist model
++
++// Archipelago: Opposing Force's scientist model has 2 special heads for
++// specific characters, so its needle bodygroup sits 6 heads along, not 4.
++static int ScientistHeadsTotal() { return ap::OnOpposingForce() ? 6 : NUM_SCIENTIST_HEADS; }
+ enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_LUTHER = 2, HEAD_SLICK = 3 };
+ 
+ enum
+@@ -649,13 +654,13 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
+ 	case SCIENTIST_AE_NEEDLEON:
+ 		{
+ 		int oldBody = pev->body;
+-		pev->body = (oldBody % NUM_SCIENTIST_HEADS) + NUM_SCIENTIST_HEADS * 1;
++		pev->body = (oldBody % ScientistHeadsTotal()) + ScientistHeadsTotal() * 1;
+ 		}
+ 		break;
+ 	case SCIENTIST_AE_NEEDLEOFF:
+ 		{
+ 		int oldBody = pev->body;
+-		pev->body = (oldBody % NUM_SCIENTIST_HEADS) + NUM_SCIENTIST_HEADS * 0;
++		pev->body = (oldBody % ScientistHeadsTotal()) + ScientistHeadsTotal() * 0;
+ 		}
+ 		break;
+ 
+diff --git a/dlls/scripted.cpp b/dlls/scripted.cpp
+index 008e129..c61ac3f 100644
+--- a/dlls/scripted.cpp
++++ b/dlls/scripted.cpp
+@@ -35,6 +35,7 @@
+ #include "schedule.h"
+ #include "scripted.h"
+ #include "defaultai.h"
++#include "ap_main.h"
+ 
+ 
+ 
+@@ -892,7 +893,9 @@ BOOL CBaseMonster :: CineCleanup( )
+ 
+ 		// We should have some animation to put these guys in, but for now it's idle.
+ 		// Due to NOINTERP above, there won't be any blending between this anim & the sequence
+-		m_Activity = ACT_RESET;
++		// Archipelago: Opposing Force's maps chain scripts that must not reset.
++		if ( !ap::OnOpposingForce() || !FBitSet( pOldCine->pev->spawnflags, SF_SCRIPT_NORESETENTITY ) )
++			m_Activity = ACT_RESET;
+ 	}
+ 	// set them back into a normal state
+ 	pev->enemy = NULL;
+diff --git a/dlls/scripted.h b/dlls/scripted.h
+index 5a5c9b2..15ae8cd 100644
+--- a/dlls/scripted.h
++++ b/dlls/scripted.h
+@@ -28,6 +28,13 @@
+ #define SF_SCRIPT_OVERRIDESTATE		64
+ #define SF_SCRIPT_NOSCRIPTMOVEMENT	128
+ 
++// Archipelago: from Opposing Force, which honours it only on its own maps.
++/**
++*	@brief Don't reset the entity's state after completing the script
++*	For chaining scripts without sequence changes
++*/
++constexpr auto SF_SCRIPT_NORESETENTITY = 256;
++
+ #define SCRIPT_BREAK_CONDITIONS		(bits_COND_LIGHT_DAMAGE|bits_COND_HEAVY_DAMAGE)
+ 
+ enum SS_INTERRUPT
+diff --git a/dlls/scriptevent.h b/dlls/scriptevent.h
+index 73bd28a..bf526a2 100644
+--- a/dlls/scriptevent.h
++++ b/dlls/scriptevent.h
+@@ -26,4 +26,8 @@
+ #define SCRIPT_EVENT_SOUND_VOICE	1008		// Play named wave file (on CHAN_VOICE)
+ #define	SCRIPT_EVENT_SENTENCE_RND1	1009		// Play sentence group 25% of the time
+ #define SCRIPT_EVENT_NOT_DEAD		1010		// Bring back to life (for life/death sequences)
++// Archipelago: from Opposing Force.
++#define SCRIPT_EVENT_SOUND_VOICE_BODY 1011	 // Play named wave file with normal attenuation (on CHAN_BODY)
++#define SCRIPT_EVENT_SOUND_VOICE_VOICE 1012	 // Play named wave file with normal attenuation (on CHAN_VOICE)
++#define SCRIPT_EVENT_SOUND_VOICE_WEAPON 1013 // Play named wave file with normal attenuation (on CHAN_WEAPON)
+ #endif   //SCRIPTEVENT_H
 diff --git a/dlls/singleplay_gamerules.cpp b/dlls/singleplay_gamerules.cpp
 index 3438f7c..84cc2e8 100644
 --- a/dlls/singleplay_gamerules.cpp
@@ -185,11 +2794,252 @@ index 3438f7c..84cc2e8 100644
  }
  
  //=========================================================
+diff --git a/dlls/skill.h b/dlls/skill.h
+index 41bdfd8..1974ad9 100644
+--- a/dlls/skill.h
++++ b/dlls/skill.h
+@@ -135,6 +135,70 @@ struct skilldata_t
+ 	float plrStomach;
+ 	float plrLeg;
+ 	float plrArm;
++
++// Archipelago: Opposing Force's, set from skillopfor.cfg.
++	float otisHealth;
++	float pitdroneHealth;
++	float pitdroneDmgBite;
++	float pitdroneDmgWhip;
++	float pitdroneDmgSpit;
++	float shockroachHealth;
++	float shockroachDmgBite;
++	float shockroachLifespan;
++	float hgruntAllyHealth;
++	float hgruntAllyDmgKick;
++	float hgruntAllyShotgunPellets;
++	float hgruntAllyGrenadeSpeed;
++	float medicAllyHealth;
++	float medicAllyDmgKick;
++	float medicAllyGrenadeSpeed;
++	float medicAllyHeal;
++	float torchAllyHealth;
++	float torchAllyDmgKick;
++	float torchAllyGrenadeSpeed;
++	float massassinHealth;
++	float massassinDmgKick;
++	float massassinGrenadeSpeed;
++	float shocktrooperHealth;
++	float shocktrooperDmgKick;
++	float shocktrooperGrenadeSpeed;
++	float shocktrooperMaxCharge;
++	float shocktrooperRechargeSpeed;
++	float cleansuitScientistHealth;
++	float voltigoreHealth;
++	float voltigoreDmgBeam;
++	float voltigoreDmgPunch;
++	float babyvoltigoreHealth;
++	float babyvoltigoreDmgPunch;
++	float pitWormHealth;
++	float pitWormDmgSwipe;
++	float pitWormDmgBeam;
++	float geneWormHealth;
++	float geneWormDmgSpit;
++	float geneWormDmgHit;
++	float zombieBarneyHealth;
++	float zombieBarneyDmgOneSlash;
++	float zombieBarneyDmgBothSlash;
++	float zombieSoldierHealth;
++	float zombieSoldierDmgOneSlash;
++	float zombieSoldierDmgBothSlash;
++	float gonomeDmgGuts;
++	float gonomeHealth;
++	float gonomeDmgOneSlash;
++	float gonomeDmgOneBite;
++	float plrDmgPipewrench;
++	float plrDmgKnife;
++	float plrDmgGrapple;
++	float plrDmgEagle;
++	float plrDmg762;
++	float plrDmg556;
++	float plrDmgDisplacerSelf;
++	float plrDmgDisplacerOther;
++	float plrRadiusDisplacer;
++	float plrDmgShockRoachS;
++	float plrDmgShockRoachM;
++	float plrDmgSpore;
++	float cleansuitScientistHeal;
+ };
+ 
+ extern	DLL_GLOBAL	skilldata_t	gSkillData;
+diff --git a/dlls/sound.cpp b/dlls/sound.cpp
+index b9b2f32..171cc61 100644
+--- a/dlls/sound.cpp
++++ b/dlls/sound.cpp
+@@ -1003,7 +1003,8 @@ typedef struct sentenceg
+ 
+ } SENTENCEG;
+ 
+-#define CSENTENCEG_MAX 200					// max number of sentence groups
++// Archipelago: OF and BS sentences merged in bring the total past 200.
++#define CSENTENCEG_MAX 512					// max number of sentence groups
+ // globals
+ 
+ SENTENCEG rgsentenceg[CSENTENCEG_MAX];
+diff --git a/dlls/squadmonster.cpp b/dlls/squadmonster.cpp
+index dad8694..85c8e3e 100644
+--- a/dlls/squadmonster.cpp
++++ b/dlls/squadmonster.cpp
+@@ -24,6 +24,7 @@
+ #include "saverestore.h"
+ #include "squadmonster.h"
+ #include "plane.h"
++#include "ap_main.h"
+ 
+ //=========================================================
+ // Save/Restore
+@@ -621,3 +622,69 @@ Schedule_t *CSquadMonster::GetScheduleOfType( int iType )
+ 	}
+ }
+ 
++// Archipelago: Opposing Force's squad alert. A hit of at least a squad
++// member's full health turns the rest of the squad on the attacker. Half-Life
++// never had it, so it applies on Opposing Force maps only.
++int CSquadMonster::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
++{
++	if (ap::OnOpposingForce() && flDamage >= pev->max_health)
++	{
++		CSquadMonster* squadLeader = MySquadLeader();
++
++		for (int i = 0; i < MAX_SQUAD_MEMBERS - 1; ++i)
++		{
++			CSquadMonster* squadMember = squadLeader->m_hSquadMember[i].Entity<CSquadMonster>();
++
++			if (squadMember)
++			{
++				if (!squadMember->m_hEnemy)
++				{
++					g_vecAttackDir = ((pevAttacker->origin + pevAttacker->view_ofs) - (squadMember->pev->origin + squadMember->pev->view_ofs)).Normalize();
++
++					const Vector vecStart = squadMember->pev->origin + squadMember->pev->view_ofs;
++					const Vector vecEnd = pevAttacker->origin + pevAttacker->view_ofs + (g_vecAttackDir * m_flDistLook);
++
++					TraceResult tr;
++
++					UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, squadMember->edict(), &tr);
++
++					if (tr.flFraction == 1.0)
++					{
++						m_IdealMonsterState = MONSTERSTATE_HUNT;
++					}
++					else
++					{
++						squadMember->m_hEnemy = CBaseEntity::Instance(tr.pHit);
++						squadMember->m_vecEnemyLKP = pevAttacker->origin;
++						squadMember->SetConditions(bits_COND_NEW_ENEMY);
++					}
++				}
++			}
++		}
++
++		if (!squadLeader->m_hEnemy)
++		{
++			g_vecAttackDir = ((pevAttacker->origin + pevAttacker->view_ofs) - (squadLeader->pev->origin + squadLeader->pev->view_ofs)).Normalize();
++
++			const Vector vecStart = squadLeader->pev->origin + squadLeader->pev->view_ofs;
++			const Vector vecEnd = pevAttacker->origin + pevAttacker->view_ofs + (g_vecAttackDir * m_flDistLook);
++
++			TraceResult tr;
++
++			UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, squadLeader->edict(), &tr);
++
++			if (tr.flFraction == 1.0)
++			{
++				m_IdealMonsterState = MONSTERSTATE_HUNT;
++			}
++			else
++			{
++				squadLeader->m_hEnemy = CBaseEntity::Instance(tr.pHit);
++				squadLeader->m_vecEnemyLKP = pevAttacker->origin;
++				squadLeader->SetConditions(bits_COND_NEW_ENEMY);
++			}
++		}
++	}
++
++	return CBaseMonster::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
++}
+diff --git a/dlls/squadmonster.h b/dlls/squadmonster.h
+index 6ff1701..34c2a68 100644
+--- a/dlls/squadmonster.h
++++ b/dlls/squadmonster.h
+@@ -107,6 +107,9 @@ public:
+ 
+ 	virtual CSquadMonster *MySquadMonsterPointer( void ) { return this; }
+ 
++	// Archipelago: Opposing Force's squad alert, on its maps only.
++	int TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
++
+ 	static TYPEDESCRIPTION m_SaveData[];
+ 
+ 	int	Save( CSave &save ); 
+diff --git a/dlls/talkmonster.cpp b/dlls/talkmonster.cpp
+index 027d7fc..9c661d9 100644
+--- a/dlls/talkmonster.cpp
++++ b/dlls/talkmonster.cpp
+@@ -45,6 +45,7 @@ TYPEDESCRIPTION	CTalkMonster::m_SaveData[] =
+ 	DEFINE_FIELD( CTalkMonster, m_flLastSaidSmelled, FIELD_TIME ),
+ 	DEFINE_FIELD( CTalkMonster, m_flStopTalkTime, FIELD_TIME ),
+ 	DEFINE_FIELD( CTalkMonster, m_hTalkTarget, FIELD_EHANDLE ),
++	DEFINE_FIELD( CTalkMonster, m_fStartSuspicious, FIELD_BOOLEAN ),
+ };
+ 
+ IMPLEMENT_SAVERESTORE( CTalkMonster, CBaseMonster );
+@@ -1327,6 +1328,16 @@ void CTalkMonster :: PrescheduleThink ( void )
+ 	{
+ 		SetConditions ( bits_COND_CLIENT_UNSEEN );
+ 	}
++
++	// Archipelago: Opposing Force's `suspicious` key.
++	if (m_fStartSuspicious)
++	{
++		if (!HasMemory(bits_MEMORY_PROVOKED))
++		{
++			ALERT(at_console, "Talk Monster Pre-Provoked\n");
++			Remember(bits_MEMORY_PROVOKED);
++		}
++	}
+ }
+ 
+ // try to smell something
+@@ -1457,6 +1468,11 @@ void CTalkMonster::KeyValue( KeyValueData *pkvd )
+ 		m_iszUnUse = ALLOC_STRING(pkvd->szValue);
+ 		pkvd->fHandled = TRUE;
+ 	}
++	else if (FStrEq(pkvd->szKeyName, "suspicious"))
++	{
++		m_fStartSuspicious = 0 != atoi(pkvd->szValue);
++		pkvd->fHandled = TRUE;
++	}
+ 	else 
+ 		CBaseMonster::KeyValue( pkvd );
+ }
+diff --git a/dlls/talkmonster.h b/dlls/talkmonster.h
+index 3c1ff87..ed39cc8 100644
+--- a/dlls/talkmonster.h
++++ b/dlls/talkmonster.h
+@@ -170,6 +170,10 @@ public:
+ 	float		m_flStopTalkTime;// when in the future that I'll be done saying this sentence.
+ 
+ 	EHANDLE		m_hTalkTarget;	// who to look at while talking
++
++	// Archipelago: from Opposing Force (the `suspicious` key).
++	bool m_fStartSuspicious;
++
+ 	CUSTOM_SCHEDULES;
+ };
+ 
 diff --git a/dlls/triggers.cpp b/dlls/triggers.cpp
-index 1f9ea5b..d94b2bc 100644
+index 1f9ea5b..18e5447 100644
 --- a/dlls/triggers.cpp
 +++ b/dlls/triggers.cpp
-@@ -23,6 +23,7 @@
+@@ -23,10 +23,13 @@
  #include "extdll.h"
  #include "util.h"
  #include "cbase.h"
@@ -197,7 +3047,13 @@ index 1f9ea5b..d94b2bc 100644
  #include "player.h"
  #include "saverestore.h"
  #include "trains.h"			// trigger_camera has train functionality
-@@ -1014,6 +1015,10 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
+ #include "gamerules.h"
++#include "skill.h"
++#include "port_compat.h"
+ 
+ #define	SF_TRIGGER_PUSH_START_OFF	2//spawnflag that makes trigger_push spawn turned OFF
+ #define SF_TRIGGER_HURT_TARGETONCE	1// Only fire hurt target once
+@@ -1014,6 +1017,10 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
  		{
  			pOther->TakeHealth( -fldmg, m_bitsDamageInflict );
  		}
@@ -208,7 +3064,7 @@ index 1f9ea5b..d94b2bc 100644
  	}
  	else
  		pOther->TakeDamage( pev, pev, fldmg, m_bitsDamageInflict );
-@@ -1131,6 +1136,10 @@ void CBaseTrigger :: MultiTouch( CBaseEntity *pOther )
+@@ -1131,6 +1138,10 @@ void CBaseTrigger :: MultiTouch( CBaseEntity *pOther )
  
  	pevToucher = pOther->pev;
  
@@ -219,7 +3075,7 @@ index 1f9ea5b..d94b2bc 100644
  	// Only touch clients, monsters, or pushables (depending on flags)
  	if ( ((pevToucher->flags & FL_CLIENT) && !(pev->spawnflags & SF_TRIGGER_NOCLIENTS)) ||
  		 ((pevToucher->flags & FL_MONSTER) && (pev->spawnflags & SF_TRIGGER_ALLOWMONSTERS)) ||
-@@ -1480,6 +1489,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
+@@ -1480,6 +1491,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
  	edict_t	*pentLandmark;
  	LEVELLIST	levels[16];
  
@@ -231,8 +3087,383 @@ index 1f9ea5b..d94b2bc 100644
  	ASSERT(!FStrEq(m_szMapName, ""));
  
  	// Don't work in deathmatch
+@@ -2440,3 +2456,205 @@ void CTriggerCamera::Move()
+ 	float fraction = 2 * gpGlobals->frametime;
+ 	pev->velocity = ((pev->movedir * pev->speed) * fraction) + (pev->velocity * (1-fraction));
+ }
++
++// ap_port: Opposing Force, from halflife-op4-updated.
++class CTriggerXenReturn : public CBaseTrigger
++{
++public:
++	using BaseClass = CBaseTrigger;
++
++	void Spawn() override;
++
++	void EXPORT ReturnTouch(CBaseEntity* pOther);
++};
++
++LINK_ENTITY_TO_CLASS(trigger_xen_return, CTriggerXenReturn);
++
++LINK_ENTITY_TO_CLASS(info_displacer_earth_target, CPointEntity);
++LINK_ENTITY_TO_CLASS(info_displacer_xen_target, CPointEntity);
++
++void CTriggerXenReturn::Spawn()
++{
++	InitTrigger();
++
++	SetTouch(&CTriggerXenReturn::ReturnTouch);
++	SetUse(nullptr);
++}
++
++void CTriggerXenReturn::ReturnTouch(CBaseEntity* pOther)
++{
++	if (!pOther->IsPlayer())
++		return;
++
++	auto pPlayer = static_cast<CBasePlayer*>(pOther);
++
++	float flDist = 8192;
++
++	CBaseEntity* pTarget = nullptr;
++
++	//Find the earth target nearest to the player's original location.
++	for (auto pDestination : UTIL_FindEntitiesByClassname("info_displacer_earth_target"))
++	{
++		const float flThisDist = (pPlayer->m_DisplacerReturn - pDestination->pev->origin).Length();
++
++		if (flDist > flThisDist)
++		{
++			pTarget = pDestination;
++
++			flDist = flThisDist;
++		}
++	}
++
++	if (pTarget && !FNullEnt(pTarget->pev))
++	{
++		pPlayer->pev->flags &= ~FL_SKIPLOCALHOST;
++
++		auto vecDest = pTarget->pev->origin;
++
++		vecDest.z -= pPlayer->pev->mins.z;
++		vecDest.z += 1;
++
++		UTIL_SetOrigin(pPlayer->pev, vecDest);
++
++		pPlayer->pev->angles = pTarget->pev->angles;
++		pPlayer->pev->v_angle = pTarget->pev->angles;
++		pPlayer->pev->fixangle = 1;
++
++		pPlayer->pev->basevelocity = g_vecZero;
++		pPlayer->pev->velocity = g_vecZero;
++
++		pPlayer->pev->gravity = 1.0;
++
++		pPlayer->m_flSndRoomtype = pPlayer->m_DisplacerSndRoomtype;
++
++		EMIT_SOUND(pPlayer->edict(), CHAN_WEAPON, "weapons/displacer_self.wav", RANDOM_FLOAT(0.8, 0.9), ATTN_NORM);
++	}
++}
++
++const auto SF_GENEWORM_HIT_TARGET_ONCE = 1 << 0;
++const auto SF_GENEWORM_HIT_START_OFF = 1 << 1;
++const auto SF_GENEWORM_HIT_NO_CLIENTS = 1 << 3;
++const auto SF_GENEWORM_HIT_FIRE_CLIENT_ONLY = 1 << 4;
++const auto SF_GENEWORM_HIT_TOUCH_CLIENT_ONLY = 1 << 5;
++
++class COFTriggerGeneWormHit : public CBaseTrigger
++{
++public:
++	int Save(CSave & save) override;
++	int Restore(CRestore & restore) override;
++	static TYPEDESCRIPTION m_SaveData[];
++
++	void Precache() override;
++	void Spawn() override;
++
++	void EXPORT GeneWormHitTouch(CBaseEntity* pOther);
++
++	static const char* pAttackSounds[];
++
++	float m_flLastDamageTime;
++};
++
++TYPEDESCRIPTION COFTriggerGeneWormHit::m_SaveData[] =
++	{
++		DEFINE_FIELD(COFTriggerGeneWormHit, m_flLastDamageTime, FIELD_TIME),
++};
++
++IMPLEMENT_SAVERESTORE(COFTriggerGeneWormHit, CBaseTrigger);
++
++const char* COFTriggerGeneWormHit::pAttackSounds[] =
++	{
++		"zombie/claw_strike1.wav",
++		"zombie/claw_strike2.wav",
++		"zombie/claw_strike3.wav"};
++
++LINK_ENTITY_TO_CLASS(trigger_geneworm_hit, COFTriggerGeneWormHit);
++
++void COFTriggerGeneWormHit::Precache()
++{
++	PRECACHE_SOUND_ARRAY(pAttackSounds);
++}
++
++void COFTriggerGeneWormHit::Spawn()
++{
++	Precache();
++
++	InitTrigger();
++
++	SetTouch(&COFTriggerGeneWormHit::GeneWormHitTouch);
++
++	if (!FStringNull(pev->targetname))
++	{
++		SetUse(&COFTriggerGeneWormHit::ToggleUse);
++	}
++	else
++	{
++		SetUse(nullptr);
++	}
++
++	if ((pev->spawnflags & SF_GENEWORM_HIT_START_OFF) != 0)
++	{
++		pev->solid = SOLID_NOT;
++	}
++
++	UTIL_SetOrigin(pev, pev->origin);
++
++	pev->dmg = gSkillData.geneWormDmgHit;
++	m_flLastDamageTime = gpGlobals->time;
++}
++
++void COFTriggerGeneWormHit::GeneWormHitTouch(CBaseEntity* pOther)
++{
++	if (gpGlobals->time - m_flLastDamageTime >= 2 && pOther->pev->takedamage != DAMAGE_NO)
++	{
++		if ((pev->spawnflags & SF_GENEWORM_HIT_TOUCH_CLIENT_ONLY) != 0)
++		{
++			if (!pOther->IsPlayer())
++				return;
++		}
++
++		if ((pev->spawnflags & SF_GENEWORM_HIT_NO_CLIENTS) == 0 || !pOther->IsPlayer())
++		{
++			if (!g_pGameRules->IsMultiplayer())
++			{
++				if (pev->dmgtime > gpGlobals->time && gpGlobals->time != pev->pain_finished)
++					return;
++			}
++			else if (pev->dmgtime <= gpGlobals->time)
++			{
++				pev->impulse = 0;
++				if (pOther->IsPlayer())
++					pev->impulse |= 1 << (pOther->entindex() - 1);
++			}
++			else if (gpGlobals->time != pev->pain_finished)
++			{
++				if (!pOther->IsPlayer())
++					return;
++
++				const auto playerBit = 1 << (pOther->entindex() - 1);
++
++				if ((pev->impulse & playerBit) != 0)
++					return;
++
++				pev->impulse |= playerBit;
++			}
++
++			pOther->TakeDamage(pev, pev, pev->dmg, DMG_CRUSH);
++
++			EMIT_SOUND_DYN(pOther->edict(), CHAN_BODY, pAttackSounds[RANDOM_LONG(0, ARRAYSIZE(pAttackSounds) - 1)], VOL_NORM, 0.1, 0, RANDOM_LONG(-5, 5) + 100);
++
++			pev->pain_finished = gpGlobals->time;
++			m_flLastDamageTime = gpGlobals->time;
++
++			if (!FStringNull(pev->target) &&
++				((pev->spawnflags & SF_GENEWORM_HIT_FIRE_CLIENT_ONLY) == 0 || pOther->IsPlayer()))
++			{
++				SUB_UseTargets(pOther, USE_TOGGLE, 0);
++
++				if ((pev->spawnflags & SF_GENEWORM_HIT_TARGET_ONCE) != 0)
++					pev->target = iStringNull;
++			}
++		}
++	}
++}
++
++
+diff --git a/dlls/weapons.cpp b/dlls/weapons.cpp
+index b9baa31..b0550c0 100644
+--- a/dlls/weapons.cpp
++++ b/dlls/weapons.cpp
+@@ -384,6 +384,23 @@ void W_Precache(void)
+ #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
+ 	// hornetgun
+ 	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
++
++	// Opposing Force's, on every map: any campaign may hand them over.
++	UTIL_PrecacheOtherWeapon( "weapon_grapple" );
++	UTIL_PrecacheOtherWeapon( "weapon_eagle" );
++	UTIL_PrecacheOtherWeapon( "weapon_pipewrench" );
++	UTIL_PrecacheOtherWeapon( "weapon_m249" );
++	UTIL_PrecacheOther( "ammo_556" );
++	UTIL_PrecacheOtherWeapon( "weapon_displacer" );
++	UTIL_PrecacheOtherWeapon( "weapon_sporelauncher" );
++	UTIL_PrecacheOther( "ammo_spore" );
++	UTIL_PrecacheOtherWeapon( "weapon_shockrifle" );
++	UTIL_PrecacheOtherWeapon( "weapon_sniperrifle" );
++	UTIL_PrecacheOther( "ammo_762" );
++	UTIL_PrecacheOtherWeapon( "weapon_knife" );
++	PRECACHE_SOUND( "weapons/spore_hit1.wav" );
++	PRECACHE_SOUND( "weapons/spore_hit2.wav" );
++	PRECACHE_SOUND( "weapons/spore_hit3.wav" );
+ #endif
+ 
+ 
+diff --git a/dlls/weapons.h b/dlls/weapons.h
+index ab2d2e7..a319bc4 100644
+--- a/dlls/weapons.h
++++ b/dlls/weapons.h
+@@ -17,6 +17,8 @@
+ 
+ #include "effects.h"
+ 
++typedef struct weapon_data_s weapon_data_t; // common/weaponinfo.h
++
+ class CBasePlayer;
+ extern int gmsgWeapPickup;
+ 
+@@ -78,6 +80,17 @@ public:
+ #define WEAPON_TRIPMINE			13
+ #define	WEAPON_SATCHEL			14
+ #define	WEAPON_SNARK			15
++// Opposing Force (halflife-op4-updated's numbering).
++#define WEAPON_GRAPPLE			16
++#define WEAPON_EAGLE			17
++#define WEAPON_PIPEWRENCH		18
++#define WEAPON_M249				19
++#define WEAPON_DISPLACER		20
++#define WEAPON_SHOCKRIFLE		21
++#define WEAPON_SPORELAUNCHER	22
++#define WEAPON_SNIPERRIFLE		23
++#define WEAPON_KNIFE			24
++#define WEAPON_PENGUIN			25
+ 
+ #define WEAPON_ALLWEAPONS		(~(1<<WEAPON_SUIT))
+ 
+@@ -102,6 +115,14 @@ public:
+ #define HORNETGUN_WEIGHT	15
+ #define HANDGRENADE_WEIGHT	5
+ #define SNARK_WEIGHT		5
++#define EAGLE_WEIGHT 15
++#define SHOCKRIFLE_WEIGHT 15
++#define PIPEWRENCH_WEIGHT 2
++#define M249_WEIGHT 20
++#define DISPLACER_WEIGHT 10
++#define SPORELAUNCHER_WEIGHT 20
++#define SNIPERRIFLE_WEIGHT 10
++#define PENGUIN_WEIGHT 5
+ #define SATCHEL_WEIGHT		-10
+ #define TRIPMINE_WEIGHT		-10
+ 
+@@ -117,6 +138,10 @@ public:
+ #define SATCHEL_MAX_CARRY		5
+ #define TRIPMINE_MAX_CARRY		5
+ #define SNARK_MAX_CARRY			15
++#define M249_MAX_CARRY 200
++#define SPORELAUNCHER_MAX_CARRY 20
++#define SNIPERRIFLE_MAX_CARRY 15
++#define PENGUIN_MAX_CARRY 9
+ #define HORNET_MAX_CARRY		8
+ #define M203_GRENADE_MAX_CARRY	10
+ 
+@@ -138,6 +163,12 @@ public:
+ #define SATCHEL_MAX_CLIP		WEAPON_NOCLIP
+ #define TRIPMINE_MAX_CLIP		WEAPON_NOCLIP
+ #define SNARK_MAX_CLIP			WEAPON_NOCLIP
++#define EAGLE_MAX_CLIP 7
++#define M249_MAX_CLIP 50
++#define SPORELAUNCHER_MAX_CLIP 5
++#define SHOCKRIFLE_MAX_CLIP 10
++#define SNIPERRIFLE_MAX_CLIP 5
++#define PENGUIN_MAX_CLIP 3
+ 
+ 
+ // the default amount of ammo that comes with each gun when it spawns
+@@ -155,6 +186,12 @@ public:
+ #define SATCHEL_DEFAULT_GIVE		1
+ #define TRIPMINE_DEFAULT_GIVE		1
+ #define SNARK_DEFAULT_GIVE			5
++#define DEAGLE_DEFAULT_GIVE 7
++#define M249_DEFAULT_GIVE 50
++#define DISPLACER_DEFAULT_GIVE 40
++#define SPORELAUNCHER_DEFAULT_GIVE 5
++#define SHOCKRIFLE_DEFAULT_GIVE 10
++#define SNIPERRIFLE_DEFAULT_GIVE 5
+ #define HIVEHAND_DEFAULT_GIVE		8
+ 
+ // The amount of ammo given to a player by an ammo item.
+@@ -169,6 +206,10 @@ public:
+ #define AMMO_RPGCLIP_GIVE		RPG_MAX_CLIP
+ #define AMMO_URANIUMBOX_GIVE	20
+ #define AMMO_SNARKBOX_GIVE		5
++#define AMMO_M249_GIVE 50
++#define AMMO_EAGLE_GIVE 7
++#define AMMO_SPORE_GIVE 1
++#define AMMO_SNIPERRIFLE_GIVE 5
+ 
+ // bullet types
+ typedef	enum
+@@ -183,6 +224,11 @@ typedef	enum
+ 	BULLET_MONSTER_9MM,
+ 	BULLET_MONSTER_MP5,
+ 	BULLET_MONSTER_12MM,
++
++	// Archipelago: Opposing Force's, appended so no Half-Life type renumbers.
++	BULLET_PLAYER_556,
++	BULLET_PLAYER_762,
++	BULLET_PLAYER_EAGLE,
+ } Bullet;
+ 
+ 
+@@ -332,6 +378,11 @@ public:
+ 	virtual BOOL ShouldWeaponIdle( void ) {return FALSE; };
+ 	virtual void Holster( int skiplocal = 0 );
+ 	virtual BOOL UseDecrement( void ) { return FALSE; };
++	virtual void IncrementAmmo( CBasePlayer *pPlayer ) {} // Opposing Force CTF; never called here
++	// Opposing Force: weapon state beyond Valve's fields, sent to and taken back
++	// from the client's prediction. Called after Valve's packing; no-ops here.
++	virtual void GetWeaponData( weapon_data_t &data ) {}
++	virtual void SetWeaponData( const weapon_data_t &data ) {}
+ 	
+ 	int	PrimaryAmmoIndex(); 
+ 	int	SecondaryAmmoIndex(); 
+@@ -669,6 +720,7 @@ private:
+ 
+ class CLaserSpot : public CBaseEntity
+ {
++public: // Opposing Force's CEagleLaser derives from it
+ 	void Spawn( void );
+ 	void Precache( void );
+ 
+@@ -1026,3 +1078,14 @@ private:
+ 
+ 
+ #endif // WEAPONS_H
++
++// Opposing Force: halflife-op4-updated's switches for its `oldweapons` cvar,
++// fixed at its default. This SDK always predicts weapons on the client.
++#define UTIL_DefaultPlaybackFlags() FEV_NOTHOST // a macro: event_flags.h is not always in yet
++inline bool UTIL_DefaultUseDecrement() { return true; }
++inline bool UTIL_UseOldWeapons() { return false; }
++void FindHullIntersection( const Vector &vecSrc, TraceResult &tr, float *mins, float *maxs, edict_t *pEntity );
++inline void FindHullIntersection( const Vector &vecSrc, TraceResult &tr, const Vector &mins, const Vector &maxs, edict_t *pEntity )
++{
++	FindHullIntersection( vecSrc, tr, const_cast<float *>( &mins.x ), const_cast<float *>( &maxs.x ), pEntity );
++}
 diff --git a/dlls/world.cpp b/dlls/world.cpp
-index 5e1d634..3521c37 100644
+index 5e1d634..985c8da 100644
 --- a/dlls/world.cpp
 +++ b/dlls/world.cpp
 @@ -23,6 +23,7 @@
@@ -243,10 +3474,29 @@ index 5e1d634..3521c37 100644
  #include "nodes.h"
  #include "soundent.h"
  #include "client.h"
-@@ -477,6 +478,10 @@ void CWorld :: Spawn( void )
+@@ -90,6 +91,15 @@ DLL_DECALLIST gDecals[] = {
+ 	{ "{smscorch3", 0 },	// DECAL_SMALLSCORCH3,	// Small scorch mark
+ 	{ "{mommablob", 0 },	// DECAL_MOMMABIRTH		// BM Birth spray
+ 	{ "{mommablob", 0 },	// DECAL_MOMMASPLAT		// BM Mortar spray?? need decal
++	{ "{spr_splt1", 0 },	// DECAL_SPR_SPLT1
++	{ "{spr_splt2", 0 },	// DECAL_SPR_SPLT2
++	{ "{spr_splt3", 0 },	// DECAL_SPR_SPLT3
++	{ "{ofscorch1", 0 },	// DECAL_OFSCORCH1
++	{ "{ofscorch2", 0 },	// DECAL_OFSCORCH2
++	{ "{ofscorch3", 0 },	// DECAL_OFSCORCH3
++	{ "{ofsmscorch1", 0 },	// DECAL_OFSMSCORCH1
++	{ "{ofsmscorch2", 0 },	// DECAL_OFSMSCORCH2
++	{ "{ofsmscorch3", 0 },	// DECAL_OFSMSCORCH3
+ };
+ 
+ /*
+@@ -477,6 +487,13 @@ void CWorld :: Spawn( void )
  void CWorld :: Precache( void )
  {
  	g_pLastSpawn = NULL;
++
++	// Archipelago: which game this map is from, before anything precaches.
++	ap::BeginMapContent();
 +
 +	// Archipelago: everything a trap can spawn, precached whether or not
 +	// one ever arrives. GoldSrc fatally errors on an unprecached model.

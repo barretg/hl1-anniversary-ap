@@ -75,6 +75,8 @@ const int kFramesBeforeClientWrites = 3;
 // shape that overruns it, so it drains a few at a time instead.
 const size_t kMaxNoticesPerFrame = 4;
 
+}  // namespace
+
 // `<game dir>/archipelago`. GET_GAME_DIR hands back the mod folder's name
 // ("hlap") and the engine's working directory is the install root, so a relative
 // path is both correct and the only thing that works on a client whose Half-Life
@@ -88,8 +90,6 @@ std::string StoreDir() {
     }
     return dir + "/" + kStoreSubdir;
 }
-
-}  // namespace
 
 CheckData& Data() { return g_data; }
 Bridge& Wire() { return g_bridge; }
@@ -344,7 +344,16 @@ void TraceReset() {
                        std::ios::out | std::ios::trunc);
 }
 
-bool Gated() { return g_data.Loaded(); }
+// Offline testing: 1 lifts every gate, as if no checkdata were installed, so
+// any pickup or weapon can be taken without a connection. Checks still go out
+// when connected; the switch only stops the mod refusing things.
+cvar_t testing_ap_override = {(char*)"testing_ap_override", (char*)"0"};
+
+void RegisterTestingCvar() {
+    CVAR_REGISTER(&testing_ap_override);
+}
+
+bool Gated() { return g_data.Loaded() && testing_ap_override.value == 0.0f; }
 
 bool Live() {
     if (!g_data.Loaded() || !g_bridge.IsOpen()) {

@@ -6,6 +6,8 @@
 // all, and `game/README.md` explains what each is for.
 //
 //   dlls/game.cpp        GameDLLInit                  -> ap::RegisterCommands
+//   dlls/game.cpp        GameDLLInit                  -> ap::InstallContentHooks
+//   dlls/world.cpp       CWorld::Precache             -> ap::BeginMapContent
 //   dlls/client.cpp      ServerActivate               -> ap::Startup
 //   dlls/client.cpp      StartFrame                   -> ap::RunFrame
 //   dlls/client.cpp      ClientPrecache               -> ap::PrecacheTraps
@@ -40,6 +42,14 @@ struct PendingEvent;
 // defined in the module that owns it.
 
 void RegisterCommands();                                    // ap_hub
+void InstallContentHooks();                                 // ap_content
+void BeginMapContent();                                     // ap_content
+void RegisterTestingCvar();                                  // ap_main, at GameDLLInit
+bool OnOpposingForce();                                     // ap_content
+bool OnBlueShift();                                         // ap_content
+void RegisterOpposingForceSkill();                          // port/of/of_skill
+void RefreshOpposingForceSkill();                           // port/of/of_skill
+void RemapSpawn(entvars_t* pev);                            // ap_content
 void PrecacheTraps();                                       // ap_traps
 void RequestLoadout();                                      // ap_items
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
@@ -78,6 +88,9 @@ CBasePlayer* Player();
 
 // The map the server is running, from gpGlobals.
 std::string CurrentMap();
+
+// `<game dir>/archipelago`, where the bridge and the installed data live.
+std::string StoreDir();
 
 // A copy of this string that lives for the rest of the process, as a plain
 // `const char*`.

@@ -54,6 +54,18 @@ target, and its comments explain each thing it has to work around.
 The toolchain file path has to be absolute: CMake resolves a relative one
 against the build directory, not the source directory.
 
+Both builds also produce `client.dll`: Valve's `cl_dll` built as
+`projects/vs2019/hl_cdll.vcxproj` builds it, plus Opposing Force's weapons
+(prediction and firing events), and staged to `mod/files/cl_dlls/` like the
+server dll. Its export table matches the retail client's exactly. It links
+Valve's prebuilt MSVC vgui libraries, so it needs MSVC or clang-cl;
+`-DHLAP_CLIENT=OFF` skips it, and an apworld without one installs no client, so
+the mod falls back to `valve`'s.
+
+Opposing Force and Blue Shift code lives in `src/port/` and in `sdk.patch`;
+`src/port/of/README.md` says which is which and how `tools/port_of.py`
+regenerates the converted files.
+
 Worth checking the result rather than trusting it, because the way a build of
 this dll goes wrong is in the export table rather than in the compile -- see
 "Why not MinGW". It should be `PE32 ... Intel i386`, and every live
