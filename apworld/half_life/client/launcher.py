@@ -248,11 +248,11 @@ class HalfLifeContext(SuperContext):
         # so the game has to be told up front or it gates it for the whole run --
         # which for the HEV suit meant no armour, ever.
         self.always_unlocked: set[str] = unshuffled_grants()
-        # The other half of that answer: equipment the game should simply be left
-        # to hand out on its own schedule. Sent as classnames because the gating
-        # is by classname, and it has to stop gating these entirely rather than
-        # treat them as owned.
-        self.ungated_classnames: set[str] = unshuffled_vanilla_classnames()
+        # Equipment the game should simply be left to hand out on its own
+        # schedule. Only seeds from before `placed_at_vanilla` existed need this;
+        # see `unshuffled_vanilla_classnames`. Sent as classnames because the
+        # gating is by classname.
+        self.ungated_classnames: set[str] = set()
         # What the run opens with, and what the game must never take away.
         self.starting_weapons: list[str] = list(
             self.campaign.get("starting_weapons", ())
@@ -426,15 +426,17 @@ class HalfLifeContext(SuperContext):
             )
             self.excluded_chapters = set(slot_data.get("excluded_chapters", ()))
             self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
-            # Absent from slot data reads as "not shuffled". Either way the item
-            # is never sent, so the game has to be told; what differs is what it
-            # is told. See `unshuffled_grants` and `unshuffled_vanilla_classnames`.
+            # Absent from slot data reads as "not shuffled". An unshuffled item is
+            # either never sent, and the game has to be told, or locked to its
+            # vanilla location and sent like any other. See `unshuffled_grants`
+            # and `unshuffled_vanilla_classnames`.
             unshuffled = {
                 name for name, option in optional_item_options().items()
                 if not slot_data.get(option, False)
             }
+            placed = set(slot_data.get("placed_at_vanilla", ()))
             self.always_unlocked = unshuffled_grants(unshuffled)
-            self.ungated_classnames = unshuffled_vanilla_classnames(unshuffled)
+            self.ungated_classnames = unshuffled_vanilla_classnames(unshuffled - placed)
             self.starting_weapons = list(
                 slot_data.get("starting_weapons", self.starting_weapons)
             )
@@ -725,7 +727,7 @@ def unshuffled_grants(unshuffled: set[str] | None = None) -> set[str]:
 
     if unshuffled is None:
         unshuffled = set(optional_item_options())
-    return unshuffled - VANILLA_WHEN_UNSHUFFLED
+    return unshuffled - VANILLA_WHEN_UNSHUFFLED.keys()
 
 
 def unshuffled_vanilla_classnames(unshuffled: set[str] | None = None) -> set[str]:
@@ -734,16 +736,17 @@ def unshuffled_vanilla_classnames(unshuffled: set[str] | None = None) -> set[str
     Classnames rather than item names, because gating is by classname and the
     game has to recognise the pickup it is being told to leave alone.
 
-    The long jump module: the campaign hands it out in Lambda Core, so an
-    unshuffled module wants nothing done to it at all. Calling it owned instead
-    granted it from the first spawn of the run.
+    Only for seeds generated before `placed_at_vanilla`, which left an
+    unshuffled long jump module entirely to the campaign. That lost it again on
+    the next mission, since every mission starts from the hub; newer seeds lock
+    the item to its vanilla location instead and gate the pickup as usual.
     """
     from ..data import VANILLA_WHEN_UNSHUFFLED
 
     if unshuffled is None:
         unshuffled = set(optional_item_options())
 
-    wanted = unshuffled & VANILLA_WHEN_UNSHUFFLED
+    wanted = unshuffled & VANILLA_WHEN_UNSHUFFLED.keys()
     return {
         classname
         for entry in load_campaign()["items"]

@@ -62,16 +62,18 @@ MAX_MISSIONS: int = len(UNLOCKABLE_CHAPTERS)
 # Items that only enter the pool when the matching YAML toggle is on.
 OPTIONAL_ITEM_NAMES = {"HEV Suit": "shuffle_hev_suit", "Long Jump Module": "shuffle_longjump"}
 
-# Of those, the ones that go back to behaving exactly as Half-Life does when the
-# toggle is off, rather than being handed over at the start of the run.
+# Of those, the ones that stay where Half-Life puts them when the toggle is off,
+# rather than being handed over at the start of the run: item -> the location it
+# is locked to.
 #
 # The two are not alike. Nothing but the HEV Suit item ever turns armour on, so an
 # unshuffled suit has to be granted up front or the player has no armour for the
-# whole run. The long jump module is different: the campaign gives it out itself,
-# in Forget About Freeman and everything after it, so leaving it entirely alone is
-# both possible and what "not shuffled" ought to mean. Granting it up front put a
-# module in the player's legs ten missions before Half-Life would have.
-VANILLA_WHEN_UNSHUFFLED = frozenset({"Long Jump Module"})
+# whole run. The long jump module the campaign hands out itself, in Forget About
+# Freeman, so granting it up front would put it in the player's legs ten missions
+# early. It is still a real item sent back by the server, though, not a pickup
+# left to the game: every mission starts from the hub, so a module that only ever
+# existed in one playthrough's inventory was gone again by Xen.
+VANILLA_WHEN_UNSHUFFLED: dict[str, str] = {"Long Jump Module": "First Long Jump Module"}
 
 # Trigger type of the health / HEV charger checks, switched off by `chargesanity`.
 CHARGER_TRIGGER = "charger"

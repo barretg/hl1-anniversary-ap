@@ -30,6 +30,7 @@ from .data import (
     INTRO_CHAPTER,
     OPTIONAL_ITEM_NAMES,
     STARTING_WEAPONS,
+    VANILLA_WHEN_UNSHUFFLED,
     VICTORY,
 )
 from .items import (
@@ -182,9 +183,15 @@ class HalfLifeWorld(World):
             self.excluded_triggers = set(passthrough.get("excluded_triggers", ()))
 
         self.available_item_names = set(weapon_items)
+        # Unshuffled equipment that still exists as an item, locked to where the
+        # campaign puts it. See `VANILLA_WHEN_UNSHUFFLED`.
+        self.vanilla_placements: dict[str, str] = {}
         for name in optional_items:
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
                 self.available_item_names.add(name)
+            elif name in VANILLA_WHEN_UNSHUFFLED:
+                self.available_item_names.add(name)
+                self.vanilla_placements[name] = VANILLA_WHEN_UNSHUFFLED[name]
         self.available_item_names.update(
             unlock_item_for_chapter[chapter["key"]]
             for chapter in self.included_chapters
@@ -243,6 +250,10 @@ class HalfLifeWorld(World):
         for name in sorted(self.available_item_names):
             if name == starting_unlock:
                 continue  # already in the starting inventory
+            if name in self.vanilla_placements:
+                location = self.get_location(self.vanilla_placements[name])
+                location.place_locked_item(self.create_item(name))
+                continue
             pool.append(self.create_item(name))
 
         remaining = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
@@ -302,4 +313,8 @@ class HalfLifeWorld(World):
             "ammo_relief": bool(self.options.ammo_relief.value),
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),
             "shuffle_longjump": bool(self.options.shuffle_longjump),
+            # Unshuffled equipment that is a real item at its vanilla location,
+            # so the client must gate its pickup like any other. Seeds from
+            # before this existed left the long jump module ungated instead.
+            "placed_at_vanilla": sorted(self.vanilla_placements),
         }

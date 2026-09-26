@@ -97,9 +97,9 @@ class ShuffleLongJump(Toggle):
     When on, the Xen missions expect it in logic, and you cannot long jump until
     the item arrives however many modules the campaign puts in front of you.
 
-    When off, the module is left to Half-Life entirely: no long jump early on,
-    and you pick it up where the campaign hands it over, in Forget About Freeman
-    and everything after it.
+    When off, the module stays where the campaign hands it over, in Forget About
+    Freeman: picking it up there sends it to you like any other item, so you keep
+    it into Xen however you get there.
     """
 
     display_name = "Shuffle Long Jump Module"

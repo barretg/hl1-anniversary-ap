@@ -153,6 +153,17 @@ class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeTestBase):
         state = self.multiworld.get_all_state(False)
         self.assertTrue(self.can_reach_entrance("Enter Xen", state))
 
+    def test_long_jump_module_is_locked_to_its_vanilla_location(self) -> None:
+        location = self.multiworld.get_location("First Long Jump Module", self.player)
+        self.assertIsNotNone(location.item)
+        self.assertEqual(location.item.name, "Long Jump Module")
+        self.assertEqual(location.item.player, self.player)
+        self.assertTrue(location.locked)
+
+    def test_slot_data_names_the_vanilla_placement(self) -> None:
+        slot_data = self.multiworld.worlds[self.player].fill_slot_data()
+        self.assertEqual(slot_data["placed_at_vanilla"], ["Long Jump Module"])
+
 
 class TestTraps(HalfLifeTestBase):
     options = {"trap_percentage": 50}
@@ -174,7 +185,7 @@ class TestTraps(HalfLifeTestBase):
         world = self.multiworld.worlds[self.player]
         return world.available_item_names - {
             unlock_item_for_chapter[world.starting_chapter]
-        }
+        } - world.vanilla_placements.keys()
 
 
 class TestNoTraps(HalfLifeTestBase):
@@ -214,7 +225,7 @@ class TestChargesanityOff(StartingMissionMixin, HalfLifeTestBase):
         pool = [item for item in self.multiworld.itempool if item.player == self.player]
         non_event = [
             location for location in self.multiworld.get_locations(self.player)
-            if location.address is not None
+            if location.address is not None and not location.locked
         ]
         self.assertEqual(len(pool), len(non_event))
 

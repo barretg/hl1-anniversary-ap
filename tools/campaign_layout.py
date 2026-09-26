@@ -273,6 +273,17 @@ HEALING_POOL_CLASSNAMES: dict[str, str] = {
 # round together.
 CHARGER_POSITION_GRID = 4
 
+# Chargers no player can reach without noclip that the automatic checks in
+# `build_campaign_data` (seam twins, somewhere to stand) do not catch, as
+# `{map: {(classname, rounded position)}}`. The position is the charger's key,
+# the `at` of its trigger in campaign.json.
+#
+# We've Got Hostiles' Part 2 map has one behind its level transition with no
+# twin in the map next door, so nothing can drop it but saying so here.
+UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    "c1a3d": {("func_healthcharger", (136, -780, 696))},
+}
+
 # --- Logic groups ---------------------------------------------------------
 
 RANGED_WEAPONS = [

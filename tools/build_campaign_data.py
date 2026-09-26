@@ -50,6 +50,7 @@ from campaign_layout import (
     REQUIREMENT_GROUPS,
     STARTING_WEAPONS,
     UNRANDOMISED_WEAPON_LOCATIONS,
+    UNREACHABLE_CHARGERS,
     WEAPON_ITEMS,
 )
 
@@ -472,6 +473,11 @@ def build(maps_dir: Path, registry: IdRegistry) -> dict:
                     if f"{classname}:{entity.get('model', '')}" in sealed_here:
                         continue
                     at = charger_position(entity, centres[map_name])
+                    if at is not None and (
+                        (classname, charger_key_position(at))
+                        in UNREACHABLE_CHARGERS.get(map_name, set())
+                    ):
+                        continue
                     if at is None:
                         # No brush model, so nothing in the running game can
                         # ever be matched to it. Silently skipping would hide

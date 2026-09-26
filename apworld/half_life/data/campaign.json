@@ -1,5 +1,5 @@
 {
- "data_version": "2795f934de1c",
+ "data_version": "4311d1555b6b",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "chapters": [
@@ -1386,25 +1386,8 @@
    }
   },
   {
-   "id": 7760052,
-   "name": "We've Got Hostiles - Health Charger 1 (Part 2)",
-   "chapter": "c1a3",
-   "map": "c1a3d",
-   "trigger": {
-    "type": "charger",
-    "map": "c1a3d",
-    "classname": "func_healthcharger",
-    "at": "136 -780 696"
-   },
-   "position": [
-    136,
-    -780,
-    696
-   ]
-  },
-  {
    "id": 7760053,
-   "name": "We've Got Hostiles - Health Charger 2 (Part 2)",
+   "name": "We've Got Hostiles - Health Charger 1 (Part 2)",
    "chapter": "c1a3",
    "map": "c1a3d",
    "trigger": {
@@ -1421,7 +1404,7 @@
   },
   {
    "id": 7760054,
-   "name": "We've Got Hostiles - Health Charger 3 (Part 2)",
+   "name": "We've Got Hostiles - Health Charger 2 (Part 2)",
    "chapter": "c1a3",
    "map": "c1a3d",
    "trigger": {
