@@ -96,7 +96,29 @@ cvar_t bot_quota = {(char*)"bot_quota", (char*)"0"};
 cvar_t bot_autofill = {(char*)"bot_autofill", (char*)"0"};
 cvar_t bot_zombie = {(char*)"bot_zombie", (char*)"0"};
 
-const char* const kBotModel = "models/player.mdl";
+// Every multiplayer skin Half-Life ships in valve/models/player. A bot wears
+// one at random. Each costs a model precache slot on every map, and a missing
+// file is a fatal precache error, so the list is only what retail installs:
+// spelled as on disk, since several are capitalised and not every filesystem
+// forgives that. All of them carry the player skeleton and sequences, so the
+// crowbar and the animation names below fit any of them.
+const char* const kBotModels[] = {
+    "models/player/barney/barney.mdl",
+    "models/player/bbbbarney/bbbbarney.mdl",
+    "models/player/gina/Gina.mdl",
+    "models/player/gman/Gman.mdl",
+    "models/player/gordon/gordon.mdl",
+    "models/player/helmet/Helmet.mdl",
+    "models/player/hgrunt/Hgrunt.mdl",
+    "models/player/ivan/ivan.mdl",
+    "models/player/recon/recon.mdl",
+    "models/player/robo/robo.mdl",
+    "models/player/scientist/Scientist.mdl",
+    "models/player/skeleton/skeleton.mdl",
+    "models/player/tmcm/TMCM.mdl",
+    "models/player/zombie/zombie.mdl",
+};
+constexpr int kBotModelCount = sizeof(kBotModels) / sizeof(kBotModels[0]);
 const char* const kCrowbarModel = "models/p_crowbar.mdl";
 
 enum MoveState { kMoveWander, kMoveJump };
@@ -175,7 +197,8 @@ TYPEDESCRIPTION CApBot::m_SaveData[] = {
 IMPLEMENT_SAVERESTORE(CApBot, CBaseMonster);
 
 void CApBot::Spawn() {
-    SET_MODEL(ENT(pev), kBotModel);
+    // A restore does not come through here: the saved model is kept.
+    SET_MODEL(ENT(pev), kBotModels[RANDOM_LONG(0, kBotModelCount - 1)]);
     // Handed the feet, like any spawn spot; the origin is the hull's centre.
     pev->origin.z += kStandHalf;
     UTIL_SetOrigin(pev, pev->origin);
@@ -741,7 +764,9 @@ int Quota() {
 bool BotZombie() { return bot_zombie.value != 0.0f; }
 
 void PrecacheBots() {
-    PRECACHE_MODEL((char*)kBotModel);
+    for (const char* model : kBotModels) {
+        PRECACHE_MODEL((char*)model);
+    }
     PRECACHE_MODEL((char*)kCrowbarModel);
     PRECACHE_SOUND((char*)"weapons/cbar_hit1.wav");
     PRECACHE_SOUND((char*)"weapons/cbar_hit2.wav");

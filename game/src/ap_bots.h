@@ -4,8 +4,8 @@
 // A fake client needs a second client slot, which means maxplayers above 1, and
 // GoldSrc will not save a game with more than one slot -- so no saves, no warp
 // points and no reload on death, which is the whole of this mod's flow. Here the
-// same brain drives an ordinary server-side entity, `ap_bot`, wearing the player
-// model with a crowbar merged onto its hand.
+// same brain drives an ordinary server-side entity, `ap_bot`, wearing one of the
+// player skins with a crowbar merged onto its hand.
 //
 // The brain is the branch's, unchanged in spirit: walk a heading; duck if that
 // is what opens the way; otherwise crouch-jump it, and turn away if the landing
