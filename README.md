@@ -1,9 +1,7 @@
 # Half-Life Trilogy: Archipelago
 
 An Archipelago randomizer for retail Half-Life on Steam, the 25th anniversary
-build, with Opposing Force and Blue Shift as experimental additions. The world's
-game name in Archipelago is still `Half-Life`, so existing YAMLs and seeds keep
-working; Half-Life Trilogy is its name in documentation. The campaign is cut into 18 missions, each locked behind a received item;
+build, with Opposing Force and Blue Shift as experimental additions. The campaign is cut into 18 missions, each locked behind a received item;
 every weapon but the crowbar has to be found in the multiworld; and you travel
 between missions from a hub rather than playing straight through.
 
