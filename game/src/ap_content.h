@@ -38,7 +38,20 @@ void InstallContentHooks();
 // this map belongs to, and so which copies to use.
 void BeginMapContent();
 
+// Model precache slots in use on this map, of the engine's 512.
+int ModelSlotsUsed();
+
+// The name a model is precached under on this map: the campaign's copy if it
+// relocated one. For names the engine reads back itself, without the dll.
+const char* ContentModel(const char* name);
+
+// StartFrame: keep each player's view and weapon model names on the relocated
+// copies. The engine looks these up by name on an HD switch, bypassing our
+// hooks, and a restored save carries the original names.
+void FixPlayerModels();
+
 // The campaign of the map being loaded, or "half_life".
+
 const std::string& CurrentCampaign();
 
 // Whether the loaded map belongs to one of these games, for the entity behaviour

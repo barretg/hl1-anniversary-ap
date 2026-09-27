@@ -812,10 +812,10 @@ index 7e9c730..18d2e8b 100644
 +	gEngfuncs.pfnHookEvent( "events/knife.sc", EV_Knife );
  }
 diff --git a/cl_dll/hl/hl_weapons.cpp b/cl_dll/hl/hl_weapons.cpp
-index d8215cb..082e1cc 100644
+index d8215cb..a7c2d21 100644
 --- a/cl_dll/hl/hl_weapons.cpp
 +++ b/cl_dll/hl/hl_weapons.cpp
-@@ -19,6 +19,16 @@
+@@ -19,11 +19,22 @@
  #include "weapons.h"
  #include "nodes.h"
  #include "player.h"
@@ -832,7 +832,13 @@ index d8215cb..082e1cc 100644
  
  #include "usercmd.h"
  #include "entity_state.h"
-@@ -66,6 +76,15 @@ CHandGrenade g_HandGren;
+ #include "demo_api.h"
+ #include "pm_defs.h"
++#include "com_model.h"
+ #include "event_api.h"
+ #include "r_efx.h"
+ 
+@@ -66,6 +77,15 @@ CHandGrenade g_HandGren;
  CSatchel g_Satchel;
  CTripmine g_Tripmine;
  CSqueak g_Snark;
@@ -848,7 +854,91 @@ index d8215cb..082e1cc 100644
  
  
  /*
-@@ -563,6 +582,19 @@ void UTIL_ParticleLine( CBasePlayer *player, float *start, float *end, float lif
+@@ -94,10 +114,73 @@ bool bIsMultiplayer ( void )
+ {
+ 	return gEngfuncs.GetMaxClients() == 1 ? 0 : 1;
+ }
++// The name the server precached for a model. On another game's maps that is
++// a relocated copy (models/ap_of/v_crowbar.mdl), not the name the weapon asks
++// for, and a model loaded outside the precache list is not reloaded when the
++// HD setting changes: drawing it afterwards is fatal.
++static char *FindPrecachedModel( char *name )
++{
++	const char *base = strrchr( name, '/' );
++	base = base ? base + 1 : name;
++	char *relocated = NULL;
++	for ( int i = 1; i < 512; ++i ) // the engine's MAX_MODELS
++	{
++		model_s *mod = gEngfuncs.hudGetModelByIndex( i );
++		if ( !mod || !mod->name[0] )
++			continue;
++		if ( !stricmp( mod->name, name ) )
++			return name;
++		const char *slash = strrchr( mod->name, '/' );
++		if ( !relocated && slash && !stricmp( slash + 1, base ) && !strnicmp( mod->name, "models/ap_", 10 )
++			&& strchr( mod->name + 10, '/' ) == slash )
++			relocated = mod->name;
++	}
++	return relocated;
++}
++
++// While the HD setting reloads models the list above can come back without
++// them, and loading a name the server never precached is fatal. So each name
++// is resolved once per map and remembered; NULL: not loadable, skip it.
++static char g_szResolvedMap[64];
++static char g_szResolved[32][2][64];
++static int g_iResolved;
++
++static char *PrecachedModel( char *name )
++{
++	const char *map = gEngfuncs.pfnGetLevelName();
++	if ( stricmp( map ? map : "", g_szResolvedMap ) )
++	{
++		strncpy( g_szResolvedMap, map ? map : "", sizeof( g_szResolvedMap ) - 1 );
++		g_iResolved = 0;
++	}
++	for ( int i = 0; i < g_iResolved; ++i )
++	{
++		if ( !stricmp( g_szResolved[i][0], name ) )
++			return g_szResolved[i][1];
++	}
++	char *found = FindPrecachedModel( name );
++	if ( !found )
++		return NULL;
++	if ( g_iResolved < 32 )
++	{
++		strncpy( g_szResolved[g_iResolved][0], name, 63 );
++		strncpy( g_szResolved[g_iResolved][1], found, 63 );
++		return g_szResolved[g_iResolved++][1];
++	}
++	return found;
++}
++
++static void LoadPrecachedModel( char *name, int *index )
++{
++	char *resolved = PrecachedModel( name );
++	if ( resolved )
++		gEngfuncs.CL_LoadModel( resolved, index );
++}
++
+ //Just loads a v_ model.
+ void LoadVModel ( char *szViewModel, CBasePlayer *m_pPlayer )
+ {
+-	gEngfuncs.CL_LoadModel( szViewModel, &m_pPlayer->pev->viewmodel );
++	LoadPrecachedModel( szViewModel, &m_pPlayer->pev->viewmodel );
+ }
+ 
+ /*
+@@ -213,7 +296,7 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
+ 	if ( !CanDeploy() )
+ 		return FALSE;
+ 
+-	gEngfuncs.CL_LoadModel( szViewModel, &m_pPlayer->pev->viewmodel );
++	LoadPrecachedModel( szViewModel, &m_pPlayer->pev->viewmodel );
+ 	
+ 	SendWeaponAnim( iAnim, skiplocal, body );
+ 
+@@ -563,6 +646,19 @@ void UTIL_ParticleLine( CBasePlayer *player, float *start, float *end, float lif
  	gEngfuncs.pEfxAPI->R_ParticleLine( start, end, r, g, b, life );
  }
  
@@ -868,7 +958,7 @@ index d8215cb..082e1cc 100644
  /*
  =====================
  HUD_InitClientWeapons
-@@ -619,6 +651,15 @@ void HUD_InitClientWeapons( void )
+@@ -619,6 +715,15 @@ void HUD_InitClientWeapons( void )
  	HUD_PrepEntity( &g_Satchel	, &player );
  	HUD_PrepEntity( &g_Tripmine	, &player );
  	HUD_PrepEntity( &g_Snark	, &player );
@@ -884,7 +974,7 @@ index d8215cb..082e1cc 100644
  }
  
  /*
-@@ -739,6 +780,42 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+@@ -739,6 +844,42 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
  		case WEAPON_SNARK:
  			pWeapon = &g_Snark;
  			break;
@@ -927,7 +1017,7 @@ index d8215cb..082e1cc 100644
  	}
  
  	// Store pointer to our destination entity_state_t so we can get our origin, etc. from it
-@@ -790,6 +867,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+@@ -790,6 +931,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
  		pCurrent->m_chargeReady			= pfrom->iuser1;
  		pCurrent->m_fInAttack			= pfrom->iuser2;
  		pCurrent->m_fireState			= pfrom->iuser3;
@@ -935,7 +1025,7 @@ index d8215cb..082e1cc 100644
  
  		pCurrent->m_iSecondaryAmmoType		= (int)from->client.vuser3[ 2 ];
  		pCurrent->m_iPrimaryAmmoType		= (int)from->client.vuser4[ 0 ];
-@@ -839,6 +917,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+@@ -839,6 +981,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
  	player.ammo_uranium		= (int)from->client.ammo_cells;
  	player.ammo_hornets		= (int)from->client.vuser2[0];
  	player.ammo_rockets		= (int)from->client.ammo_rockets;
@@ -944,7 +1034,7 @@ index d8215cb..082e1cc 100644
  
  	
  	// Point to current weapon object
-@@ -914,6 +994,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+@@ -914,6 +1058,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
  	to->client.ammo_cells				= player.ammo_uranium;
  	to->client.vuser2[0]				= player.ammo_hornets;
  	to->client.ammo_rockets				= player.ammo_rockets;
@@ -953,7 +1043,7 @@ index d8215cb..082e1cc 100644
  
  	if ( player.m_pActiveItem->m_iId == WEAPON_RPG )
  	{
-@@ -964,6 +1046,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
+@@ -964,6 +1110,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
  		pto->iuser1						= pCurrent->m_chargeReady;
  		pto->iuser2						= pCurrent->m_fInAttack;
  		pto->iuser3						= pCurrent->m_fireState;
@@ -2918,6 +3008,45 @@ index e7c7ced..3a722c3 100644
  };
  
  #define AUTOAIM_2DEGREES  0.0348994967025
+diff --git a/dlls/satchel.cpp b/dlls/satchel.cpp
+index 10f7b6b..0e5cc6c 100644
+--- a/dlls/satchel.cpp
++++ b/dlls/satchel.cpp
+@@ -22,6 +22,12 @@
+ #include "nodes.h"
+ #include "player.h"
+ #include "gamerules.h"
++#ifndef CLIENT_DLL
++#include "ap_content.h"
++#define AP_MODEL( name ) ap::ContentModel( name )
++#else
++#define AP_MODEL( name ) ( name )
++#endif
+ 
+ enum satchel_e {
+ 	SATCHEL_IDLE1 = 0,
+@@ -401,8 +407,8 @@ void CSatchel::Throw( void )
+ 		pSatchel->pev->velocity = vecThrow;
+ 		pSatchel->pev->avelocity.y = 400;
+ 
+-		m_pPlayer->pev->viewmodel = MAKE_STRING("models/v_satchel_radio.mdl");
+-		m_pPlayer->pev->weaponmodel = MAKE_STRING("models/p_satchel_radio.mdl");
++		m_pPlayer->pev->viewmodel = MAKE_STRING(AP_MODEL("models/v_satchel_radio.mdl"));
++		m_pPlayer->pev->weaponmodel = MAKE_STRING(AP_MODEL("models/p_satchel_radio.mdl"));
+ #else
+ 		LoadVModel ( "models/v_satchel_radio.mdl", m_pPlayer );
+ #endif
+@@ -448,8 +454,8 @@ void CSatchel::WeaponIdle( void )
+ 		}
+ 
+ #ifndef CLIENT_DLL
+-		m_pPlayer->pev->viewmodel = MAKE_STRING("models/v_satchel.mdl");
+-		m_pPlayer->pev->weaponmodel = MAKE_STRING("models/p_satchel.mdl");
++		m_pPlayer->pev->viewmodel = MAKE_STRING(AP_MODEL("models/v_satchel.mdl"));
++		m_pPlayer->pev->weaponmodel = MAKE_STRING(AP_MODEL("models/p_satchel.mdl"));
+ #else
+ 		LoadVModel ( "models/v_satchel.mdl", m_pPlayer );
+ #endif
 diff --git a/dlls/schedule.cpp b/dlls/schedule.cpp
 index 488a770..922b3fe 100644
 --- a/dlls/schedule.cpp
@@ -3671,10 +3800,18 @@ index 1f9ea5b..7233b68 100644
 +
 +
 diff --git a/dlls/weapons.cpp b/dlls/weapons.cpp
-index b9baa31..b0550c0 100644
+index b9baa31..20c677f 100644
 --- a/dlls/weapons.cpp
 +++ b/dlls/weapons.cpp
-@@ -384,6 +384,23 @@ void W_Precache(void)
+@@ -30,6 +30,7 @@
+ #include "soundent.h"
+ #include "decals.h"
+ #include "gamerules.h"
++#include "ap_content.h"
+ 
+ extern CGraph	WorldGraph;
+ extern int gEvilImpulse101;
+@@ -384,6 +385,23 @@ void W_Precache(void)
  #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
  	// hornetgun
  	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
@@ -3697,6 +3834,17 @@ index b9baa31..b0550c0 100644
 +	PRECACHE_SOUND( "weapons/spore_hit3.wav" );
  #endif
  
+ 
+@@ -1008,8 +1026,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
+ 		return FALSE;
+ 
+ 	m_pPlayer->TabulateAmmo();
+-	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
+-	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
++	m_pPlayer->pev->viewmodel = MAKE_STRING(ap::ContentModel(szViewModel));
++	m_pPlayer->pev->weaponmodel = MAKE_STRING(ap::ContentModel(szWeaponModel));
+ 	strcpy( m_pPlayer->m_szAnimExtention, szAnimExt );
+ 	SendWeaponAnim( iAnim, skiplocal, body );
  
 diff --git a/dlls/weapons.h b/dlls/weapons.h
 index ab2d2e7..b2d6476 100644

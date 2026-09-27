@@ -14,6 +14,7 @@
 #include "ap_bots.h"
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
+#include "ap_content.h"
 #include "ap_deathlink.h"
 #include "ap_hub.h"
 #include "ap_items.h"
@@ -436,6 +437,13 @@ void RunFrame() {
     if (g_frames_this_map < 1000) {
         ++g_frames_this_map;  // capped: only the first couple are interesting
     }
+    if (g_frames_this_map == 1) {
+        char line[96];
+        snprintf(line, sizeof(line), "model slots on %s: %d of 512",
+                 STRING(gpGlobals->mapname), ModelSlotsUsed());
+        Trace(line);
+        ALERT(at_console, "[AP] %s\n", line);
+    }
     static bool first = true;
     if (first) {
         first = false;
@@ -449,6 +457,7 @@ void RunFrame() {
     // from the hook.
     ExecBinds();
     FlushNotices();
+    FixPlayerModels();
     RunLoadout();
     RunThrows();
     RunSeamDoors();

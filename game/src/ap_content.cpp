@@ -6,7 +6,9 @@
 #include "ap_main.h"
 #include "ap_state.h"
 
+#include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <fstream>
 #include <map>
 #include <set>
@@ -42,6 +44,15 @@ const Campaign* g_active = nullptr;  // null unless it relocated any file
 Campaign* g_texts = nullptr;         // null unless it renamed any text
 
 const char* const kSilence = "common/null.wav";
+
+// `viewmodel_style: always_gordon`, fixed for the whole map when it loads. The
+// client's snapshot is first polled after the map has precached, so asking
+// State() mid-map could name a view model the precache never saw.
+bool g_gordon_hands = false;
+
+// The highest model slot handed out on this map. The engine numbers the world
+// and its brush models first, so this is every slot in use.
+int g_model_slots = 0;
 
 // Redirected names, kept for the life of the process. The engine stores the
 // pointer it is given for a model name rather than copying it, so each one
@@ -154,7 +165,7 @@ const char* Redirect(const char* name, const char* base) {
     }
     // `viewmodel_style: always_gordon`: Half-Life's hands on every map. Only
     // the first-person models; the world is still the other game's.
-    if (State().gordon_hands && key.rfind("models/v_", 0) == 0) {
+    if (g_gordon_hands && key.rfind("models/v_", 0) == 0) {
         return name;
     }
     std::string rel = Lower(path);
@@ -166,7 +177,27 @@ const char* Redirect(const char* name, const char* base) {
 }
 
 int PrecacheModel(char* s) {
-    return g_real.pfnPrecacheModel(const_cast<char*>(Redirect(s, "")));
+    const char* name = Redirect(s, "");
+    const int index = g_real.pfnPrecacheModel(const_cast<char*>(name));
+    g_model_slots = (std::max)(g_model_slots, index);
+    // A classic model can keep its textures in `<name>T.mdl` where the HD one
+    // has them inside. The engine precaches that file only for the version it
+    // loaded, so switching HD mid-map would need one it never listed.
+    const size_t len = std::strlen(name);
+    if (len > 4 && Lower(name + len - 4) == ".mdl") {
+        static std::unordered_map<std::string, bool> has_textures;
+        const std::string textures = std::string(name, len - 4) + "T.mdl";
+        auto it = has_textures.find(textures);
+        if (it == has_textures.end()) {
+            it = has_textures.emplace(textures,
+                g_real.pfnGetFileSize(const_cast<char*>(textures.c_str())) > 0).first;
+        }
+        if (it->second) {
+            g_model_slots = (std::max)(g_model_slots,
+                g_real.pfnPrecacheModel(const_cast<char*>(Intern(textures))));
+        }
+    }
+    return index;
 }
 
 int PrecacheSound(char* s) {
@@ -218,8 +249,23 @@ void InstallContentHooks() {
     g_engfuncs.pfnEmitAmbientSound = EmitAmbientSound;
 }
 
+// The seed's `gordon_hands`, read straight from the client's snapshot: this runs
+// before the first poll after a game launch. State() once one has run.
+bool ReadGordonHands() {
+    std::ifstream in(StoreDir() + "/ap_in.txt");
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.rfind("gordon_hands=", 0) == 0) {
+            return line.size() > 13 && line[13] == '1';
+        }
+    }
+    return State().gordon_hands;
+}
+
 void BeginMapContent() {
     Load();
+    g_gordon_hands = ReadGordonHands();
+    g_model_slots = 0;
     const auto found = g_map_campaign.find(Lower(STRING(gpGlobals->mapname)));
     g_current = found == g_map_campaign.end() ? kHalfLife : found->second;
     const auto campaign = g_campaigns.find(g_current);
@@ -245,6 +291,35 @@ void RemapSpawn(entvars_t* pev) {
     if (found != g_texts->titles.end()) {
         pev->message = MAKE_STRING(Intern(found->second));
     }
+}
+
+const char* ContentModel(const char* name) {
+    return Redirect(name, "");
+}
+
+void FixPlayerModels() {
+    if (!g_active) {
+        return;
+    }
+    for (int i = 1; i <= gpGlobals->maxClients; ++i) {
+        edict_t* e = INDEXENT(i);
+        if (!e || e->free || !e->pvPrivateData) {
+            continue;
+        }
+        for (auto* field : {&e->v.viewmodel, &e->v.weaponmodel}) {
+            if (FStringNull(*field)) {
+                continue;
+            }
+            const char* redirected = Redirect(STRING(*field), "");
+            if (redirected != STRING(*field)) {
+                *field = MAKE_STRING(redirected);
+            }
+        }
+    }
+}
+
+int ModelSlotsUsed() {
+    return g_model_slots;
 }
 
 const std::string& CurrentCampaign() {
