@@ -1,4 +1,7 @@
-# Half-Life
+# Half-Life Trilogy
+
+Half-Life, Opposing Force and Blue Shift on retail Steam, as one world. It is
+listed as **Half-Life** in the game list and in YAMLs.
 
 ## Quick links
 
@@ -8,7 +11,8 @@
 
 Half-Life's campaign is cut into its own 18 missions, from Black Mesa Inbound to
 Nihilanth, using the game's own chapter boundaries. Instead of playing straight
-through, you travel to a mission from a hub, and a mission is locked until the
+through, you travel to a mission from a hub by walking into its entrance or
+pressing its button, and a mission is locked until the
 multiworld sends its unlock item.
 
 Weapons are locked too. Every weapon but the crowbar has to be received before
@@ -46,8 +50,17 @@ after the level has settled.
 
 ## What is the goal?
 
-Kill Nihilanth. It becomes available once `missions_required` other missions have
-been finished.
+Finish the finale of every game in the seed:
+
+| Game | Finale | Opens after |
+| --- | --- | --- |
+| Half-Life | Nihilanth: kill Nihilanth | `missions_required` other Half-Life missions |
+| Opposing Force | Worlds Collide | `opposing_force_missions_required` other Opposing Force missions |
+| Blue Shift | Power Struggle: reach the ending | `blue_shift_missions_required` other Blue Shift missions |
+
+A finale has no unlock item; it opens on its own game's mission count, and only
+missions of that game count toward it. With one game in the seed, its finale is
+the whole goal.
 
 ## Opposing Force and Blue Shift (experimental)
 
@@ -59,10 +72,13 @@ every seed, since all three games place them.
 
 ## Unique local commands
 
-Typed in the game console (`~`):
+Typed in the game console (`~`), or in chat (`Y`) with `!` in place of `ap_`
+(`!warp 3`, and `!ap` for the first):
 
 - `ap` -- every mission and its unlock status
 - `ap_warp <number or name>` -- travel to an unlocked mission
+- `ap_warp <mission> <part>` -- travel to a part of a mission you have reached
+- `ap_setwarp [name]`, `ap_warps` -- make and list warp points of your own
 - `ap_hub` -- return to the hub
 - `ap_tracker [map]` -- locations found and still out there
 - `ap_find [text]` -- point at the nearest unfound check, or one you name

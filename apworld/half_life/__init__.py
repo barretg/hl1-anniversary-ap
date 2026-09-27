@@ -111,7 +111,7 @@ class HalfLifeWeb(WebWorld):
     tutorials = [
         Tutorial(
             "Multiworld Setup Guide",
-            "A guide to setting up Half-Life for Archipelago.",
+            "A guide to setting up Half-Life Trilogy for Archipelago.",
             "English",
             "setup_en.md",
             "setup/en",
@@ -135,8 +135,8 @@ class HalfLifeWeb(WebWorld):
 
 
 class HalfLifeWorld(World):
-    """Half-Life, with every mission and every weapon locked behind Archipelago
-    items."""
+    """Half-Life Trilogy: Half-Life, Opposing Force and Blue Shift, with every
+    mission and every weapon locked behind Archipelago items."""
 
     game = GAME_NAME
     options_dataclass = HalfLifeOptions

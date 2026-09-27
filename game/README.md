@@ -217,8 +217,9 @@ chargers of the same classname are never closer than 204 units anywhere in the
 campaign, and any two chargers are never closer than 48, so the match cannot be
 ambiguous -- and a future recompile that shifts a brush slightly cannot break it.
 
-**The hub is `ap_lobby_alpha`,** an authored map: one room, a labelled panel per
-mission, and a pit. It is also `startmap` in `liblist.gam`, so New Game begins
+**The hub is `ap_lobby_alpha`,** an authored map: an entrance per Half-Life
+mission, and a pit. Most entrances are trigger volumes walked into; a few are
+buttons pressed with use. It is also `startmap` in `liblist.gam`, so New Game begins
 there rather than on the tram, and it is the one map the mod folder ships --
 everything else is inherited from `valve` through the fallback, but no Half-Life
 install has this one.
@@ -232,18 +233,26 @@ because it is reloaded after every mission. Authoring the map settles the first
 and the third. The second it breaks deliberately: the pit is a joke and has to be
 walked into.
 
-**The lobby's panels go through the same gate as `ap_warp`.** `MissionOpen` in
+**The lobby's entrances go through the same gate as `ap_warp`.** `MissionOpen` in
 `ap_hub.cpp` is the one place that answers "may the player enter this mission",
-so a panel cannot become a way past a lock the command honours. The only thing
-the two do differently is where a refusal is printed: a command answers in the
-console with `Say`, a panel answers on screen with `Notify`, because somebody who
-pressed a button is looking at the room and a console-only refusal is
-indistinguishable from a dead button.
+so an entrance cannot become a way past a lock the command honours. The only
+thing the two do differently is where a refusal is printed: a command answers in
+the console with `Say`, an entrance answers on screen with `Notify`, because
+somebody who walked into one is looking at the room and a console-only refusal is
+indistinguishable from a dead entrance.
 
-A panel is matched by `targetname` against the `P` records, and the generator
-reads those out of the BSP: `chapter_<n>_button` enters the mission with index
-`n`. Nothing is written down twice, so a panel renamed in the map moves its
-record with it, and a mission with no panel fails the build rather than being
+An entrance does not leave at once. A trigger, or a button with no target of its
+own, says "Warping to <mission>" and leaves two seconds later (`ArmHubWarp`); a
+button that also fires a target, such as chapter 3's elevator doors, waits 3.5
+seconds so the map finishes moving first. A trigger is handled in
+`TouchHubTrigger` before the game's own touch runs, so a `trigger_once` is never
+used up and a refused player can walk back in once the mission opens.
+
+An entrance is matched by `targetname` against the `P` records, and the
+generator reads those out of the BSP: `chapter_<n>_button` (a `func_button`,
+`trigger_once` or `trigger_multiple`) enters the mission with index `n`. Nothing
+is written down twice, so an entrance renamed in the map moves its record with
+it, and a mission with no entrance, or with two, fails the build rather than being
 discovered in play. Four names have to agree -- `kHubMap` here, `startmap` in
 `liblist.gam`, `HUB_MAP` in `tools/campaigns/shared.py`, and `hub_map` in the
 generated data -- and `tests/test_mod_install.py` fails if they drift.

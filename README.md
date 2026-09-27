@@ -1,7 +1,9 @@
-# Half-Life — Archipelago
+# Half-Life Trilogy: Archipelago
 
 An Archipelago randomizer for retail Half-Life on Steam, the 25th anniversary
-build. The campaign is cut into 18 missions, each locked behind a received item;
+build, with Opposing Force and Blue Shift as experimental additions. The world's
+game name in Archipelago is still `Half-Life`, so existing YAMLs and seeds keep
+working; Half-Life Trilogy is its name in documentation. The campaign is cut into 18 missions, each locked behind a received item;
 every weapon but the crowbar has to be found in the multiworld; and you travel
 between missions from a hub rather than playing straight through.
 
@@ -42,7 +44,8 @@ moment Nihilanth dies. The hazard course is not part of the campaign and is left
 out.
 
 Nihilanth has no unlock item: it opens once `missions_required` other missions
-are finished, and clearing it wins the seed.
+are finished. Clearing it wins a Half-Life-only seed; with Opposing Force or
+Blue Shift in, every included game's finale is needed (see below).
 
 A mission is entered from the hub with a fresh `map` load, so it is repeatable
 and carries no state in from anywhere else. Transitions *inside* a mission are
@@ -91,15 +94,15 @@ reports the missing ones rather than failing.
 
 ## The hub
 
-New Game starts in `stalkyard`, not on the tram, and every mission is reached
-from there with `ap_warp`. Until there is an authored hub map it is a stock
-deathmatch map, chosen against the map files rather than by taste: no
-`trigger_changelevel` (`lambda_bunker` has one straight into the middle of Forget
-About Freeman), nothing that hurts you while you stand still (`pool_party` has a
-`dmg 200` trigger), and small, because it is reloaded after every mission.
+New Game starts in `ap_lobby_alpha`, an authored lobby map the mod ships, not on
+the tram. Each Half-Life mission has an entrance there, `chapter_<n>_button`:
+most are trigger volumes walked into, a few are buttons pressed with use. Either
+says "Warping to <mission>" and leaves after a short countdown, or longer where
+the button first sets the map moving (an elevator, a door). A locked mission says
+why on screen. `ap_warp` reaches every mission, including the other games'.
 
-Nothing in the hub can fire a check. Its weapons are not the campaign's weapons,
-and its two chargers are not in `checkdata.txt` at all.
+Nothing in the hub can fire a check. It has no weapons, and its health charger
+is not in `checkdata.txt` at all.
 
 ## Layout
 

@@ -1,10 +1,16 @@
-# Half-Life Archipelago Setup Guide
+# Half-Life Trilogy Archipelago Setup Guide
+
+Half-Life Trilogy is Half-Life, Opposing Force and Blue Shift as one
+Archipelago world. In the Archipelago game list, YAMLs and the Launcher it is
+still called **Half-Life**; the name there is unchanged so existing YAMLs and
+seeds keep working.
 
 ## What you need
 
 - **Half-Life** on Steam, current build. Not the `steam_legacy` beta branch.
 - **Archipelago** 0.6.7 or newer.
-- The **Half-Life apworld**, in `<Archipelago>/custom_worlds/`.
+- The **Half-Life Trilogy apworld**, `half_life.apworld`, in
+  `<Archipelago>/custom_worlds/`.
 - Optionally **Opposing Force** and/or **Blue Shift** on Steam, in the same
   library as Half-Life, for a seed that includes them. Install them *before*
   running `/install`, or run it again after buying one.
@@ -34,7 +40,11 @@ is not connected -- otherwise closing the client would be a way past every lock
 in the game.
 
 Start a New Game and you arrive in the hub rather than on the tram. Every mission
-is reached from there.
+is reached from there: walk into a mission's entrance, or press its button, and
+the game says "Warping to <mission>" and takes you there a couple of seconds
+later. A mission that is still locked says why instead. The hub has entrances
+for Half-Life's missions; Opposing Force and Blue Shift missions are reached with
+`!warp`.
 
 Commands work in two places: **chat** (`Y`), with a `!` in front, or the
 **console** (`~`, which needs `-console`) without it. Chat is usually the one you
@@ -147,7 +157,8 @@ has sent them: walking over a shotgun you have not been sent leaves it where it
 is, and the check for it still fires.
 
 Nihilanth is not unlocked by an item. It opens once you have finished
-`missions_required` other missions, and clearing it wins your slot.
+`missions_required` other missions. Clearing it wins your slot when Half-Life is
+the only game in the seed; with more than one, see below.
 
 Warping into a mission loads the map fresh, so you always arrive with exactly
 what the seed says you should have and can replay a mission freely. Transitions
