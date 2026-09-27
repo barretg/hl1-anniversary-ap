@@ -115,9 +115,9 @@ void RunDeferred();
 // Matched on the entity's targetname against the `P` records, which is the one
 // handle the map and `checkdata.txt` share.
 //
-// A panel whose button also fires a target of its own (chapter 3's elevator
-// doors) does not leave at once: it says "Warping to <mission>" and leaves once
-// the map has finished moving. See `TouchHubTrigger` for the countdown.
+// A panel says "Warping to <mission>" and leaves after the same countdown a
+// trigger gives, or, when its button also fires a target of its own (chapter
+// 3's elevator doors), once the map has finished moving. See `TouchHubTrigger`.
 bool PressHubButton(CBasePlayer* player, CBaseEntity* target);
 
 // A lobby trigger was touched, from `CBaseTrigger::MultiTouch`. True when it is

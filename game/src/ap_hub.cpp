@@ -708,13 +708,11 @@ bool PressHubButton(CBasePlayer* player, CBaseEntity* target) {
 
     // A panel with a target of its own sets something in the map going -- the
     // elevator doors -- and the warp waits for it to finish rather than cutting
-    // it off.
-    if (!FStringNull(target->pev->target)) {
-        ArmHubWarp(*chapter, kHubAnimatedDelay, kHubPressNoticeDelay);
-    } else if (MissionOpen(*chapter, true)) {
-        Notify(std::string("Entering ") + chapter->name + ".");
-        RequestMap(chapter->maps.front());
-    }
+    // it off. One without counts down like a walk-in trigger.
+    ArmHubWarp(*chapter,
+               FStringNull(target->pev->target) ? kHubTriggerDelay
+                                                : kHubAnimatedDelay,
+               kHubPressNoticeDelay);
     // Ours either way: a refused panel has still been answered, and the refusal
     // is on screen. Returning false would let the press fall through to the
     // charger check below it, which is not what a lobby panel is.
