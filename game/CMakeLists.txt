@@ -188,12 +188,14 @@ if(HLAP_CLIENT AND MSVC)
                  CShockRifle CSniperRifle CSporeLauncher)
         list(APPEND CL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of/${name}.cpp")
     endforeach()
+    # The lobby whiteboard; see src/client/ap_whiteboard.h.
+    list(APPEND CL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/client/ap_whiteboard.cpp")
     file(GLOB CL_SHARED CONFIGURE_DEPENDS "${HLSDK_DIR}/game_shared/vgui_*.cpp")
     list(APPEND CL_SOURCES ${CL_SHARED} "${HLSDK_DIR}/game_shared/voice_banmgr.cpp")
 
     add_library(client SHARED ${CL_SOURCES} ${SDK_C_SOURCES})
     target_include_directories(client PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/port/of" "${CMAKE_CURRENT_SOURCE_DIR}/src/client"
         "${HLSDK_DIR}/dlls" "${HLSDK_DIR}/cl_dll" "${HLSDK_DIR}/public"
         "${HLSDK_DIR}/common" "${HLSDK_DIR}/pm_shared" "${HLSDK_DIR}/engine"
         "${HLSDK_DIR}/utils/vgui/include" "${HLSDK_DIR}/game_shared"
@@ -214,7 +216,7 @@ if(HLAP_CLIENT AND MSVC)
         "${HLSDK_DIR}/utils/vgui/lib/win32_vc16/vgui.lib"
         "${HLSDK_DIR}/lib/public/SDL2.lib"
         "${HLSDK_DIR}/lib/public/game_controls.lib"
-        wsock32)
+        wsock32 opengl32)
     set_target_properties(client PROPERTIES OUTPUT_NAME "client" PREFIX "")
     set_property(TARGET client PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     # Staged like hl.dll below; mod.CLIENT_DLL_NAME is the same path.

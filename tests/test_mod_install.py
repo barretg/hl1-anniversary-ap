@@ -148,6 +148,19 @@ def test_the_hub_map_is_named_the_same_in_all_three_places() -> None:
     assert start is not None
     assert campaign["hub_map"] == start.group(1)
 
+    # client.dll matches the lobby by level name to redraw its whiteboard.
+    board = (REPO / "game" / "src" / "client" / "ap_whiteboard.cpp").read_text(encoding="utf-8")
+    level = re.search(r'kLobbyLevel\s*=\s*"maps/([^"]+)\.bsp"', board)
+    assert level is not None
+    assert level.group(1) == start.group(1)
+
+
+def test_every_whiteboard_is_shipped() -> None:
+    """The client stops counting at the first missing one, so a stale count
+    would silently hide the rest, and an extra one would never be drawn."""
+    built = sorted(p.name for p in (WORLD / "mod" / "files" / "gfx" / "whiteboards").glob("wb*.tga"))
+    assert built == [f"wb{i:02d}.tga" for i in range(mod.WHITEBOARD_COUNT)]
+
 
 def test_the_hub_is_not_a_campaign_map() -> None:
     """A check firing in the hub would be a check for standing still."""

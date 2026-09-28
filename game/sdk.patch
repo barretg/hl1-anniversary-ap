@@ -26,6 +26,34 @@ index 7c4a6ea..61c9b5f 100644
 -	return NULL;
 +	return best;
  }
+diff --git a/cl_dll/cdll_int.cpp b/cl_dll/cdll_int.cpp
+index e1e4724..0c8f50e 100644
+--- a/cl_dll/cdll_int.cpp
++++ b/cl_dll/cdll_int.cpp
+@@ -34,6 +34,7 @@ extern "C"
+ #include "hud_servers.h"
+ #include "vgui_int.h"
+ #include "interface.h"
++#include "ap_whiteboard.h"	// AP
+ 
+ #ifdef _WIN32
+ #include "winsani_in.h"
+@@ -175,6 +176,7 @@ int CL_DLLEXPORT HUD_VidInit( void )
+ {
+ //	RecClHudVidInit();
+ 	gHUD.VidInit();
++	APWhiteboard_VidInit();	// AP
+ 
+ 	VGui_Startup();
+ 
+@@ -214,6 +216,7 @@ int CL_DLLEXPORT HUD_Redraw( float time, int intermission )
+ //	RecClHudRedraw(time, intermission);
+ 
+ 	gHUD.Redraw( time, intermission );
++	APWhiteboard_Frame();	// AP
+ 
+ 	return 1;
+ }
 diff --git a/cl_dll/cl_util.h b/cl_dll/cl_util.h
 index 54c283a..994c698 100644
 --- a/cl_dll/cl_util.h

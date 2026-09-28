@@ -84,6 +84,14 @@ MOD_FILES = (
     ("files/apbinds.cfg", "apbinds.cfg"),
 )
 
+# The lobby whiteboard's variants, one drawn at random per lobby load by
+# client.dll. Written by tools/build_whiteboards.py from `assets/`.
+WHITEBOARD_COUNT = 22
+MOD_FILES += tuple(
+    (f"files/gfx/whiteboards/wb{i:02d}.tga", f"gfx/whiteboards/wb{i:02d}.tga")
+    for i in range(WHITEBOARD_COUNT)
+)
+
 # Files installed once and then left alone. A player is expected to edit these,
 # and an update that silently rebound their keys -- or deleted a bind they had
 # removed on purpose -- would be worse than an update that ships nothing.
