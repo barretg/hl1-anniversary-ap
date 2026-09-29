@@ -78,11 +78,61 @@ std::string Upper(const std::string& text) {
     return out;
 }
 
+#ifdef HLAP_TEST_BUILD
+// Test builds: with `testing_base_only 1`, the install behaves as a player's
+// with neither Opposing Force nor Blue Shift. content.txt is ignored, so no
+// campaign is mounted, and every file the installer linked in for them is
+// treated as absent: precaching one asks the engine for a name that does not
+// exist, which fails exactly as the real missing file would. The installer's
+// manifest lists them, and only them: a file Half-Life already has is skipped.
+std::set<std::string> g_emulated_missing;  // lowercase, "sound/..." for sounds
+
+bool EmulatingBaseOnly() {
+    return CVAR_GET_FLOAT("testing_base_only") != 0.0f;
+}
+
+void LoadEmulatedMissing() {
+    std::ifstream in(StoreDir() + "/content_manifest.txt");
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        for (const char* top : {"hlap_downloads/", "hlap_hd/"}) {
+            const size_t len = std::strlen(top);
+            if (line.compare(0, len, top) == 0) {
+                g_emulated_missing.insert(Lower(line.c_str() + len));
+            }
+        }
+    }
+    ALERT(at_console, "[AP test] base-only install: %d files hidden\n",
+          static_cast<int>(g_emulated_missing.size()));
+}
+
+// The name to precache: `name` itself, or one that cannot exist.
+const char* EmulateMissing(const char* name, const char* base) {
+    if (g_emulated_missing.empty() || !name
+        || g_emulated_missing.count(Lower((std::string(base) + name).c_str())) == 0) {
+        return name;
+    }
+    ALERT(at_console, "[AP test] precached a file a base-only install lacks: %s%s\n",
+          base, name);
+    Trace((std::string("  base-only: missing ") + base + name).c_str());
+    return Intern(std::string("ap_missing/") + name);
+}
+#endif
+
 void Load() {
     if (g_loaded) {
         return;
     }
     g_loaded = true;
+#ifdef HLAP_TEST_BUILD
+    if (EmulatingBaseOnly()) {
+        LoadEmulatedMissing();
+        return;
+    }
+#endif
     std::ifstream in(StoreDir() + "/content.txt");
     std::string line;
     while (std::getline(in, line)) {
@@ -178,6 +228,9 @@ const char* Redirect(const char* name, const char* base) {
 
 int PrecacheModel(char* s) {
     const char* name = Redirect(s, "");
+#ifdef HLAP_TEST_BUILD
+    name = EmulateMissing(name, "");
+#endif
     const int index = g_real.pfnPrecacheModel(const_cast<char*>(name));
     g_model_slots = (std::max)(g_model_slots, index);
     // A classic model can keep its textures in `<name>T.mdl` where the HD one
@@ -202,6 +255,13 @@ int PrecacheModel(char* s) {
 
 int PrecacheSound(char* s) {
     const char* redirected = Redirect(s, "sound/");
+#ifdef HLAP_TEST_BUILD
+    // Nothing is relocated while emulating, so this never meets the redirect.
+    const char* missing = EmulateMissing(s, "sound/");
+    if (missing != s) {
+        return g_real.pfnPrecacheSound(const_cast<char*>(missing));
+    }
+#endif
     if (redirected != s) {
         // The original too. The engine plays some sounds by name without ever
         // asking the dll -- the player's footsteps, from its own movement code

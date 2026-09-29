@@ -90,6 +90,14 @@ target_include_directories(hl PRIVATE
 target_compile_definitions(hl PRIVATE
     QUIVER VOXEL QUAKE2 VALVE_DLL CLIENT_WEAPONS _CRT_SECURE_NO_WARNINGS)
 
+# A test build: `testing_base_only 1` hides Opposing Force and Blue
+# Shift as though not installed, and `testing_ap_override 1` hands over every
+# weapon on spawn. Never for release.
+option(HLAP_TEST_BUILD "Build the testing cvars in" OFF)
+if(HLAP_TEST_BUILD)
+    target_compile_definitions(hl PRIVATE HLAP_TEST_BUILD)
+endif()
+
 # The engine loads `hl.dll` by name, whatever the mod folder is called.
 set_target_properties(hl PROPERTIES OUTPUT_NAME "hl" PREFIX "")
 
@@ -203,6 +211,9 @@ if(HLAP_CLIENT AND MSVC)
     target_compile_definitions(client PRIVATE
         WIN32 _WINDOWS NDEBUG CLIENT_DLL CLIENT_WEAPONS HL_DLL
         _CRT_SECURE_NO_WARNINGS)
+    if(HLAP_TEST_BUILD)
+        target_compile_definitions(client PRIVATE HLAP_TEST_BUILD)
+    endif()
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         # SDL_endian.h defines `_m_prefetch` for old clangs; newer ones have it
         # built in and reject the redefinition. Its own guard skips it.

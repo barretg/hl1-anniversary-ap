@@ -1,8 +1,95 @@
 ﻿diff --git a/cl_dll/ammo.cpp b/cl_dll/ammo.cpp
-index 7c4a6ea..61c9b5f 100644
+index 7c4a6ea..b1b1f09 100644
 --- a/cl_dll/ammo.cpp
 +++ b/cl_dll/ammo.cpp
-@@ -1223,12 +1223,20 @@ client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes
+@@ -237,6 +237,32 @@ WEAPON* WeaponsResource :: GetNextActivePos( int iSlot, int iSlotPos )
+ int giBucketHeight, giBucketWidth, giABHeight, giABWidth; // Ammo Bar width and height
+ 
+ HSPRITE ghsprBuckets;					// Sprite for top row of weapons menu
++// Archipelago: each slot's own bucket sprite, looked up by name. Half-Life's
++// hud.txt stops at bucket5, so slots 6 and 7 have none: -1. Those draw on
++// bucket0, Half-Life's blank tile, with the digit added in the same blocky
++// 5x5 grid the others use, sitting at 26/40 of the tile across and down.
++static int giBucketSprite[MAX_WEAPON_SLOTS];
++static int giBlankBucket;
++
++static const char *gszBucketDigits[2][5] =
++{
++	{ "#####", "#....", "#####", "#...#", "#####" },	// 6
++	{ "#####", "....#", "....#", "....#", "....#" },	// 7
++};
++
++static void DrawBucketDigit( int x, int y, int iSlot, int r, int g, int b )
++{
++	if ( iSlot < 5 || iSlot > 6 )
++		return;
++	const char **rows = gszBucketDigits[iSlot - 5];
++	const int cell = max( 1, giBucketWidth / 20 );
++	const int left = x + giBucketWidth * 26 / 40;
++	const int top = y + giBucketHeight * 26 / 40;
++	for ( int row = 0; row < 5; row++ )
++		for ( int col = 0; col < 5; col++ )
++			if ( rows[row][col] == '#' )
++				FillRGBA( left + col * cell, top + row * cell, cell, cell, r, g, b, 255 );
++}
+ 
+ DECLARE_MESSAGE(m_Ammo, CurWeapon );	// Current weapon and clip
+ DECLARE_MESSAGE(m_Ammo, WeaponList);	// new weapon type
+@@ -323,6 +349,24 @@ int CHudAmmo::VidInit(void)
+ 	m_HUD_bucket0 = gHUD.GetSpriteIndex( "bucket1" );
+ 	m_HUD_selection = gHUD.GetSpriteIndex( "selection" );
+ 
++	for ( int iBucket = 0; iBucket < MAX_WEAPON_SLOTS; iBucket++ )
++	{
++		char szBucket[16];
++		sprintf( szBucket, "bucket%d", iBucket + 1 );
++		giBucketSprite[iBucket] = gHUD.GetSpriteIndex( szBucket );
++	}
++	giBlankBucket = gHUD.GetSpriteIndex( "bucket0" );
++
++	// Half-Life's config binds 1 to 5 only; Opposing Force's binds 6 and 7.
++	// Here rather than in Init, since the config (and its unbindall) runs
++	// after Init. Only when nothing already selects the slot.
++	const char *pszSlot6 = gEngfuncs.Key_LookupBinding( "slot6" );
++	if ( !pszSlot6 || !pszSlot6[0] )
++		EngineClientCmd( "bind 6 slot6" );
++	const char *pszSlot7 = gEngfuncs.Key_LookupBinding( "slot7" );
++	if ( !pszSlot7 || !pszSlot7[0] )
++		EngineClientCmd( "bind 7 slot7" );
++
+ 	ghsprBuckets = gHUD.GetSprite(m_HUD_bucket0);
+ 	giBucketWidth = gHUD.GetSpriteRect(m_HUD_bucket0).right - gHUD.GetSpriteRect(m_HUD_bucket0).left;
+ 	giBucketHeight = gHUD.GetSpriteRect(m_HUD_bucket0).bottom - gHUD.GetSpriteRect(m_HUD_bucket0).top;
+@@ -1087,7 +1131,6 @@ int CHudAmmo::DrawWList(float flTime)
+ 			a = 192;
+ 
+ 		ScaleColors(r, g, b, 255);
+-		SPR_Set(gHUD.GetSprite(m_HUD_bucket0 + i), r, g, b );
+ 
+ 		// make active slot wide enough to accomodate gun pictures
+ 		if ( i == iActiveSlot )
+@@ -1101,7 +1144,19 @@ int CHudAmmo::DrawWList(float flTime)
+ 		else
+ 			iWidth = giBucketWidth;
+ 
+-		SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_HUD_bucket0 + i));
++		if ( giBucketSprite[i] >= 0 )
++		{
++			SPR_Set(gHUD.GetSprite(giBucketSprite[i]), r, g, b );
++			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(giBucketSprite[i]));
++		}
++		else if ( giBlankBucket >= 0 )
++		{
++			// bucket0 is grey 100 where the numbered tiles are grey 54, at every
++			// resolution, so it is tinted down to match them.
++			SPR_Set(gHUD.GetSprite(giBlankBucket), r * 54 / 100, g * 54 / 100, b * 54 / 100 );
++			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(giBlankBucket));
++			DrawBucketDigit( x, y, i, r, g, b );
++		}
+ 		
+ 		x += iWidth + 5;
+ 	}
+@@ -1223,12 +1278,20 @@ client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes
  	int i = iCount;
  	client_sprite_t *p = pList;
  	
@@ -55,10 +142,10 @@ index e1e4724..0c8f50e 100644
  	return 1;
  }
 diff --git a/cl_dll/cl_util.h b/cl_dll/cl_util.h
-index 54c283a..994c698 100644
+index 54c283a..510778b 100644
 --- a/cl_dll/cl_util.h
 +++ b/cl_dll/cl_util.h
-@@ -187,8 +187,13 @@ extern vec3_t vec3_origin;
+@@ -187,11 +187,19 @@ extern vec3_t vec3_origin;
  // disable 'truncation from 'const double' to 'float' warning message
  #pragma warning( disable: 4305 )
  
@@ -72,6 +159,12 @@ index 54c283a..994c698 100644
  	r = (ulRGB & 0xFF0000) >>16;\
  	g = (ulRGB & 0xFF00) >> 8;\
  	b = ulRGB & 0xFF;\
+ }
+ 
+ HSPRITE LoadSprite(const char *pszName);
++// AP: SPR_Load, or 0 when the file is not there. Opposing Force's and Blue
++// Shift's sprites exist only when /install linked them in.
++HSPRITE APSPR_Load(const char *pszName);
 diff --git a/cl_dll/ev_hldm.cpp b/cl_dll/ev_hldm.cpp
 index 91aed0c..b6318ce 100644
 --- a/cl_dll/ev_hldm.cpp
@@ -546,7 +639,7 @@ index 5fd90c1..5e9c43f 100644
  #endif // EV_HLDMH
 \ No newline at end of file
 diff --git a/cl_dll/flashlight.cpp b/cl_dll/flashlight.cpp
-index d12cfbd..d94c5c9 100644
+index d12cfbd..d857697 100644
 --- a/cl_dll/flashlight.cpp
 +++ b/cl_dll/flashlight.cpp
 @@ -36,6 +36,7 @@ int CHudFlashlight::Init(void)
@@ -573,7 +666,7 @@ index d12cfbd..d94c5c9 100644
  	m_prc2 = &gHUD.GetSpriteRect(HUD_flash_full);
  	m_prcBeam = &gHUD.GetSpriteRect(HUD_flash_beam);
  	m_iWidth = m_prc2->right - m_prc2->left;
-+	m_nvSprite = LoadSprite("sprites/of_nv_b.spr");
++	m_nvSprite = APSPR_Load("sprites/of_nv_b.spr");
 +
 +	// AP: Opposing Force uses the same icon names on its own sheets, which the
 +	// content installer relocates under sprites/ap_of. Its hud.txt stops at 640.
@@ -589,7 +682,7 @@ index d12cfbd..d94c5c9 100644
 +		{
 +			char sz[256];
 +			sprintf( sz, "sprites/ap_of/%s.spr", p->szSprite );
-+			m_hOFSprite[i] = SPR_Load( sz );
++			m_hOFSprite[i] = APSPR_Load( sz );
 +			m_rcOF[i] = p->rc;
 +		}
 +	}
@@ -1080,13 +1173,56 @@ index d8215cb..a7c2d21 100644
  		// Decrement weapon counters, server does this at same time ( during post think, after doing everything else )
  		pto->m_flNextReload				-= cmd->msec / 1000.0;
 diff --git a/cl_dll/hud.cpp b/cl_dll/hud.cpp
-index 41aa5cf..2879a2e 100644
+index 41aa5cf..72a4677 100644
 --- a/cl_dll/hud.cpp
 +++ b/cl_dll/hud.cpp
-@@ -99,6 +99,23 @@ int __MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf)
+@@ -99,6 +99,66 @@ int __MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf)
  	return gHUD.MsgFunc_ResetHUD(pszName, iSize, pbuf );
  }
  
++#ifdef HLAP_TEST_BUILD
++// AP test builds: with testing_base_only 1, a file /install linked in for
++// Opposing Force or Blue Shift counts as absent. See the server's ap_content.cpp.
++static bool APEmulatedMissing( const char *name )
++{
++	if ( gEngfuncs.pfnGetCvarFloat( "testing_base_only" ) == 0 )
++		return false;
++	char *manifest = (char *)gEngfuncs.COM_LoadFile( "archipelago/content_manifest.txt", 5, NULL );
++	if ( !manifest )
++		return false;
++	bool missing = false;
++	const char *tops[2] = { "hlap_downloads/", "hlap_hd/" };
++	for ( int i = 0; i < 2 && !missing; i++ )
++	{
++		char line[300];
++		_snprintf( line, sizeof( line ), "%s%s", tops[i], name );
++		line[sizeof( line ) - 1] = 0;
++		for ( const char *at = strstr( manifest, line ); at && !missing; at = strstr( at + 1, line ) )
++		{
++			const char end = at[strlen( line )];
++			missing = ( at == manifest || at[-1] == '\n' ) && ( end == '\r' || end == '\n' || end == 0 );
++		}
++	}
++	gEngfuncs.COM_FreeFile( manifest );
++	if ( missing )
++		gEngfuncs.Con_Printf( "[AP test] client sprite a base-only install lacks: %s\n", name );
++	return missing;
++}
++#endif
++
++HSPRITE APSPR_Load( const char *pszName )
++{
++	char *file = (char *)gEngfuncs.COM_LoadFile( (char *)pszName, 5, NULL );
++	if ( !file )
++		return 0;
++	gEngfuncs.COM_FreeFile( file );
++#ifdef HLAP_TEST_BUILD
++	if ( APEmulatedMissing( pszName ) )
++		return 0;
++#endif
++	return SPR_Load( pszName );
++}
++
 +// AP: 0 Half-Life, 1 Opposing Force, 2 Blue Shift
 +unsigned long g_ulAPHudColor = 0;
 +int g_iAPCampaign = 0;
@@ -1107,7 +1243,7 @@ index 41aa5cf..2879a2e 100644
  int __MsgFunc_InitHUD(const char *pszName, int iSize, void *pbuf)
  {
  	gHUD.MsgFunc_InitHUD( pszName, iSize, pbuf );
-@@ -288,6 +305,7 @@ void CHud :: Init( void )
+@@ -288,6 +348,7 @@ void CHud :: Init( void )
  	HOOK_MESSAGE( ResetHUD );
  	HOOK_MESSAGE( GameMode );
  	HOOK_MESSAGE( InitHUD );
@@ -1161,7 +1297,7 @@ index e478d59..d13a521 100644
  		this->m_StatusIcons.DisableIcon("dmg_concuss");
  	return 1;
 diff --git a/cl_dll/message.cpp b/cl_dll/message.cpp
-index 199fb2c..5ebae1c 100644
+index 199fb2c..9052bde 100644
 --- a/cl_dll/message.cpp
 +++ b/cl_dll/message.cpp
 @@ -26,6 +26,8 @@
@@ -1225,7 +1361,7 @@ index 199fb2c..5ebae1c 100644
  
  		// Turn on drawing
  		if ( !(m_iFlags & HUD_ACTIVE) )
-@@ -550,3 +570,44 @@ void CHudMessage::MessageAdd(client_textmessage_t * newMessage )
+@@ -550,3 +570,47 @@ void CHudMessage::MessageAdd(client_textmessage_t * newMessage )
  	}
  
  }
@@ -1239,12 +1375,15 @@ index 199fb2c..5ebae1c 100644
 +	static int loadedFor = 0;
 +	if ( loadedFor != campaign || !m_hAPTitle[0] )
 +	{
-+		m_hAPTitle[0] = SPR_Load( half );
-+		m_hAPTitle[1] = SPR_Load( life );
-+		m_hAPTitle[2] = campaign == 1 ? SPR_Load( "sprites/640hudof05.spr" ) : 0;
-+		m_hAPTitle[3] = campaign == 1 ? SPR_Load( "sprites/640hudof06.spr" ) : 0;
++		m_hAPTitle[0] = APSPR_Load( half );
++		m_hAPTitle[1] = APSPR_Load( life );
++		m_hAPTitle[2] = campaign == 1 ? APSPR_Load( "sprites/640hudof05.spr" ) : 0;
++		m_hAPTitle[3] = campaign == 1 ? APSPR_Load( "sprites/640hudof06.spr" ) : 0;
 +		loadedFor = campaign;
 +	}
++
++	if ( !m_hAPTitle[0] || !m_hAPTitle[1] )
++		return;
 +
 +	wrect_t rcHalf = { 0, 256, 226, 256 };
 +	wrect_t rcLife = { 0, 220, 226, 256 };
@@ -1405,6 +1544,21 @@ index 4b7ad65..a2fbf98 100644
  	//Special stuff for grenades and satchels.
  	float m_flStartThrow;
  	float m_flReleaseThrow;
+diff --git a/dlls/cdll_dll.h b/dlls/cdll_dll.h
+index a5e62de..ff3bd29 100644
+--- a/dlls/cdll_dll.h
++++ b/dlls/cdll_dll.h
+@@ -22,7 +22,9 @@
+ 
+ #define MAX_WEAPONS		32		// ???
+ 
+-#define MAX_WEAPON_SLOTS		5	// hud item selection slots
++// Archipelago: 7, as Opposing Force has it. Its M249, displacer and sniper
++// rifle sit in slot 6, its spore launcher and shock rifle in slot 7.
++#define MAX_WEAPON_SLOTS		7	// hud item selection slots
+ #define MAX_ITEM_TYPES			6	// hud item selection slots
+ 
+ #define MAX_ITEMS				5	// hard coded item types
 diff --git a/dlls/client.cpp b/dlls/client.cpp
 index e2f30b7..dae0c46 100644
 --- a/dlls/client.cpp
@@ -3828,7 +3982,7 @@ index 1f9ea5b..7233b68 100644
 +
 +
 diff --git a/dlls/weapons.cpp b/dlls/weapons.cpp
-index b9baa31..20c677f 100644
+index b9baa31..6e7e869 100644
 --- a/dlls/weapons.cpp
 +++ b/dlls/weapons.cpp
 @@ -30,6 +30,7 @@
@@ -3839,31 +3993,36 @@ index b9baa31..20c677f 100644
  
  extern CGraph	WorldGraph;
  extern int gEvilImpulse101;
-@@ -384,6 +385,23 @@ void W_Precache(void)
+@@ -384,6 +385,28 @@ void W_Precache(void)
  #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
  	// hornetgun
  	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
 +
-+	// Opposing Force's, on every map: any campaign may hand them over.
-+	UTIL_PrecacheOtherWeapon( "weapon_grapple" );
-+	UTIL_PrecacheOtherWeapon( "weapon_eagle" );
-+	UTIL_PrecacheOtherWeapon( "weapon_pipewrench" );
-+	UTIL_PrecacheOtherWeapon( "weapon_m249" );
-+	UTIL_PrecacheOther( "ammo_556" );
-+	UTIL_PrecacheOtherWeapon( "weapon_displacer" );
-+	UTIL_PrecacheOtherWeapon( "weapon_sporelauncher" );
-+	UTIL_PrecacheOther( "ammo_spore" );
-+	UTIL_PrecacheOtherWeapon( "weapon_shockrifle" );
-+	UTIL_PrecacheOtherWeapon( "weapon_sniperrifle" );
-+	UTIL_PrecacheOther( "ammo_762" );
-+	UTIL_PrecacheOtherWeapon( "weapon_knife" );
-+	PRECACHE_SOUND( "weapons/spore_hit1.wav" );
-+	PRECACHE_SOUND( "weapons/spore_hit2.wav" );
-+	PRECACHE_SOUND( "weapons/spore_hit3.wav" );
++	// Opposing Force's, on every map: any campaign may hand them over. Only
++	// when it is installed: without its files every one of these is a fatal
++	// precache error, and a seed without it never hands them out.
++	if ( ap::IsMountedCampaign( "opposing_force" ) )
++	{
++		UTIL_PrecacheOtherWeapon( "weapon_grapple" );
++		UTIL_PrecacheOtherWeapon( "weapon_eagle" );
++		UTIL_PrecacheOtherWeapon( "weapon_pipewrench" );
++		UTIL_PrecacheOtherWeapon( "weapon_m249" );
++		UTIL_PrecacheOther( "ammo_556" );
++		UTIL_PrecacheOtherWeapon( "weapon_displacer" );
++		UTIL_PrecacheOtherWeapon( "weapon_sporelauncher" );
++		UTIL_PrecacheOther( "ammo_spore" );
++		UTIL_PrecacheOtherWeapon( "weapon_shockrifle" );
++		UTIL_PrecacheOtherWeapon( "weapon_sniperrifle" );
++		UTIL_PrecacheOther( "ammo_762" );
++		UTIL_PrecacheOtherWeapon( "weapon_knife" );
++		PRECACHE_SOUND( "weapons/spore_hit1.wav" );
++		PRECACHE_SOUND( "weapons/spore_hit2.wav" );
++		PRECACHE_SOUND( "weapons/spore_hit3.wav" );
++	}
  #endif
  
  
-@@ -1008,8 +1026,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
+@@ -1008,8 +1031,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
  		return FALSE;
  
  	m_pPlayer->TabulateAmmo();

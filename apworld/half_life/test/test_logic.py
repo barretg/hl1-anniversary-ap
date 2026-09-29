@@ -101,22 +101,62 @@ class TestMinimumMissions(StartingMissionMixin, HalfLifeTestBase):
         self.assertTrue(self.multiworld.completion_condition[self.player](state))
 
 
-class TestEquipmentShuffled(StartingMissionMixin, HalfLifeTestBase):
+XEN_CHAPTERS = ("c4a1", "c4a2", "c4a1a", "c4a3")
+
+
+class XenNeedsLongJumpMixin:
+    """Every Xen mission and check is out of logic until the long jump module
+    arrives, whether it is shuffled or locked to its vanilla location."""
+
+    def test_xen_requires_the_long_jump_module(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        name = "Long Jump Module"
+
+        # Take the module out of the world entirely: from the pool when shuffled,
+        # off its locked location when not, so sweeping cannot pick it back up.
+        for location in self.multiworld.get_locations(self.player):
+            if location.item is not None and location.item.name == name:
+                location.item = None
+        self.multiworld.itempool = [
+            item for item in self.multiworld.itempool
+            if not (item.player == self.player and item.name == name)
+        ]
+        state = self.multiworld.get_all_state(False)
+        self.assertEqual(state.count(name, self.player), 0)
+
+        xen_names = {e["name"] for e in LOCATIONS if e["chapter"] in XEN_CHAPTERS}
+        xen_locations = [
+            location for location in self.multiworld.get_locations(self.player)
+            if location.name in xen_names
+        ]
+        self.assertTrue(xen_locations)
+
+        for key in XEN_CHAPTERS:
+            entrance = f"Enter {CHAPTERS_BY_KEY[key]['name']}"
+            self.assertFalse(
+                state.can_reach_entrance(entrance, self.player),
+                f"{entrance} is reachable without the {name}",
+            )
+        self.assertEqual(
+            [location.name for location in xen_locations if location.can_reach(state)], []
+        )
+
+        state.collect(world.create_item(name), True)
+        state.sweep_for_advancements()
+        for key in XEN_CHAPTERS:
+            self.assertTrue(
+                state.can_reach_entrance(f"Enter {CHAPTERS_BY_KEY[key]['name']}", self.player)
+            )
+        self.assertTrue(all(location.can_reach(state) for location in xen_locations))
+
+
+class TestEquipmentShuffled(XenNeedsLongJumpMixin, StartingMissionMixin, HalfLifeTestBase):
     options = {"shuffle_hev_suit": True, "shuffle_longjump": True}
 
     def test_equipment_is_in_the_pool(self) -> None:
         pool = {item.name for item in self.multiworld.itempool if item.player == self.player}
         self.assertIn("HEV Suit", pool)
         self.assertIn("Long Jump Module", pool)
-
-    def test_xen_requires_the_long_jump_module(self) -> None:
-        """Xen is unreachable on its unlock alone once the module is shuffled."""
-        world = self.multiworld.worlds[self.player]
-        state = self.multiworld.get_all_state(False)
-        state.remove(world.create_item("Long Jump Module"))
-        state.sweep_for_advancements()
-
-        self.assertFalse(state.can_reach_entrance("Enter Xen", self.player))
 
 
 class TestXenWeapons(HalfLifeTestBase):
@@ -147,7 +187,7 @@ class TestXenWeapons(HalfLifeTestBase):
         self.assertTrue(state.can_reach_entrance("Enter Surface Tension", self.player))
 
 
-class TestEquipmentNotShuffled(StartingMissionMixin, HalfLifeTestBase):
+class TestEquipmentNotShuffled(XenNeedsLongJumpMixin, StartingMissionMixin, HalfLifeTestBase):
     options = {"shuffle_hev_suit": False, "shuffle_longjump": False}
 
     def test_equipment_is_absent_from_the_pool(self) -> None:

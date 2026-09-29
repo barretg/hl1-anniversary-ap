@@ -351,8 +351,19 @@ void TraceReset() {
 // when connected; the switch only stops the mod refusing things.
 cvar_t testing_ap_override = {(char*)"testing_ap_override", (char*)"0"};
 
+#ifdef HLAP_TEST_BUILD
+// Test builds only: 1 behaves as though Opposing Force and Blue Shift were not
+// installed. Read once, at the first map load. See `ap_content.cpp`.
+cvar_t testing_base_only = {(char*)"testing_base_only", (char*)"0"};
+#endif
+
 void RegisterTestingCvar() {
     CVAR_REGISTER(&testing_ap_override);
+#ifdef HLAP_TEST_BUILD
+    CVAR_REGISTER(&testing_base_only);
+    ALERT(at_console, "[AP test] TEST BUILD: testing_base_only, and every weapon "
+                      "with testing_ap_override 1\n");
+#endif
 }
 
 bool Gated() { return g_data.Loaded() && testing_ap_override.value == 0.0f; }

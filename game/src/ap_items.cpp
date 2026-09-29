@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ap_checkdata.h"
+#include "ap_content.h"
 #include "ap_locations.h"
 #include "ap_main.h"
 #include "ap_state.h"
@@ -527,6 +528,31 @@ void ApplyLoadout(CBasePlayer* player) {
 
         gave_something |= Give(player, classnames.front());
     }
+
+#ifdef HLAP_TEST_BUILD
+    // Test builds: with `testing_ap_override 1`, every weapon on every spawn.
+    // Opposing Force's only when it is mounted, since otherwise none of them
+    // were precached and handing one over is a fatal error.
+    if (!Gated()) {
+        static const char* const kHalfLifeWeapons[] = {
+            "weapon_crowbar", "weapon_9mmhandgun", "weapon_357", "weapon_9mmAR",
+            "weapon_shotgun", "weapon_crossbow", "weapon_rpg", "weapon_gauss",
+            "weapon_egon", "weapon_hornetgun", "weapon_handgrenade",
+            "weapon_satchel", "weapon_tripmine", "weapon_snark"};
+        static const char* const kOpForWeapons[] = {
+            "weapon_pipewrench", "weapon_knife", "weapon_grapple", "weapon_eagle",
+            "weapon_m249", "weapon_displacer", "weapon_sniperrifle",
+            "weapon_sporelauncher", "weapon_shockrifle"};
+        for (const char* classname : kHalfLifeWeapons) {
+            gave_something |= Give(player, classname);
+        }
+        if (IsMountedCampaign("opposing_force")) {
+            for (const char* classname : kOpForWeapons) {
+                gave_something |= Give(player, classname);
+            }
+        }
+    }
+#endif
 
     // Tell the client what it now has: forget everything the client is believed
     // to know and send it again, which is what the `fullupdate` console command
