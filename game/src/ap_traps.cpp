@@ -204,10 +204,10 @@ void SpawnAround(CBasePlayer* player, const std::string& classname, int count) {
 
 void SpringNow(CBasePlayer* player, const std::string& name) {
     if (name == "Scientist Trap") {
-        Notify("Scientists!");
+        Notify("Someone called for a science team.");
         SpawnAround(player, "monster_scientist", kTrapSpawnCount);
     } else if (name == "Headcrab Trap") {
-        Notify("Headcrabs!");
+        Notify("What remarkable specimen!");
         SpawnAround(player, "monster_headcrab", kTrapSpawnCount);
     } else if (name == "Bot Swarm Trap") {
         Notify("Bot swarm!");
