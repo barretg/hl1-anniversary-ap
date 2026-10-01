@@ -86,7 +86,7 @@ MOD_FILES = (
 
 # The lobby whiteboard's variants, one drawn at random per lobby load by
 # client.dll. Written by tools/build_whiteboards.py from `assets/`.
-WHITEBOARD_COUNT = 22
+WHITEBOARD_COUNT = 24
 MOD_FILES += tuple(
     (f"files/gfx/whiteboards/wb{i:02d}.tga", f"gfx/whiteboards/wb{i:02d}.tga")
     for i in range(WHITEBOARD_COUNT)
