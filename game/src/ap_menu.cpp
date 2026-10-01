@@ -93,7 +93,7 @@ void Send(int bits, const std::string& text) {
 // (sent as `menuselect 10`, which is bit 9).
 void Show() {
     const size_t first = g_menu.page * kItemsPerPage;
-    const size_t last = std::min(first + kItemsPerPage, g_menu.items.size());
+    const size_t last = (std::min)(first + kItemsPerPage, g_menu.items.size());
     const bool back = g_menu.page > 0;
     const bool more = last < g_menu.items.size();
 
@@ -176,8 +176,8 @@ std::vector<const Location*> WeaponsOf(const std::string& game) {
         if (!IsWeaponCheck(location) || !State().InSeed(location.id)) {
             continue;
         }
-        const Chapter* chapter = Data().ChapterByKey(location.chapter);
-        if (chapter != nullptr && chapter->campaign == game) {
+        // By its map: a weapon check names no mission of its own.
+        if (Data().CampaignOfMap(location.map).key == game) {
             checks.push_back(&location);
         }
     }

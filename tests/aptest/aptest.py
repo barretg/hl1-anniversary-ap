@@ -49,7 +49,7 @@ off, retargeting, a target off the map, and the chat colour.
 behaviour this game was brought in line with the Sven Co-op plugin on. They
 use three more verbs, standing in for what the real client would deliver:
     !item <name>       a filler item arrives (Ammo Cache, Medkit, ...)
-    !trap <name>       a trap arrives (Scientist Trap, ...)
+    !trap <name>       a trap arrives (Scientist Trap, Bot Swarm Trap, ...)
     !deathlink         somebody else's DeathLink arrives
 and the harness shows every DEATH and CHAT the game sends.
 
@@ -546,6 +546,48 @@ def trace_scenarios(data: CheckData, nodes: dict[str, int]) -> list[Scenario]:
     return out
 
 
+# The longest line the chat area shows whole.
+STEP_WIDTH = 150
+
+
+def reflow(steps: str) -> list[str]:
+    """A scenario's steps as whole sentences, one message each.
+
+    The steps are written wrapped to fit the source, and each line sent on its
+    own reads as a string of fragments in the chat area. Lines are joined until
+    one ends a sentence, and a sentence longer than the chat area is broken
+    between words.
+    """
+    sentences: list[str] = []
+    current = ""
+    for line in steps.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        current = f"{current} {line}".strip()
+        if current.rstrip("'\")").endswith((".", "!", "?", ":")):
+            sentences.append(current)
+            current = ""
+    if current:
+        sentences.append(current)
+    out: list[str] = []
+    for sentence in sentences:
+        while len(sentence) > STEP_WIDTH:
+            cut = sentence.rfind(" ", 0, STEP_WIDTH)
+            if cut <= 0:
+                break
+            out.append(sentence[:cut])
+            sentence = sentence[cut + 1:]
+        out.append(sentence)
+    return out
+
+
+# What `!item` and `!trap` can send: the names `GrantFiller` and `SpringNow`
+# in the game answer to.
+FILLER = ("Medkit", "Health Charge", "Armor Battery", "Ammo Cache")
+TRAPS = ("Scientist Trap", "Headcrab Trap", "Bot Swarm Trap", "Butterfingers Trap")
+
+
 def parity_scenarios(data: CheckData) -> list[Scenario]:
     """The behaviour brought in line with the Sven Co-op plugin, one scenario
     per change (the ids are `.claude/sven-parity-handoff.md`'s).
@@ -937,8 +979,8 @@ class Harness:
         if s is None:
             self.tell("[aptest] No scenario running. !next starts the first untested.")
             return
-        for line in s.steps.splitlines():
-            self.tell(line)
+        for number, line in enumerate(reflow(s.steps), 1):
+            self.tell(f"{number}. {line}")
 
     def first_untested(self, after: int = -1) -> int | None:
         verdicts = self.latest_verdicts()
@@ -1026,6 +1068,14 @@ class Harness:
             elif verb == "list":
                 self.list(arg)
             elif verb in ("item", "trap") and arg:
+                # The game ignores a name it does not know, so check it here
+                # and say what would have worked. Chat is not careful about case.
+                known = FILLER if verb == "item" else TRAPS
+                name = next((n for n in known if n.lower() == arg.lower()), None)
+                if name is None:
+                    self.tell(f"[aptest] No {verb} '{arg}'. Try: {', '.join(known)}.")
+                    return
+                arg = name
                 self.bridge.queue_event(verb.upper(), arg)
                 self.publish()
                 self.tell(f"[aptest] {verb} sent: {arg}")
@@ -1125,11 +1175,38 @@ def main(argv: list[str] | None = None) -> int:
         if hasattr(signal, name):
             signal.signal(getattr(signal, name), stop)
 
+    # Two harnesses on one store both append to `aptest_say.txt` and both answer
+    # every event, which reads in game as each line twice, interleaved.
+    lock = store / "aptest.lock"
+    other = running_harness(lock)
+    if other is not None:
+        parser.error(f"another harness is already running (pid {other}); stop it first")
+    lock.write_text(str(os.getpid()), encoding="utf-8")
+
     swap.swap_in()
     try:
         return run(args, store, bridge_module)
     finally:
         swap.restore()
+        lock.unlink(missing_ok=True)
+
+
+def running_harness(lock: Path) -> int | None:
+    """The pid of a live harness holding `lock`, or None. A lock left by one
+    that was killed is stale and ignored."""
+    try:
+        pid = int(lock.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return None
+    if pid == os.getpid():
+        return None
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return None
+    except (PermissionError, OSError):
+        pass  # alive but not ours, or a platform that cannot tell; assume alive
+    return pid
 
 
 def run(args: argparse.Namespace, store: Path, bridge_module) -> int:

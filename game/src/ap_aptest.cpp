@@ -180,7 +180,7 @@ void Teleport() {
 // Everything but `tp` is the harness's to answer.
 const char* const kHarnessVerbs[] = {
     "pass", "fail", "note", "next", "prev", "redo", "go", "info", "status",
-    "list", "give", "take",
+    "list", "give", "take", "item", "trap", "deathlink",
 };
 
 void Cmd_Test() {
@@ -191,7 +191,7 @@ void Cmd_Test() {
     }
     if (!TestDispatch(verb, rest)) {
         Notify("[aptest] testing_aptest pass|fail|note|next|prev|redo|go|info|status|"
-               "list|give|take|tp");
+               "list|give|take|item|trap|deathlink|tp");
     }
 }
 
@@ -231,7 +231,6 @@ void RunTestHarness() {
 #ifdef HLAP_TEST_BUILD
     if (gpGlobals->time >= g_next_poll || gpGlobals->time + 1.0f < g_next_poll) {
         g_next_poll = gpGlobals->time + kPollInterval;
-        ShowSaid();
         Destination next;
         const bool first = !g_looked;
         g_looked = true;
@@ -240,6 +239,12 @@ void RunTestHarness() {
             if (!first) {
                 Load();
             }
+        }
+        // Held while a scenario's map loads: the load clears the chat area,
+        // and the steps shown before it would be gone before they were read.
+        // They are shown once the player is placed.
+        if (!g_arriving) {
+            ShowSaid();
         }
     }
 
@@ -262,6 +267,7 @@ void RunTestHarness() {
     }
     g_arriving = false;
     Teleport();
+    ShowSaid();
 #endif
 }
 

@@ -1182,9 +1182,15 @@ void Tracker(const std::string& map_filter) {
             found += map_found;
             total += static_cast<int>(on_map.size());
 
+            // The game's name too, so `!tracker opposing` is the whole game and
+            // not only its weapons block. Its short name only whole, since `of`
+            // is also the start of `office`.
+            const Campaign& game = Data().CampaignOfMap(map_name);
             if (!wanted.empty() &&
                 Lower(map_name).find(wanted) == std::string::npos &&
-                Lower(chapter.name).find(wanted) == std::string::npos) {
+                Lower(chapter.name).find(wanted) == std::string::npos &&
+                Lower(game.name).find(wanted) == std::string::npos &&
+                Lower(game.shortname) != wanted) {
                 continue;
             }
 
@@ -1217,8 +1223,8 @@ void Tracker(const std::string& map_filter) {
             if (!IsWeaponCheck(location) || !State().InSeed(location.id)) {
                 continue;
             }
-            const Chapter* chapter = Data().ChapterByKey(location.chapter);
-            if (chapter != nullptr && chapter->campaign == campaign.key) {
+            // By its map: a weapon check names no mission of its own.
+            if (Data().CampaignOfMap(location.map).key == campaign.key) {
                 weapons.push_back(&location);
             }
         }
@@ -1236,7 +1242,8 @@ void Tracker(const std::string& map_filter) {
         total += static_cast<int>(weapons.size());
 
         if (!wanted.empty() &&
-            Lower(campaign.name + " weapons").find(wanted) == std::string::npos) {
+            Lower(campaign.name + " weapons").find(wanted) == std::string::npos &&
+            Lower(campaign.shortname) != wanted) {
             continue;
         }
 

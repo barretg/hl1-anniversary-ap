@@ -85,3 +85,22 @@ def test_sdk_patch_hunks_add_up() -> None:
             problems.append(f"{current} {line}: body has {old_seen}/{new_seen} lines")
         delta += new_count - old_count
     assert not problems, "\n".join(problems)
+
+
+def test_parity_steps_reflow_into_whole_sentences() -> None:
+    """Each step reaches the chat area as one message, so none may be a
+    fragment of a wrapped sentence or wider than the area shows."""
+    data = aptest.read_checkdata(CHECKDATA)
+    for scenario in aptest.parity_scenarios(data):
+        lines = aptest.reflow(scenario.steps)
+        assert lines, scenario.title
+        for line in lines:
+            assert len(line) <= aptest.STEP_WIDTH, (scenario.title, line)
+        assert lines[-1].endswith("."), (scenario.title, lines[-1])
+
+
+def test_reflow_joins_wrapped_lines_and_splits_on_sentences() -> None:
+    assert aptest.reflow("Do this, then\nthat.\n!pass, or !fail <note>.") == [
+        "Do this, then that.", "!pass, or !fail <note>."]
+    assert aptest.reflow("It says 'in the way.'\nNext.") == [
+        "It says 'in the way.'", "Next."]
