@@ -437,6 +437,7 @@ void Help() {
     Say("!hub                      return to the hub");
     Say("!tracker [filter]         every location in the seed, found and not");
     Say("!tracker office           narrowed to a mission or a map name");
+    Say("!tracker weapons          each game's weapon checks");
     Say("!find                     point at the nearest check on this map");
     Say("!find <text>              find a check by name, anywhere in the seed");
     Say("!trace [text]             as !find, and draw a path to it; again to stop");

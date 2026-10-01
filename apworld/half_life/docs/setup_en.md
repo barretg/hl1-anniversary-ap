@@ -60,7 +60,7 @@ want -- one key, no pause, no `ap_` prefix to type.
 | `!setwarp [name]` | `ap_setwarp …` | make a warp point where you stand |
 | `!warps` | `ap_warps` | the warp points you have made |
 | `!hub` | `ap_hub` | return to the hub |
-| `!tracker [map]` | `ap_tracker …` | locations found and still out there |
+| `!tracker [filter]` | `ap_tracker …` | locations found and still out there; the filter is a mission, a map, or `weapons` for each game's weapon checks |
 | `!find [text]` | `ap_find …` | point at the nearest unfound check |
 | `!help` | `ap_help` | these, in game |
 

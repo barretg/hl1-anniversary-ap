@@ -1101,6 +1101,14 @@ void PrecachePathTrace() {
     g_beam_sprite = PRECACHE_MODEL((char*)"sprites/laserbeam.spr");
 }
 
+// A `First <weapon>` check: any copy in its game sends it, so it belongs to the
+// game rather than to the map it is anchored on.
+namespace {
+bool IsWeaponCheck(const Location& location) {
+    return location.type == TriggerType::WeaponPickup && !location.sources.empty();
+}
+}  // namespace
+
 void Tracker(const std::string& map_filter) {
     if (!Data().Loaded()) {
         Say("No checkdata.txt, so there is nothing to track.");
@@ -1144,6 +1152,9 @@ void Tracker(const std::string& map_filter) {
                 if (!State().InSeed(location.id)) {
                     continue;  // not in this seed; showing it would be a lie
                 }
+                if (IsWeaponCheck(location)) {
+                    continue;  // listed under its game's weapons, below
+                }
                 on_map.push_back(&location);
             }
             if (on_map.empty()) {
@@ -1186,6 +1197,49 @@ void Tracker(const std::string& map_filter) {
                 Say(std::string("    ") +
                     (Collected(*on_map[i]) ? "[x] " : "[ ] ") + on_map[i]->name);
             }
+        }
+    }
+
+    // Each game's weapon checks together, as the Sven plugin lists them: they
+    // are found anywhere in their game, so no one map heading fits them.
+    for (const Campaign& campaign : Data().campaigns) {
+        std::vector<const Location*> weapons;
+        for (const Location& location : Data().locations) {
+            if (!IsWeaponCheck(location) || !State().InSeed(location.id)) {
+                continue;
+            }
+            const Chapter* chapter = Data().ChapterByKey(location.chapter);
+            if (chapter != nullptr && chapter->campaign == campaign.key) {
+                weapons.push_back(&location);
+            }
+        }
+        if (weapons.empty()) {
+            continue;
+        }
+
+        int weapons_found = 0;
+        for (const Location* location : weapons) {
+            if (Collected(*location)) {
+                ++weapons_found;
+            }
+        }
+        found += weapons_found;
+        total += static_cast<int>(weapons.size());
+
+        if (!wanted.empty() &&
+            Lower(campaign.name + " weapons").find(wanted) == std::string::npos) {
+            continue;
+        }
+
+        ++shown;
+        char head[192];
+        std::snprintf(head, sizeof(head), "%s: Weapons  (%d/%d)",
+                      campaign.name.c_str(), weapons_found,
+                      static_cast<int>(weapons.size()));
+        Say(head);
+        for (const Location* location : weapons) {
+            Say(std::string("    ") + (Collected(*location) ? "[x] " : "[ ] ") +
+                location->name);
         }
     }
 
