@@ -298,6 +298,16 @@ class TestItemGroups(HalfLifeTestBase):
         from ..items import item_name_groups
         self.assertIn("Melee Throw", item_name_groups["Abilities"])
 
+    def test_renamed_items_keep_their_old_names(self) -> None:
+        from ..items import item_name_groups
+        from ..locations import location_name_groups
+        self.assertEqual(item_name_groups["Displacer"], {"Displacer Cannon"})
+        self.assertEqual(item_name_groups["Barnacle"], {"Barnacle Grapple"})
+        self.assertEqual(location_name_groups["Opposing Force: First Displacer"],
+                         {"Opposing Force: First Displacer Cannon"})
+        self.assertEqual(location_name_groups["Opposing Force: First Barnacle"],
+                         {"Opposing Force: First Barnacle Grapple"})
+
 
 class TestOldLocationNames(HalfLifeTestBase):
     """Names from before `Mission: Thing` still name exactly their location."""
@@ -379,8 +389,8 @@ class TestLooseLogic(StartingMissionMixin, HalfLifeTestBase):
 # --- More than one game -----------------------------------------------------
 
 HL_WEAPONS = {"Shotgun", "MP5", "Glock", "RPG"}
-OF_WEAPONS = {"Desert Eagle", "M249", "Sniper Rifle", "Displacer",
-              "Spore Launcher", "Barnacle", "Shock Roach"}
+OF_WEAPONS = {"Desert Eagle", "M249", "Sniper Rifle", "Displacer Cannon",
+              "Spore Launcher", "Barnacle Grapple", "Shock Roach"}
 
 
 class CampaignMixin:
@@ -442,7 +452,7 @@ class TestOpposingForceGrapple(HalfLifeTestBase):
     def test_vicarious_reality_part_3_on_needs_the_barnacle_at_any_difficulty(self) -> None:
         world = self.multiworld.worlds[self.player]
         state = self.multiworld.get_all_state(False)
-        state.remove(world.create_item("Barnacle"))
+        state.remove(world.create_item("Barnacle Grapple"))
         state.sweep_for_advancements()
         self.assertTrue(state.can_reach_region("of4a2", self.player))
         self.assertTrue(state.can_reach_location("Vicarious Reality: Part 2 Reached",
@@ -604,7 +614,7 @@ class TestOpposingForceWeaponSources(HalfLifeTestBase):
         """We Are Not Alone's only shotgun is past a displacer teleport."""
         state = only_unlocks(self, "of3a1")
         self.assertFalse(state.can_reach_location("Opposing Force: First Shotgun", self.player))
-        state.collect(self.multiworld.worlds[self.player].create_item("Displacer"),
+        state.collect(self.multiworld.worlds[self.player].create_item("Displacer Cannon"),
                       prevent_sweep=True)
         self.assertTrue(state.can_reach_location("Opposing Force: First Shotgun", self.player))
 
@@ -619,7 +629,7 @@ class TestOpposingForceWeaponSources(HalfLifeTestBase):
             "The Package: Healing Pool (Part 4)",
             "Worlds Collide: Healing Pool (Part 1)",
         ]
-        without = all_but(self, "Displacer")
+        without = all_but(self, "Displacer Cannon")
         with_it = self.multiworld.get_all_state(False)
         for name in names:
             self.assertFalse(without.can_reach_location(name, self.player), name)
@@ -629,7 +639,7 @@ class TestOpposingForceWeaponSources(HalfLifeTestBase):
         """The Shock Roach is only ever dropped, and The Package's troopers
         drop one. The Package itself needs the grapple at any difficulty."""
         state = only_unlocks(self, "of6a1")
-        state.collect(self.multiworld.worlds[self.player].create_item("Barnacle"),
+        state.collect(self.multiworld.worlds[self.player].create_item("Barnacle Grapple"),
                       prevent_sweep=True)
         self.assertTrue(state.can_reach_location("Opposing Force: First Shock Roach",
                                                  self.player))

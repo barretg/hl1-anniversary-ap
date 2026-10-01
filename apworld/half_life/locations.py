@@ -3,6 +3,7 @@ from __future__ import annotations
 from BaseClasses import Location
 
 from .data import CHAPTERS, LOCATIONS
+from .items import RENAMED_ITEMS
 
 GAME_NAME = "Half-Life"
 
@@ -64,6 +65,12 @@ for _entry in LOCATIONS:
     if _entry["name"].startswith(_prefix):
         _old = _chapter_names[_entry["chapter"]] + " - " + _entry["name"][len(_prefix):]
         location_name_groups[_old] = {_entry["name"]}
+
+# Weapon checks are named after their item, so a renamed item renamed its check.
+for _entry in LOCATIONS:
+    for _old, _new in RENAMED_ITEMS.items():
+        if _entry["name"].endswith("First " + _new):
+            location_name_groups[_entry["name"][:-len(_new)] + _old] = {_entry["name"]}
 
 # Drop groups with no members; Archipelago rejects empty location name groups.
 location_name_groups = {k: v for k, v in location_name_groups.items() if v}

@@ -20,7 +20,7 @@
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
 V|6
-D|6eab5ad9a5be
+D|8923eb1d3238
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -307,43 +307,43 @@ L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone: HEV Charge
 L|7760281|of3a1b|map_reached||We Are Not Alone: Part 2 Reached
 L|7760282|of3a1b|charger|trigger_hurt@-632 -548 -124|We Are Not Alone: Healing Pool (Part 2)|-632 -548 -125
 L|7760283|of3a2|map_reached||We Are Not Alone: Part 3 Reached
-L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone: Health Charger (Part 3)|1204 2614 -3268|Displacer
+L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone: Health Charger (Part 3)|1204 2614 -3268|Displacer Cannon
 L|7760285|of3a4|map_reached||Crush Depth: Part 1 Reached
 L|7760286|of3a4|charger|func_healthcharger@-1636 896 -56|Crush Depth: Health Charger (Part 1)|-1636 896 -56
 L|7760287|of3a4|charger|func_recharge@-1636 832 -56|Crush Depth: HEV Charger (Part 1)|-1636 832 -56
-L|7760288|of3a4|charger|trigger_hurt@-2504 -3296 -408|Crush Depth: Healing Pool (Part 1)|-2504 -3296 -408|Displacer
+L|7760288|of3a4|charger|trigger_hurt@-2504 -3296 -408|Crush Depth: Healing Pool (Part 1)|-2504 -3296 -408|Displacer Cannon
 L|7760289|of3a5|map_reached||Crush Depth: Part 2 Reached
 L|7760290|of3a5|charger|func_recharge@-3228 2340 -56|Crush Depth: HEV Charger (Part 2)|-3228 2340 -56
 L|7760291|of3a6|map_reached||Crush Depth: Part 3 Reached
 L|7760292|of4a1|map_reached||Vicarious Reality: Part 1 Reached
-L|7760293|of4a1|charger|trigger_hurt@-172 -272 -840|Vicarious Reality: Healing Pool (Part 1)|-172 -271 -840|Displacer
+L|7760293|of4a1|charger|trigger_hurt@-172 -272 -840|Vicarious Reality: Healing Pool (Part 1)|-172 -271 -840|Displacer Cannon
 L|7760294|of4a2|map_reached||Vicarious Reality: Part 2 Reached
-L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality: Health Charger 1 (Part 2)|-2044 2 444|Barnacle
-L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality: Health Charger 2 (Part 2)|-544 -1318 1148|Barnacle
-L|7760297|of4a2|charger|func_healthcharger@544 -1320 1148|Vicarious Reality: Health Charger 3 (Part 2)|544 -1318 1148|Barnacle
-L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality: Healing Pool (Part 2)|-2192 -1456 262|Barnacle
+L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality: Health Charger 1 (Part 2)|-2044 2 444|Barnacle Grapple
+L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality: Health Charger 2 (Part 2)|-544 -1318 1148|Barnacle Grapple
+L|7760297|of4a2|charger|func_healthcharger@544 -1320 1148|Vicarious Reality: Health Charger 3 (Part 2)|544 -1318 1148|Barnacle Grapple
+L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality: Healing Pool (Part 2)|-2192 -1456 262|Barnacle Grapple
 L|7760299|of4a3|map_reached||Vicarious Reality: Part 3 Reached
 L|7760300|of4a3|charger|func_healthcharger@176 -2116 356|Vicarious Reality: Health Charger (Part 3)|176 -2116 356
 L|7760301|of4a4|map_reached||Pit Worm's Nest: Part 1 Reached
 L|7760302|of4a5|map_reached||Pit Worm's Nest: Part 2 Reached
 L|7760303|of5a1|map_reached||Foxtrot Uniform: Part 1 Reached
-L|7760304|of5a1|charger|trigger_hurt@2580 1832 -840|Foxtrot Uniform: Healing Pool (Part 1)|2580 1832 -840|Displacer
+L|7760304|of5a1|charger|trigger_hurt@2580 1832 -840|Foxtrot Uniform: Healing Pool (Part 1)|2580 1832 -840|Displacer Cannon
 L|7760305|of5a2|map_reached||Foxtrot Uniform: Part 2 Reached
-L|7760306|of5a2|charger|trigger_hurt@2504 -3160 1816|Foxtrot Uniform: Healing Pool (Part 2)|2504 -3160 1816|Displacer
+L|7760306|of5a2|charger|trigger_hurt@2504 -3160 1816|Foxtrot Uniform: Healing Pool (Part 2)|2504 -3160 1816|Displacer Cannon
 L|7760307|of5a3|map_reached||Foxtrot Uniform: Part 3 Reached
 L|7760308|of5a4|map_reached||Foxtrot Uniform: Part 4 Reached
 L|7760309|of5a4|charger|func_healthcharger@-2624 124 -8|Foxtrot Uniform: Health Charger (Part 4)|-2624 124 -8
 L|7760310|of5a4|charger|func_recharge@-2576 124 -8|Foxtrot Uniform: HEV Charger (Part 4)|-2576 124 -8
 L|7760311|of6a1|map_reached||The Package: Part 1 Reached
-L|7760312|of6a1|charger|trigger_hurt@-3244 -3352 -840|The Package: Healing Pool (Part 1)|-3244 -3352 -840|Displacer
+L|7760312|of6a1|charger|trigger_hurt@-3244 -3352 -840|The Package: Healing Pool (Part 1)|-3244 -3352 -840|Displacer Cannon
 L|7760313|of6a2|map_reached||The Package: Part 2 Reached
 L|7760314|of6a3|map_reached||The Package: Part 3 Reached
 L|7760315|of6a4|map_reached||The Package: Part 4 Reached
-L|7760316|of6a4|charger|trigger_hurt@2504 -3160 2840|The Package: Healing Pool (Part 4)|2504 -3160 2840|Displacer
+L|7760316|of6a4|charger|trigger_hurt@2504 -3160 2840|The Package: Healing Pool (Part 4)|2504 -3160 2840|Displacer Cannon
 L|7760317|of6a4b|map_reached||Worlds Collide: Part 1 Reached
 L|7760318|of6a4b|charger|func_healthcharger@-1860 -1088 -488|Worlds Collide: Health Charger (Part 1)|-1860 -1088 -488
 L|7760319|of6a4b|charger|func_recharge@-1860 -1136 -488|Worlds Collide: HEV Charger (Part 1)|-1860 -1136 -488
-L|7760320|of6a4b|charger|trigger_hurt@2504 -3160 2840|Worlds Collide: Healing Pool (Part 1)|2504 -3160 2840|Displacer
+L|7760320|of6a4b|charger|trigger_hurt@2504 -3160 2840|Worlds Collide: Healing Pool (Part 1)|2504 -3160 2840|Displacer Cannon
 L|7760321|of6a5|map_reached||Worlds Collide: Part 2 Reached
 L|7760322|of6a5|charger|trigger_hurt@1264 -520 312|Worlds Collide: Healing Pool (Part 2)|1264 -518 310
 L|7760323|of7a0|map_reached||Worlds Collide: Part 3 Reached
@@ -506,7 +506,7 @@ L|7760374|of1a3|weapon_pickup|weapon_shotgun|Opposing Force: First Shotgun|808 -
 F|7760374|of1a3|808 -2584 832||
 F|7760374|of2a1|1652 1516 52||
 F|7760374|of2a5|2120 -1068 812||
-F|7760374|of3a2|1094 2426 -3372|Displacer|
+F|7760374|of3a2|1094 2426 -3372|Displacer Cannon|
 F|7760374|of4a3|1888 -1068 593||
 F|7760374|of4a4|-40 -856 416||
 F|7760374|of5a1|-928 40 112||ally
@@ -522,7 +522,7 @@ F|7760376|of5a1|-2384 2544 76||
 L|7760377|of2a5|weapon_pickup|weapon_tripmine|Opposing Force: First Tripmine|1724 -1068 808
 F|7760377|of2a5|1724 -1068 808||
 L|7760378|of4a2|weapon_pickup|weapon_snark|Opposing Force: First Snarks|-1768 760 417
-F|7760378|of4a2|-1768 760 417|Barnacle|
+F|7760378|of4a2|-1768 760 417|Barnacle Grapple|
 L|7760379|of1a4b|weapon_pickup|weapon_handgrenade|Opposing Force: First Hand Grenade|-544 1856 -976
 F|7760379|of1a4b|-544 1856 -976||
 F|7760379|of1a6|232 -1220 8||
@@ -530,7 +530,7 @@ F|7760379|of2a1b|-528 2416 -720||
 F|7760379|of2a5|2220 372 664||
 F|7760379|of4a3|3144 -1552 496||
 F|7760379|of5a3|-1040 -1984 128||
-F|7760379|of6a2|1856 2064 -1504|Displacer|
+F|7760379|of6a2|1856 2064 -1504|Displacer Cannon|
 L|7760380|of1a2|weapon_pickup|weapon_eagle|Opposing Force: First Desert Eagle|1144 1864 -144
 F|7760380|of1a2|1144 1864 -144||
 F|7760380|of1a1|-1328 -136 -128||ally
@@ -546,11 +546,11 @@ F|7760381|of2a6|-352 432 -440||ally
 F|7760381|of6a2|776 1368 -248||
 L|7760382|of5a1|weapon_pickup|weapon_sniperrifle|Opposing Force: First Sniper Rifle|-640 -1408 136
 F|7760382|of5a1|-640 -1408 136||
-L|7760383|of3a2|weapon_pickup|weapon_displacer|Opposing Force: First Displacer|424 884 1040
+L|7760383|of3a2|weapon_pickup|weapon_displacer|Opposing Force: First Displacer Cannon|424 884 1040
 F|7760383|of3a2|424 884 1040||
 L|7760384|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force: First Spore Launcher|-1624 -432 384
-F|7760384|of4a2|-1624 -432 384|Barnacle|
-L|7760385|of4a3|weapon_pickup|weapon_grapple|Opposing Force: First Barnacle|-338 -504 337
+F|7760384|of4a2|-1624 -432 384|Barnacle Grapple|
+L|7760385|of4a3|weapon_pickup|weapon_grapple|Opposing Force: First Barnacle Grapple|-338 -504 337
 F|7760385|of4a3|-338 -504 337||
 L|7760386|of4a1|weapon_pickup|weapon_shockrifle|Opposing Force: First Shock Roach
 F|7760386|of4a1|||
@@ -645,12 +645,12 @@ K|weapon_9mmAR|MP5
 K|weapon_9mmhandgun|Glock
 K|weapon_crossbow|Crossbow
 K|weapon_crowbar|Crowbar
-K|weapon_displacer|Displacer
+K|weapon_displacer|Displacer Cannon
 K|weapon_eagle|Desert Eagle
 K|weapon_egon|Gluon Gun
 K|weapon_gauss|Tau Cannon
 K|weapon_glock|Glock
-K|weapon_grapple|Barnacle
+K|weapon_grapple|Barnacle Grapple
 K|weapon_handgrenade|Hand Grenade
 K|weapon_hornetgun|Hivehand
 K|weapon_knife|Combat Knife

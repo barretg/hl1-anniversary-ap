@@ -52,6 +52,16 @@ item_name_groups: dict[str, set[str]] = {
     "Traps": set(trap_items),
 }
 
+# Older releases' names for items since renamed, as one-item groups, so a YAML
+# written for them still generates.
+RENAMED_ITEMS: dict[str, str] = {
+    "Displacer": "Displacer Cannon",
+    "Barnacle": "Barnacle Grapple",
+}
+for _old, _new in RENAMED_ITEMS.items():
+    if _new in item_table:
+        item_name_groups[_old] = {_new}
+
 # Events carry no id -- they exist only to express logic.
 EVENT_ITEMS = EVENT_ITEM_NAMES
 

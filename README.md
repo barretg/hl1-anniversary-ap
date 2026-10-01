@@ -73,8 +73,8 @@ seed is won with every included game's finale. Blue Shift's ends on the
 outro's end-of-game trigger, which the game turns into a return to the hub.
 
 Half-Life's weapons are always in the pool, since every game places them.
-Opposing Force adds seven: Desert Eagle, M249, Sniper Rifle, Displacer, Spore
-Launcher, Barnacle (needed for everything past arriving in Vicarious Reality Part 2, at any logic difficulty) and
+Opposing Force adds seven: Desert Eagle, M249, Sniper Rifle, Displacer Cannon, Spore
+Launcher, Barnacle Grapple (needed for everything past arriving in Vicarious Reality Part 2, at any logic difficulty) and
 Shock Roach (its check is the first one a shock trooper drops). With Opposing Force in, `random_starting_weapon` picks the starting
 melee weapon from the crowbar, combat knife and pipe wrench; the others become
 items. Each game has its own `First <weapon>` checks, named with the game in

@@ -1,5 +1,5 @@
 {
- "data_version": "6eab5ad9a5be",
+ "data_version": "8923eb1d3238",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -1242,7 +1242,7 @@
   },
   {
    "id": 7750059,
-   "name": "Displacer",
+   "name": "Displacer Cannon",
    "classification": "progression",
    "group": "weapon",
    "classnames": [
@@ -1262,7 +1262,7 @@
   },
   {
    "id": 7750061,
-   "name": "Barnacle",
+   "name": "Barnacle Grapple",
    "classification": "progression",
    "group": "weapon",
    "classnames": [
@@ -7745,7 +7745,7 @@
   },
   {
    "id": 7760383,
-   "name": "Opposing Force: First Displacer",
+   "name": "Opposing Force: First Displacer Cannon",
    "chapter": "of3a1",
    "map": "of3a2",
    "trigger": {
@@ -7808,7 +7808,7 @@
   },
   {
    "id": 7760385,
-   "name": "Opposing Force: First Barnacle",
+   "name": "Opposing Force: First Barnacle Grapple",
    "chapter": "of4a1",
    "map": "of4a3",
    "trigger": {
@@ -8838,7 +8838,7 @@
    "Sniper Rifle",
    "Shock Roach",
    "Spore Launcher",
-   "Displacer"
+   "Displacer Cannon"
   ],
   "heavy": [
    "RPG",
@@ -8890,7 +8890,7 @@
    "Sniper Rifle",
    "Shock Roach",
    "Spore Launcher",
-   "Displacer"
+   "Displacer Cannon"
   ],
   "crate_breaker": [
    "Hand Grenade",
@@ -8902,10 +8902,10 @@
    "Satchel Charge"
   ],
   "barnacle_grapple": [
-   "Barnacle"
+   "Barnacle Grapple"
   ],
   "displacer": [
-   "Displacer"
+   "Displacer Cannon"
   ]
  },
  "starting_weapons": [

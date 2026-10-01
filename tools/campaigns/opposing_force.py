@@ -71,16 +71,16 @@ WEAPON_ITEMS: dict[str, list[str]] = {
     "Desert Eagle": ["weapon_eagle"],
     "M249": ["weapon_m249"],
     "Sniper Rifle": ["weapon_sniperrifle"],
-    "Displacer": ["weapon_displacer"],
+    "Displacer Cannon": ["weapon_displacer"],
     "Spore Launcher": ["weapon_sporelauncher"],
-    "Barnacle": ["weapon_grapple"],
+    "Barnacle Grapple": ["weapon_grapple"],
     "Shock Roach": ["weapon_shockrifle"],
 }
 
 # Additions to the shared logic groups, applied only when this campaign is in
 # the build so a Half-Life-only seed's groups are unchanged.
 _RANGED_WEAPONS = ["Desert Eagle", "M249", "Sniper Rifle", "Shock Roach",
-                   "Spore Launcher", "Displacer"]
+                   "Spore Launcher", "Displacer Cannon"]
 REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "ranged": _RANGED_WEAPONS,
     "barrel_shooter": _RANGED_WEAPONS,
@@ -88,8 +88,8 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "heavy": ["M249", "Sniper Rifle"],
     "explosives": ["Spore Launcher"],
     "underwater": ["Desert Eagle"],
-    "barnacle_grapple": ["Barnacle"],
-    "displacer": ["Displacer"],
+    "barnacle_grapple": ["Barnacle Grapple"],
+    "displacer": ["Displacer Cannon"],
 }
 
 # Shephard's melee weapons: a `First` check each, and starting-melee candidates
@@ -130,7 +130,7 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
     ],
     # Props: the only real displacer is the one handed over going into Xen
     # for the first time, of3a2's maker.
-    "Displacer": ["of3a5", "of4a5"],
+    "Displacer Cannon": ["of3a5", "of4a5"],
     # The one shock trooper here waits for a script rather than a fight (see
     # `WEAPON_ANCHORS`).
     "Shock Roach": [
@@ -142,9 +142,9 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
 # Copies confirmed reachable in play that the flood fill could not prove.
 CONFIRMED_COPIES: dict[str, list[str]] = {
     # Only ever in one place.
-    "Barnacle": ["of4a3"],
+    "Barnacle Grapple": ["of4a3"],
     # Handed over going into Xen for the first time.
-    "Displacer": ["of3a2"],
+    "Displacer Cannon": ["of3a2"],
     # The rest from the scenario harness, 2026-09-30. of3a2's shotgun and
     # of6a2's grenades with the Displacer, as gated.
     "Glock": ["of5a3@-632 -944 80", "of6a4@672 2044 32", "of6a4b@-1976 -1064 -488"],
