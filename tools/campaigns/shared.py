@@ -134,7 +134,118 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "underwater": UNDERWATER_WEAPONS,
     "tau_cannon": ["Tau Cannon"],
     "rpg": ["RPG"],
+    # What clears On A Rail's crates. The MP5's grenade launcher does too, but
+    # only loose logic counts on it.
+    "crate_breaker": ["Hand Grenade", "Satchel Charge", "MP5"],
+    "thrown_explosives": ["Hand Grenade", "Satchel Charge"],
 }
+
+# --- Weapon drops ---------------------------------------------------------
+#
+# Monsters that drop a weapon when they die, and which one. A drop is a weapon
+# lying in the world like any other, so picking it up sends the weapon check,
+# and the map holding the monster is another source for it.
+#
+# Read from the SDK and the Opposing Force port (`DropItem` in each monster's
+# `Killed`/`GibMonster`, and the `weapons` default in its `Spawn`). The bit
+# values are each monster's own `weapons` flags. The `*_repel` makers hand
+# their `weapons` on to the monster they drop in, so they read the same way.
+
+
+def _flags(entity: dict[str, str]) -> int:
+    try:
+        return int(entity.get("weapons", "0") or 0)
+    except ValueError:
+        return 0
+
+
+def _hgrunt(entity: dict[str, str]) -> str | None:
+    # Always armed: no shotgun bit means the MP5 (the default when 0).
+    return "weapon_shotgun" if _flags(entity) & 8 else "weapon_9mmAR"
+
+
+def _grunt_ally(entity: dict[str, str]) -> str | None:
+    flags = _flags(entity)
+    if not flags & (1 | 8 | 16):
+        return None  # unarmed; no default
+    if flags & 8:
+        return "weapon_shotgun"
+    if flags & 16:
+        return "weapon_m249"
+    return "weapon_9mmAR"
+
+
+def _medic_ally(entity: dict[str, str]) -> str | None:
+    flags = _flags(entity) or 2  # 0 means the Glock
+    if flags & 2:
+        return "weapon_9mmhandgun"
+    if flags & 1:
+        return "weapon_eagle"
+    return None  # the needle alone
+
+
+def _torch_ally(entity: dict[str, str]) -> str | None:
+    return "weapon_eagle" if (_flags(entity) or 1) & 1 else None
+
+
+def _male_assassin(entity: dict[str, str]) -> str | None:
+    flags = _flags(entity) or 1  # 0 means the MP5
+    if flags & 1:
+        return "weapon_9mmAR"
+    if flags & 8:
+        return "weapon_sniperrifle"
+    return None
+
+
+def _barney(entity: dict[str, str]) -> str | None:
+    # `body` 2 is the holster with no gun in it.
+    try:
+        body = int(entity.get("body", "0") or 0)
+    except ValueError:
+        body = 0
+    return "weapon_9mmhandgun" if body < 2 else None
+
+
+# `{classname: (what it drops, ally)}`. Allies count only when the seed asks
+# for them (`ally_weapon_drops`): killing a friendly is never otherwise needed.
+# The shock trooper drops a live shock roach, which hands over the Shock Roach
+# when touched. Otis draws his Desert Eagle when he fights, so he always has it
+# by the time he dies.
+WEAPON_DROPPERS: dict[str, tuple] = {
+    "monster_human_grunt": (_hgrunt, False),
+    "monster_grunt_repel": (_hgrunt, False),
+    "monster_male_assassin": (_male_assassin, False),
+    "monster_assassin_repel": (_male_assassin, False),
+    "monster_shocktrooper": (lambda e: "weapon_shockrifle", False),
+    "monster_shocktrooper_repel": (lambda e: "weapon_shockrifle", False),
+    "monster_barney": (_barney, True),
+    "monster_otis": (lambda e: "weapon_eagle", True),
+    "monster_human_grunt_ally": (_grunt_ally, True),
+    "monster_grunt_ally_repel": (_grunt_ally, True),
+    "monster_human_medic_ally": (_medic_ally, True),
+    "monster_medic_ally_repel": (_medic_ally, True),
+    "monster_human_torch_ally": (_torch_ally, True),
+    "monster_torch_ally_repel": (_torch_ally, True),
+}
+
+
+def dropped_weapon(entity: dict[str, str]) -> tuple[str, bool] | None:
+    """`(weapon classname, ally)` this entity drops when killed, or None.
+
+    A `monstermaker` drops what its monster would with no keyvalues set, since
+    it passes none on.
+    """
+    classname = entity.get("classname", "")
+    if classname == "monstermaker":
+        rule = WEAPON_DROPPERS.get(entity.get("monstertype", ""))
+        entity = {}
+    else:
+        rule = WEAPON_DROPPERS.get(classname)
+    if rule is None:
+        return None
+    weapon = rule[0](entity)
+    return (weapon, rule[1]) if weapon else None
+
 
 # --- Monster locations ----------------------------------------------------
 #

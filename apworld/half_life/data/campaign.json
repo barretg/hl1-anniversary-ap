@@ -1,5 +1,5 @@
 {
- "data_version": "4bbfb24a950a",
+ "data_version": "6eab5ad9a5be",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -205,6 +205,16 @@
      "heavy",
      "explosives"
     ]
+   },
+   "map_gates": {
+    "c2a2e": {
+     "always": [
+      "crate_breaker"
+     ],
+     "strict": [
+      "thrown_explosives"
+     ]
+    }
    },
    "complete_on_arrival": false,
    "campaign": "half_life",
@@ -4831,7 +4841,12 @@
     1204,
     2614,
     -3268
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760285,
@@ -4892,7 +4907,12 @@
     -2504,
     -3296,
     -408
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760289,
@@ -4939,6 +4959,28 @@
    "trigger": {
     "type": "map_reached",
     "map": "of4a1"
+   }
+  },
+  {
+   "id": 7760293,
+   "name": "Vicarious Reality - Healing Pool (Part 1)",
+   "chapter": "of4a1",
+   "map": "of4a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of4a1",
+    "classname": "trigger_hurt",
+    "at": "-172 -272 -840"
+   },
+   "position": [
+    -172,
+    -271,
+    -840
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
    }
   },
   {
@@ -5097,6 +5139,28 @@
    }
   },
   {
+   "id": 7760304,
+   "name": "Foxtrot Uniform - Healing Pool (Part 1)",
+   "chapter": "of5a1",
+   "map": "of5a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of5a1",
+    "classname": "trigger_hurt",
+    "at": "2580 1832 -840"
+   },
+   "position": [
+    2580,
+    1832,
+    -840
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
+  },
+  {
    "id": 7760305,
    "name": "Foxtrot Uniform - Part 2 Reached",
    "chapter": "of5a1",
@@ -5104,6 +5168,28 @@
    "trigger": {
     "type": "map_reached",
     "map": "of5a2"
+   }
+  },
+  {
+   "id": 7760306,
+   "name": "Foxtrot Uniform - Healing Pool (Part 2)",
+   "chapter": "of5a1",
+   "map": "of5a2",
+   "trigger": {
+    "type": "charger",
+    "map": "of5a2",
+    "classname": "trigger_hurt",
+    "at": "2504 -3160 1816"
+   },
+   "position": [
+    2504,
+    -3160,
+    1816
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
    }
   },
   {
@@ -5171,6 +5257,28 @@
    }
   },
   {
+   "id": 7760312,
+   "name": "The Package - Healing Pool (Part 1)",
+   "chapter": "of6a1",
+   "map": "of6a1",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a1",
+    "classname": "trigger_hurt",
+    "at": "-3244 -3352 -840"
+   },
+   "position": [
+    -3244,
+    -3352,
+    -840
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
+  },
+  {
    "id": 7760313,
    "name": "The Package - Part 2 Reached",
    "chapter": "of6a1",
@@ -5198,6 +5306,28 @@
    "trigger": {
     "type": "map_reached",
     "map": "of6a4"
+   }
+  },
+  {
+   "id": 7760316,
+   "name": "The Package - Healing Pool (Part 4)",
+   "chapter": "of6a1",
+   "map": "of6a4",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a4",
+    "classname": "trigger_hurt",
+    "at": "2504 -3160 2840"
+   },
+   "position": [
+    2504,
+    -3160,
+    2840
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
    }
   },
   {
@@ -5243,6 +5373,28 @@
     -1136,
     -488
    ]
+  },
+  {
+   "id": 7760320,
+   "name": "Worlds Collide - Healing Pool (Part 1)",
+   "chapter": "of6a4b",
+   "map": "of6a4b",
+   "trigger": {
+    "type": "charger",
+    "map": "of6a4b",
+    "classname": "trigger_hurt",
+    "at": "2504 -3160 2840"
+   },
+   "position": [
+    2504,
+    -3160,
+    2840
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760321,
@@ -5897,6 +6049,166 @@
     -256,
     -984,
     -102
+   ],
+   "sources": [
+    {
+     "chapter": "c1a0c",
+     "map": "c1a1f",
+     "position": [
+      -256,
+      -984,
+      -102
+     ]
+    },
+    {
+     "chapter": "c0a0",
+     "map": "c0a0b",
+     "position": [
+      2070,
+      632,
+      -2312
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c1a0",
+     "map": "c1a0",
+     "position": [
+      -132,
+      -1083,
+      -216
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c1a0c",
+     "map": "c1a0c",
+     "position": [
+      1348,
+      -216,
+      -360
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c1a2",
+     "map": "c1a2a",
+     "position": [
+      -716,
+      -60,
+      -256
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c1a3",
+     "map": "c1a3",
+     "position": [
+      35,
+      1047,
+      0
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c1a4",
+     "map": "c1a4i",
+     "position": [
+      -826,
+      -479,
+      -744
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a1",
+     "map": "c2a1",
+     "position": [
+      -472,
+      46,
+      96
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a2",
+     "map": "c2a2",
+     "position": [
+      -1532,
+      -2800,
+      -1352
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a3",
+     "map": "c2a3d",
+     "position": [
+      976,
+      -1224,
+      788
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a4",
+     "map": "c2a4a",
+     "position": [
+      -232,
+      -1008,
+      0
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4d",
+     "position": [
+      144,
+      32,
+      16
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5c",
+     "position": [
+      -688,
+      400,
+      -272
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5e",
+     "position": [
+      -240,
+      744,
+      -1656
+     ]
+    },
+    {
+     "chapter": "c3a1",
+     "map": "c3a1",
+     "position": [
+      480,
+      -884,
+      576
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2a",
+     "position": [
+      -2316,
+      576,
+      -1
+     ],
+     "drop": "ally"
+    }
    ]
   },
   {
@@ -5916,6 +6228,44 @@
     -783,
     -1218,
     -1888
+   ],
+   "sources": [
+    {
+     "chapter": "c1a4",
+     "map": "c1a4g",
+     "position": [
+      -783,
+      -1218,
+      -1888
+     ]
+    },
+    {
+     "chapter": "c2a1",
+     "map": "c2a1",
+     "position": [
+      -512,
+      16,
+      112
+     ]
+    },
+    {
+     "chapter": "c2a2",
+     "map": "c2a2a",
+     "position": [
+      -308,
+      2428,
+      -236
+     ]
+    },
+    {
+     "chapter": "c2a4",
+     "map": "c2a4b",
+     "position": [
+      -912,
+      -736,
+      -784
+     ]
+    }
    ]
   },
   {
@@ -5935,6 +6285,77 @@
     -888,
     -1080,
     64
+   ],
+   "sources": [
+    {
+     "chapter": "c1a3",
+     "map": "c1a3",
+     "position": [
+      -888,
+      -1080,
+      64
+     ]
+    },
+    {
+     "chapter": "c2a1",
+     "map": "c2a1",
+     "position": [
+      -92,
+      320,
+      -1
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c2a2",
+     "map": "c2a2b1",
+     "position": [
+      -3352,
+      -716,
+      368
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c2a3",
+     "map": "c2a3",
+     "position": [
+      -481,
+      -416,
+      1524
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4d",
+     "position": [
+      384,
+      560,
+      16
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5",
+     "position": [
+      1679,
+      319,
+      64
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c3a1",
+     "map": "c3a1a",
+     "position": [
+      -3400,
+      168,
+      304
+     ],
+     "drop": "hostile"
+    }
    ]
   },
   {
@@ -5953,6 +6374,74 @@
     -623,
     -846,
     -534
+   ],
+   "sources": [
+    {
+     "chapter": "c1a2",
+     "map": "c1a2",
+     "position": [
+      -623,
+      -846,
+      -534
+     ]
+    },
+    {
+     "chapter": "c1a3",
+     "map": "c1a3",
+     "position": [
+      140,
+      1082,
+      32
+     ]
+    },
+    {
+     "chapter": "c2a1",
+     "map": "c2a1b",
+     "position": [
+      240,
+      848,
+      376
+     ]
+    },
+    {
+     "chapter": "c2a2",
+     "map": "c2a2b2",
+     "position": [
+      2304,
+      420,
+      -8
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4e",
+     "position": [
+      -80,
+      -496,
+      128
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5",
+     "position": [
+      2016,
+      320,
+      32
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1094,
+      -649,
+      -256
+     ]
+    }
    ]
   },
   {
@@ -5971,6 +6460,26 @@
     1577,
     792,
     1025
+   ],
+   "sources": [
+    {
+     "chapter": "c2a3",
+     "map": "c2a3a",
+     "position": [
+      1577,
+      792,
+      1025
+     ]
+    },
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4e",
+     "position": [
+      -464,
+      448,
+      256
+     ]
+    }
    ]
   },
   {
@@ -5989,6 +6498,35 @@
     -1576,
     240,
     -352
+   ],
+   "sources": [
+    {
+     "chapter": "c2a5",
+     "map": "c2a5a",
+     "position": [
+      -1576,
+      240,
+      -352
+     ]
+    },
+    {
+     "chapter": "c3a1",
+     "map": "c3a1",
+     "position": [
+      -1976,
+      -1184,
+      384
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1000,
+      -368,
+      -208
+     ]
+    }
    ]
   },
   {
@@ -6007,6 +6545,26 @@
     352,
     -1104,
     464
+   ],
+   "sources": [
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4f",
+     "position": [
+      352,
+      -1104,
+      464
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1608,
+      -744,
+      -208
+     ]
+    }
    ]
   },
   {
@@ -6025,6 +6583,17 @@
     -550,
     1990,
     304
+   ],
+   "sources": [
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2",
+     "position": [
+      -550,
+      1990,
+      304
+     ]
+    }
    ]
   },
   {
@@ -6043,6 +6612,26 @@
     96,
     320,
     -1117
+   ],
+   "sources": [
+    {
+     "chapter": "c2a5",
+     "map": "c2a5d",
+     "position": [
+      96,
+      320,
+      -1117
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1480,
+      -744,
+      -208
+     ]
+    }
    ]
   },
   {
@@ -6061,6 +6650,71 @@
     1344,
     -1608,
     268
+   ],
+   "sources": [
+    {
+     "chapter": "c2a2",
+     "map": "c2a2b2",
+     "position": [
+      1344,
+      -1608,
+      268
+     ]
+    },
+    {
+     "chapter": "c2a3",
+     "map": "c2a3b",
+     "position": [
+      212,
+      2462,
+      1036
+     ]
+    },
+    {
+     "chapter": "c2a4",
+     "map": "c2a4b",
+     "position": [
+      -968,
+      -464,
+      -752
+     ]
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5e",
+     "position": [
+      -32,
+      744,
+      -1656
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2c",
+     "position": [
+      1384,
+      -884,
+      -1580
+     ]
+    },
+    {
+     "chapter": "c4a1a",
+     "map": "c4a1d",
+     "position": [
+      1752,
+      -1648,
+      -448
+     ]
+    },
+    {
+     "chapter": "c4a3",
+     "map": "c4a3",
+     "position": [
+      -144,
+      1072,
+      -3792
+     ]
+    }
    ]
   },
   {
@@ -6079,6 +6733,53 @@
     1308,
     -676,
     24
+   ],
+   "sources": [
+    {
+     "chapter": "c2a2",
+     "map": "c2a2b2",
+     "position": [
+      1308,
+      -676,
+      24
+     ]
+    },
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4e",
+     "position": [
+      -3232,
+      320,
+      16
+     ]
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5d",
+     "position": [
+      -328,
+      -224,
+      -216
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1528,
+      -600,
+      -248
+     ]
+    },
+    {
+     "chapter": "c4a1a",
+     "map": "c4a1d",
+     "position": [
+      1304,
+      -2536,
+      -432
+     ]
+    }
    ]
   },
   {
@@ -6097,6 +6798,44 @@
     -608,
     144,
     256
+   ],
+   "sources": [
+    {
+     "chapter": "c2a4d",
+     "map": "c2a4e",
+     "position": [
+      -608,
+      144,
+      256
+     ]
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5x",
+     "position": [
+      -560,
+      288,
+      912
+     ]
+    },
+    {
+     "chapter": "c3a1",
+     "map": "c3a1",
+     "position": [
+      -1888,
+      -1400,
+      396
+     ]
+    },
+    {
+     "chapter": "c4a1a",
+     "map": "c4a1b",
+     "position": [
+      424,
+      36,
+      33
+     ]
+    }
    ]
   },
   {
@@ -6115,6 +6854,89 @@
     -120,
     -804,
     -19
+   ],
+   "sources": [
+    {
+     "chapter": "c1a0c",
+     "map": "c1a1b",
+     "position": [
+      -120,
+      -804,
+      -19
+     ]
+    },
+    {
+     "chapter": "c1a2",
+     "map": "c1a2b",
+     "position": [
+      1198,
+      -310,
+      -22
+     ]
+    },
+    {
+     "chapter": "c1a4",
+     "map": "c1a4",
+     "position": [
+      -1408,
+      2544,
+      -516
+     ]
+    },
+    {
+     "chapter": "c2a1",
+     "map": "c2a1a",
+     "position": [
+      528,
+      1216,
+      176
+     ]
+    },
+    {
+     "chapter": "c2a2",
+     "map": "c2a2a",
+     "position": [
+      -1972,
+      756,
+      124
+     ]
+    },
+    {
+     "chapter": "c2a5",
+     "map": "c2a5e",
+     "position": [
+      -488,
+      744,
+      -1656
+     ]
+    },
+    {
+     "chapter": "c3a1",
+     "map": "c3a1a",
+     "position": [
+      -3220,
+      -400,
+      56
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2e",
+     "position": [
+      2744,
+      3116,
+      304
+     ]
+    },
+    {
+     "chapter": "c4a1a",
+     "map": "c4a1b",
+     "position": [
+      -2280,
+      -376,
+      -224
+     ]
+    }
    ]
   },
   {
@@ -6133,6 +6955,26 @@
     -3648,
     960,
     -248
+   ],
+   "sources": [
+    {
+     "chapter": "c1a0",
+     "map": "c1a0d",
+     "position": [
+      -3648,
+      960,
+      -248
+     ]
+    },
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1056,
+      -176,
+      -224
+     ]
+    }
    ]
   },
   {
@@ -6151,6 +6993,17 @@
     1806,
     -448,
     -209
+   ],
+   "sources": [
+    {
+     "chapter": "c3a2e",
+     "map": "c3a2d",
+     "position": [
+      1806,
+      -448,
+      -209
+     ]
+    }
    ]
   },
   {
@@ -6169,25 +7022,132 @@
     1745,
     1847,
     -129
+   ],
+   "sources": [
+    {
+     "chapter": "c1a0c",
+     "map": "c1a1",
+     "position": [
+      1745,
+      1847,
+      -129
+     ]
+    },
+    {
+     "chapter": "c1a4",
+     "map": "c1a4",
+     "position": [
+      -1443,
+      2539,
+      -516
+     ]
+    },
+    {
+     "chapter": "c2a3",
+     "map": "c2a3e",
+     "position": [
+      -2624,
+      -104,
+      712
+     ]
+    }
    ]
   },
   {
    "id": 7760372,
    "name": "Opposing Force: First Glock",
    "chapter": "of1a5",
-   "map": "of1a5",
+   "map": "of1a5b",
    "trigger": {
     "type": "weapon_pickup",
-    "map": "of1a5",
+    "map": "of1a5b",
     "classnames": [
      "weapon_glock",
      "weapon_9mmhandgun"
     ]
    },
    "position": [
-    1824,
-    -3456,
-    1339
+    768,
+    -1872,
+    1344
+   ],
+   "sources": [
+    {
+     "chapter": "of1a5",
+     "map": "of1a5b",
+     "position": [
+      768,
+      -1872,
+      1344
+     ]
+    },
+    {
+     "chapter": "of1a1",
+     "map": "of1a1",
+     "position": [
+      688,
+      -1047,
+      0
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a4",
+     "position": [
+      -1008,
+      -382,
+      172
+     ]
+    },
+    {
+     "chapter": "of3a4",
+     "map": "of3a4",
+     "position": [
+      -904,
+      -232,
+      40
+     ]
+    },
+    {
+     "chapter": "of4a4",
+     "map": "of4a4",
+     "position": [
+      -300,
+      -912,
+      416
+     ]
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a3",
+     "position": [
+      -632,
+      -944,
+      80
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a4",
+     "position": [
+      672,
+      2044,
+      32
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of6a4b",
+     "map": "of6a4b",
+     "position": [
+      -1976,
+      -1064,
+      -488
+     ],
+     "drop": "ally"
+    }
    ]
   },
   {
@@ -6207,6 +7167,94 @@
     -516,
     2300,
     -784
+   ],
+   "sources": [
+    {
+     "chapter": "of2a1",
+     "map": "of2a1b",
+     "position": [
+      -516,
+      2300,
+      -784
+     ]
+    },
+    {
+     "chapter": "of1a5",
+     "map": "of1a5b",
+     "position": [
+      -1408,
+      -2992,
+      2204
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a5",
+     "position": [
+      320,
+      -1408,
+      1176
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "of3a4",
+     "map": "of3a6",
+     "position": [
+      -2096,
+      2352,
+      -304
+     ]
+    },
+    {
+     "chapter": "of4a1",
+     "map": "of4a3",
+     "position": [
+      3438,
+      -1767,
+      496
+     ]
+    },
+    {
+     "chapter": "of4a4",
+     "map": "of4a4",
+     "position": [
+      -444,
+      -980,
+      400
+     ]
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a1",
+     "position": [
+      -3419,
+      1024,
+      16
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a1",
+     "position": [
+      1328,
+      960,
+      128
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "of6a4b",
+     "map": "of6a4b",
+     "position": [
+      -2067,
+      2560,
+      -576
+     ],
+     "drop": "hostile"
+    }
    ]
   },
   {
@@ -6225,6 +7273,86 @@
     808,
     -2584,
     832
+   ],
+   "sources": [
+    {
+     "chapter": "of1a1",
+     "map": "of1a3",
+     "position": [
+      808,
+      -2584,
+      832
+     ]
+    },
+    {
+     "chapter": "of2a1",
+     "map": "of2a1",
+     "position": [
+      1652,
+      1516,
+      52
+     ]
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a5",
+     "position": [
+      2120,
+      -1068,
+      812
+     ]
+    },
+    {
+     "chapter": "of3a1",
+     "map": "of3a2",
+     "position": [
+      1094,
+      2426,
+      -3372
+     ],
+     "gates": {
+      "always": [
+       "displacer"
+      ]
+     }
+    },
+    {
+     "chapter": "of4a1",
+     "map": "of4a3",
+     "position": [
+      1888,
+      -1068,
+      593
+     ]
+    },
+    {
+     "chapter": "of4a4",
+     "map": "of4a4",
+     "position": [
+      -40,
+      -856,
+      416
+     ]
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a1",
+     "position": [
+      -928,
+      40,
+      112
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a1",
+     "position": [
+      -3320,
+      2880,
+      272
+     ]
+    }
    ]
   },
   {
@@ -6243,6 +7371,26 @@
     2988,
     3084,
     -576
+   ],
+   "sources": [
+    {
+     "chapter": "of2a4",
+     "map": "of2a6",
+     "position": [
+      2988,
+      3084,
+      -576
+     ]
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a3",
+     "position": [
+      -2088,
+      532,
+      184
+     ]
+    }
    ]
   },
   {
@@ -6261,24 +7409,73 @@
     232,
     -1284,
     8
+   ],
+   "sources": [
+    {
+     "chapter": "of1a5",
+     "map": "of1a6",
+     "position": [
+      232,
+      -1284,
+      8
+     ]
+    },
+    {
+     "chapter": "of2a1",
+     "map": "of2a3",
+     "position": [
+      -906,
+      160,
+      0
+     ]
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a5",
+     "position": [
+      200,
+      -320,
+      1184
+     ]
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a1",
+     "position": [
+      -2384,
+      2544,
+      76
+     ]
+    }
    ]
   },
   {
    "id": 7760377,
    "name": "Opposing Force: First Tripmine",
    "chapter": "of2a4",
-   "map": "of2a4",
+   "map": "of2a5",
    "trigger": {
     "type": "weapon_pickup",
-    "map": "of2a4",
+    "map": "of2a5",
     "classnames": [
      "weapon_tripmine"
     ]
    },
    "position": [
-    64,
-    678,
-    22
+    1724,
+    -1068,
+    808
+   ],
+   "sources": [
+    {
+     "chapter": "of2a4",
+     "map": "of2a5",
+     "position": [
+      1724,
+      -1068,
+      808
+     ]
+    }
    ]
   },
   {
@@ -6298,11 +7495,22 @@
     760,
     417
    ],
-   "gates": {
-    "always": [
-     "barnacle_grapple"
-    ]
-   }
+   "sources": [
+    {
+     "chapter": "of4a1",
+     "map": "of4a2",
+     "position": [
+      -1768,
+      760,
+      417
+     ],
+     "gates": {
+      "always": [
+       "barnacle_grapple"
+      ]
+     }
+    }
+   ]
   },
   {
    "id": 7760379,
@@ -6320,6 +7528,76 @@
     -544,
     1856,
     -976
+   ],
+   "sources": [
+    {
+     "chapter": "of1a1",
+     "map": "of1a4b",
+     "position": [
+      -544,
+      1856,
+      -976
+     ]
+    },
+    {
+     "chapter": "of1a5",
+     "map": "of1a6",
+     "position": [
+      232,
+      -1220,
+      8
+     ]
+    },
+    {
+     "chapter": "of2a1",
+     "map": "of2a1b",
+     "position": [
+      -528,
+      2416,
+      -720
+     ]
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a5",
+     "position": [
+      2220,
+      372,
+      664
+     ]
+    },
+    {
+     "chapter": "of4a1",
+     "map": "of4a3",
+     "position": [
+      3144,
+      -1552,
+      496
+     ]
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a3",
+     "position": [
+      -1040,
+      -1984,
+      128
+     ]
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a2",
+     "position": [
+      1856,
+      2064,
+      -1504
+     ],
+     "gates": {
+      "always": [
+       "displacer"
+      ]
+     }
+    }
    ]
   },
   {
@@ -6338,6 +7616,104 @@
     1144,
     1864,
     -144
+   ],
+   "sources": [
+    {
+     "chapter": "of1a1",
+     "map": "of1a2",
+     "position": [
+      1144,
+      1864,
+      -144
+     ]
+    },
+    {
+     "chapter": "of1a1",
+     "map": "of1a1",
+     "position": [
+      -1328,
+      -136,
+      -128
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of1a5",
+     "map": "of1a5",
+     "position": [
+      1560,
+      -3424,
+      1339
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of2a1",
+     "map": "of2a3",
+     "position": [
+      -976,
+      1104,
+      2
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a6",
+     "position": [
+      2984,
+      3348,
+      -584
+     ]
+    },
+    {
+     "chapter": "of3a4",
+     "map": "of3a4",
+     "position": [
+      -944,
+      8,
+      112
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of4a1",
+     "map": "of4a1",
+     "position": [
+      -50,
+      2340,
+      296
+     ]
+    },
+    {
+     "chapter": "of4a4",
+     "map": "of4a4",
+     "position": [
+      -184,
+      -868,
+      416
+     ]
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a3",
+     "position": [
+      -712,
+      -960,
+      80
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a3",
+     "position": [
+      1408,
+      2508,
+      -160
+     ],
+     "drop": "ally"
+    }
    ]
   },
   {
@@ -6356,6 +7732,46 @@
     -2324,
     2520,
     96
+   ],
+   "sources": [
+    {
+     "chapter": "of5a1",
+     "map": "of5a1",
+     "position": [
+      -2324,
+      2520,
+      96
+     ]
+    },
+    {
+     "chapter": "of1a5",
+     "map": "of1a6",
+     "position": [
+      -272,
+      112,
+      -144
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a6",
+     "position": [
+      -352,
+      432,
+      -440
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a2",
+     "position": [
+      776,
+      1368,
+      -248
+     ]
+    }
    ]
   },
   {
@@ -6374,24 +7790,46 @@
     -640,
     -1408,
     136
+   ],
+   "sources": [
+    {
+     "chapter": "of5a1",
+     "map": "of5a1",
+     "position": [
+      -640,
+      -1408,
+      136
+     ]
+    }
    ]
   },
   {
    "id": 7760383,
    "name": "Opposing Force: First Displacer",
-   "chapter": "of3a4",
-   "map": "of3a5",
+   "chapter": "of3a1",
+   "map": "of3a2",
    "trigger": {
     "type": "weapon_pickup",
-    "map": "of3a5",
+    "map": "of3a2",
     "classnames": [
      "weapon_displacer"
     ]
    },
    "position": [
-    1414,
-    302,
-    240
+    424,
+    884,
+    1040
+   ],
+   "sources": [
+    {
+     "chapter": "of3a1",
+     "map": "of3a2",
+     "position": [
+      424,
+      884,
+      1040
+     ]
+    }
    ]
   },
   {
@@ -6411,11 +7849,22 @@
     -432,
     384
    ],
-   "gates": {
-    "always": [
-     "barnacle_grapple"
-    ]
-   }
+   "sources": [
+    {
+     "chapter": "of4a1",
+     "map": "of4a2",
+     "position": [
+      -1624,
+      -432,
+      384
+     ],
+     "gates": {
+      "always": [
+       "barnacle_grapple"
+      ]
+     }
+    }
+   ]
   },
   {
    "id": 7760385,
@@ -6433,6 +7882,17 @@
     -338,
     -504,
     337
+   ],
+   "sources": [
+    {
+     "chapter": "of4a1",
+     "map": "of4a3",
+     "position": [
+      -338,
+      -504,
+      337
+     ]
+    }
    ]
   },
   {
@@ -6446,7 +7906,53 @@
     "classnames": [
      "weapon_shockrifle"
     ]
-   }
+   },
+   "sources": [
+    {
+     "chapter": "of4a1",
+     "map": "of4a1"
+    },
+    {
+     "chapter": "of3a4",
+     "map": "of3a6",
+     "position": [
+      -2154,
+      1238,
+      -288
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "of5a1",
+     "map": "of5a2",
+     "position": [
+      -320,
+      3168,
+      64
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "of6a1",
+     "map": "of6a2",
+     "position": [
+      -354,
+      -1200,
+      90
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "of6a4b",
+     "map": "of6a4b",
+     "position": [
+      -152,
+      -1512,
+      -592
+     ],
+     "drop": "hostile"
+    }
+   ]
   },
   {
    "id": 7760387,
@@ -6464,6 +7970,17 @@
     367,
     2816,
     48
+   ],
+   "sources": [
+    {
+     "chapter": "of1a1",
+     "map": "of1a1",
+     "position": [
+      367,
+      2816,
+      48
+     ]
+    }
    ]
   },
   {
@@ -6482,6 +7999,17 @@
     -1152,
     -560,
     -112
+   ],
+   "sources": [
+    {
+     "chapter": "of1a1",
+     "map": "of1a1",
+     "position": [
+      -1152,
+      -560,
+      -112
+     ]
+    }
    ]
   },
   {
@@ -6500,6 +8028,26 @@
     544,
     -2824,
     80
+   ],
+   "sources": [
+    {
+     "chapter": "of1a1",
+     "map": "of1a2",
+     "position": [
+      544,
+      -2824,
+      80
+     ]
+    },
+    {
+     "chapter": "of2a4",
+     "map": "of2a6",
+     "position": [
+      -1620,
+      2344,
+      -540
+     ]
+    }
    ]
   },
   {
@@ -6519,6 +8067,65 @@
     592,
     1684,
     420
+   ],
+   "sources": [
+    {
+     "chapter": "ba_security1",
+     "map": "ba_security2",
+     "position": [
+      592,
+      1684,
+      420
+     ]
+    },
+    {
+     "chapter": "ba_tram1",
+     "map": "ba_tram1",
+     "position": [
+      -2844,
+      916,
+      64
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "ba_security1",
+     "map": "ba_security1",
+     "position": [
+      -864,
+      2544,
+      480
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "ba_canal1",
+     "map": "ba_canal1",
+     "position": [
+      1928,
+      208,
+      24
+     ],
+     "drop": "ally"
+    },
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard3",
+     "position": [
+      1344,
+      440,
+      -560
+     ]
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power1",
+     "position": [
+      -204,
+      772,
+      -512
+     ]
+    }
    ]
   },
   {
@@ -6538,6 +8145,26 @@
     -72,
     -1765,
     0
+   ],
+   "sources": [
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard1",
+     "position": [
+      -72,
+      -1765,
+      0
+     ]
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power2",
+     "position": [
+      -22,
+      -843,
+      144
+     ]
+    }
    ]
   },
   {
@@ -6557,6 +8184,37 @@
     -898,
     -1882,
     -112
+   ],
+   "sources": [
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power1",
+     "position": [
+      -898,
+      -1882,
+      -112
+     ]
+    },
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard1",
+     "position": [
+      676,
+      -964,
+      0
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_teleport2",
+     "position": [
+      624,
+      644,
+      272
+     ],
+     "drop": "hostile"
+    }
    ]
   },
   {
@@ -6575,6 +8233,37 @@
     400,
     2184,
     -88
+   ],
+   "sources": [
+    {
+     "chapter": "ba_canal1",
+     "map": "ba_canal2",
+     "position": [
+      400,
+      2184,
+      -88
+     ]
+    },
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard1",
+     "position": [
+      768,
+      -832,
+      0
+     ],
+     "drop": "hostile"
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_teleport2",
+     "position": [
+      -1456,
+      -816,
+      0
+     ],
+     "drop": "hostile"
+    }
    ]
   },
   {
@@ -6593,6 +8282,17 @@
     -344,
     2000,
     93
+   ],
+   "sources": [
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard5",
+     "position": [
+      -344,
+      2000,
+      93
+     ]
+    }
    ]
   },
   {
@@ -6611,6 +8311,26 @@
     -2662,
     -1550,
     92
+   ],
+   "sources": [
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard1",
+     "position": [
+      -2662,
+      -1550,
+      92
+     ]
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power1",
+     "position": [
+      1029,
+      -2475,
+      -487
+     ]
+    }
    ]
   },
   {
@@ -6629,6 +8349,26 @@
     1160,
     3384,
     -3576
+   ],
+   "sources": [
+    {
+     "chapter": "ba_xen1",
+     "map": "ba_xen2",
+     "position": [
+      1160,
+      3384,
+      -3576
+     ]
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power1",
+     "position": [
+      -890,
+      -1822,
+      -112
+     ]
+    }
    ]
   },
   {
@@ -6647,6 +8387,26 @@
     -2635,
     -1550,
     92
+   ],
+   "sources": [
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard1",
+     "position": [
+      -2635,
+      -1550,
+      92
+     ]
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power1",
+     "position": [
+      1007,
+      -2475,
+      -487
+     ]
+    }
    ]
   },
   {
@@ -6666,6 +8426,44 @@
     651,
     1352,
     263
+   ],
+   "sources": [
+    {
+     "chapter": "ba_security1",
+     "map": "ba_security2",
+     "position": [
+      651,
+      1352,
+      263
+     ]
+    },
+    {
+     "chapter": "ba_canal1",
+     "map": "ba_canal1b",
+     "position": [
+      -432,
+      584,
+      -192
+     ]
+    },
+    {
+     "chapter": "ba_yard1",
+     "map": "ba_yard1",
+     "position": [
+      -30,
+      -1784,
+      1
+     ]
+    },
+    {
+     "chapter": "ba_teleport2",
+     "map": "ba_power1",
+     "position": [
+      -112,
+      768,
+      -512
+     ]
+    }
    ]
   },
   {
@@ -6684,6 +8482,17 @@
     2080,
     288,
     56
+   ],
+   "sources": [
+    {
+     "chapter": "ba_canal1",
+     "map": "ba_canal1",
+     "position": [
+      2080,
+      288,
+      56
+     ]
+    }
    ]
   },
   {
@@ -7137,8 +8946,20 @@
   "rpg": [
    "RPG"
   ],
+  "crate_breaker": [
+   "Hand Grenade",
+   "Satchel Charge",
+   "MP5"
+  ],
+  "thrown_explosives": [
+   "Hand Grenade",
+   "Satchel Charge"
+  ],
   "barnacle_grapple": [
    "Barnacle"
+  ],
+  "displacer": [
+   "Displacer"
   ]
  },
  "starting_weapons": [

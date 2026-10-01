@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "ap_ammo.h"
+#include "ap_aptest.h"
 #include "ap_bots.h"
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
@@ -478,6 +479,7 @@ void RunFrame() {
     RunHubWarp();
     RunBots();
     RunDeferred();
+    RunTestHarness();
     EnforceSuit();
     ClampArmour();
     EnforceFlashlight();

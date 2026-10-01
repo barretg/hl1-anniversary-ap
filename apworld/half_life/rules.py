@@ -162,3 +162,33 @@ def location_rule(
         if strict is not None:
             conditions.append(strict)
     return all_of(conditions)
+
+
+def weapon_rule(
+    world: "HalfLifeWorld", entry: dict, sources: list[dict]
+) -> Callable[[CollectionState], bool]:
+    """A "First ..." check: reachable through any mission's first copy.
+
+    Missions are played in any order, so no one copy is the first a player
+    meets. Each source is its map's region plus whatever that copy alone asks
+    for (a displacer teleport, the grapple), and any one of them will do. The
+    location's own gates, if it ever has any, apply on top. Location rules are
+    re-evaluated every sweep, so reaching into map regions needs no indirect
+    conditions.
+    """
+    player = world.player
+    ways = [
+        (source["map"], all_of(gate_conditions(world, source.get("gates", {}))))
+        for source in sources
+    ]
+    base = location_rule(world, entry)
+
+    def rule(state: CollectionState) -> bool:
+        if base is not None and not base(state):
+            return False
+        return any(
+            state.can_reach_region(region, player) and (extra is None or extra(state))
+            for region, extra in ways
+        )
+
+    return rule

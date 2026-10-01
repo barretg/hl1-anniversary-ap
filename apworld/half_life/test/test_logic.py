@@ -511,3 +511,139 @@ class TestFlashlightOpposingForceOnly(EquipmentPoolMixin, HalfLifeTestBase):
     def test_only_the_goggles(self) -> None:
         self.assertIn("Night Vision Goggles", self.pool())
         self.assertNotIn("Flashlight", self.pool())
+
+
+# --- Weapon checks: any mission's first copy ----------------------------------
+
+
+def only_unlocks(test: HalfLifeTestBase, *chapters: str) -> CollectionState:
+    """A state holding nothing but these missions' unlocks."""
+    world = test.multiworld.worlds[test.player]
+    state = CollectionState(test.multiworld)
+    # A fresh state already holds the mission the run opens with.
+    state.remove(world.create_item(unlock_item_for_chapter[world.starting_chapter]))
+    for key in chapters:
+        state.collect(world.create_item(unlock_item_for_chapter[key]), prevent_sweep=True)
+    return state
+
+
+def all_but(test: HalfLifeTestBase, *items: str) -> CollectionState:
+    """Everything, less these items. Unswept until they are gone, or the sweep
+    collects the events they open and removing them takes none back."""
+    world = test.multiworld.worlds[test.player]
+    state = test.multiworld.get_all_state(perform_sweep=False)
+    for name in items:
+        state.remove(world.create_item(name))
+    state.sweep_for_advancements()
+    return state
+
+
+class TestOpposingForceWeaponSources(HalfLifeTestBase):
+    options = {"include_half_life": False, "include_opposing_force": True,
+               "logic_difficulty": "loose"}
+
+    def test_a_later_mission_with_a_copy_reaches_the_check(self) -> None:
+        """Crush Depth has its own Glock; the earliest one is missions away."""
+        state = only_unlocks(self, "of3a4")
+        self.assertTrue(state.can_reach_location("Opposing Force: First Glock", self.player))
+
+    def test_a_mission_with_no_copy_does_not(self) -> None:
+        state = only_unlocks(self, "of3a1")
+        self.assertFalse(state.can_reach_location("Opposing Force: First Glock", self.player))
+
+    def test_weapon_checks_hang_on_the_hub(self) -> None:
+        location = self.multiworld.get_location("Opposing Force: First Glock", self.player)
+        self.assertEqual(location.parent_region.name, "Hub")
+
+    def test_a_source_past_a_teleport_needs_the_displacer(self) -> None:
+        """We Are Not Alone's only shotgun is past a displacer teleport."""
+        state = only_unlocks(self, "of3a1")
+        self.assertFalse(state.can_reach_location("Opposing Force: First Shotgun", self.player))
+        state.collect(self.multiworld.worlds[self.player].create_item("Displacer"),
+                      prevent_sweep=True)
+        self.assertTrue(state.can_reach_location("Opposing Force: First Shotgun", self.player))
+
+    def test_the_displacer_xen_rooms_need_the_displacer(self) -> None:
+        names = [
+            "We Are Not Alone - Health Charger (Part 3)",
+            "Crush Depth - Healing Pool (Part 1)",
+            "Vicarious Reality - Healing Pool (Part 1)",
+            "Foxtrot Uniform - Healing Pool (Part 1)",
+            "Foxtrot Uniform - Healing Pool (Part 2)",
+            "The Package - Healing Pool (Part 1)",
+            "The Package - Healing Pool (Part 4)",
+            "Worlds Collide - Healing Pool (Part 1)",
+        ]
+        without = all_but(self, "Displacer")
+        with_it = self.multiworld.get_all_state(False)
+        for name in names:
+            self.assertFalse(without.can_reach_location(name, self.player), name)
+            self.assertTrue(with_it.can_reach_location(name, self.player), name)
+
+    def test_a_hostile_drop_is_a_source(self) -> None:
+        """The Shock Roach is only ever dropped, and The Package's troopers
+        drop one. The Package itself needs the grapple at any difficulty."""
+        state = only_unlocks(self, "of6a1")
+        state.collect(self.multiworld.worlds[self.player].create_item("Barnacle"),
+                      prevent_sweep=True)
+        self.assertTrue(state.can_reach_location("Opposing Force: First Shock Roach",
+                                                 self.player))
+
+
+class TestAllyDropsOff(HalfLifeTestBase):
+    options = {"exclude_intro_missions": False, "logic_difficulty": "loose"}
+
+    def test_an_allys_drop_is_not_a_source(self) -> None:
+        """Anomalous Materials' guards carry Glocks; killing one is not logic."""
+        state = only_unlocks(self, "c1a0")
+        self.assertFalse(state.can_reach_location("First Glock", self.player))
+
+    def test_slot_data_says_so(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertFalse(world.fill_slot_data()["ally_weapon_drops"])
+
+
+class TestAllyDropsOn(HalfLifeTestBase):
+    options = {"exclude_intro_missions": False, "logic_difficulty": "loose",
+               "ally_weapon_drops": True}
+
+    def test_an_allys_drop_is_a_source(self) -> None:
+        state = only_unlocks(self, "c1a0")
+        self.assertTrue(state.can_reach_location("First Glock", self.player))
+
+    def test_a_grunts_drop_is_a_source_either_way(self) -> None:
+        """Apprehension's grunts drop MP5s; no MP5 lies in it before."""
+        state = only_unlocks(self, "c2a1")
+        self.assertTrue(state.can_reach_location("First MP5", self.player))
+
+
+class TestOnARailCratesLoose(HalfLifeTestBase):
+    options = {"logic_difficulty": "loose"}
+
+    def test_the_grenade_launcher_clears_them(self) -> None:
+        state = all_but(self, "Hand Grenade", "Satchel Charge")
+        self.assertTrue(state.can_reach_region("c2a2e", self.player))
+
+    def test_nothing_explosive_does_not(self) -> None:
+        state = all_but(self, "Hand Grenade", "Satchel Charge", "MP5")
+        self.assertTrue(state.can_reach_region("c2a2d", self.player))
+        self.assertFalse(state.can_reach_region("c2a2e", self.player))
+
+
+class TestOnARailCratesStrict(HalfLifeTestBase):
+    options = {"logic_difficulty": "strict"}
+
+    def test_the_grenade_launcher_is_not_enough(self) -> None:
+        state = all_but(self, "Hand Grenade", "Satchel Charge")
+        self.assertFalse(state.can_reach_region("c2a2e", self.player))
+
+    def test_a_grenade_is(self) -> None:
+        state = all_but(self, "Satchel Charge", "MP5")
+        self.assertTrue(state.can_reach_region("c2a2e", self.player))
+
+
+class TestEveryGameStrictAllyDrops(HalfLifeTestBase):
+    """The default tests (fill, every location reachable) on the widest seed."""
+    options = {"include_opposing_force": True, "include_blue_shift": True,
+               "logic_difficulty": "strict", "ally_weapon_drops": True,
+               "exclude_intro_missions": False}

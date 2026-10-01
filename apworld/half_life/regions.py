@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .data import VICTORY, campaign_of, mission_complete_event
-from .locations import HalfLifeLocation, locations_by_map
-from .rules import chapter_entry_rule, location_rule, map_entry_rule
+from .data import LOCATIONS, VICTORY, campaign_of, mission_complete_event
+from .locations import HalfLifeLocation, locations_by_map, weapon_sources
+from .rules import chapter_entry_rule, location_rule, map_entry_rule, weapon_rule
 
 if TYPE_CHECKING:
     from . import HalfLifeWorld
@@ -50,6 +50,9 @@ def create_regions(world: "HalfLifeWorld") -> None:
                 # rather than placed and made unreachable.
                 if entry["trigger"]["type"] in world.excluded_triggers:
                     continue
+                # Hung on the Hub below, reachable through any of its sources.
+                if "sources" in entry:
+                    continue
 
                 location = HalfLifeLocation(player, entry["name"], entry["id"], region)
                 rule = location_rule(world, entry)
@@ -73,6 +76,27 @@ def create_regions(world: "HalfLifeWorld") -> None:
 
         assert previous is not None
         add_event(world, previous, chapter)
+
+    add_weapon_checks(world, hub)
+
+
+def add_weapon_checks(world: "HalfLifeWorld", hub: Region) -> None:
+    """Every "First ..." check, hung on the Hub.
+
+    Its rule reaches into the map region of each mission's first copy, so the
+    region it sits in only has to be one every source is reached from. In the
+    seed while any source it counts is, so leaving its earliest mission out no
+    longer takes it away.
+    """
+    for entry in LOCATIONS:
+        if "sources" not in entry or entry["trigger"]["type"] in world.excluded_triggers:
+            continue
+        sources = weapon_sources(entry, world.excluded_chapters, world.ally_weapon_drops)
+        if not sources:
+            continue
+        location = HalfLifeLocation(world.player, entry["name"], entry["id"], hub)
+        location.access_rule = weapon_rule(world, entry, sources)
+        hub.locations.append(location)
 
 
 def add_event(world: "HalfLifeWorld", region: Region, chapter: dict) -> None:

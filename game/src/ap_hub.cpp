@@ -5,6 +5,7 @@
 
 #include "ap_hub.h"
 
+#include "ap_aptest.h"
 #include "ap_bots.h"
 #include "ap_traps.h"
 
@@ -635,6 +636,7 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_nowarps", Cmd_ApNoWarps);
     RegisterTrapCommands();
     RegisterBotCommands();
+    RegisterTestCommands();
     Trace("  commands registered");
 }
 

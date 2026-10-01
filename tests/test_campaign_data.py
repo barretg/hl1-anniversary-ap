@@ -592,12 +592,16 @@ def test_healing_pools_are_chargers_on_xen(campaign: dict) -> None:
     xen = {"c4a1", "c4a2", "c4a1a", "c4a3", "ba_xen1",
            # Opposing Force's: the Xen trip out of We Are Not Alone, Vicarious
            # Reality's and Worlds Collide's alien stretches, and Crush Depth's.
-           # Its copies sealed in unused prefab rooms are dropped by
-           # `isolated_healing_pools`.
            "of3a1", "of3a4", "of4a1", "of6a4b"}
+    # The displacer's Xen room, a prefab compiled into later maps and reached
+    # only by its self-teleport, so gated on the Displacer.
+    displacer_rooms = {"of4a1", "of5a1", "of5a2", "of6a1", "of6a4", "of6a4b"}
     for entry in pools:
         assert entry["trigger"]["type"] == "charger", entry["name"]
         assert "Healing Pool" in entry["name"], entry["name"]
+        if entry.get("gates") == {"always": ["displacer"]}:
+            assert entry["map"] in displacer_rooms | {"of3a4"}, entry["name"]
+            continue
         assert entry["chapter"] in xen, entry["name"]
 
 
@@ -813,3 +817,101 @@ def test_the_hazard_course_is_not_in_the_campaign(campaign: dict) -> None:
     """A training course rather than a mission, and nothing changelevels to it."""
     maps = {m for chapter in campaign["chapters"] for m in chapter["maps"]}
     assert not any(m.startswith("t0a0") for m in maps)
+
+
+def test_every_weapon_check_has_sources(campaign: dict) -> None:
+    """Each "First ..." check names its anchor first, and every source is a map
+    of one of that check's own game's missions."""
+    chapters = {c["key"]: c for c in campaign["chapters"]}
+    for entry in campaign["locations"]:
+        if entry["trigger"]["type"] != "weapon_pickup":
+            continue
+        sources = entry["sources"]
+        assert sources, entry["name"]
+        assert sources[0]["map"] == entry["map"], entry["name"]
+        assert sources[0]["chapter"] == entry["chapter"], entry["name"]
+        for source in sources:
+            chapter = chapters[source["chapter"]]
+            assert source["map"] in chapter["maps"], entry["name"]
+            assert chapter["campaign"] == chapters[entry["chapter"]]["campaign"]
+            assert source.get("drop") in (None, "hostile", "ally"), entry["name"]
+        # A check only an ally's drop reaches would leave seeds without
+        # `ally_weapon_drops`; none does today, and the anchor is never one.
+        assert sources[0].get("drop") != "ally", entry["name"]
+
+
+def test_checkdata_sources_follow_their_location(checkdata: list[list[str]]) -> None:
+    """The game files an `F` under the `L` right before it."""
+    owner = None
+    seen = 0
+    for record in checkdata:
+        if record[0] == "L":
+            owner = record[1]
+        elif record[0] == "F":
+            assert record[1] == owner, record
+            seen += 1
+    assert seen
+
+
+def released_locations() -> dict[str, dict[int, str]]:
+    """`{tag: {id: name}}` for every released `campaign.json` git still has."""
+    import subprocess
+
+    try:
+        tags = subprocess.run(["git", "-C", str(REPO), "tag", "--list", "v*"],
+                              capture_output=True, text=True, check=True).stdout.split()
+    except (OSError, subprocess.CalledProcessError):
+        return {}
+    found: dict[str, dict[int, str]] = {}
+    for tag in tags:
+        shown = subprocess.run(
+            ["git", "-C", str(REPO), "show", f"{tag}:apworld/half_life/data/campaign.json"],
+            capture_output=True, text=True,
+        )
+        if shown.returncode == 0:
+            found[tag] = {l["id"]: l["name"] for l in json.loads(shown.stdout)["locations"]}
+    return found
+
+
+def test_released_seeds_keep_every_location(campaign: dict) -> None:
+    """A seed from any release must still finish: every id it holds is either a
+    live check or a legacy one the client sends for it."""
+    sys.path.insert(0, str(REPO / "apworld" / "half_life"))
+    from data.legacy import LEGACY_LOCATIONS
+
+    releases = released_locations()
+    if not releases:
+        pytest.skip("no git history to compare against")
+    live = {l["id"] for l in campaign["locations"]}
+    for tag, locations in releases.items():
+        lost = set(locations) - live - set(LEGACY_LOCATIONS)
+        assert not lost, f"{tag}: {sorted(lost)}"
+
+
+def test_legacy_locations_stay_reserved_and_out_of_new_seeds(campaign: dict) -> None:
+    sys.path.insert(0, str(REPO / "apworld" / "half_life"))
+    from data.legacy import LEGACY_LOCATIONS
+
+    ids = json.loads((REPO / "apworld" / "half_life" / "data" / "ids.json").read_text())
+    live = {l["id"] for l in campaign["locations"]}
+    reached = {l["map"] for l in campaign["locations"]
+               if l["trigger"]["type"] == "map_reached"}
+    for location_id, (name, map_name) in LEGACY_LOCATIONS.items():
+        assert location_id not in live, name
+        assert location_id in ids["locations"].values(), name
+        # Sent once this map's "Reached" check is in, so it must have one.
+        assert map_name in reached, name
+
+
+def test_confirmed_copies_are_sources(campaign: dict) -> None:
+    """A confirmation naming no source is a typo the harness would never catch."""
+    from campaigns import KNOWN_CAMPAIGNS
+
+    sources = {
+        (entry["name"], source["map"])
+        for entry in campaign["locations"] for source in entry.get("sources", ())
+    }
+    for c in KNOWN_CAMPAIGNS:
+        for item, maps in c.confirmed_copies.items():
+            for map_name in maps:
+                assert (c.display(f"First {item}"), map_name) in sources, (item, map_name)

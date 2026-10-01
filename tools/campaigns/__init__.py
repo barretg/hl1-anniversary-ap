@@ -31,6 +31,8 @@ from .shared import (  # re-exported: the facts every campaign shares
     RANGED_WEAPONS,
     REQUIREMENT_GROUPS,
     UNDERWATER_WEAPONS,
+    WEAPON_DROPPERS,
+    dropped_weapon,
     hub_button_index,
 )
 

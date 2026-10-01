@@ -55,6 +55,7 @@ from campaigns import (
     MIN_LOCATIONS_PER_MAP,
     NOTABLE_MONSTERS,
     Campaign,
+    dropped_weapon,
     requirement_groups,
     weapon_items,
 )
@@ -390,13 +391,125 @@ def earliest_map_with(
     chapters: list[dict], entities: dict[str, list[dict[str, str]]],
     classnames: list[str],
 ) -> tuple[dict, str] | None:
-    """First `(chapter, map)` in campaign order that contains one of these."""
+    """First `(chapter, map)` in campaign order that places one of these.
+
+    The anchor every weapon check had before it had sources. Still what names
+    the check's map, where that map is still a source, so `ap_find` and the
+    tracker keep pointing where they did.
+    """
     wanted = set(classnames)
     for chapter in chapters:
         for map_name in chapter["maps"]:
             if any(e.get("classname", "") in wanted for e in entities[map_name]):
                 return chapter, map_name
     return None
+
+
+# How a copy of a weapon gets into the player's hands, best first: lying in the
+# map (or spawned there by a maker), dropped by a hostile, dropped by an ally.
+COPY_KINDS = ("placed", "hostile", "ally")
+
+
+def weapon_copy(entity: dict[str, str], wanted: set[str]) -> str | None:
+    """Which of `COPY_KINDS` this entity is a copy of one of these weapons by.
+
+    A `monstermaker` whose monster is the weapon spawns it outright: Opposing
+    Force hands over the displacer that way, leaving no `weapon_displacer` in
+    the map until it fires.
+    """
+    classname = entity.get("classname", "")
+    if classname in wanted:
+        return "placed"
+    if classname == "monstermaker" and entity.get("monstertype", "") in wanted:
+        return "placed"
+    drop = dropped_weapon(entity)
+    if drop is not None and drop[0] in wanted:
+        return "ally" if drop[1] else "hostile"
+    return None
+
+
+def _gate_set(gates: dict[str, list[str]] | None) -> set[tuple[str, str]]:
+    return {(mode, group) for mode, groups in (gates or {}).items() for group in groups}
+
+
+def merge_gates(*records: dict[str, list[str]] | None) -> dict[str, list[str]]:
+    """Every requirement of each gates record, in one."""
+    merged: dict[str, list[str]] = {}
+    for record in records:
+        for mode, groups in (record or {}).items():
+            have = merged.setdefault(mode, [])
+            have.extend(g for g in groups if g not in have)
+    return merged
+
+
+def weapon_sources(
+    campaign: Campaign, chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]], item_name: str,
+    classnames: list[str],
+) -> list[dict]:
+    """Every mission's first copy of this weapon: each is a way to its check.
+
+    Missions are played in any order, so the first copy in campaign order says
+    nothing about which one a player meets first. A mission's maps are walked in
+    order and its first copy taken; a copy that asks for more than a later one
+    (a source gate, or an ally to kill) does not end the walk, so the later,
+    cheaper one is a source too. A hand-placed anchor stands in for its own
+    mission with no entity.
+
+    Returned as `{"chapter", "map", "entity", "kind", "gates"}`, `entity` None
+    for an anchor.
+    """
+    wanted = set(classnames)
+    forced = campaign.weapon_anchors.get(item_name)
+    skip = set(campaign.unreachable_copies.get(item_name, ()))
+    found: list[dict] = []
+    for chapter in chapters:
+        if forced in chapter["maps"]:
+            found.append({"chapter": chapter, "map": forced, "entity": None,
+                          "kind": "placed", "gates": {}})
+            continue
+        mine: list[dict] = []
+        for map_name in chapter["maps"]:
+            if map_name in skip:
+                continue
+            copies = [(k, e) for e in entities[map_name]
+                      if (k := weapon_copy(e, wanted)) is not None]
+            if not copies:
+                continue
+            kind, entity = min(copies, key=lambda c: COPY_KINDS.index(c[0]))
+            gates = campaign.weapon_source_gates.get(map_name, {}).get(item_name, {})
+            source = {"chapter": chapter, "map": map_name, "entity": entity,
+                      "kind": kind, "gates": gates}
+            # Redundant if an earlier copy in this mission needs no more.
+            if any(_gate_set(s["gates"]) <= _gate_set(gates)
+                   and (s["kind"] != "ally" or kind == "ally") for s in mine):
+                continue
+            mine.append(source)
+            if not gates and kind != "ally":
+                break
+        found.extend(mine)
+    if forced and not any(s["map"] == forced for s in found):
+        raise SystemExit(
+            f"{campaign.key}: {item_name} anchored to {forced}, "
+            "which is in none of its chapters"
+        )
+    return found
+
+
+def source_record(source: dict, extra_gates: dict | None = None) -> dict:
+    """One way to a weapon check, as the apworld and the game read it."""
+    record: dict = {"chapter": source["chapter"]["key"], "map": source["map"]}
+    if source["entity"] is not None:
+        origin = entity_origin(source["entity"].get("origin", ""))
+        record["position"] = [int(round(v)) for v in origin]
+    if source["kind"] != "placed":
+        # Killing something is how this copy is had: `hostile` always counts,
+        # `ally` only in a seed with `ally_weapon_drops` on.
+        record["drop"] = source["kind"]
+    gates = merge_gates(source["gates"], extra_gates)
+    if gates:
+        record["gates"] = gates
+    return record
 
 
 def build(
@@ -456,12 +569,24 @@ def build(
         sealed.setdefault(map_name, set()).update(pocketed[map_name])
 
     isolated = isolated_healing_pools(chapters, entities, bounds, bsp_paths)
+    location_gates = {m: g for c in campaigns for m, g in c.location_gates.items()}
     for map_name in sorted(isolated):
         for key in sorted(isolated[map_name]):
+            # A flood fill cannot see the displacer's teleport, so a "sealed"
+            # room on a map with somewhere to teleport to is suspect. The ones
+            # confirmed in play carry a gate and are kept.
+            if key in location_gates.get(map_name, {}):
+                print(f"  healing volume reached by teleport: {map_name} {key}")
+                continue
+            if any(e.get("classname") == "info_displacer_xen_target"
+                   for e in entities[map_name]):
+                print(f"  WARNING: sealed healing volume on a displacer map, "
+                      f"unconfirmed: {map_name} {key}")
             print(f"  healing volume in a sealed room: {map_name} {key}")
-        sealed.setdefault(map_name, set()).update(isolated[map_name])
+            sealed.setdefault(map_name, set()).add(key)
 
     enabled = ENABLED_LOCATION_TYPES
+    gated_units: set[tuple[str, str]] = set()
 
     for chapter in chapters:
         campaign = by_key[chapter["campaign"]]
@@ -572,6 +697,13 @@ def build(
                             },
                             position=at,
                         )
+                        gate = location_gates.get(map_name, {}).get(
+                            f"{classname}:{entity.get('model', '')}"
+                        )
+                        if gate:
+                            builder.locations[-1]["gates"] = gate
+                            gated_units.add((map_name,
+                                             f"{classname}:{entity.get('model', '')}"))
 
             # Every distinct pickup classname present in the map becomes one
             # check -- collecting any instance of it fires the check once.
@@ -654,11 +786,11 @@ def build(
                         )
                         by_map[map_name] += 1
 
-    # One check per weapon, at the place Half-Life would first have handed it to
-    # you: the earliest map in campaign order that contains one. Deliberately not
-    # "anywhere": finding a shotgun six missions later is not the moment the
-    # check is about, and the per-map `pickup` type that fired on every copy is
-    # what read as noise. The crowbar is here too even though you start with one.
+    # One check per weapon: the first one you pick up. Missions are played in
+    # any order, so each mission's own first copy is a source (see
+    # `weapon_sources`), placed or dropped by a monster, and logic accepts any
+    # of them. The per-map `pickup` type that fired on every copy is what read
+    # as noise. The crowbar is here too even though you start with one.
     #
     # Per campaign, since which campaigns a seed includes must not move a check:
     # each game has its own "first shotgun", anchored in its own chapter order.
@@ -671,29 +803,43 @@ def build(
             **weapon_items(KNOWN_CAMPAIGNS), **campaign.optional_items,
             **campaign.unrandomised_weapons,
         }.items():
-            if item_name in campaign.weapon_anchors:
-                # Never lying in a map, only dropped by something that is.
-                anchor_map = campaign.weapon_anchors[item_name]
-                anchor = next(
-                    ((c, anchor_map) for c in own if anchor_map in c["maps"]), None
-                )
-                if anchor is None:
-                    raise SystemExit(
-                        f"{campaign.key}: {item_name} anchored to {anchor_map}, "
-                        "which is in none of its chapters"
-                    )
-            else:
-                anchor = earliest_map_with(own, entities, classnames)
-            if anchor is None:
+            sources = weapon_sources(campaign, own, entities, item_name, classnames)
+            if not sources:
                 continue  # not in the campaign; the check could never fire
-            chapter, map_name = anchor
-            # Where the earliest copy sits. There may be several in the map; the
-            # first is as good as any, and `ap_find` says "one of them".
-            wanted = set(classnames)
-            placed = next(
-                (e for e in entities[map_name] if e.get("classname", "") in wanted),
+            # The check is named and placed by the map it always was, the
+            # earliest that places one (or the hand-placed anchor), while that
+            # map is still a source. Logic accepts any source.
+            old = (
+                (None, campaign.weapon_anchors[item_name])
+                if item_name in campaign.weapon_anchors
+                else earliest_map_with(own, entities, classnames)
+            )
+            skip = set(campaign.unreachable_copies.get(item_name, ()))
+            first = next(
+                (s for s in sources if old is not None and s["map"] == old[1]),
                 None,
             )
+            if first is None and old is not None and old[1] not in skip:
+                # Still a real copy, only a later one in a mission that has an
+                # earlier source. Kept as a source so the check stays put.
+                chapter = next(c for c in own if old[1] in c["maps"])
+                wanted = set(classnames)
+                first = {"chapter": chapter, "map": old[1],
+                         "entity": next(e for e in entities[old[1]]
+                                        if e.get("classname", "") in wanted),
+                         "kind": "placed",
+                         "gates": campaign.weapon_source_gates.get(old[1], {})
+                                  .get(item_name, {})}
+                sources.append(first)
+            if first is None:
+                # Never named after a copy only some seeds count.
+                first = next((s for s in sources if s["kind"] != "ally"), sources[0])
+            if old is not None and first["map"] != old[1]:
+                print(f"  {campaign.key}: First {item_name} moves from {old[1]} "
+                      f"to {first['map']}")
+            sources.remove(first)
+            sources.insert(0, first)
+            chapter, map_name, placed = first["chapter"], first["map"], first["entity"]
             position = entity_origin(placed.get("origin", "")) if placed else None
 
             builder.add(
@@ -705,7 +851,17 @@ def build(
                 prefixed=False,
                 position=position,
                 scope=campaign.weapon_check_scope,
-            )
+            )["sources"] = [
+                source_record(s, campaign.map_check_gates.get(s["map"]))
+                for s in sources
+            ]
+
+    # A gate naming no check is a typo or a check some other test dropped.
+    if "charger" in enabled:
+        for map_name, keys in location_gates.items():
+            for key in keys:
+                if (map_name, key) not in gated_units:
+                    raise SystemExit(f"{map_name}: gate on {key}, which is no check")
 
     # Chapter completion always comes last so it reads last in the list.
     if "chapter_complete" in enabled:
@@ -1205,6 +1361,69 @@ def pocketed_chargers(
 POOL_CELL_LIMIT = 200_000
 
 
+def map_entries(ents: list[dict[str, str]]) -> list[tuple[float, float, float]]:
+    """Where a player comes into a map: its starts and its landmarks."""
+    return [
+        origin for origin in (
+            origin_of(e) for e in ents
+            if e.get("classname") in ("info_player_start", "info_landmark")
+        ) if origin is not None
+    ]
+
+
+def fill_reaches_entry(
+    hull: ClipHull,
+    entries: list[tuple[float, float, float]],
+    seeds: list[tuple[float, float, float]],
+    limit: int = POOL_CELL_LIMIT,
+) -> bool | None:
+    """Fill the space a crouched player fits in from `seeds`, ignoring gravity.
+
+    True if it comes near an entry, False if it runs out without doing so (a
+    sealed room), None if it passes `limit` cells first (open level, unproven).
+    Seeds are snapped to the `POCKET_GRID`; solid ones are dropped.
+    """
+    step = POCKET_GRID
+
+    def open_cell(p: tuple[float, float, float]) -> bool:
+        return hull.contents(p, HULL_CROUCHING) != CONTENTS_SOLID
+
+    def near_entry(q: tuple[float, float, float]) -> bool:
+        return any(abs(q[0] - t[0]) < 48 and abs(q[1] - t[1]) < 48
+                   and abs(q[2] - t[2]) < 80 for t in entries)
+
+    seeds = [s for s in seeds if open_cell(s)]
+    if any(near_entry(s) for s in seeds):
+        return True
+    seen = set(seeds)
+    queue = collections.deque(seeds)
+    while queue and len(seen) < limit:
+        x, y, z = queue.popleft()
+        for d in ((step, 0, 0), (-step, 0, 0), (0, step, 0),
+                  (0, -step, 0), (0, 0, step), (0, 0, -step)):
+            q = (x + d[0], y + d[1], z + d[2])
+            if q in seen or not open_cell(q):
+                continue
+            seen.add(q)
+            queue.append(q)
+            if near_entry(q):
+                return True
+    return None if queue else False
+
+
+def point_seeds(position: tuple[float, float, float]) -> list[tuple[float, float, float]]:
+    """Grid points around an entity origin a crouched player might occupy.
+
+    Origins sit on floors, in lockers and against walls, so a few cells either
+    side and above."""
+    step = POCKET_GRID
+    return [
+        (round(position[0] / step) * step + dx, round(position[1] / step) * step + dy,
+         round(position[2] / step) * step + dz)
+        for dx in (-step, 0, step) for dy in (-step, 0, step) for dz in (0, step, 2 * step)
+    ]
+
+
 def isolated_healing_pools(
     chapters: list[dict],
     entities: dict[str, list[dict[str, str]]],
@@ -1235,15 +1454,6 @@ def isolated_healing_pools(
         if not pools:
             continue
         hull = ClipHull(bsp_paths[map_name])
-        entries = [
-            origin for origin in (
-                origin_of(e) for e in ents
-                if e.get("classname") in ("info_player_start", "info_landmark")
-            ) if origin is not None
-        ]
-
-        def open_cell(p: tuple[float, float, float]) -> bool:
-            return hull.contents(p, HULL_CROUCHING) != CONTENTS_SOLID
 
         for pool in pools:
             lo, hi = bounds[map_name][pool["model"]]
@@ -1253,23 +1463,7 @@ def isolated_healing_pools(
                  round((lo[2] + 18) / step) * step + dz)
                 for x in range(1, 8) for y in range(1, 8) for dz in (0, 16, 32)
             ]
-            seeds = [s for s in seeds if open_cell(s)]
-            seen = set(seeds)
-            queue = collections.deque(seeds)
-            reached = False
-            while queue and len(seen) < POOL_CELL_LIMIT and not reached:
-                x, y, z = queue.popleft()
-                for d in ((step, 0, 0), (-step, 0, 0), (0, step, 0),
-                          (0, -step, 0), (0, 0, step), (0, 0, -step)):
-                    q = (x + d[0], y + d[1], z + d[2])
-                    if q in seen or not open_cell(q):
-                        continue
-                    seen.add(q)
-                    queue.append(q)
-                    if any(abs(q[0] - t[0]) < 48 and abs(q[1] - t[1]) < 48
-                           and abs(q[2] - t[2]) < 80 for t in entries):
-                        reached = True
-            if not reached and not queue:
+            if fill_reaches_entry(hull, map_entries(ents), seeds) is False:
                 isolated.setdefault(map_name, set()).add(
                     f"{pool['classname']}:{pool['model']}"
                 )
@@ -1454,8 +1648,11 @@ def gate_checks(locations: list[dict], campaigns: list[Campaign]) -> list[dict]:
     gates = {m: g for c in campaigns for m, g in c.map_check_gates.items()}
     for location in locations:
         gate = gates.get(location["map"])
+        # A weapon check's sources carry their own map's gate instead.
+        if location.get("sources"):
+            continue
         if gate and location["trigger"]["type"] != "map_reached":
-            location["gates"] = gate
+            location["gates"] = merge_gates(location.get("gates"), gate)
     return locations
 
 

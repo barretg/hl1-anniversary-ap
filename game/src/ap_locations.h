@@ -30,6 +30,10 @@ namespace ap {
 // it. `AuthoriseMap` answers that and releases the arrival.
 void OnMapStart(const std::string& map_name);
 
+// Forget which checks this map has sent, so they can be sent again. The
+// scenario harness only (`ap_aptest.cpp`).
+void ForgetSentChecks();
+
 // Settle whether this map may fire at all, on the first snapshot that can answer
 // it. Called from the poll.
 //

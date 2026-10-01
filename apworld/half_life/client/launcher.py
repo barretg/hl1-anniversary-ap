@@ -37,6 +37,7 @@ except ModuleNotFoundError:
     TRACKER_LOADED = False
 
 from .. import mod
+from ..data.legacy import LEGACY_LOCATIONS
 from . import settings
 from .bridge import Bridge, find_store_dir, is_game_dir, warp_save_key
 
@@ -244,6 +245,16 @@ class HalfLifeContext(SuperContext):
         self.item_by_id = {entry["id"]: entry for entry in self.campaign["items"]}
         self.location_name_by_id = {
             entry["id"]: entry["name"] for entry in self.campaign["locations"]
+        }
+        for location_id, (name, _) in LEGACY_LOCATIONS.items():
+            self.location_name_by_id.setdefault(location_id, name)
+        # Legacy checks already sent this run, so one waiting on the server's
+        # round trip is not sent again every poll.
+        self.legacy_sent: set[int] = set()
+        # Each map's "Reached" check, which says when a legacy check is due.
+        self.reached_id_by_map = {
+            entry["map"]: entry["id"] for entry in self.campaign["locations"]
+            if entry["trigger"]["type"] == "map_reached"
         }
         # The finale. No item unlocks it; it opens on a count of finished
         # missions, and clearing it wins the slot.
@@ -627,6 +638,20 @@ class HalfLifeContext(SuperContext):
                 return entry["trigger"]["type"] == "chapter_complete"
         return False
 
+    def legacy_checks_due(self, new_checks: list[int]) -> list[int]:
+        """Removed checks this seed still lists, whose map has been reached.
+
+        Nothing in the game fires them any more (see `data/legacy.py`), so this
+        is the only way an older seed gets them.
+        """
+        reached = self.checked_locations | set(new_checks)
+        return sorted(
+            location_id for location_id, (_, map_name) in LEGACY_LOCATIONS.items()
+            if location_id in self.missing_locations
+            and location_id not in self.legacy_sent
+            and self.reached_id_by_map.get(map_name) in reached
+        )
+
     def sync_completed_missions(self) -> None:
         """Rebuild the finished-mission set from the server's checked locations.
 
@@ -984,6 +1009,14 @@ async def pump(ctx: HalfLifeContext) -> None:
         elif event.kind == "HELLO":
             logger.info(f"Game is on {event.arg}.")
             publish(ctx, force=True)
+
+    due = ctx.legacy_checks_due(new_checks)
+    for location_id in due:
+        ctx.legacy_sent.add(location_id)
+        if location_id not in new_checks:
+            logger.info("Check (removed location, sent on reaching its map): "
+                        f"{ctx.location_name_by_id.get(location_id, location_id)}")
+            new_checks.append(location_id)
 
     if new_checks:
         # The game fires every check its checkdata.txt knows about, but the seed

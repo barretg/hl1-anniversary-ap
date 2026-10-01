@@ -55,8 +55,14 @@ from .items import (
     unlock_item_for_chapter,
     weapon_items,
 )
-from .locations import location_name_groups, location_name_to_id
+from .locations import (
+    location_in_seed,
+    location_name_groups,
+    location_name_to_id,
+    location_table,
+)
 from .options import (
+    AllyWeaponDrops,
     AmmoRelief,
     BlueShiftMissionsRequired,
     HalfLifeOptions,
@@ -128,7 +134,8 @@ class HalfLifeWeb(WebWorld):
             "Experimental Features",
             [AmmoRelief, IncludeOpposingForce, IncludeBlueShift,
              OpposingForceMissionsRequired, BlueShiftMissionsRequired,
-             RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow],
+             RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
+             AllyWeaponDrops],
             start_collapsed=True,
         )
     ]
@@ -176,6 +183,8 @@ class HalfLifeWorld(World):
         self.campaigns: list[str] = []
         # The melee weapon the run opens with.
         self.starting_weapon: str = ""
+        # Whether an ally's dropped weapon is a way to its weapon check.
+        self.ally_weapon_drops: bool = False
 
     # -- generation ------------------------------------------------------
 
@@ -237,6 +246,11 @@ class HalfLifeWorld(World):
             }
             self.excluded_triggers = set(passthrough.get("excluded_triggers", ()))
 
+        self.ally_weapon_drops = bool(self.options.ally_weapon_drops)
+        if passthrough:
+            # A seed from before the option is one without it.
+            self.ally_weapon_drops = bool(passthrough.get("ally_weapon_drops", False))
+
         items_by_name = {entry["name"]: entry for entry in ITEMS}
 
         # Half-Life's weapons are always in: every game places them, and their
@@ -255,7 +269,10 @@ class HalfLifeWorld(World):
                 continue
             if getattr(self.options, OPTIONAL_ITEM_NAMES[name]):
                 self.available_item_names.add(name)
-            elif name in VANILLA_WHEN_UNSHUFFLED:
+            elif name in VANILLA_WHEN_UNSHUFFLED and location_in_seed(
+                location_table[VANILLA_WHEN_UNSHUFFLED[name]],
+                self.excluded_chapters, self.ally_weapon_drops,
+            ):
                 self.available_item_names.add(name)
                 self.vanilla_placements[name] = VANILLA_WHEN_UNSHUFFLED[name]
         self.available_item_names.update(
@@ -438,6 +455,9 @@ class HalfLifeWorld(World):
             "shuffle_longjump": bool(self.options.shuffle_longjump),
             "shuffle_flashlight": bool(self.options.shuffle_flashlight),
             "melee_throw": bool(self.options.melee_throw),
+            # Logic only, for Universal Tracker: whether killing an ally for
+            # their weapon counts toward its check.
+            "ally_weapon_drops": self.ally_weapon_drops,
             # Unshuffled equipment that is a real item at its vanilla location,
             # so the client must gate its pickup like any other. Seeds from
             # before this existed left the long jump module ungated instead.

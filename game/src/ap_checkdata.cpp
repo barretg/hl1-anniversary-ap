@@ -122,7 +122,24 @@ bool CheckData::Load(const std::string& path) {
             if (f.size() >= 7) {
                 location.has_position = ParseVector(f[6], location.position);
             }
+            // Format 6. The position before it may be empty.
+            if (f.size() >= 8) {
+                location.needs = f[7];
+            }
             locations.push_back(location);
+        } else if (record == "F" && f.size() >= 5) {
+            // Format 6. Always right after its `L`, so the owner is the last
+            // location read.
+            if (!locations.empty() && locations.back().id == ParseLong(f[1])) {
+                Location::Source source;
+                source.map = f[2];
+                source.has_position = ParseVector(f[3], source.position);
+                source.needs = f[4];
+                if (f.size() >= 6) {
+                    source.drop = f[5];
+                }
+                locations.back().sources.push_back(source);
+            }
         } else if (record == "K" && f.size() >= 3) {
             gated_classnames.push_back(std::make_pair(f[1], f[2]));
         } else if (record == "S" && f.size() >= 2) {

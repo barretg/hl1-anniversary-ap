@@ -60,6 +60,25 @@ class Campaign:
     # `{item: map}` for a weapon check the entity lump cannot place: the weapon
     # is never lying in a map, only dropped by something that is.
     weapon_anchors: dict[str, str] = field(default_factory=dict)
+    # `{item: [maps]}` whose copies (placed or dropped) do not count toward its
+    # "First ..." check: a prop out of bounds, a scripted monster that never
+    # fights. Each mission's source moves on to its next map that holds one.
+    unreachable_copies: dict[str, list[str]] = field(default_factory=dict)
+    # `{item: [maps]}` whose copies were confirmed reachable in play where the
+    # maps alone could not prove it. Logic is unchanged; the scenario harness
+    # stops asking about them (`tests/aptest/aptest.py --unproven`).
+    confirmed_copies: dict[str, list[str]] = field(default_factory=dict)
+    # `{map: {item: gates}}` for a mission's copy of a weapon that sits past
+    # something its mission and map do not ask for. Same shape as `gates`.
+    weapon_source_gates: dict[str, dict[str, dict[str, list[str]]]] = field(
+        default_factory=dict
+    )
+    # Gates on single charger or pool checks, `{map: {"classname:*model":
+    # gates}}`, for one spot in a map that needs more than the map does (the
+    # displacer's Xen room).
+    location_gates: dict[str, dict[str, dict[str, list[str]]]] = field(
+        default_factory=dict
+    )
     # Display names for this campaign's presentation of a shared item. Display
     # strings only, never ids.
     weapon_aliases: dict[str, str] = field(default_factory=dict)
@@ -101,9 +120,12 @@ class Campaign:
         maps = [m for _, _, chapter_maps in self.chapters for m in chapter_maps]
         if len(maps) != len(set(maps)):
             raise ValueError(f"{self.key}: a map is in two chapters")
-        for map_name in self.map_check_gates:
+        for map_name in (*self.map_check_gates, *self.weapon_source_gates,
+                         *self.location_gates,
+                         *(m for ms in self.unreachable_copies.values() for m in ms),
+                         *(m for ms in self.confirmed_copies.values() for m in ms)):
             if map_name not in maps:
-                raise ValueError(f"{self.key}: check gate on {map_name!r}, "
+                raise ValueError(f"{self.key}: gate or copy on {map_name!r}, "
                                  "which is not one of its maps")
         firsts = {chapter_maps[0] for _, _, chapter_maps in self.chapters}
         for map_name in self.map_gates:

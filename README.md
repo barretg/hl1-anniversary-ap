@@ -75,8 +75,7 @@ outro's end-of-game trigger, which the game turns into a return to the hub.
 Half-Life's weapons are always in the pool, since every game places them.
 Opposing Force adds seven: Desert Eagle, M249, Sniper Rifle, Displacer, Spore
 Launcher, Barnacle (needed for everything past arriving in Vicarious Reality Part 2, at any logic difficulty) and
-Shock Roach (its check is the first one a shock trooper drops in Vicarious
-Reality). With Opposing Force in, `random_starting_weapon` picks the starting
+Shock Roach (its check is the first one a shock trooper drops). With Opposing Force in, `random_starting_weapon` picks the starting
 melee weapon from the crowbar, combat knife and pipe wrench; the others become
 items. Each game has its own `First <weapon>` checks, named with the game in
 front. `viewmodel_style: always_gordon` keeps Gordon's hands everywhere.
@@ -168,11 +167,22 @@ coordinates, since no two chargers of the same kind are within 204 units of each
 other and two languages agreeing on how to round a float is a silent bug waiting
 to happen.
 
-Weapon checks sit at the *vanilla* first location: the earliest map in campaign
-order that contains that weapon, and only there. Picking the same weapon up later
-sends nothing, and neither does the arsenal lying around the hub. The crowbar has
-one too, despite being starting inventory, which is why the game sweeps for
-pickups within arm's reach -- a weapon you already hold never fires a touch.
+A weapon check is the first copy of that weapon you pick up anywhere in its
+game; the arsenal lying around the hub sends nothing. Missions are played in any
+order, so logic gives each check **sources**: every mission's first map holding
+a copy, and the check is in logic once any source is reachable (plus whatever
+that copy alone needs, such as a displacer teleport). A copy can be lying in the
+map or dropped by a monster on death: enemy soldiers' MP5s and shotguns, male
+assassins' guns, shock troopers' roaches. Weapons dropped by allies you kill
+count only with `ally_weapon_drops`. Copies nobody can reach, and the ones past a
+teleport, are listed per game in `tools/campaigns/` (`unreachable_copies`,
+`weapon_source_gates`). The crowbar has a check too, despite being starting
+inventory, which is why the game sweeps for pickups within arm's reach: a
+weapon you already hold never fires a touch.
+
+Checks a release removes keep their ids reserved, and an older seed still
+holding one has it sent by the client once the player reaches the map it was on
+(`apworld/half_life/data/legacy.py`).
 
 Richer location types are already implemented and derived from the map files
 themselves: `tools/bsp_entities.py` reads the entity lump out of each shipped
@@ -226,6 +236,28 @@ without it -- a dll-less build takes an explicit `--allow-no-dll`.
 
 Playing needs the mod running: launch Half-Life with `-game hlap -console`, or
 pick Half-Life Archipelago from the Custom Game menu.
+
+### Checking logic in game
+
+Anything the maps cannot prove (a copy out of bounds, a room only a teleport
+reaches, crates only an explosive clears) is confirmed by playing it.
+`tests/aptest/aptest.py` stands in for the client and walks through scenarios
+built from the installed `checkdata.txt`: one per weapon source, one per gated
+check, and On A Rail's crates with each explosive. It needs the test build of
+the dll, which adds `ap_test_go` and `ap_test_tp`:
+
+```bash
+cmake --build build/game-test      # stages the test dll; rebuild the release one after
+python tests/aptest/aptest.py --game-root "<Half-Life>"
+# aptest> go 0        then in game: ap_test_go
+# aptest> pass | fail <what else it needs> | note <finding>
+```
+
+`--unproven` narrows it to the weapon sources the maps cannot prove reachable:
+drops, gated or handed-over copies, and placed copies whose flood fill never
+connects to a way into the map. The first run takes a few minutes and is cached.
+Verdicts go to `hlap/archipelago/aptest_results.txt`. A failed source becomes an
+`unreachable_copies` or `weapon_source_gates` entry.
 
 ## Adding a game
 

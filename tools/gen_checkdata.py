@@ -47,7 +47,22 @@ OUT_PATH = (
 # mission completes (`arrival`, `forward_exit`, `endsection`), and a new `N`
 # record describes each campaign. Additive: a format 4 reader sees Half-Life's
 # records unchanged and treats the other games' missions as more chapters.
-FORMAT_VERSION = 5
+#
+# 6 adds `F`, every way to a weapon check (each mission's first copy), and an
+# eighth `L` field naming what a check always needs. Additive: a format 5
+# reader skips `F` and stops reading `L` at the position.
+FORMAT_VERSION = 6
+
+
+def location_needs(location: dict, groups: dict[str, list[str]]) -> str:
+    """What a check's `always` gates ask for, as `ap_find` should say it."""
+    # The two `always` keys that name equipment rather than a group, as in
+    # `rules.EQUIPMENT_GATES`.
+    equipment = {"longjump": ["Long Jump Module"], "suit": ["HEV Suit"]}
+    return " and ".join(
+        " or ".join(groups.get(key) or equipment[key])
+        for key in (location.get("gates") or {}).get("always", [])
+    )
 
 
 def render(campaign: dict) -> str:
@@ -59,7 +74,10 @@ def render(campaign: dict) -> str:
         "#   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>"
         "|<campaign>|<complete on>",
         "#   N|<campaign>|<short>|<name>|<goal chapter>|<armour item>",
-        "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]",
+        "#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>[|<needs>]]",
+        "#   F|<location id>|<map>|<x y z>|<needs>|<drop>  one way to a weapon check:",
+        "#     a mission's first copy. <x y z> is empty for one handed over; <drop>",
+        "#     is hostile or ally for a copy a monster drops, empty for one placed.",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
         "#   P|<button targetname>|<chapter key>   a lobby panel and where it goes",
@@ -129,9 +147,22 @@ def render(campaign: dict) -> str:
             arg=arg,
             name=location["name"],
         )
-        if position:
-            record += "|" + " ".join(str(value) for value in position)
+        groups = campaign.get("requirement_groups", {})
+        needs = location_needs(location, groups)
+        if position or needs:
+            record += "|" + " ".join(str(value) for value in (position or ()))
+        if needs:
+            record += "|" + needs
         lines.append(record)
+        # Right after their `L`, which is how the game knows whose they are.
+        for source in location.get("sources", ()):
+            lines.append("F|{id}|{map}|{pos}|{needs}|{drop}".format(
+                id=location["id"],
+                map=source["map"],
+                pos=" ".join(str(v) for v in source.get("position", ())),
+                needs=location_needs(source, groups),
+                drop=source.get("drop", ""),
+            ))
 
     # Every classname the game must refuse until the matching item arrives.
     for classname, item in sorted(CLASSNAME_TO_ITEM.items()):

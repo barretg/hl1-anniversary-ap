@@ -213,6 +213,17 @@ class MeleeThrow(Toggle):
     display_name = "Add Melee Throw"
 
 
+class AllyWeaponDrops(Toggle):
+    """Let logic expect weapons dropped by allies you kill.
+
+    A security guard drops his Glock when he dies, and Opposing Force's marines
+    drop theirs. With this on, killing a friendly for their weapon counts as a
+    way to a "First ..." weapon check. Weapons dropped by enemies always count.
+    """
+
+    display_name = "Ally Weapon Drops"
+
+
 class DeathLinkAmnesty(Range):
     """How many deaths are forgiven before one is sent to the multiworld.
 
@@ -291,6 +302,7 @@ class HalfLifeOptions(PerGameCommonOptions):
     shuffle_longjump: ShuffleLongJump
     shuffle_flashlight: ShuffleFlashlight
     melee_throw: MeleeThrow
+    ally_weapon_drops: AllyWeaponDrops
     ammo_relief: AmmoRelief
     trap_percentage: TrapPercentage
     start_inventory_from_pool: StartInventoryPool

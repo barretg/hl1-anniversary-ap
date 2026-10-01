@@ -135,6 +135,26 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "c4a3": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
 }
 
+# Gates from a later map of a mission on, `{map: gates}`.
+MAP_GATES: dict[str, dict[str, list[str]]] = {
+    # From here On A Rail's way on is blocked by crates only an explosive
+    # clears. Loose logic takes the MP5's grenade launcher as well; strict asks
+    # for a grenade or a satchel charge.
+    "c2a2e": {"always": ["crate_breaker"], "strict": ["thrown_explosives"]},
+}
+
+# Copies that do not count toward their weapon's check, `{item: [maps]}`.
+UNREACHABLE_COPIES: dict[str, list[str]] = {
+    # The guard waving at the tram, which the player never leaves.
+    "Glock": ["c0a0"],
+}
+
+# Copies confirmed reachable in play that the flood fill could not prove.
+CONFIRMED_COPIES: dict[str, list[str]] = {
+    # The Lambda Core armoury, beside the Tau Cannon the fill does reach.
+    "Tripmine": ["c3a2d"],
+}
+
 # --- Weapons --------------------------------------------------------------
 #
 # One Archipelago item can cover several engine classnames, because retail ships
@@ -196,6 +216,9 @@ HALF_LIFE = Campaign(
     goal_chapter=GOAL_CHAPTER,
     intro_chapter=INTRO_CHAPTER,
     gates=CHAPTER_GATES,
+    map_gates=MAP_GATES,
+    unreachable_copies=UNREACHABLE_COPIES,
+    confirmed_copies=CONFIRMED_COPIES,
     weapons=WEAPON_ITEMS,
     optional_items=OPTIONAL_ITEMS,
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,

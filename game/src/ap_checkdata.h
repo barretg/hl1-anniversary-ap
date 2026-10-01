@@ -50,6 +50,20 @@ struct Location {
     // reaching a map is not somewhere a player can be pointed.
     bool has_position = false;
     float position[3] = {0, 0, 0};
+
+    // What reaching it always takes, as item names to print. Empty for most.
+    std::string needs;
+
+    // A weapon check's ways in: each mission's first copy, from `F` records.
+    // Empty for everything else and in an older data file.
+    struct Source {
+        std::string map;
+        bool has_position = false;
+        float position[3] = {0, 0, 0};
+        std::string needs;
+        std::string drop;  // "hostile" or "ally" for a copy a monster drops
+    };
+    std::vector<Source> sources;
 };
 
 struct Chapter {

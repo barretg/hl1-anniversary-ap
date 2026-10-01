@@ -9,6 +9,32 @@ GAME_NAME = "Half-Life"
 location_table: dict[str, dict] = {entry["name"]: entry for entry in LOCATIONS}
 location_name_to_id: dict[str, int] = {entry["name"]: entry["id"] for entry in LOCATIONS}
 
+
+
+def weapon_sources(
+    entry: dict, excluded_chapters: set[str], ally_drops: bool = False
+) -> list[dict]:
+    """The ways to a weapon check this seed counts: each source in an included
+    mission, and an ally's drop only with `ally_weapon_drops` on."""
+    return [
+        source for source in entry.get("sources", ())
+        if source["chapter"] not in excluded_chapters
+        and (ally_drops or source.get("drop") != "ally")
+    ]
+
+
+def location_in_seed(
+    entry: dict, excluded_chapters: set[str], ally_drops: bool = False
+) -> bool:
+    """Whether a seed leaving these missions out still contains this check.
+
+    A weapon check is there while any source it counts is.
+    """
+    if "sources" in entry:
+        return bool(weapon_sources(entry, excluded_chapters, ally_drops))
+    return entry["chapter"] not in excluded_chapters
+
+
 # Locations grouped by the map region they live in.
 locations_by_map: dict[str, list[dict]] = {}
 for _entry in LOCATIONS:

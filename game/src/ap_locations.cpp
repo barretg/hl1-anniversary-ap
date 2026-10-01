@@ -148,6 +148,8 @@ bool Visited(const std::string& map_name) {
     return false;  // no arrival check for it, so no record of ever being there
 }
 
+void ForgetSentChecks() { g_sent.clear(); }
+
 void OnMapStart(const std::string& map_name) {
     // The map before this one. The dll outlives the level, so this is still the
     // last map's name until it is overwritten below, and it is the only way to
@@ -409,6 +411,17 @@ int PartOf(const Chapter& chapter, const std::string& map_name) {
     return 0;
 }
 
+// The copy of a weapon check on this map, if it has one. Any mission's first
+// copy sends it, so the one in front of the player is the one worth pointing at.
+const Location::Source* SourceHere(const Location& location) {
+    for (const Location::Source& source : location.sources) {
+        if (source.map == g_map) {
+            return &source;
+        }
+    }
+    return nullptr;
+}
+
 // Point the player at one location, wherever it is.
 //
 // Somewhere else in the campaign is a legitimate answer -- `ap_find crossbow`
@@ -416,29 +429,51 @@ int PartOf(const Chapter& chapter, const std::string& map_name) {
 // -- so this says which mission and part, and hands over the command that goes
 // there rather than leaving the player to work it out.
 void DescribeLocation(CBasePlayer* player, const Location& location) {
+    // A weapon check is sent by whichever copy is touched first, so once it is
+    // found no copy anywhere is still a place to find it.
+    if (location.type == TriggerType::WeaponPickup && Collected(location)) {
+        Notify(location.name + ": already found.");
+        return;
+    }
+
     Notify((Collected(location) ? "[found] " : "") + location.name);
 
-    if (location.map != g_map) {
-        const Chapter* chapter = Data().ChapterOfMap(location.map);
+    // This map's copy if there is one, else the check itself.
+    const Location::Source* source = SourceHere(location);
+    const std::string& map = source != nullptr ? source->map : location.map;
+    const bool has_position = source != nullptr ? source->has_position
+                                                : location.has_position;
+    const float* position = source != nullptr ? source->position : location.position;
+    const std::string& needs = source != nullptr ? source->needs : location.needs;
+
+    if (!needs.empty()) {
+        Notify("Needs the " + needs + " to reach.");
+    }
+    if (location.type == TriggerType::WeaponPickup && !location.sources.empty()) {
+        Notify("Any copy in this game sends it; one is here:");
+    }
+
+    if (map != g_map) {
+        const Chapter* chapter = Data().ChapterOfMap(map);
         if (chapter == nullptr) {
-            Notify(std::string("It is on ") + location.map + ".");
+            Notify(std::string("It is on ") + map + ".");
             return;
         }
 
-        const int part = PartOf(*chapter, location.map);
+        const int part = PartOf(*chapter, map);
         char line[192];
         if (part > 0) {
             std::snprintf(line, sizeof(line), "In %s, part %d (%s).",
-                          chapter->name.c_str(), part, location.map.c_str());
+                          chapter->name.c_str(), part, map.c_str());
         } else {
             std::snprintf(line, sizeof(line), "In %s (%s).",
-                          chapter->name.c_str(), location.map.c_str());
+                          chapter->name.c_str(), map.c_str());
         }
         Notify(line);
 
         // A part warp only works somewhere already walked to, so offer it only
         // where it would be accepted. Otherwise the mission's own door.
-        if (part > 0 && Visited(location.map)) {
+        if (part > 0 && Visited(map)) {
             std::snprintf(line, sizeof(line), "Get there with ap_warp %d %d.",
                           chapter->index, part);
         } else {
@@ -449,7 +484,13 @@ void DescribeLocation(CBasePlayer* player, const Location& location) {
         return;
     }
 
-    if (!location.has_position) {
+    if (source != nullptr && !source->drop.empty()) {
+        Notify(source->drop == "ally"
+                   ? "Carried by an ally here, dropped if they die."
+                   : "Carried by an enemy here, dropped when killed.");
+    }
+
+    if (!has_position) {
         // Either the check is the map itself, or it is a weapon handed over
         // rather than one lying about. Nothing to point at either way, but they
         // are different answers.
@@ -463,8 +504,7 @@ void DescribeLocation(CBasePlayer* player, const Location& location) {
         return;
     }
 
-    const Vector at(location.position[0], location.position[1],
-                    location.position[2]);
+    const Vector at(position[0], position[1], position[2]);
     char line[192];
     std::snprintf(line, sizeof(line), "%s, about %d units away.",
                   Bearing(player, at),
@@ -495,15 +535,21 @@ void Find(const std::string& text) {
         float best_score = 0.0f;
 
         for (const Location& location : Data().locations) {
-            if (!location.has_position || location.map != g_map) {
-                continue;
-            }
             if (!State().InSeed(location.id) || Collected(location)) {
                 continue;
             }
+            // A weapon check's copy on this map counts as being on this map.
+            const Location::Source* source = SourceHere(location);
+            const float* position = nullptr;
+            if (source != nullptr && source->has_position) {
+                position = source->position;
+            } else if (location.has_position && location.map == g_map) {
+                position = location.position;
+            } else {
+                continue;
+            }
 
-            const Vector at(location.position[0], location.position[1],
-                            location.position[2]);
+            const Vector at(position[0], position[1], position[2]);
             const float score = WalkScore(player->pev->origin, at);
             if (best == nullptr || score < best_score) {
                 best = &location;
@@ -547,7 +593,11 @@ void Find(const std::string& text) {
     const Location* here = nullptr;
     int here_count = 0;
     for (size_t i = 0; i < matches.size(); ++i) {
-        if (matches[i]->map == g_map) {
+        // A found weapon check has nowhere left to point at.
+        if (matches[i]->type == TriggerType::WeaponPickup && Collected(*matches[i])) {
+            continue;
+        }
+        if (matches[i]->map == g_map || SourceHere(*matches[i]) != nullptr) {
             if (here == nullptr) {
                 here = matches[i];
             }

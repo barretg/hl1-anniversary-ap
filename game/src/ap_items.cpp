@@ -119,6 +119,9 @@ void TraceInventory(CBasePlayer* player, const char* when) {
 // reapplied from scratch.
 constexpr float kGrantedAmmoShare = 0.5f;
 
+// What one displacer self-teleport costs, in uranium.
+constexpr int kDisplacerTeleportAmmo = 60;
+
 CBasePlayerItem* FindItem(CBasePlayer* player, const std::string& classname) {
     for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
         for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
@@ -148,6 +151,14 @@ void StockAmmo(CBasePlayer* player, const std::string& classname) {
     int wanted = static_cast<int>(limit * kGrantedAmmoShare + 0.5f);
     if (wanted < 1) {
         wanted = 1;
+    }
+    // Half of the displacer's uranium is 50, and its self-teleport costs 60.
+    // Where the map has somewhere to teleport to, hand over enough for one, or
+    // the checks only the teleport reaches are a dead end for a player who has
+    // just received it.
+    if (classname == "weapon_displacer" && wanted < kDisplacerTeleportAmmo &&
+        UTIL_FindEntityByClassname(nullptr, "info_displacer_xen_target") != nullptr) {
+        wanted = kDisplacerTeleportAmmo < limit ? kDisplacerTeleportAmmo : limit;
     }
 
     const int index = player->GetAmmoIndex(item->pszAmmo1());

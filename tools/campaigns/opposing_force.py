@@ -86,6 +86,7 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "explosives": ["Spore Launcher"],
     "underwater": ["Desert Eagle"],
     "barnacle_grapple": ["Barnacle"],
+    "displacer": ["Displacer"],
 }
 
 # Shephard's melee weapons: a `First` check each, and starting-melee candidates
@@ -101,6 +102,56 @@ OPTIONAL_ITEMS: dict[str, list[str]] = {
     "PCV": ["item_suit"],
     # Opposing Force's flashlight: impulse 100 on its maps. No pickup.
     "Night Vision Goggles": [],
+}
+
+# Copies that do not count toward their weapon's check, from play in Sven Co-op
+# (hl1-sven-ap, 2026-09-30), whose maps are retail's: each is the same entity at
+# the same position here. To confirm in retail with the scenario harness.
+UNREACHABLE_COPIES: dict[str, list[str]] = {
+    # Both in the room behind the skylight, reachable only by stacking players.
+    "Tripmine": ["of2a4"],
+    "Shotgun": ["of2a4", "of0a0"],
+    # Out of bounds; We Are Pulling Out's source moves on to its next map.
+    # Also the Osprey ride in, whose marines nobody can reach.
+    "Glock": ["of1a5", "of0a0"],
+    "MP5": ["of0a0"],
+    "Desert Eagle": ["of0a0"],
+    # Props: the only real displacer is the one handed over going into Xen
+    # for the first time, of3a2's maker.
+    "Displacer": ["of3a5", "of4a5"],
+    # The one shock trooper here waits for a script rather than a fight (see
+    # `WEAPON_ANCHORS`).
+    "Shock Roach": ["of1a5b"],
+}
+
+# Copies confirmed reachable in play that the flood fill could not prove.
+CONFIRMED_COPIES: dict[str, list[str]] = {
+    # Only ever in one place.
+    "Barnacle": ["of4a3"],
+    # Handed over going into Xen for the first time.
+    "Displacer": ["of3a2"],
+}
+
+# Copies past a displacer teleport, from the same play.
+_DISPLACER = {"always": ["displacer"]}
+WEAPON_SOURCE_GATES: dict[str, dict[str, dict[str, list[str]]]] = {
+    "of3a2": {"Shotgun": _DISPLACER},
+    "of6a2": {"Hand Grenade": _DISPLACER},
+}
+
+# Checks only the displacer's self-teleport reaches. The pools are its Xen
+# room, a prefab compiled into each map near its `info_displacer_xen_target`:
+# a flood fill from the player start cannot see a teleport, so they once read
+# as sealed. Confirmed reachable in Sven Co-op, whose maps are these.
+LOCATION_GATES: dict[str, dict[str, dict[str, list[str]]]] = {
+    "of3a2": {"func_healthcharger:*78": _DISPLACER},
+    "of3a4": {"trigger_hurt:*247": _DISPLACER},
+    "of4a1": {"trigger_hurt:*10": _DISPLACER},
+    "of5a1": {"trigger_hurt:*160": _DISPLACER},
+    "of5a2": {"trigger_hurt:*101": _DISPLACER},
+    "of6a1": {"trigger_hurt:*45": _DISPLACER},
+    "of6a4": {"trigger_hurt:*78": _DISPLACER},
+    "of6a4b": {"trigger_hurt:*115": _DISPLACER},
 }
 
 # The Shock Roach is never placed; it is dropped by a dying shock trooper. The
@@ -128,6 +179,10 @@ OPPOSING_FORCE = Campaign(
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     melee=["weapon_knife", "weapon_pipewrench"],
     weapon_anchors=WEAPON_ANCHORS,
+    unreachable_copies=UNREACHABLE_COPIES,
+    confirmed_copies=CONFIRMED_COPIES,
+    weapon_source_gates=WEAPON_SOURCE_GATES,
+    location_gates=LOCATION_GATES,
     # Boot camp: the training course, left out like Half-Life's hazard course.
     excluded_maps=frozenset({"ofboot0", "ofboot1", "ofboot2", "ofboot3", "ofboot4"}),
     hub_button_prefix="of_",

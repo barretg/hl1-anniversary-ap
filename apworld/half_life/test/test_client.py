@@ -165,3 +165,39 @@ class TestMissingGameWarning(unittest.TestCase):
     def test_linked_says_nothing(self) -> None:
         self.write_installed("installed")
         self.assertNotIn("Opposing Force", self.warnings())
+
+
+class TestLegacyChecks(unittest.TestCase):
+    """A check a later release removed, still in an older seed, is sent for the
+    player once they have reached the map it was on."""
+
+    REMOVED = 7760052  # We've Got Hostiles, Part 2 (c1a3d)
+
+    def setUp(self) -> None:
+        self.ctx = context()
+        self.ctx.legacy_sent = set()
+        self.ctx.reached_id_by_map = {
+            entry["map"]: entry["id"] for entry in self.ctx.campaign["locations"]
+            if entry["trigger"]["type"] == "map_reached"
+        }
+        self.reached = self.ctx.reached_id_by_map["c1a3d"]
+        self.ctx.checked_locations = set()
+        self.ctx.missing_locations = {self.REMOVED, self.reached}
+
+    def test_not_before_the_map_is_reached(self) -> None:
+        self.assertEqual(self.ctx.legacy_checks_due([]), [])
+
+    def test_on_reaching_the_map(self) -> None:
+        self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [self.REMOVED])
+
+    def test_on_connect_when_reached_long_ago(self) -> None:
+        self.ctx.checked_locations = {self.reached}
+        self.assertEqual(self.ctx.legacy_checks_due([]), [self.REMOVED])
+
+    def test_once(self) -> None:
+        self.ctx.legacy_sent = {self.REMOVED}
+        self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [])
+
+    def test_never_for_a_seed_without_it(self) -> None:
+        self.ctx.missing_locations = {self.reached}
+        self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [])

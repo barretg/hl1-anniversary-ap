@@ -4,7 +4,10 @@
 #   G|<goal chapter key>
 #   C|<index>|<key>|<name>|<map,map,...>|<is_goal>|<complete on arrival>|<campaign>|<complete on>
 #   N|<campaign>|<short>|<name>|<goal chapter>|<armour item>
-#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>]
+#   L|<id>|<map>|<type>|<arg>|<name>[|<x y z>[|<needs>]]
+#   F|<location id>|<map>|<x y z>|<needs>|<drop>  one way to a weapon check:
+#     a mission's first copy. <x y z> is empty for one handed over; <drop>
+#     is hostile or ally for a copy a monster drops, empty for one placed.
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
 #   P|<button targetname>|<chapter key>   a lobby panel and where it goes
@@ -16,8 +19,8 @@
 # A charger's <arg> is <classname>@<x y z>, the rounded world-space centre
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
-V|5
-D|4bbfb24a950a
+V|6
+D|6eab5ad9a5be
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -304,37 +307,43 @@ L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone - HEV Charg
 L|7760281|of3a1b|map_reached||We Are Not Alone - Part 2 Reached
 L|7760282|of3a1b|charger|trigger_hurt@-632 -548 -124|We Are Not Alone - Healing Pool (Part 2)|-632 -548 -125
 L|7760283|of3a2|map_reached||We Are Not Alone - Part 3 Reached
-L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone - Health Charger (Part 3)|1204 2614 -3268
+L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone - Health Charger (Part 3)|1204 2614 -3268|Displacer
 L|7760285|of3a4|map_reached||Crush Depth - Part 1 Reached
 L|7760286|of3a4|charger|func_healthcharger@-1636 896 -56|Crush Depth - Health Charger (Part 1)|-1636 896 -56
 L|7760287|of3a4|charger|func_recharge@-1636 832 -56|Crush Depth - HEV Charger (Part 1)|-1636 832 -56
-L|7760288|of3a4|charger|trigger_hurt@-2504 -3296 -408|Crush Depth - Healing Pool (Part 1)|-2504 -3296 -408
+L|7760288|of3a4|charger|trigger_hurt@-2504 -3296 -408|Crush Depth - Healing Pool (Part 1)|-2504 -3296 -408|Displacer
 L|7760289|of3a5|map_reached||Crush Depth - Part 2 Reached
 L|7760290|of3a5|charger|func_recharge@-3228 2340 -56|Crush Depth - HEV Charger (Part 2)|-3228 2340 -56
 L|7760291|of3a6|map_reached||Crush Depth - Part 3 Reached
 L|7760292|of4a1|map_reached||Vicarious Reality - Part 1 Reached
+L|7760293|of4a1|charger|trigger_hurt@-172 -272 -840|Vicarious Reality - Healing Pool (Part 1)|-172 -271 -840|Displacer
 L|7760294|of4a2|map_reached||Vicarious Reality - Part 2 Reached
-L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality - Health Charger 1 (Part 2)|-2044 2 444
-L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality - Health Charger 2 (Part 2)|-544 -1318 1148
-L|7760297|of4a2|charger|func_healthcharger@544 -1320 1148|Vicarious Reality - Health Charger 3 (Part 2)|544 -1318 1148
-L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality - Healing Pool (Part 2)|-2192 -1456 262
+L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality - Health Charger 1 (Part 2)|-2044 2 444|Barnacle
+L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality - Health Charger 2 (Part 2)|-544 -1318 1148|Barnacle
+L|7760297|of4a2|charger|func_healthcharger@544 -1320 1148|Vicarious Reality - Health Charger 3 (Part 2)|544 -1318 1148|Barnacle
+L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality - Healing Pool (Part 2)|-2192 -1456 262|Barnacle
 L|7760299|of4a3|map_reached||Vicarious Reality - Part 3 Reached
 L|7760300|of4a3|charger|func_healthcharger@176 -2116 356|Vicarious Reality - Health Charger (Part 3)|176 -2116 356
 L|7760301|of4a4|map_reached||Pit Worm's Nest - Part 1 Reached
 L|7760302|of4a5|map_reached||Pit Worm's Nest - Part 2 Reached
 L|7760303|of5a1|map_reached||Foxtrot Uniform - Part 1 Reached
+L|7760304|of5a1|charger|trigger_hurt@2580 1832 -840|Foxtrot Uniform - Healing Pool (Part 1)|2580 1832 -840|Displacer
 L|7760305|of5a2|map_reached||Foxtrot Uniform - Part 2 Reached
+L|7760306|of5a2|charger|trigger_hurt@2504 -3160 1816|Foxtrot Uniform - Healing Pool (Part 2)|2504 -3160 1816|Displacer
 L|7760307|of5a3|map_reached||Foxtrot Uniform - Part 3 Reached
 L|7760308|of5a4|map_reached||Foxtrot Uniform - Part 4 Reached
 L|7760309|of5a4|charger|func_healthcharger@-2624 124 -8|Foxtrot Uniform - Health Charger (Part 4)|-2624 124 -8
 L|7760310|of5a4|charger|func_recharge@-2576 124 -8|Foxtrot Uniform - HEV Charger (Part 4)|-2576 124 -8
 L|7760311|of6a1|map_reached||The Package - Part 1 Reached
+L|7760312|of6a1|charger|trigger_hurt@-3244 -3352 -840|The Package - Healing Pool (Part 1)|-3244 -3352 -840|Displacer
 L|7760313|of6a2|map_reached||The Package - Part 2 Reached
 L|7760314|of6a3|map_reached||The Package - Part 3 Reached
 L|7760315|of6a4|map_reached||The Package - Part 4 Reached
+L|7760316|of6a4|charger|trigger_hurt@2504 -3160 2840|The Package - Healing Pool (Part 4)|2504 -3160 2840|Displacer
 L|7760317|of6a4b|map_reached||Worlds Collide - Part 1 Reached
 L|7760318|of6a4b|charger|func_healthcharger@-1860 -1088 -488|Worlds Collide - Health Charger (Part 1)|-1860 -1088 -488
 L|7760319|of6a4b|charger|func_recharge@-1860 -1136 -488|Worlds Collide - HEV Charger (Part 1)|-1860 -1136 -488
+L|7760320|of6a4b|charger|trigger_hurt@2504 -3160 2840|Worlds Collide - Healing Pool (Part 1)|2504 -3160 2840|Displacer
 L|7760321|of6a5|map_reached||Worlds Collide - Part 2 Reached
 L|7760322|of6a5|charger|trigger_hurt@1264 -520 312|Worlds Collide - Healing Pool (Part 2)|1264 -518 310
 L|7760323|of7a0|map_reached||Worlds Collide - Part 3 Reached
@@ -387,49 +396,217 @@ L|7760369|ba_power2|charger|func_healthcharger@-1560 696 80|Power Struggle - Hea
 L|7760370|ba_power2|charger|func_healthcharger@64 -1240 -356|Power Struggle - Health Charger 2 (Part 3)|64 -1240 -356
 L|7760371|ba_outro|map_reached||Power Struggle - Part 4 Reached
 L|7760207|c1a1f|weapon_pickup|weapon_glock,weapon_9mmhandgun|First Glock|-256 -984 -102
+F|7760207|c1a1f|-256 -984 -102||
+F|7760207|c0a0b|2070 632 -2312||ally
+F|7760207|c1a0|-132 -1083 -216||ally
+F|7760207|c1a0c|1348 -216 -360||ally
+F|7760207|c1a2a|-716 -60 -256||ally
+F|7760207|c1a3|35 1047 0||ally
+F|7760207|c1a4i|-826 -479 -744||ally
+F|7760207|c2a1|-472 46 96||ally
+F|7760207|c2a2|-1532 -2800 -1352||ally
+F|7760207|c2a3d|976 -1224 788||ally
+F|7760207|c2a4a|-232 -1008 0||ally
+F|7760207|c2a4d|144 32 16||ally
+F|7760207|c2a5c|-688 400 -272||ally
+F|7760207|c2a5e|-240 744 -1656||
+F|7760207|c3a1|480 -884 576||ally
+F|7760207|c3a2a|-2316 576 -1||ally
 L|7760208|c1a4g|weapon_pickup|weapon_357,weapon_python|First .357 Magnum|-783 -1218 -1888
+F|7760208|c1a4g|-783 -1218 -1888||
+F|7760208|c2a1|-512 16 112||
+F|7760208|c2a2a|-308 2428 -236||
+F|7760208|c2a4b|-912 -736 -784||
 L|7760209|c1a3|weapon_pickup|weapon_mp5,weapon_9mmAR|First MP5|-888 -1080 64
+F|7760209|c1a3|-888 -1080 64||
+F|7760209|c2a1|-92 320 -1||hostile
+F|7760209|c2a2b1|-3352 -716 368||hostile
+F|7760209|c2a3|-481 -416 1524||hostile
+F|7760209|c2a4d|384 560 16||hostile
+F|7760209|c2a5|1679 319 64||hostile
+F|7760209|c3a1a|-3400 168 304||hostile
 L|7760210|c1a2|weapon_pickup|weapon_shotgun|First Shotgun|-623 -846 -534
+F|7760210|c1a2|-623 -846 -534||
+F|7760210|c1a3|140 1082 32||
+F|7760210|c2a1b|240 848 376||
+F|7760210|c2a2b2|2304 420 -8||hostile
+F|7760210|c2a4e|-80 -496 128||hostile
+F|7760210|c2a5|2016 320 32||hostile
+F|7760210|c3a2d|1094 -649 -256||
 L|7760211|c2a3a|weapon_pickup|weapon_crossbow|First Crossbow|1577 792 1025
+F|7760211|c2a3a|1577 792 1025||
+F|7760211|c2a4e|-464 448 256||
 L|7760212|c2a5a|weapon_pickup|weapon_rpg|First RPG|-1576 240 -352
+F|7760212|c2a5a|-1576 240 -352||
+F|7760212|c3a1|-1976 -1184 384||
+F|7760212|c3a2d|1000 -368 -208||
 L|7760213|c2a4f|weapon_pickup|weapon_gauss|First Tau Cannon|352 -1104 464
+F|7760213|c2a4f|352 -1104 464||
+F|7760213|c3a2d|1608 -744 -208||
 L|7760214|c3a2|weapon_pickup|weapon_egon|First Gluon Gun|-550 1990 304
+F|7760214|c3a2|-550 1990 304||
 L|7760215|c2a5d|weapon_pickup|weapon_hornetgun|First Hivehand|96 320 -1117
+F|7760215|c2a5d|96 320 -1117||
+F|7760215|c3a2d|1480 -744 -208||
 L|7760216|c2a2b2|weapon_pickup|weapon_satchel|First Satchel Charge|1344 -1608 268
+F|7760216|c2a2b2|1344 -1608 268||
+F|7760216|c2a3b|212 2462 1036||
+F|7760216|c2a4b|-968 -464 -752||
+F|7760216|c2a5e|-32 744 -1656||
+F|7760216|c3a2c|1384 -884 -1580||
+F|7760216|c4a1d|1752 -1648 -448||
+F|7760216|c4a3|-144 1072 -3792||
 L|7760217|c2a2b2|weapon_pickup|weapon_tripmine|First Tripmine|1308 -676 24
+F|7760217|c2a2b2|1308 -676 24||
+F|7760217|c2a4e|-3232 320 16||
+F|7760217|c2a5d|-328 -224 -216||
+F|7760217|c3a2d|1528 -600 -248||
+F|7760217|c4a1d|1304 -2536 -432||
 L|7760218|c2a4e|weapon_pickup|weapon_snark|First Snarks|-608 144 256
+F|7760218|c2a4e|-608 144 256||
+F|7760218|c2a5x|-560 288 912||
+F|7760218|c3a1|-1888 -1400 396||
+F|7760218|c4a1b|424 36 33||
 L|7760219|c1a1b|weapon_pickup|weapon_handgrenade|First Hand Grenade|-120 -804 -19
+F|7760219|c1a1b|-120 -804 -19||
+F|7760219|c1a2b|1198 -310 -22||
+F|7760219|c1a4|-1408 2544 -516||
+F|7760219|c2a1a|528 1216 176||
+F|7760219|c2a2a|-1972 756 124||
+F|7760219|c2a5e|-488 744 -1656||
+F|7760219|c3a1a|-3220 -400 56||
+F|7760219|c3a2e|2744 3116 304||
+F|7760219|c4a1b|-2280 -376 -224||
 L|7760240|c1a0d|weapon_pickup|item_suit|First HEV Suit|-3648 960 -248
+F|7760240|c1a0d|-3648 960 -248||
+F|7760240|c3a2d|1056 -176 -224||
 L|7760220|c3a2d|weapon_pickup|item_longjump|First Long Jump Module|1806 -448 -209
+F|7760220|c3a2d|1806 -448 -209||
 L|7760221|c1a1|weapon_pickup|weapon_crowbar|First Crowbar|1745 1847 -129
-L|7760372|of1a5|weapon_pickup|weapon_glock,weapon_9mmhandgun|Opposing Force: First Glock|1824 -3456 1339
+F|7760221|c1a1|1745 1847 -129||
+F|7760221|c1a4|-1443 2539 -516||
+F|7760221|c2a3e|-2624 -104 712||
+L|7760372|of1a5b|weapon_pickup|weapon_glock,weapon_9mmhandgun|Opposing Force: First Glock|768 -1872 1344
+F|7760372|of1a5b|768 -1872 1344||
+F|7760372|of1a1|688 -1047 0||ally
+F|7760372|of2a4|-1008 -382 172||
+F|7760372|of3a4|-904 -232 40||
+F|7760372|of4a4|-300 -912 416||
+F|7760372|of5a3|-632 -944 80||ally
+F|7760372|of6a4|672 2044 32||ally
+F|7760372|of6a4b|-1976 -1064 -488||ally
 L|7760373|of2a1b|weapon_pickup|weapon_mp5,weapon_9mmAR|Opposing Force: First MP5|-516 2300 -784
+F|7760373|of2a1b|-516 2300 -784||
+F|7760373|of1a5b|-1408 -2992 2204||ally
+F|7760373|of2a5|320 -1408 1176||hostile
+F|7760373|of3a6|-2096 2352 -304||
+F|7760373|of4a3|3438 -1767 496||
+F|7760373|of4a4|-444 -980 400||
+F|7760373|of5a1|-3419 1024 16||hostile
+F|7760373|of6a1|1328 960 128||hostile
+F|7760373|of6a4b|-2067 2560 -576||hostile
 L|7760374|of1a3|weapon_pickup|weapon_shotgun|Opposing Force: First Shotgun|808 -2584 832
+F|7760374|of1a3|808 -2584 832||
+F|7760374|of2a1|1652 1516 52||
+F|7760374|of2a5|2120 -1068 812||
+F|7760374|of3a2|1094 2426 -3372|Displacer|
+F|7760374|of4a3|1888 -1068 593||
+F|7760374|of4a4|-40 -856 416||
+F|7760374|of5a1|-928 40 112||ally
+F|7760374|of6a1|-3320 2880 272||
 L|7760375|of2a6|weapon_pickup|weapon_rpg|Opposing Force: First RPG|2988 3084 -576
+F|7760375|of2a6|2988 3084 -576||
+F|7760375|of6a3|-2088 532 184||
 L|7760376|of1a6|weapon_pickup|weapon_satchel|Opposing Force: First Satchel Charge|232 -1284 8
-L|7760377|of2a4|weapon_pickup|weapon_tripmine|Opposing Force: First Tripmine|64 678 22
+F|7760376|of1a6|232 -1284 8||
+F|7760376|of2a3|-906 160 0||
+F|7760376|of2a5|200 -320 1184||
+F|7760376|of5a1|-2384 2544 76||
+L|7760377|of2a5|weapon_pickup|weapon_tripmine|Opposing Force: First Tripmine|1724 -1068 808
+F|7760377|of2a5|1724 -1068 808||
 L|7760378|of4a2|weapon_pickup|weapon_snark|Opposing Force: First Snarks|-1768 760 417
+F|7760378|of4a2|-1768 760 417|Barnacle|
 L|7760379|of1a4b|weapon_pickup|weapon_handgrenade|Opposing Force: First Hand Grenade|-544 1856 -976
+F|7760379|of1a4b|-544 1856 -976||
+F|7760379|of1a6|232 -1220 8||
+F|7760379|of2a1b|-528 2416 -720||
+F|7760379|of2a5|2220 372 664||
+F|7760379|of4a3|3144 -1552 496||
+F|7760379|of5a3|-1040 -1984 128||
+F|7760379|of6a2|1856 2064 -1504|Displacer|
 L|7760380|of1a2|weapon_pickup|weapon_eagle|Opposing Force: First Desert Eagle|1144 1864 -144
+F|7760380|of1a2|1144 1864 -144||
+F|7760380|of1a1|-1328 -136 -128||ally
+F|7760380|of1a5|1560 -3424 1339||ally
+F|7760380|of2a3|-976 1104 2||ally
+F|7760380|of2a6|2984 3348 -584||
+F|7760380|of3a4|-944 8 112||ally
+F|7760380|of4a1|-50 2340 296||
+F|7760380|of4a4|-184 -868 416||
+F|7760380|of5a3|-712 -960 80||ally
+F|7760380|of6a3|1408 2508 -160||ally
 L|7760381|of5a1|weapon_pickup|weapon_m249|Opposing Force: First M249|-2324 2520 96
+F|7760381|of5a1|-2324 2520 96||
+F|7760381|of1a6|-272 112 -144||ally
+F|7760381|of2a6|-352 432 -440||ally
+F|7760381|of6a2|776 1368 -248||
 L|7760382|of5a1|weapon_pickup|weapon_sniperrifle|Opposing Force: First Sniper Rifle|-640 -1408 136
-L|7760383|of3a5|weapon_pickup|weapon_displacer|Opposing Force: First Displacer|1414 302 240
+F|7760382|of5a1|-640 -1408 136||
+L|7760383|of3a2|weapon_pickup|weapon_displacer|Opposing Force: First Displacer|424 884 1040
+F|7760383|of3a2|424 884 1040||
 L|7760384|of4a2|weapon_pickup|weapon_sporelauncher|Opposing Force: First Spore Launcher|-1624 -432 384
+F|7760384|of4a2|-1624 -432 384|Barnacle|
 L|7760385|of4a3|weapon_pickup|weapon_grapple|Opposing Force: First Barnacle|-338 -504 337
+F|7760385|of4a3|-338 -504 337||
 L|7760386|of4a1|weapon_pickup|weapon_shockrifle|Opposing Force: First Shock Roach
+F|7760386|of4a1|||
+F|7760386|of3a6|-2154 1238 -288||hostile
+F|7760386|of5a2|-320 3168 64||hostile
+F|7760386|of6a2|-354 -1200 90||hostile
+F|7760386|of6a4b|-152 -1512 -592||hostile
 L|7760387|of1a1|weapon_pickup|item_suit|Opposing Force: First PCV|367 2816 48
+F|7760387|of1a1|367 2816 48||
 L|7760388|of1a1|weapon_pickup|weapon_pipewrench|Opposing Force: First Pipe Wrench|-1152 -560 -112
+F|7760388|of1a1|-1152 -560 -112||
 L|7760389|of1a2|weapon_pickup|weapon_knife|Opposing Force: First Combat Knife|544 -2824 80
+F|7760389|of1a2|544 -2824 80||
+F|7760389|of2a6|-1620 2344 -540||
 L|7760390|ba_security2|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift: First Glock|592 1684 420
+F|7760390|ba_security2|592 1684 420||
+F|7760390|ba_tram1|-2844 916 64||ally
+F|7760390|ba_security1|-864 2544 480||ally
+F|7760390|ba_canal1|1928 208 24||ally
+F|7760390|ba_yard3|1344 440 -560||
+F|7760390|ba_power1|-204 772 -512||
 L|7760391|ba_yard1|weapon_pickup|weapon_357,weapon_python|Blue Shift: First .357 Magnum|-72 -1765 0
+F|7760391|ba_yard1|-72 -1765 0||
+F|7760391|ba_power2|-22 -843 144||
 L|7760392|ba_power1|weapon_pickup|weapon_mp5,weapon_9mmAR|Blue Shift: First MP5|-898 -1882 -112
+F|7760392|ba_power1|-898 -1882 -112||
+F|7760392|ba_yard1|676 -964 0||hostile
+F|7760392|ba_teleport2|624 644 272||hostile
 L|7760393|ba_canal2|weapon_pickup|weapon_shotgun|Blue Shift: First Shotgun|400 2184 -88
+F|7760393|ba_canal2|400 2184 -88||
+F|7760393|ba_yard1|768 -832 0||hostile
+F|7760393|ba_teleport2|-1456 -816 0||hostile
 L|7760394|ba_yard5|weapon_pickup|weapon_rpg|Blue Shift: First RPG|-344 2000 93
+F|7760394|ba_yard5|-344 2000 93||
 L|7760395|ba_yard1|weapon_pickup|weapon_satchel|Blue Shift: First Satchel Charge|-2662 -1550 92
+F|7760395|ba_yard1|-2662 -1550 92||
+F|7760395|ba_power1|1029 -2475 -487||
 L|7760396|ba_xen2|weapon_pickup|weapon_snark|Blue Shift: First Snarks|1160 3384 -3576
+F|7760396|ba_xen2|1160 3384 -3576||
+F|7760396|ba_power1|-890 -1822 -112||
 L|7760397|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift: First Hand Grenade|-2635 -1550 92
+F|7760397|ba_yard1|-2635 -1550 92||
+F|7760397|ba_power1|1007 -2475 -487||
 L|7760398|ba_security2|weapon_pickup|item_armorvest,item_helmet|Blue Shift: First Security Armor|651 1352 263
+F|7760398|ba_security2|651 1352 263||
+F|7760398|ba_canal1b|-432 584 -192||
+F|7760398|ba_yard1|-30 -1784 1||
+F|7760398|ba_power1|-112 768 -512||
 L|7760399|ba_canal1|weapon_pickup|weapon_crowbar|Blue Shift: First Crowbar|2080 288 56
+F|7760399|ba_canal1|2080 288 56||
 L|7760222|c0a0e|chapter_complete|c0a0|Black Mesa Inbound - Complete
 L|7760223|c1a0e|chapter_complete|c1a0|Anomalous Materials - Complete
 L|7760224|c1a1d|chapter_complete|c1a0c|Unforeseen Consequences - Complete

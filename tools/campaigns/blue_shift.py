@@ -57,6 +57,12 @@ UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
     "Crowbar": ["weapon_crowbar"],
 }
 
+# Copies confirmed reachable in play that the flood fill could not prove.
+CONFIRMED_COPIES: dict[str, list[str]] = {
+    # The guard hands it over.
+    "Glock": ["ba_security2"],
+}
+
 BLUE_SHIFT = Campaign(
     key="blue_shift",
     name="Blue Shift",
@@ -69,6 +75,7 @@ BLUE_SHIFT = Campaign(
     map_gates=MAP_GATES,
     optional_items=OPTIONAL_ITEMS,
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
+    confirmed_copies=CONFIRMED_COPIES,
     melee=["weapon_crowbar"],
     # Its HEV-style wall units are scenery: none is a `func_recharge`, and a
     # test keeps it that way.
