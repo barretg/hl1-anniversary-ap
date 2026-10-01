@@ -670,12 +670,18 @@ void GrantFiller(CBasePlayer* player, const std::string& item_name) {
                                           : armour;
         }
     } else if (item_name == "Ammo Cache") {
-        // Ammo for what the player is actually holding, rather than a fixed
-        // type: a cache of 9mm means nothing to someone carrying a crossbow.
-        CBasePlayerItem* held = player->m_pActiveItem;
-        if (held != nullptr && held->pszAmmo1() != nullptr) {
-            player->GiveAmmo(held->iMaxAmmo1() / 2, (char*)held->pszAmmo1(),
-                             held->iMaxAmmo1());
+        // Ammo for every weapon the player carries, as the Sven plugin gives it:
+        // two clips each, or 20 rounds for one with no clip (grenades, satchels,
+        // snarks, tripmines). `GiveAmmo` caps each at its maximum.
+        for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
+            for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
+                 item != nullptr; item = item->m_pNext) {
+                if (item->pszAmmo1() == nullptr) {
+                    continue;
+                }
+                const int amount = item->iMaxClip() > 0 ? item->iMaxClip() * 2 : 20;
+                player->GiveAmmo(amount, (char*)item->pszAmmo1(), item->iMaxAmmo1());
+            }
         }
     }
 
