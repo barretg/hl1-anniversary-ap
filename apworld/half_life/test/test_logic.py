@@ -264,7 +264,7 @@ class TestChargesanityOff(StartingMissionMixin, HalfLifeTestBase):
             location.name for location in self.multiworld.get_locations(self.player)
         }
         self.assertIn("First Shotgun", names)
-        self.assertIn("Office Complex - Part 1 Reached", names)
+        self.assertIn("Office Complex: Part 1 Reached", names)
 
     def test_the_pool_shrinks_with_the_location_set(self) -> None:
         """Filler is sized from this slot's locations, so both drop together."""
@@ -283,7 +283,28 @@ class TestChargesanityOn(HalfLifeTestBase):
         names = {
             location.name for location in self.multiworld.get_locations(self.player)
         }
-        self.assertIn("Office Complex - Health Charger 1 (Part 1)", names)
+        self.assertIn("Office Complex: Health Charger 1 (Part 1)", names)
+
+
+class TestOldLocationNames(HalfLifeTestBase):
+    """Names from before `Mission: Thing` still name exactly their location."""
+
+    def test_every_old_name_resolves_to_its_location(self) -> None:
+        from ..locations import location_name_groups
+        chapter_names = {chapter["key"]: chapter["name"] for chapter in CHAPTERS}
+        checked = 0
+        for entry in LOCATIONS:
+            prefix = chapter_names[entry["chapter"]] + ": "
+            if not entry["name"].startswith(prefix):
+                continue
+            old = chapter_names[entry["chapter"]] + " - " + entry["name"][len(prefix):]
+            self.assertEqual(location_name_groups.get(old), {entry["name"]}, old)
+            checked += 1
+        self.assertGreater(checked, 0)
+
+    def test_an_old_name_can_be_excluded(self) -> None:
+        from ..locations import location_name_groups
+        self.assertIn("Office Complex - Part 1 Reached", location_name_groups)
 
 
 class TestIntroIncluded(StartingMissionMixin, HalfLifeTestBase):
@@ -293,7 +314,7 @@ class TestIntroIncluded(StartingMissionMixin, HalfLifeTestBase):
         names = {
             location.name for location in self.multiworld.get_locations(self.player)
         }
-        self.assertIn("Black Mesa Inbound - Part 1 Reached", names)
+        self.assertIn("Black Mesa Inbound: Part 1 Reached", names)
 
     def test_it_has_an_unlock_item(self) -> None:
         world = self.multiworld.worlds[self.player]
@@ -316,7 +337,7 @@ class TestIntroExcluded(StartingMissionMixin, HalfLifeTestBase):
         names = {
             location.name for location in self.multiworld.get_locations(self.player)
         }
-        self.assertNotIn("Black Mesa Inbound - Part 1 Reached", names)
+        self.assertNotIn("Black Mesa Inbound: Part 1 Reached", names)
 
     def test_missions_required_drops_by_one(self) -> None:
         """Asking for more missions than the seed has would seal the finale."""
@@ -411,10 +432,10 @@ class TestOpposingForceGrapple(HalfLifeTestBase):
         state.remove(world.create_item("Barnacle"))
         state.sweep_for_advancements()
         self.assertTrue(state.can_reach_region("of4a2", self.player))
-        self.assertTrue(state.can_reach_location("Vicarious Reality - Part 2 Reached",
+        self.assertTrue(state.can_reach_location("Vicarious Reality: Part 2 Reached",
                                                  self.player))
         self.assertFalse(state.can_reach_location(
-            "Vicarious Reality - Health Charger 1 (Part 2)", self.player))
+            "Vicarious Reality: Health Charger 1 (Part 2)", self.player))
         self.assertFalse(state.can_reach_region("of4a3", self.player))
         for mission in ("Pit Worm's Nest", "Foxtrot Uniform",
                         "The Package"):
@@ -565,14 +586,14 @@ class TestOpposingForceWeaponSources(HalfLifeTestBase):
 
     def test_the_displacer_xen_rooms_need_the_displacer(self) -> None:
         names = [
-            "We Are Not Alone - Health Charger (Part 3)",
-            "Crush Depth - Healing Pool (Part 1)",
-            "Vicarious Reality - Healing Pool (Part 1)",
-            "Foxtrot Uniform - Healing Pool (Part 1)",
-            "Foxtrot Uniform - Healing Pool (Part 2)",
-            "The Package - Healing Pool (Part 1)",
-            "The Package - Healing Pool (Part 4)",
-            "Worlds Collide - Healing Pool (Part 1)",
+            "We Are Not Alone: Health Charger (Part 3)",
+            "Crush Depth: Healing Pool (Part 1)",
+            "Vicarious Reality: Healing Pool (Part 1)",
+            "Foxtrot Uniform: Healing Pool (Part 1)",
+            "Foxtrot Uniform: Healing Pool (Part 2)",
+            "The Package: Healing Pool (Part 1)",
+            "The Package: Healing Pool (Part 4)",
+            "Worlds Collide: Healing Pool (Part 1)",
         ]
         without = all_but(self, "Displacer")
         with_it = self.multiworld.get_all_state(False)

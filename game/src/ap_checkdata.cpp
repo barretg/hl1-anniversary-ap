@@ -207,25 +207,6 @@ const Chapter* CheckData::ChapterByIndex(int index) const {
     return nullptr;
 }
 
-namespace {
-
-// Letters and digits only, lowercased. A player typing a mission name is not
-// transcribing it: `gonarchs lair` and `Gonarch's Lair` are the same request,
-// and so are `weve got hostiles` and `"We've Got Hostiles"`.
-std::string Simplify(const std::string& text) {
-    std::string out;
-    for (char c : text) {
-        if (c >= 'A' && c <= 'Z') {
-            out.push_back(static_cast<char>(c - 'A' + 'a'));
-        } else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-            out.push_back(c);
-        }
-    }
-    return out;
-}
-
-}  // namespace
-
 const Chapter* CheckData::ChapterByName(const std::string& text) const {
     const std::string wanted = Simplify(text);
     if (wanted.empty()) {

@@ -109,7 +109,7 @@ def add_event(world: "HalfLifeWorld", region: Region, chapter: dict) -> None:
     """
     name = VICTORY if chapter["is_goal"] else mission_complete_event(campaign_of(chapter))
     location = HalfLifeLocation(
-        world.player, f"{chapter['name']} - Mission Cleared", None, region
+        world.player, f"{chapter['name']}: Mission Cleared", None, region
     )
     location.place_locked_item(world.create_item(name))
     region.locations.append(location)

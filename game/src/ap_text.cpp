@@ -50,6 +50,18 @@ std::string Lower(const std::string& text) {
     return out;
 }
 
+std::string Simplify(const std::string& text) {
+    std::string out;
+    for (char c : text) {
+        if (c >= 'A' && c <= 'Z') {
+            out.push_back(static_cast<char>(c - 'A' + 'a'));
+        } else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
+
 bool ParseBool(const std::string& text) {
     return Trim(text) == "1";
 }

@@ -943,12 +943,18 @@ void FindInto(const std::string& text, FindTarget* target) {
     // A query searches the whole seed, not this map. The current map is the
     // default, not the limit: asking where something is from the hub, or from
     // six missions later, is exactly when the question is worth asking.
+    // Punctuation is ignored, so the older `Mission - Thing` spelling still finds
+    // `Mission: Thing`. A query of punctuation alone falls back to the raw text.
+    const std::string simple = Simplify(wanted);
     std::vector<const Location*> matches;
     for (const Location& location : Data().locations) {
         if (!State().InSeed(location.id)) {
             continue;
         }
-        if (Lower(location.name).find(wanted) == std::string::npos) {
+        const bool hit = simple.empty()
+            ? Lower(location.name).find(wanted) != std::string::npos
+            : Simplify(location.name).find(simple) != std::string::npos;
+        if (!hit) {
             continue;
         }
         matches.push_back(&location);

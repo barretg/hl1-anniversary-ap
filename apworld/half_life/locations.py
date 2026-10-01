@@ -54,6 +54,17 @@ location_name_groups["Chargers"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] == "charger"
 }
 
+# Older releases named locations `Mission - Thing`. Each old name is a group of
+# its one location, so a YAML written for them still generates. The old name is
+# built from the mission name, not by replacing the first `: `, since a mission
+# name may hold one.
+_chapter_names = {chapter["key"]: chapter["name"] for chapter in CHAPTERS}
+for _entry in LOCATIONS:
+    _prefix = _chapter_names[_entry["chapter"]] + ": "
+    if _entry["name"].startswith(_prefix):
+        _old = _chapter_names[_entry["chapter"]] + " - " + _entry["name"][len(_prefix):]
+        location_name_groups[_old] = {_entry["name"]}
+
 # Drop groups with no members; Archipelago rejects empty location name groups.
 location_name_groups = {k: v for k, v in location_name_groups.items() if v}
 

@@ -24,6 +24,11 @@ bool StartsWith(const std::string& text, const std::string& prefix);
 // ASCII lowercase, for matching a mission by name.
 std::string Lower(const std::string& text);
 
+// Letters and digits only, lowercased. A player typing a name is not
+// transcribing it: `gonarchs lair` and `Gonarch's Lair` are the same request,
+// and so are `office complex - health` and `Office Complex: Health`.
+std::string Simplify(const std::string& text);
+
 // "1" and "0" as the generators write them. Anything else is false.
 bool ParseBool(const std::string& text);
 
