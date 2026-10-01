@@ -40,9 +40,10 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
 
 # Duty Calls: past its first health charger and the crowbars, the way on is
 # opened by shooting an explosive barrel. Nothing melee reaches it, so from
-# `ba_canal1b` on the mission needs a ranged weapon at any logic difficulty.
+# `ba_canal1b` on the mission needs a ranged weapon or the RPG at any logic
+# difficulty.
 MAP_GATES: dict[str, dict[str, list[str]]] = {
-    "ba_canal1b": {"always": ["ranged"]},
+    "ba_canal1b": {"always": ["barrel_shooter"]},
 }
 
 # Barney's armour: the vest and helmet, gating armour on BS maps. Blue Shift's

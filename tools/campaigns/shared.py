@@ -92,13 +92,14 @@ CHARGER_POSITION_GRID = 4
 
 # --- Logic groups ---------------------------------------------------------
 
+# The RPG is left out: it counts as heavy and as an explosive, not as a
+# day-to-day firearm.
 RANGED_WEAPONS = [
     "Glock",
     ".357 Magnum",
     "MP5",
     "Shotgun",
     "Crossbow",
-    "RPG",
     "Tau Cannon",
     "Gluon Gun",
     "Hivehand",
@@ -134,6 +135,9 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "underwater": UNDERWATER_WEAPONS,
     "tau_cannon": ["Tau Cannon"],
     "rpg": ["RPG"],
+    # Anything that can detonate a barrel from a distance: every ranged weapon,
+    # and the RPG, which `ranged` leaves out.
+    "barrel_shooter": RANGED_WEAPONS + ["RPG"],
     # What clears On A Rail's crates. The MP5's grenade launcher does too, but
     # only loose logic counts on it.
     "crate_breaker": ["Hand Grenade", "Satchel Charge", "MP5"],

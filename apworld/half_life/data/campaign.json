@@ -735,7 +735,7 @@
    "map_gates": {
     "ba_canal1b": {
      "always": [
-      "ranged"
+      "barrel_shooter"
      ]
     }
    },
@@ -8829,7 +8829,6 @@
    "MP5",
    "Shotgun",
    "Crossbow",
-   "RPG",
    "Tau Cannon",
    "Gluon Gun",
    "Hivehand",
@@ -8875,6 +8874,24 @@
   ],
   "rpg": [
    "RPG"
+  ],
+  "barrel_shooter": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Shotgun",
+   "Crossbow",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Hivehand",
+   "Snarks",
+   "RPG",
+   "Desert Eagle",
+   "M249",
+   "Sniper Rifle",
+   "Shock Roach",
+   "Spore Launcher",
+   "Displacer"
   ],
   "crate_breaker": [
    "Hand Grenade",

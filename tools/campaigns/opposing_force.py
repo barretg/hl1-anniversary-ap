@@ -79,9 +79,11 @@ WEAPON_ITEMS: dict[str, list[str]] = {
 
 # Additions to the shared logic groups, applied only when this campaign is in
 # the build so a Half-Life-only seed's groups are unchanged.
+_RANGED_WEAPONS = ["Desert Eagle", "M249", "Sniper Rifle", "Shock Roach",
+                   "Spore Launcher", "Displacer"]
 REQUIREMENT_GROUPS: dict[str, list[str]] = {
-    "ranged": ["Desert Eagle", "M249", "Sniper Rifle", "Shock Roach",
-               "Spore Launcher", "Displacer"],
+    "ranged": _RANGED_WEAPONS,
+    "barrel_shooter": _RANGED_WEAPONS,
     "heavy": ["Desert Eagle", "M249", "Sniper Rifle"],
     "explosives": ["Spore Launcher"],
     "underwater": ["Desert Eagle"],

@@ -475,12 +475,23 @@ class TestDutyCallsBarrel(HalfLifeTestBase):
         world = self.multiworld.worlds[self.player]
         state = self.multiworld.get_all_state(False)
         for item in state.multiworld.itempool:
-            if item.player == self.player and item.name in REQUIREMENT_GROUPS["ranged"]:
+            if item.player == self.player and item.name in REQUIREMENT_GROUPS["barrel_shooter"]:
                 state.remove(item)
         state.sweep_for_advancements()
         self.assertTrue(state.can_reach_region("ba_canal1", self.player))
         self.assertFalse(state.can_reach_region("ba_canal1b", self.player))
         state.collect(world.create_item("Glock"))
+        self.assertTrue(state.can_reach_region("ba_canal1b", self.player))
+
+    def test_the_rpg_alone_gets_past_the_barrel(self) -> None:
+        from ..data import REQUIREMENT_GROUPS
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        for item in state.multiworld.itempool:
+            if item.player == self.player and item.name in REQUIREMENT_GROUPS["barrel_shooter"]:
+                state.remove(item)
+        state.sweep_for_advancements()
+        state.collect(world.create_item("RPG"))
         self.assertTrue(state.can_reach_region("ba_canal1b", self.player))
 
 
