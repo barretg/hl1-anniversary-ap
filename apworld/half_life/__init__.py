@@ -63,7 +63,6 @@ from .locations import (
 )
 from .options import (
     AllyWeaponDrops,
-    AmmoRelief,
     BlueShiftMissionsRequired,
     HalfLifeOptions,
     IncludeBlueShift,
@@ -132,7 +131,7 @@ class HalfLifeWeb(WebWorld):
     option_groups = [
         OptionGroup(
             "Experimental Features",
-            [AmmoRelief, IncludeOpposingForce, IncludeBlueShift,
+            [IncludeOpposingForce, IncludeBlueShift,
              OpposingForceMissionsRequired, BlueShiftMissionsRequired,
              RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
              AllyWeaponDrops],
@@ -449,7 +448,6 @@ class HalfLifeWorld(World):
             "starting_weapons": [self.starting_weapon],
             "death_link": bool(self.options.death_link),
             "death_link_amnesty": self.options.death_link_amnesty.value,
-            "ammo_relief": bool(self.options.ammo_relief.value),
             "viewmodel_style": self.options.viewmodel_style.current_key,
             "shuffle_hev_suit": bool(self.options.shuffle_hev_suit),
             "shuffle_longjump": bool(self.options.shuffle_longjump),

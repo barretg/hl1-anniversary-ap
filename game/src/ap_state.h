@@ -36,9 +36,6 @@ struct Snapshot {
     bool goal_open = false;
     bool death_link = false;
 
-    // Refill a gun the level cannot feed. Off in every seed that does not ask
-    // for it, and read from here every time rather than cached: see ap_ammo.h.
-    bool ammo_relief = false;
     // Half-Life's viewmodels everywhere, rather than each game's own hands.
     bool gordon_hands = false;
     // An ally's drop counts as a weapon source. Off in every seed that does not

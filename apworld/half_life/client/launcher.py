@@ -301,9 +301,6 @@ class HalfLifeContext(SuperContext):
         # Deaths forgiven before one is reported to the multiworld. The game owns
         # the countdown; this is only the allowance it counts from.
         self.death_link_amnesty = 4
-        # Set by the seed. The game refuses to act on it until it arrives in a
-        # snapshot, so the default here is the same "off" the option defaults to.
-        self.ammo_relief = False
         # Half-Life's viewmodels on every game's maps. Off in every seed that
         # does not ask for it.
         self.gordon_hands = False
@@ -538,7 +535,6 @@ class HalfLifeContext(SuperContext):
         self.death_link_amnesty = int(
             slot_data.get("death_link_amnesty", self.death_link_amnesty)
         )
-        self.ammo_relief = bool(slot_data.get("ammo_relief", self.ammo_relief))
         self.gordon_hands = slot_data.get("viewmodel_style", "per_campaign") == "always_gordon"
         self.ally_weapon_drops = bool(slot_data.get("ally_weapon_drops", False))
 
@@ -935,7 +931,6 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
-        ammo_relief=ctx.ammo_relief,
         gordon_hands=ctx.gordon_hands,
         ally_weapon_drops=ctx.ally_weapon_drops,
         excluded=sorted(ctx.excluded_chapters),

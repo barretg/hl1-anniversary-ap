@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "ap_ammo.h"
 #include "ap_aptest.h"
 #include "ap_bots.h"
 #include "ap_bridge.h"
@@ -420,8 +419,6 @@ void Startup() {
     ClearWithheld();
     // Likewise a thrown crowbar or knife.
     ClearThrown();
-    // What this level stocks, and the timers, are both level-scoped.
-    ResetAmmoRelief();
     // A lobby countdown was on the old level's clock. See `CancelHubWarp`.
     CancelHubWarp();
     // The lobby's test chamber is dressed once the level is running. See
@@ -475,7 +472,6 @@ void RunFrame() {
     RunSeamDoors();
     DressHubChamber();
     RunWarpSave();
-    RunAmmoRelief();
     RunHubWarp();
     RunBots();
     RunDeferred();

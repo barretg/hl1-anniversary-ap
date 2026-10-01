@@ -214,7 +214,6 @@ class Bridge:
         checked: list[int] | None = None,
         missing: list[int] | None = None,
         death_link_amnesty: int = 0,
-        ammo_relief: bool = False,
         gordon_hands: bool = False,
         ally_weapon_drops: bool = False,
         data_version: str = "",
@@ -246,10 +245,6 @@ class Bridge:
             # Counted down by the game, not here: the death message has to name
             # the remaining allowance at the moment of the death.
             f"death_link_amnesty={max(0, int(death_link_amnesty))}",
-            # A gun the level cannot feed is refilled after a wait. Off unless
-            # the seed asked for it, and the game reads it from here every time
-            # rather than remembering it.
-            f"ammo_relief={1 if ammo_relief else 0}",
             # Half-Life's own viewmodels on every map, instead of Shephard's
             # and Barney's hands on theirs. Presentation only.
             f"gordon_hands={1 if gordon_hands else 0}",

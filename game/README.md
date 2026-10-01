@@ -162,7 +162,6 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_content.*` | Opposing Force and Blue Shift content: per-game model and sound redirects, titles and sentences | engine function table, `DispatchKeyValue`, spawn |
 | `src/ap_warpsave.*` | warp points: the engine saves a warp lands on | the poll, `ap_hub`, `ap_locations` |
 | `src/ap_deathlink.*` | deaths out, deaths in | `CBasePlayer::Killed`, `CRevertSaved::Use` |
-| `src/ap_ammo.*` | refilling a gun the level cannot feed | the frame loop, once a second |
 | `src/ap_traps.*` | the four traps, their precache set, and the `trap_*` test commands | `ClientPrecache`, the poll |
 | `src/ap_bots.*` | the `ap_bot` entity (the fun-with-bots brain on a monster rather than a fake client), the Bot Swarm Trap's bots, and `bot_quota`/`bot_autofill`/`bot_zombie` | `StartFrame`, `ap_traps` |
 
@@ -446,31 +445,6 @@ there is nothing to press use on. The sign of `dmg` is the whole test that tells
 one from a lava pit, so the check is made on the healing branch of `HurtTouch`
 rather than by classname. Touching one arrives twice a second, which is harmless:
 `SendCheck` drops a location already sent.
-
-**Ammo relief reads the option from the snapshot every time.** A shuffled seed
-can hand over the crossbow in a map with no bolts, and nothing in Half-Life will
-ever give the player more. With the option on, `ap_ammo` watches the weapons the
-player is carrying once a second, and a gun whose ammo type this level does not
-stock at all is announced when it runs dry and refilled five minutes later. What
-the level stocks is one pass over the entity list at map load -- asking during the
-check would be a search of every entity in the level once a second -- and the
-timers are level time, so they are cleared on every load like everything else
-here -- and *level time is not monotonic*, which is the trap this walked into
-once already. Restoring a savegame moves it backwards, so every deadline held in
-it lands in a future that will not arrive for as long as the jump was, the
-once-a-second throttle included: one quickload switched the whole watcher off for
-the rest of the map. `RunAmmoRelief` therefore watches the clock itself and
-rebuilds when it moves back, which is also the honest answer -- a restore hands
-back whatever ammo the save was holding, so the old watch meant nothing anyway.
-Anything else that keeps a deadline in `gpGlobals->time` across a load has the
-same bug waiting in it.
-
-What survives a map change is decided by the mission, not by the map: a seam in
-the middle of Surface Tension is the same crossbow and the same absent bolts, so
-the countdown carries across, re-based onto the new level's clock by hand. The
-hub, or another mission, starts again. A map that stocks the ammo drops the
-countdown for it entirely, because the wait it was serving is over. The ten-second grace after a refill covers dying to whatever emptied the
-gun and reloading a save from before the refill arrived.
 
 **A short command reply goes to the HUD as well as the console.** Opening the
 console pauses single-player, and a paused server runs no frames, which is where

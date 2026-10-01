@@ -25,7 +25,6 @@ def context() -> HalfLifeContext:
     ctx.missions_required_by_campaign = {HALF_LIFE: 17}
     ctx.starting_weapons = ["weapon_crowbar"]
     ctx.death_link_amnesty = 4
-    ctx.ammo_relief = False
     ctx.gordon_hands = False
     ctx.ally_weapon_drops = False
     ctx.completed_missions = set()

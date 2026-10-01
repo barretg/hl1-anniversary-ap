@@ -180,7 +180,6 @@ server.
 | `shuffle_longjump` | off | on: the module is an item. Off: Half-Life hands it out as it always did |
 | `shuffle_flashlight` | off | on: the flashlight key does nothing until the Flashlight arrives; with Opposing Force in, its maps need the Night Vision Goggles instead. The hub is always lit |
 | `melee_throw` | off | on: adds Melee Throw, which lets secondary fire throw the crowbar or knife. Walk over it to pick it up, or it comes back after ten seconds |
-| `ammo_relief` | off | **experimental:** a gun the level stocks no ammo for is refilled five minutes after it runs dry |
 | `trap_percentage` | 15 | share of your filler replaced by traps |
 | `include_half_life` | on | Half-Life's missions. Turning every game off turns this back on |
 | `include_opposing_force` | off | **experimental:** Opposing Force's 12 missions and 7 weapons. Needs the game installed |
@@ -200,20 +199,6 @@ by game, and `!warp of 3` or `!warp bs 2` warps by a game's own mission number.
 The HEV suit is never taken away from you, whatever `shuffle_hev_suit` says: in
 GoldSrc the suit draws the weapon HUD and owns weapon switching, so a player
 without one cannot use what they are holding. What the item controls is armour.
-
-`ammo_relief` sits under **Experimental Features** in the YAML and is exactly
-that: it works, and its timing is still rough in ways listed in the template's
-own description. Nothing it does can take anything away from you -- it only ever
-adds ammo -- so the worst case is a refill arriving when you did not need one.
-
-It is for the seed that hands you the crossbow in a map with no bolts
-in it. With it on, a gun that runs dry on ammo the level does not stock anywhere
-says so, and the suit synthesises more five minutes later; if it is empty again
-within ten seconds of a refill you get one more for free, which covers dying and
-reloading a save from before it. The wait follows you through a mission's own
-transitions -- the next map has no bolts either -- but going to the hub or
-loading a save starts it again, since either can put ammo back in your hands. Off by default, because with it on a patient
-player is never really out of ammo.
 
 DeathLink counts the deaths Half-Life does not treat as deaths, too: falling into
 the void on Xen and losing a scientist you were supposed to protect both end in a
