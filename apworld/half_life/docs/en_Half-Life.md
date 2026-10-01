@@ -62,7 +62,7 @@ A finale has no unlock item; it opens on its own game's mission count, and only
 missions of that game count toward it. With one game in the seed, its finale is
 the whole goal.
 
-## Opposing Force and Blue Shift (experimental)
+## Opposing Force and Blue Shift
 
 Either game can be added to a seed, or played alone, if you own it. Each brings
 its own missions, its own finale and its own armour item (the PCV, the Security

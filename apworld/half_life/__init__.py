@@ -66,8 +66,10 @@ from .options import (
     BlueShiftMissionsRequired,
     HalfLifeOptions,
     IncludeBlueShift,
+    IncludeHalfLife,
     IncludeOpposingForce,
     MeleeThrow,
+    MissionsRequired,
     OpposingForceMissionsRequired,
     RandomStartingWeapon,
     ShuffleFlashlight,
@@ -124,19 +126,24 @@ class HalfLifeWeb(WebWorld):
         )
     ]
 
-    # Anything here is off by default and known to be rough. Grouping it says so
-    # in the template YAML and on the website without the player having to read
-    # the option's own description first, and keeps it out of the run of settings
-    # that are safe to turn on without thinking about it.
+    # Which games the seed holds, and how much of each the goal asks, together.
+    # Anything in the experimental group is off by default and known to be rough.
+    # Grouping it says so in the template YAML and on the website without the
+    # player having to read the option's own description first, and keeps it out
+    # of the run of settings that are safe to turn on without thinking about it.
     option_groups = [
         OptionGroup(
+            "Games",
+            [IncludeHalfLife, MissionsRequired,
+             IncludeOpposingForce, OpposingForceMissionsRequired,
+             IncludeBlueShift, BlueShiftMissionsRequired],
+        ),
+        OptionGroup(
             "Experimental Features",
-            [IncludeOpposingForce, IncludeBlueShift,
-             OpposingForceMissionsRequired, BlueShiftMissionsRequired,
-             RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
+            [RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
              AllyWeaponDrops],
             start_collapsed=True,
-        )
+        ),
     ]
 
 

@@ -182,8 +182,8 @@ server.
 | `melee_throw` | off | on: adds Melee Throw, which lets secondary fire throw the crowbar or knife. Walk over it to pick it up, or it comes back after ten seconds |
 | `trap_percentage` | 15 | share of your filler replaced by traps |
 | `include_half_life` | on | Half-Life's missions. Turning every game off turns this back on |
-| `include_opposing_force` | off | **experimental:** Opposing Force's 12 missions and 7 weapons. Needs the game installed |
-| `include_blue_shift` | off | **experimental:** Blue Shift's 6 missions. Needs the game installed |
+| `include_opposing_force` | off | Opposing Force's 12 missions and 7 weapons. Needs the game installed |
+| `include_blue_shift` | off | Blue Shift's 6 missions. Needs the game installed |
 | `opposing_force_missions_required` | all of them | how many Opposing Force missions open Worlds Collide |
 | `blue_shift_missions_required` | all of them | how many Blue Shift missions open Power Struggle |
 | `random_starting_weapon` | on | with Opposing Force in, start with the crowbar, knife or pipe wrench at random; the others become items |

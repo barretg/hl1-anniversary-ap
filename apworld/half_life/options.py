@@ -40,7 +40,7 @@ class IncludeHalfLife(DefaultOnToggle):
 
 
 class IncludeOpposingForce(Toggle):
-    """EXPERIMENTAL. Include Opposing Force's missions, and its weapons.
+    """Include Opposing Force's missions, and its weapons.
 
     Needs Opposing Force installed alongside Half-Life, and `/install` run after
     it was, so its maps and content are linked into the mod. Its finale, Worlds
@@ -51,7 +51,7 @@ class IncludeOpposingForce(Toggle):
 
 
 class IncludeBlueShift(Toggle):
-    """EXPERIMENTAL. Include Blue Shift's missions.
+    """Include Blue Shift's missions.
 
     Needs Blue Shift installed alongside Half-Life, and `/install` run after it
     was. Its finale, Power Struggle (with A Leap Of Faith), becomes part of the

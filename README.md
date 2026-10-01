@@ -1,7 +1,7 @@
 # Half-Life Trilogy: Archipelago
 
 An Archipelago randomizer for retail Half-Life on Steam, the 25th anniversary
-build, with Opposing Force and Blue Shift as experimental additions. The campaign is cut into 18 missions, each locked behind a received item;
+build, with Opposing Force and Blue Shift as optional additions. The campaign is cut into 18 missions, each locked behind a received item;
 every weapon but the crowbar has to be found in the multiworld; and you travel
 between missions from a hub rather than playing straight through.
 
@@ -25,7 +25,7 @@ done, [TODO.md](TODO.md) for deliberate deferrals and ideas, and
 ## The target
 
 Retail Half-Life on Steam, current build. Not `steam_legacy`, not WON, not Xash.
-Opposing Force and Blue Shift can be added to a seed as experimental options; see
+Opposing Force and Blue Shift can be added to a seed as options; see
 below.
 
 The mod installs as its own game folder, `hlap`, with `fallback_dir "valve"`, so
@@ -49,7 +49,7 @@ A mission is entered from the hub with a fresh `map` load, so it is repeatable
 and carries no state in from anywhere else. Transitions *inside* a mission are
 the game's own -- inventory and level state carry exactly as retail does.
 
-## Opposing Force and Blue Shift (experimental)
+## Opposing Force and Blue Shift
 
 `include_opposing_force` and `include_blue_shift` add each game's missions to the
 seed, and `include_half_life` can be turned off. They need the game installed in
