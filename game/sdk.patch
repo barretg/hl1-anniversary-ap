@@ -1409,6 +1409,40 @@ index 199fb2c..9052bde 100644
 +		SPR_DrawAdditive( 0, x + halfWidth, y + fullHeight, &rcLine );
 +	}
 +}
+diff --git a/cl_dll/saytext.cpp b/cl_dll/saytext.cpp
+--- a/cl_dll/saytext.cpp
++++ b/cl_dll/saytext.cpp
+@@ -48,6 +48,14 @@
+ 
+ DECLARE_MESSAGE( m_SayText, SayText );
+ 
++// AP: chat in the current game's HUD colour; Half-Life keeps the console's own
++static void APChatColor( void )
++{
++	if ( g_ulAPHudColor )
++		gEngfuncs.pfnDrawSetTextColor( ( ( g_ulAPHudColor >> 16 ) & 0xFF ) / 255.0f,
++			( ( g_ulAPHudColor >> 8 ) & 0xFF ) / 255.0f, ( g_ulAPHudColor & 0xFF ) / 255.0f );
++}
++
+ int CHudSayText :: Init( void )
+ {
+ 	gHUD.AddHudElem( this );
+@@ -143,6 +151,7 @@
+ 					strncpy( buf, g_szLineBuffer[i] + g_iNameLengths[i], strlen( g_szLineBuffer[i] ));
+ 					buf[ strlen( g_szLineBuffer[i] + g_iNameLengths[i] ) - 1 ] = '\0';
+ 					// color is reset after each string draw
++					APChatColor();	// AP
+ 					DrawConsoleString( x, y, buf ); 
+ 				}
+ 				else
+@@ -153,6 +162,7 @@
+ 			else
+ 			{
+ 				// normal draw
++				APChatColor();	// AP
+ 				DrawConsoleString( LINE_START, y, g_szLineBuffer[i] );
+ 			}
+ 		}
 diff --git a/common/mathlib.h b/common/mathlib.h
 index c765eb5..8afc4de 100644
 --- a/common/mathlib.h

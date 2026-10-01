@@ -386,6 +386,7 @@ void Help() {
     Say("!tracker office           narrowed to a mission or a map name");
     Say("!find                     point at the nearest check on this map");
     Say("!find <text>              find a check by name, anywhere in the seed");
+    Say("!trace [text]             as !find, and draw a path to it; again to stop");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
     Say("In the hub you can press a mission's panel instead of typing anything.");
 }
@@ -553,6 +554,16 @@ void Cmd_ApHub() { Reply reply("ap_hub"); ToHub(); }
 void Cmd_ApSetWarp() { Reply reply("ap_setwarp"); SetWarp(ArgumentTail(1)); }
 void Cmd_ApWarps() { Reply reply("ap_warps"); ListWarps(); }
 void Cmd_ApFind() { Reply reply("ap_find"); Find(ArgumentTail(1)); }
+void Cmd_ApTrace() {
+    // Turning it off says nothing, so not even the empty reply's line.
+    const std::string text = ArgumentTail(1);
+    if (PathTraceActive() && Trim(text).empty()) {
+        StopPathTrace();
+        return;
+    }
+    Reply reply("ap_trace");
+    PathTrace(text);
+}
 void Cmd_ApTracker() { Reply reply("ap_tracker"); Tracker(ArgumentTail(1)); }
 
 // A testing switch, and console only: not in `!help`, and not a chat command,
@@ -588,6 +599,12 @@ bool Dispatch(const std::string& name, const std::string& rest) {
     if (TestDispatch(name, rest)) {
         return true;
     }
+    // `!trace` turning off is silent, which a reply would not be.
+    if ((name == "trace" || name == "ap_trace") && PathTraceActive() &&
+        Trim(rest).empty()) {
+        StopPathTrace();
+        return true;
+    }
     // Named as the player said it, so the HUD line for a console-length reply
     // names the command they actually typed.
     Reply reply(StartsWith(name, "ap") ? name : "!" + name);
@@ -605,6 +622,8 @@ bool Dispatch(const std::string& name, const std::string& rest) {
         ToHub();
     } else if (name == "find" || name == "ap_find") {
         Find(rest);
+    } else if (name == "trace" || name == "ap_trace") {
+        PathTrace(rest);
     } else if (name == "tracker" || name == "ap_tracker") {
         Tracker(rest);
     } else {
@@ -637,6 +656,7 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_setwarp", Cmd_ApSetWarp);
     g_engfuncs.pfnAddServerCommand((char*)"ap_warps", Cmd_ApWarps);
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_trace", Cmd_ApTrace);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
     g_engfuncs.pfnAddServerCommand((char*)"ap_nowarps", Cmd_ApNoWarps);
     RegisterTrapCommands();

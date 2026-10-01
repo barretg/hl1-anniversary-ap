@@ -2,13 +2,16 @@
 #include "util.h"
 #include "cbase.h"
 #include "player.h"
+#include "nodes.h"
 
 #include "ap_locations.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
@@ -88,6 +91,278 @@ const char* Bearing(CBasePlayer* player, const Vector& target) {
     return across > 0 ? "behind you and right" : "behind you and left";
 }
 
+struct Colour {
+    int r, g, b;
+};
+
+// What `Find` pointed at, when it is a spot on this map.
+struct FindTarget {
+    bool found = false;
+    Vector at;
+    long location_id = 0;
+    Colour colour = {255, 255, 255};
+};
+
+// The line takes the colour of what is at the end of it.
+Colour LineColour(const Location& location) {
+    if (location.type == TriggerType::WeaponPickup) {
+        return {40, 110, 255};
+    }
+    if (location.type == TriggerType::Charger) {
+        // Xen's healing pools heal, so they are red with the wall units.
+        return location.charger_classname == "func_recharge" ? Colour{255, 130, 0}
+                                                             : Colour{255, 30, 30};
+    }
+    return {255, 255, 255};
+}
+
+// How often the line is redrawn from where the player now stands, and how long
+// each drawing lasts. A little longer than the interval so it never blinks, and
+// short, because turning the trace off is just not drawing it again.
+constexpr float kTraceInterval = 1.0f;
+constexpr int kTraceLife = 12;  // tenths of a second
+// Nodes on the way are drawn this far above the floor they sit on.
+constexpr float kTraceLift = 20.0f;
+// A segment is let through when it ends this close to the point it aimed at.
+// The check's own spot is often inside something: a charger's centre is inside
+// its brush, and a weapon's origin can sit a few units into its shelf.
+constexpr float kTraceSlack = 40.0f;
+// Nearest nodes tried, closest first, before giving up on a point.
+constexpr int kNodeCandidates = 24;
+// More than this many segments goes out over several frames anyway, but a line
+// past it is no longer helping.
+constexpr size_t kMaxSegments = 64;
+// A short-cut between two points on the route needs ground under it every so
+// often, or the line would cross a pit the route walks around.
+constexpr float kGroundStep = 48.0f;
+constexpr float kGroundDepth = 80.0f;
+// How far along the route a short-cut may reach.
+constexpr size_t kPullLookahead = 12;
+
+struct TraceState {
+    bool on = false;
+    std::string map;
+    FindTarget target;
+    float next_draw = 0.0f;
+    // Whether the last drawing followed the graph, so the fallback is said once.
+    bool routed = true;
+    bool said_fallback = false;
+};
+TraceState g_trace;
+int g_beam_sprite = 0;
+
+// Segments waiting to be sent, a few per frame.
+struct Segment {
+    Vector a, b;
+    Colour colour;
+};
+std::vector<Segment> g_segments;
+constexpr size_t kSegmentsPerFrame = 16;
+
+bool GraphReady() {
+    return WorldGraph.m_fGraphPresent && WorldGraph.m_fGraphPointersSet &&
+           WorldGraph.m_cNodes > 0;
+}
+
+Vector NodePoint(int node) {
+    return WorldGraph.m_pNodes[node].m_vecOrigin + Vector(0, 0, kTraceLift);
+}
+
+// Can a line go from `from` to `to`? Brushes stop it; monsters do not. With
+// `slack`, stopping just short of `to` counts, for points inside something.
+bool Clear(const Vector& from, const Vector& to, bool slack) {
+    TraceResult tr;
+    UTIL_TraceLine(from, to, ignore_monsters, nullptr, &tr);
+    if (tr.fAllSolid) {
+        return false;
+    }
+    if (tr.flFraction >= 1.0f) {
+        return true;
+    }
+    return slack && (tr.vecEndPos - to).Length() <= kTraceSlack;
+}
+
+// Floor under every step of a segment, so a short-cut does not fly over a gap.
+bool Grounded(const Vector& a, const Vector& b) {
+    const Vector delta = b - a;
+    const int steps = static_cast<int>(delta.Length() / kGroundStep);
+    for (int i = 1; i < steps; ++i) {
+        const Vector at = a + delta * (static_cast<float>(i) / steps);
+        TraceResult tr;
+        UTIL_TraceLine(at, at - Vector(0, 0, kGroundDepth), ignore_monsters,
+                       nullptr, &tr);
+        if (tr.flFraction >= 1.0f) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// The nearest land node a line reaches from `point`, or -1. Every node is
+// looked at rather than `FindNearestNode`'s, which traces only from the point
+// outward and so never finds one from inside a charger.
+int NearestNode(const Vector& point) {
+    std::vector<std::pair<float, int>> by_distance;
+    by_distance.reserve(WorldGraph.m_cNodes);
+    for (int i = 0; i < WorldGraph.m_cNodes; ++i) {
+        if (WorldGraph.m_pNodes[i].m_afNodeInfo & bits_NODE_AIR) {
+            continue;
+        }
+        by_distance.push_back({(NodePoint(i) - point).Length(), i});
+    }
+    const size_t keep = by_distance.size() < kNodeCandidates
+                            ? by_distance.size()
+                            : static_cast<size_t>(kNodeCandidates);
+    std::partial_sort(by_distance.begin(), by_distance.begin() + keep,
+                      by_distance.end());
+    for (size_t i = 0; i < keep; ++i) {
+        const Vector node = NodePoint(by_distance[i].second);
+        // From the node to the point, so a point inside a brush still counts
+        // when the line stops at its face.
+        if (Clear(node, point, true)) {
+            return by_distance[i].second;
+        }
+    }
+    return -1;
+}
+
+// The nodes from `start` to `dest` inclusive, or empty. Walks the route table
+// itself: `FindShortestPath` stops at `MAX_PATH_SIZE`, ten nodes, which is a
+// monster's next few steps and not a way across a map.
+std::vector<int> Route(int start, int dest, int hull) {
+    std::vector<int> path;
+    if (WorldGraph.m_fRoutingComplete) {
+        const int cap = WorldGraph.CapIndex(bits_CAP_DOORS_GROUP);
+        path.push_back(start);
+        int current = start;
+        while (current != dest) {
+            const int next = WorldGraph.NextNodeInRoute(current, dest, hull, cap);
+            if (next == current || next < 0 ||
+                path.size() > static_cast<size_t>(WorldGraph.m_cNodes)) {
+                return {};
+            }
+            path.push_back(next);
+            current = next;
+        }
+        return path;
+    }
+    // No route table: the SDK's Dijkstra, which has no length limit but writes
+    // the whole path, so the buffer is as long as the graph.
+    path.resize(WorldGraph.m_cNodes + 2);
+    const int count = WorldGraph.FindShortestPath(path.data(), start, dest, hull,
+                                                  bits_CAP_DOORS_GROUP);
+    path.resize(count > 0 ? count : 0);
+    return path;
+}
+
+// Points from the player to the target: along the graph when there is one and
+// it connects them, a straight line otherwise. `routed` says which.
+std::vector<Vector> TracePoints(const Vector& from, const Vector& to, bool& routed) {
+    routed = false;
+    std::vector<Vector> points;
+    points.push_back(from);
+    // In plain sight with floor all the way: the straight line is the route.
+    const bool sight = Clear(from, to, true) && Grounded(from, to);
+    if (sight) {
+        routed = true;
+    } else if (GraphReady()) {
+        const int start = NearestNode(from);
+        const int dest = NearestNode(to);
+        if (start >= 0 && dest >= 0) {
+            // The player's own size first; a crouch fits where it does not.
+            std::vector<int> path = Route(start, dest, NODE_HUMAN_HULL);
+            if (path.empty()) {
+                path = Route(start, dest, NODE_SMALL_HULL);
+            }
+            for (int node : path) {
+                points.push_back(NodePoint(node));
+            }
+            routed = !path.empty();
+        }
+    }
+    points.push_back(to);
+
+    // Pull it tight: from each point, on to the furthest one in sight with
+    // ground all the way. The graph's nodes zigzag; a player would not.
+    std::vector<Vector> tight;
+    tight.push_back(points.front());
+    size_t at = 0;
+    while (at + 1 < points.size()) {
+        size_t next = at + 1;
+        // A few points ahead at most: this runs every second, and a long
+        // route checked end to end from every point is thousands of traces.
+        const size_t last = at + kPullLookahead < points.size() - 1
+                                ? at + kPullLookahead
+                                : points.size() - 1;
+        for (size_t j = last; j > at + 1; --j) {
+            if (Clear(points[at], points[j], j + 1 == points.size()) &&
+                Grounded(points[at], points[j])) {
+                next = j;
+                break;
+            }
+        }
+        tight.push_back(points[next]);
+        at = next;
+    }
+    return tight;
+}
+
+void QueueTraceLine() {
+    CBasePlayer* player = Player();
+    if (player == nullptr || !player->IsAlive()) {
+        return;
+    }
+    // About the height the nodes are drawn at, rather than the eyes.
+    const Vector from = player->pev->origin - Vector(0, 0, 16);
+    bool routed = false;
+    const std::vector<Vector> points = TracePoints(from, g_trace.target.at, routed);
+    if (!routed && !g_trace.said_fallback) {
+        g_trace.said_fallback = true;
+        Notify("No walking route known from here; the line points straight at it.");
+    }
+    g_trace.routed = routed;
+    g_segments.clear();
+    for (size_t i = 0; i + 1 < points.size() && i < kMaxSegments; ++i) {
+        g_segments.push_back(Segment{points[i], points[i + 1], g_trace.target.colour});
+    }
+}
+
+void SendSegments() {
+    if (g_segments.empty() || g_beam_sprite == 0 || !ClientReady()) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    const size_t take = g_segments.size() < kSegmentsPerFrame ? g_segments.size()
+                                                              : kSegmentsPerFrame;
+    for (size_t i = 0; i < take; ++i) {
+        const Segment& s = g_segments[i];
+        MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, nullptr, player->edict());
+        WRITE_BYTE(TE_BEAMPOINTS);
+        WRITE_COORD(s.a.x);
+        WRITE_COORD(s.a.y);
+        WRITE_COORD(s.a.z);
+        WRITE_COORD(s.b.x);
+        WRITE_COORD(s.b.y);
+        WRITE_COORD(s.b.z);
+        WRITE_SHORT(g_beam_sprite);
+        WRITE_BYTE(0);           // starting frame
+        WRITE_BYTE(10);          // frame rate
+        WRITE_BYTE(kTraceLife);  // life, tenths of a second
+        WRITE_BYTE(6);           // width
+        WRITE_BYTE(0);           // noise
+        WRITE_BYTE(s.colour.r);
+        WRITE_BYTE(s.colour.g);
+        WRITE_BYTE(s.colour.b);
+        WRITE_BYTE(200);         // brightness
+        WRITE_BYTE(10);          // scroll speed: shows which way is forward
+        MESSAGE_END();
+    }
+    g_segments.erase(g_segments.begin(), g_segments.begin() + take);
+}
+
 }  // namespace
 
 void SendCheck(long id) {
@@ -156,6 +431,8 @@ void OnMapStart(const std::string& map_name) {
     // tell a transition into part 3 from a warp straight to it.
     const std::string previous = g_map;
 
+    // Beams meant for the last level, or for before this load.
+    g_segments.clear();
     if (map_name != g_map) {
         g_sent.clear();
         g_map = map_name;
@@ -492,7 +769,11 @@ const Location::Source* EarliestSource(const Location& location, bool& available
 // from the hub should say where the crossbow is, not that there is nothing here
 // -- so this says which mission and part, and hands over the command that goes
 // there rather than leaving the player to work it out.
-void DescribeLocation(CBasePlayer* player, const Location& location) {
+//
+// `target`, when given, is filled in if the answer is a spot on this map, which
+// is the one case `PathTrace` can draw a line to.
+void DescribeLocation(CBasePlayer* player, const Location& location,
+                      FindTarget* target) {
     // A weapon check is sent by whichever copy is touched first, so once it is
     // found no copy anywhere is still a place to find it.
     if (location.type == TriggerType::WeaponPickup && Collected(location)) {
@@ -590,6 +871,12 @@ void DescribeLocation(CBasePlayer* player, const Location& location) {
     }
 
     const Vector at(position[0], position[1], position[2]);
+    if (target != nullptr) {
+        target->found = true;
+        target->at = at;
+        target->location_id = location.id;
+        target->colour = LineColour(location);
+    }
     char line[192];
     std::snprintf(line, sizeof(line), "%s, about %d units away.",
                   Bearing(player, at),
@@ -597,7 +884,8 @@ void DescribeLocation(CBasePlayer* player, const Location& location) {
     Notify(line);
 }
 
-void Find(const std::string& text) {
+// `Find`, also saying where it pointed when that is somewhere on this map.
+void FindInto(const std::string& text, FindTarget* target) {
     CBasePlayer* player = Player();
     if (player == nullptr) {
         return;
@@ -646,7 +934,7 @@ void Find(const std::string& text) {
             Notify("Nothing left to find on this map.");
             return;
         }
-        DescribeLocation(player, *best);
+        DescribeLocation(player, *best, target);
         return;
     }
 
@@ -669,7 +957,7 @@ void Find(const std::string& text) {
         return;
     }
     if (matches.size() == 1) {
-        DescribeLocation(player, *matches[0]);
+        DescribeLocation(player, *matches[0], target);
         return;
     }
 
@@ -690,7 +978,7 @@ void Find(const std::string& text) {
         }
     }
     if (here_count == 1) {
-        DescribeLocation(player, *here);
+        DescribeLocation(player, *here, target);
         return;
     }
 
@@ -704,6 +992,58 @@ void Find(const std::string& text) {
         Say(std::string("  ") + (Collected(*matches[i]) ? "[x] " : "[ ] ") +
             matches[i]->name + "  (" + matches[i]->map + ")");
     }
+}
+
+void Find(const std::string& text) { FindInto(text, nullptr); }
+
+bool PathTraceActive() { return g_trace.on; }
+
+void StopPathTrace() {
+    g_trace = TraceState();
+    g_segments.clear();
+}
+
+void PathTrace(const std::string& text) {
+    // Off says nothing: the line going away is the answer.
+    if (g_trace.on && Trim(text).empty()) {
+        StopPathTrace();
+        return;
+    }
+    StopPathTrace();
+    FindTarget target;
+    FindInto(text, &target);
+    if (!target.found) {
+        // `Find` has said where it is; there is just no line to draw to it.
+        Notify("Nothing on this map to trace to.");
+        return;
+    }
+    g_trace.on = true;
+    g_trace.map = g_map;
+    g_trace.target = target;
+    g_trace.next_draw = 0.0f;
+}
+
+void RunPathTrace() {
+    SendSegments();
+    if (!g_trace.on) {
+        return;
+    }
+    // A check on the map just left is nowhere on this one.
+    if (g_trace.map != g_map) {
+        StopPathTrace();
+        return;
+    }
+    // The clock restarts on a load; a draw due far in the future is a stale one.
+    if (gpGlobals->time < g_trace.next_draw &&
+        g_trace.next_draw - gpGlobals->time <= kTraceInterval) {
+        return;
+    }
+    g_trace.next_draw = gpGlobals->time + kTraceInterval;
+    QueueTraceLine();
+}
+
+void PrecachePathTrace() {
+    g_beam_sprite = PRECACHE_MODEL((char*)"sprites/laserbeam.spr");
 }
 
 void Tracker(const std::string& map_filter) {

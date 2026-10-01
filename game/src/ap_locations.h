@@ -89,6 +89,21 @@ int PartOf(const Chapter& chapter, const std::string& map_name);
 // elsewhere names its mission and part and hands over the command to get there.
 void Find(const std::string& text);
 
+// `ap_trace`: a toggle. Off, it answers exactly as `Find` does with the same
+// text, and if the check it names is on this map, draws a line to it along the
+// map's node graph, redrawn from wherever the player is until it is turned off.
+// On, with no text, it stops drawing and says nothing; with text, it retargets.
+// Red for health, orange for HEV chargers, blue for weapons.
+void PathTrace(const std::string& text);
+bool PathTraceActive();
+void StopPathTrace();
+
+// Every frame: redraw the trace line when it is due. From `StartFrame`.
+void RunPathTrace();
+
+// The beam sprite the trace line draws with. From `PrecacheTraps`.
+void PrecachePathTrace();
+
 // `ap_tracker`: every location in the seed, grouped by mission and map, marked
 // found or not. An optional filter narrows it to a mission name or a map name;
 // the totals stay the seed's either way, so the footer means the same thing

@@ -480,6 +480,7 @@ void RunFrame() {
     RunBots();
     RunDeferred();
     RunTestHarness();
+    RunPathTrace();
     EnforceSuit();
     ClampArmour();
     EnforceFlashlight();

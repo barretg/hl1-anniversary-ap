@@ -60,6 +60,7 @@ IN_GAME_COMMANDS = (
     ("!ap", "list every mission and its unlock status"),
     ("!tracker [map]", "locations found and still out there, printed to console"),
     ("!find [text]", "point at the nearest unfound check, or one you name"),
+    ("!trace [text]", "as !find, plus a line along the way there; again to stop"),
     ("!warp <number or name>", "travel to an unlocked mission"),
     ("!warp <mission> <part>", "back to a part of it you have already reached"),
     ("!warp <name>", "back to a warp point of your own"),

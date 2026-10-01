@@ -268,6 +268,10 @@ connects to a way into the map. The first run takes a few minutes and is cached.
 Copies confirmed in play go in `confirmed_copies` and drop off the list.
 `--find` runs only the `!find` scenarios: which copy it names when none is on
 the current map, with missions locked and an item missing.
+`--trace` runs only the `!trace` scenarios, in each game: a red, orange and blue
+line on the map with the most nodes, standing on the check, the straight-line
+fallback on a map with no nodes, `!trace` with no text, a healing pool, a target
+off the map and a map change mid-trace, with the chat colour checked as it goes.
 Verdicts go to `hlap/archipelago/aptest_results.txt`. A failed source becomes an
 `unreachable_copies` or `weapon_source_gates` entry.
 

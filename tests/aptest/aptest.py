@@ -41,8 +41,12 @@ Scenarios come from the installed `checkdata.txt`, so they track the data:
 
 `--find` runs only the `!find` scenarios (see `find_scenarios`).
 
+`--trace` runs only the `!trace` scenarios, in each game (see `trace_scenarios`):
+the line's colour and route, the fallback where a map has no nodes, toggling
+off, retargeting, a target off the map, and the chat colour.
+
 Usage:
-    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find]
+    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace]
 """
 
 from __future__ import annotations
@@ -97,6 +101,7 @@ class Chapter:
     key: str
     name: str
     maps: list[str]
+    campaign: str = ""
 
 
 @dataclass
@@ -143,7 +148,8 @@ def read_checkdata(path: Path) -> CheckData:
         if f[0] == "D":
             data.data_version = f[1]
         elif f[0] == "C" and len(f) >= 6:
-            data.chapters.append(Chapter(f[2], f[3], f[4].split(",")))
+            data.chapters.append(Chapter(f[2], f[3], f[4].split(","),
+                                         f[7] if len(f) > 7 else ""))
         elif f[0] == "L" and len(f) >= 6:
             data.locations[int(f[1])] = Location(
                 int(f[1]), f[2], f[3], f[4], f[5],
@@ -363,6 +369,169 @@ def find_scenarios(data: CheckData) -> list[Scenario]:
     return out
 
 
+# What chat should look like in each game: the HUD colour.
+CHAT_COLOUR = {
+    "half_life": "Half-Life's usual orange-yellow",
+    "opposing_force": "green, like Opposing Force's HUD",
+    "blue_shift": "blue, like Blue Shift's HUD",
+}
+CAMPAIGN_NAME = {"half_life": "Half-Life", "opposing_force": "Opposing Force",
+                 "blue_shift": "Blue Shift"}
+# A map with at least this many nodes has a graph worth routing along.
+TRACE_RICH_NODES = 30
+
+
+def node_counts(data: CheckData, game_root: Path) -> dict[str, int]:
+    """`info_node`s per campaign map: what `!trace` has to route along."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import load_map
+    from campaigns import KNOWN_CAMPAIGNS
+
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+    counts: dict[str, int] = {}
+    for chapter in data.chapters:
+        for map_name in chapter.maps:
+            bsp = game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
+            if bsp.is_file():
+                counts[map_name] = sum(e.get("classname") == "info_node"
+                                       for e in load_map(bsp))
+    return counts
+
+
+def trace_scenarios(data: CheckData, nodes: dict[str, int]) -> list[Scenario]:
+    """`!trace` in each game: one scenario per line colour on the best-noded map
+    that has one, standing on the check, a map with no nodes, `!trace` with no
+    text, and once overall a target off the map and a map change mid-trace.
+
+    The line is red to health (wall units and Xen's pools), orange to HEV
+    chargers, blue to weapons. Mirrors `LineColour` in ap_locations.cpp.
+    """
+    # Every positioned check on a map: (location, map, pos, colour).
+    def colour(location: Location) -> str:
+        if location.kind == "weapon_pickup":
+            return "BLUE"
+        return "ORANGE" if location.arg.startswith("func_recharge") else "RED"
+
+    spots: list[tuple[Location, str, str, str]] = []
+    for location in data.locations.values():
+        if location.kind == "charger" and location.pos and not location.needs:
+            spots.append((location, location.map, location.pos, colour(location)))
+    for source in data.sources:
+        if source.pos and not source.drop and not source.needs:
+            location = data.locations[source.id]
+            spots.append((location, source.map, source.pos, "BLUE"))
+
+    def campaign_of(map_name: str) -> str:
+        chapter = data.chapter_of(map_name)
+        return chapter.campaign if chapter else ""
+
+    def query(location: Location) -> str:
+        return location.name.lower()
+
+    off = "Then !trace alone: the line is gone within a second, nothing printed."
+    verdict = "!pass, or !fail <what was wrong>."
+    out: list[Scenario] = []
+    campaigns = list(dict.fromkeys(c.campaign for c in data.chapters if c.campaign))
+    for campaign in campaigns:
+        game = CAMPAIGN_NAME.get(campaign, campaign)
+        chat = f"Chat text (these lines) should be {CHAT_COLOUR.get(campaign, 'unchanged')}."
+        mine = [s for s in spots if campaign_of(s[1]) == campaign]
+        rich = sorted((s for s in mine if nodes.get(s[1], 0) >= TRACE_RICH_NODES),
+                      key=lambda s: -nodes[s[1]])
+
+        def first(want: str):
+            return next((s for s in rich if s[3] == want
+                         and not (want == "RED" and s[0].arg.startswith("trigger_hurt"))),
+                        None)
+
+        for want, what in (("RED", "health charger"), ("ORANGE", "HEV charger"),
+                           ("BLUE", "weapon")):
+            spot = first(want)
+            if spot is None:
+                continue
+            location, map_name, _, _ = spot
+            # Another check on the same map, to retarget to.
+            other = next((s for s in mine if s[1] == map_name and s[0] is not location), None)
+            steps = [
+                f"{game}, {map_name} ({nodes[map_name]} nodes), from the map's start.",
+                f"Type !trace {query(location)}. Expect the !find answer, then a",
+                f"line in {want} from you along the walkable route to it.",
+                "Walk it: the line is redrawn from you each second.",
+            ]
+            if other is not None:
+                steps.append(f"With it on, !trace {query(other[0])}: it switches to a "
+                             f"line in {other[3]} to that one, after its !find answer.")
+            steps += [off, chat, verdict]
+            out.append(Scenario(title=f"Trace: {game} {what} on {map_name} from the start",
+                                map=map_name, steps="\n".join(steps)))
+
+        # Standing on it: one short line, no fallback message.
+        if rich:
+            location, map_name, pos, want = rich[0]
+            out.append(Scenario(
+                title=f"Trace: {game} standing at {location.name}",
+                map=map_name, pos=pos, steps="\n".join([
+                    f"You are next to it. !trace {query(location)}: a short line in {want}",
+                    "straight to it, and no 'No walking route' line.",
+                    off, verdict,
+                ])))
+
+        # No graph, or next to none: the straight-line fallback.
+        sparse = sorted(mine, key=lambda s: nodes.get(s[1], 0))
+        if sparse and nodes.get(sparse[0][1], 0) < TRACE_RICH_NODES:
+            location, map_name, _, want = sparse[0]
+            out.append(Scenario(
+                title=f"Trace: {game} fallback on {map_name} "
+                      f"({nodes.get(map_name, 0)} nodes) to {location.name}",
+                map=map_name, steps="\n".join([
+                    f"{map_name} has {nodes.get(map_name, 0)} nodes. From the start,",
+                    f"!trace {query(location)}. Out of sight of it, expect once",
+                    "'No walking route known from here; the line points straight",
+                    f"at it.' and a straight line in {want}; in sight, a straight line and",
+                    "no message. Nothing should hang or stutter.",
+                    off, verdict,
+                ])))
+
+        # No text: the nearest unfound check.
+        if rich:
+            map_name = rich[0][1]
+            out.append(Scenario(
+                title=f"Trace: {game} nearest check on {map_name}",
+                map=map_name, steps="\n".join([
+                    "!trace with nothing after it. Expect the same answer as !find",
+                    "with nothing after it, and a line to that check in its colour",
+                    "(red health, orange HEV, blue weapon).",
+                    off, chat, verdict,
+                ])))
+
+    # Once: Xen's healing pools are red like the wall units.
+    pool = next((s for s in spots if s[0].arg.startswith("trigger_hurt")
+                 and nodes.get(s[1], 0) >= TRACE_RICH_NODES), None)
+    if pool is not None:
+        location, map_name, _, _ = pool
+        out.append(Scenario(
+            title=f"Trace: healing pool {location.name}", map=map_name,
+            steps="\n".join([
+                f"!trace {query(location)}: a RED line to the pool, ending at the",
+                "water rather than stopping well short of it.", off, verdict,
+            ])))
+
+    # Once: a target on another map, and the map changing under a trace.
+    here = next((s for s in spots if nodes.get(s[1], 0) >= TRACE_RICH_NODES), None)
+    away = next((s for s in spots if here is not None and s[1] != here[1]), None)
+    if here is not None and away is not None:
+        out.append(Scenario(
+            title=f"Trace: off the map, and a map change, from {here[1]}",
+            map=here[1], steps="\n".join([
+                f"!trace {query(away[0])}: the !find answer (where it is, how to get",
+                "there), then 'Nothing on this map to trace to.' and no line.",
+                f"Then !trace {query(here[0])} (a line), then !hub. In the hub: no line.",
+                "!trace there starts a new trace rather than stopping the old one.",
+                verdict,
+            ])))
+    return out
+
+
 def build_scenarios(data: CheckData,
                     only: dict[tuple[int, str], str] | None = None) -> list[Scenario]:
     """Appended to, never reordered: results are recorded by title, but a
@@ -502,14 +671,19 @@ class DllSwap:
 
 class Harness:
     def __init__(self, store: Path, bridge_module, find: bool,
-                 game_root: Path | None = None) -> None:
+                 game_root: Path | None = None,
+                 trace_root: Path | None = None) -> None:
         self.store = store
         self.data = read_checkdata(store / "checkdata.txt")
         only = None
         if game_root is not None:
             only = unproven_sources(self.data, game_root, store / "aptest_unproven.txt")
-        self.scenarios = (find_scenarios(self.data) if find
-                          else build_scenarios(self.data, only))
+        if trace_root is not None:
+            self.scenarios = trace_scenarios(self.data, node_counts(self.data, trace_root))
+        elif find:
+            self.scenarios = find_scenarios(self.data)
+        else:
+            self.scenarios = build_scenarios(self.data, only)
         self.bridge = bridge_module.Bridge(store)
         self.bridge.reset_cursor()
         self.results_path = store / "aptest_results.txt"
@@ -748,6 +922,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="only the weapon sources the maps cannot prove reachable")
     parser.add_argument("--find", action="store_true",
                         help="only the !find scenarios")
+    parser.add_argument("--trace", action="store_true",
+                        help="only the !trace scenarios, in each game")
     args = parser.parse_args(argv)
     if args.game_root is None:
         parser.error("--game-root is required")
@@ -785,7 +961,8 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
     print("Launch Half-Life now (or restart it if it is running) so it loads the "
           "test dll.")
     harness = Harness(store, bridge_module, args.find,
-                      args.game_root if args.unproven else None)
+                      args.game_root if args.unproven else None,
+                      args.game_root if args.trace else None)
     harness.publish(force=True)
     print(f"{len(harness.scenarios)} scenarios from {store / 'checkdata.txt'}.")
     print("Drive it from the game: !next to begin, !pass / !fail <note> / !note <text>.")

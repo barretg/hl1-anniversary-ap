@@ -13,6 +13,7 @@
 #include "ap_bots.h"
 #include "ap_hub.h"
 #include "ap_items.h"
+#include "ap_locations.h"
 #include "ap_main.h"
 
 namespace ap {
@@ -340,6 +341,7 @@ void PrecacheTraps() {
     PrecacheCarriedMonsters();
     PrecacheBots();
     PrecacheThrow();
+    PrecachePathTrace();
     // Off for now; see `DressHubChamber`.
     // PrecacheHubChamber();
 }
