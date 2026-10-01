@@ -19,6 +19,7 @@
 #include "ap_hub.h"
 #include "ap_items.h"
 #include "ap_locations.h"
+#include "ap_menu.h"
 #include "ap_state.h"
 #include "ap_throw.h"
 #include "ap_traps.h"
@@ -429,6 +430,7 @@ void Startup() {
     RearmQueuedTraps();
     // The bot quota is per level. See `ResetBots`.
     ResetBots();
+    ResetMenu();
 
     // The client answers a HELLO with a forced snapshot, so this is what gets
     // our unlocks back after any map load.
@@ -474,6 +476,7 @@ void RunFrame() {
     RunWarpSave();
     RunHubWarp();
     RunBots();
+    RunMenu();
     RunDeferred();
     RunTestHarness();
     RunPathTrace();

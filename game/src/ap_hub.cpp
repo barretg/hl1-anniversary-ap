@@ -17,6 +17,7 @@
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
 #include "ap_locations.h"
+#include "ap_menu.h"
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
@@ -441,6 +442,7 @@ void Help() {
     Say("!find                     point at the nearest check on this map");
     Say("!find <text>              find a check by name, anywhere in the seed");
     Say("!trace [text]             as !find, and draw a path to it; again to stop");
+    Say("!menu                     the warp and tracker as a menu: pick with 1-9, 0");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
     Say("In the hub you can press a mission's panel instead of typing anything.");
 }
@@ -627,6 +629,7 @@ void Cmd_ApTrace() {
     PathTrace(text);
 }
 void Cmd_ApTracker() { Reply reply("ap_tracker"); Tracker(ArgumentTail(1)); }
+void Cmd_ApMenu() { OpenMenu("main"); }
 
 // A testing switch, and console only: not in `!help`, and not a chat command,
 // because a player has no reason to want it. `ap_nowarps` toggles; `1` or `0`
@@ -667,6 +670,11 @@ bool Dispatch(const std::string& name, const std::string& rest) {
         StopPathTrace();
         return true;
     }
+    // The menu on screen is the answer, so no reply line under it.
+    if (name == "menu" || name == "ap_menu") {
+        OpenMenu("main");
+        return true;
+    }
     // Named as the player said it, so the HUD line for a console-length reply
     // names the command they actually typed.
     Reply reply(StartsWith(name, "ap") ? name : "!" + name);
@@ -696,6 +704,24 @@ bool Dispatch(const std::string& name, const std::string& rest) {
 
 }  // namespace
 
+bool RunCommand(const std::string& name, const std::string& rest) {
+    return Dispatch(name, rest);
+}
+
+const char* MissionStatus(const Chapter& chapter) { return StatusOf(chapter); }
+
+int MissionNumberInGame(const Chapter& chapter) { return RelativeNumber(chapter); }
+
+bool WarpToPoint(const std::string& label) {
+    WarpPoint point;
+    if (!FindNamedWarp(label, point)) {
+        return false;
+    }
+    Reply reply("!menu");
+    WarpToNamed(point);
+    return true;
+}
+
 void RegisterCommands() {
     static bool registered = false;
     if (registered) {
@@ -720,6 +746,7 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
     g_engfuncs.pfnAddServerCommand((char*)"ap_trace", Cmd_ApTrace);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_menu", Cmd_ApMenu);
     g_engfuncs.pfnAddServerCommand((char*)"ap_nowarps", Cmd_ApNoWarps);
     RegisterTrapCommands();
     RegisterBotCommands();

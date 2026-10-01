@@ -84,4 +84,5 @@ Typed in the game console (`~`), or in chat (`Y`) with `!` in place of `ap_`
 - `ap_hub` -- return to the hub
 - `ap_tracker [map]` -- locations found and still out there
 - `ap_find [text]` -- point at the nearest unfound check, or one you name
+- `ap_menu`: the warp and tracker as a menu, picked with the number keys
 - `ap_help` -- these, in game

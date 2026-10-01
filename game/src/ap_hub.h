@@ -38,6 +38,7 @@ bool ChapterIsOpen(const Chapter& chapter);
 //   ap_warp <n|name>   travel to an unlocked mission
 //   ap_warp <game> <n> the same, counted within one game: `ap_warp of 3`
 //   ap_hub             return to the hub
+//   ap_menu            the warp and tracker as a numbered menu
 //   ap_help            these, in game
 void RegisterCommands();
 
@@ -50,6 +51,17 @@ void RegisterCommands();
 // text box that opens with one key and does not pause the game, which is more
 // than can be said for the console.
 bool HandleChat(CBasePlayer* player, const std::string& said);
+
+// A command by its chat name (`warp`, `find`), answered as if typed. What a
+// `!menu` choice runs, so a menu warp passes every gate a typed one does.
+bool RunCommand(const std::string& name, const std::string& rest);
+
+// For `!menu`: what `!ap` says of a mission, and its number within its game.
+const char* MissionStatus(const Chapter& chapter);
+int MissionNumberInGame(const Chapter& chapter);
+
+// One of the player's `!setwarp` points, by its label. False if there is none.
+bool WarpToPoint(const std::string& label);
 
 // Ask for a level change. Always deferred to the next frame. `map`, never
 // `changelevel`: a clean load with no carried state is what makes a mission

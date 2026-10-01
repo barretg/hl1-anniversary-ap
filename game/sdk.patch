@@ -1605,7 +1605,7 @@ index e2f30b7..dae0c46 100644
  #include "saverestore.h"
  #include "player.h"
  #include "spectator.h"
-@@ -507,6 +508,14 @@ void ClientCommand( edict_t *pEntity )
+@@ -507,6 +508,21 @@ void ClientCommand( edict_t *pEntity )
  
  	entvars_t *pev = &pEntity->v;
  
@@ -1617,10 +1617,17 @@ index e2f30b7..dae0c46 100644
 +		return;
 +	}
 +
++	// Archipelago: a key pressed in `!menu`. Singleplayer's rules would ignore it.
++	if ( FStrEq(pcmd, "menuselect") &&
++		 ap::MenuSelect( GetClassPtr((CBasePlayer *)pev), atoi( CMD_ARGV(1) ) ) )
++	{
++		return;
++	}
++
  	if ( FStrEq(pcmd, "say" ) )
  	{
  		Host_Say( pEntity, 0 );
-@@ -736,6 +745,9 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
+@@ -736,6 +752,9 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
  
  	// Link user messages here to make sure first client can get them...
  	LinkUserMessages();
@@ -1630,7 +1637,7 @@ index e2f30b7..dae0c46 100644
  }
  
  
-@@ -799,6 +811,9 @@ void StartFrame( void )
+@@ -799,6 +818,9 @@ void StartFrame( void )
  	if ( g_fGameOver )
  		return;
  
@@ -1640,7 +1647,7 @@ index e2f30b7..dae0c46 100644
  	gpGlobals->teamplay = teamplay.value;
  	g_ulFrameCount++;
  }
-@@ -1206,6 +1221,11 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
+@@ -1206,6 +1228,11 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
  		state->eflags |= EFLAG_SLERP;
  	}
  
@@ -1652,7 +1659,7 @@ index e2f30b7..dae0c46 100644
  	state->scale	  = ent->v.scale;
  	state->solid	  = ent->v.solid;
  	state->colormap   = ent->v.colormap;
-@@ -1645,6 +1665,7 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
+@@ -1645,6 +1672,7 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
  						item->iuser1					= gun->m_chargeReady;
  						item->iuser2					= gun->m_fInAttack;
  						item->iuser3					= gun->m_fireState;
@@ -1660,7 +1667,7 @@ index e2f30b7..dae0c46 100644
  						
  											
  //						item->m_flPumpTime				= max( gun->m_flPumpTime, -0.001f );
-@@ -1747,6 +1768,8 @@ void UpdateClientData ( const edict_t *ent, int sendweapons, struct clientdata_s
+@@ -1747,6 +1775,8 @@ void UpdateClientData ( const edict_t *ent, int sendweapons, struct clientdata_s
  			cd->ammo_rockets	= pl->ammo_rockets;
  			cd->ammo_cells		= pl->ammo_uranium;
  			cd->vuser2.x		= pl->ammo_hornets;

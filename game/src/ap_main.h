@@ -61,6 +61,7 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_death
 void OnRevertSaved();                                       // ap_deathlink
 void OnHealingTouch(CBaseEntity* player, CBaseEntity* pool);// ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
+bool MenuSelect(CBasePlayer* player, int key);                       // ap_menu
 bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub
 bool InterceptChangeLevel(const std::string& from_map,
                           const std::string& to_map);       // ap_hub

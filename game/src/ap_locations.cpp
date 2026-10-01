@@ -1101,13 +1101,22 @@ void PrecachePathTrace() {
     g_beam_sprite = PRECACHE_MODEL((char*)"sprites/laserbeam.spr");
 }
 
-// A `First <weapon>` check: any copy in its game sends it, so it belongs to the
-// game rather than to the map it is anchored on.
-namespace {
 bool IsWeaponCheck(const Location& location) {
     return location.type == TriggerType::WeaponPickup && !location.sources.empty();
 }
-}  // namespace
+
+void FindById(long id) {
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    for (const Location& location : Data().locations) {
+        if (location.id == id) {
+            DescribeLocation(player, location, nullptr);
+            return;
+        }
+    }
+}
 
 void Tracker(const std::string& map_filter) {
     if (!Data().Loaded()) {

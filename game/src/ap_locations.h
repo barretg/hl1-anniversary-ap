@@ -20,6 +20,7 @@ class CBasePlayer;
 
 namespace ap {
 struct Chapter;
+struct Location;
 }
 
 namespace ap {
@@ -109,6 +110,16 @@ void PrecachePathTrace();
 // found or not. An optional filter narrows it to a mission name or a map name;
 // the totals stay the seed's either way, so the footer means the same thing
 // whether or not anything was filtered out.
+// Has this location been found: checked on the server, or sent this session.
+bool Collected(const Location& location);
+
+// A `First <weapon>` check: any copy in its game sends it, so it belongs to the
+// game rather than to the map it is anchored on.
+bool IsWeaponCheck(const Location& location);
+
+// `Find`'s answer for one location, by id. What picking a check in `!menu` does.
+void FindById(long id);
+
 void Tracker(const std::string& map_filter);
 
 // How far a weapon may be from the player and still count as collected by the
