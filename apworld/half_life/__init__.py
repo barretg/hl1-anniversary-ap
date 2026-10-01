@@ -467,4 +467,13 @@ class HalfLifeWorld(World):
             # so the client must gate its pickup like any other. Seeds from
             # before this existed left the long jump module ungated instead.
             "placed_at_vanilla": sorted(self.vanilla_placements),
+            # Game -> the item that is armour on its maps, and the equipment
+            # actually shuffled into this seed's pool. Named and shaped as the
+            # Sven world writes them; nothing here reads them yet.
+            "armour_items": {c["key"]: c["armour_item"] for c in CAMPAIGNS},
+            "shuffled_equipment": sorted(
+                name for name in optional_items
+                if name in self.available_item_names
+                and name not in self.vanilla_placements
+            ),
         }

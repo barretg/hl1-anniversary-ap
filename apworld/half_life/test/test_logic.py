@@ -309,6 +309,17 @@ class TestItemGroups(HalfLifeTestBase):
                          {"Opposing Force: First Barnacle Grapple"})
 
 
+class TestEquipmentSlotData(HalfLifeTestBase):
+    options = {"shuffle_hev_suit": True, "shuffle_longjump": False}
+
+    def test_armour_items_and_shuffled_equipment(self) -> None:
+        slot_data = self.multiworld.worlds[self.player].fill_slot_data()
+        self.assertEqual(slot_data["armour_items"]["half_life"], "HEV Suit")
+        self.assertIn("HEV Suit", slot_data["shuffled_equipment"])
+        # Locked to its vanilla spot, so not shuffled.
+        self.assertNotIn("Long Jump Module", slot_data["shuffled_equipment"])
+
+
 class TestOldLocationNames(HalfLifeTestBase):
     """Names from before `Mission: Thing` still name exactly their location."""
 
