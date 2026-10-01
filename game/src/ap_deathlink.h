@@ -32,9 +32,9 @@ constexpr long kDeathLinkMaxAgeSeconds = 10;
 // player's. `TakeDamage` raises `Killed` inside the same call, so this only has
 // to cover that; the margin is for a death that lands a frame or two later --
 // gibs, a fall already in progress -- which is still not a death to report. The
-// cost of being generous is one genuine death going unreported in the second
-// after a DeathLink, which is the safer way to be wrong.
-constexpr float kDeathLinkImmuneSeconds = 1.5f;
+// cost of being generous is one genuine death going unreported in a second
+// or two after a DeathLink, which is the safer way to be wrong.
+constexpr float kDeathLinkImmuneSeconds = 2.0f;
 
 // How long after one `player_loadsaved` fade begins another is treated as the
 // same event. The fade runs for seconds with the player alive inside it, and a

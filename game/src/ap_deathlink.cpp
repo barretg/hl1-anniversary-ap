@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "ap_bridge.h"
+#include "ap_checkdata.h"
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
@@ -23,6 +24,18 @@ namespace {
 // is one of the two exceptions, and it exists because the death message has to
 // name the remaining allowance at the instant of the death.
 const char* const kAmnestyFile = "/ap_amnesty.txt";
+
+// Who a death is put down to: the protagonist of the game being played. The
+// hub, in no game, is Half-Life's.
+const char* ProtagonistOf(const std::string& campaign) {
+    if (campaign == "opposing_force") {
+        return "Shephard";
+    }
+    if (campaign == "blue_shift") {
+        return "Barney";
+    }
+    return "Freeman";
+}
 
 std::string AmnestyPath() {
     char game_dir[260] = {0};
@@ -182,7 +195,7 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
     Trace(forgiven ? "  death forgiven by amnesty" : "  death sent");
 
     std::vector<std::string> args;
-    args.push_back("Freeman");
+    args.push_back(ProtagonistOf(Data().CampaignOfMap(CurrentMap()).key));
     args.push_back(Sanitise(cause.empty() ? std::string("an unknown fate") : cause));
     args.push_back(forgiven ? "1" : "0");
     Wire().Send("DEATH", args);
