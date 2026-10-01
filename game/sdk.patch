@@ -3087,13 +3087,14 @@ index 85b67c4..4f30545 100644
  }
  
  
-@@ -3518,13 +3556,21 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3518,13 +3556,22 @@ void CBasePlayer :: FlashlightTurnOn( void )
  		return;
  	}
  
 +	// AP: the Flashlight, or on Opposing Force the Night Vision Goggles
 +	if ( !ap::FlashlightAllowed() )
 +	{
++		ap::RefuseFlashlight();
 +		return;
 +	}
 +
@@ -3110,7 +3111,7 @@ index 85b67c4..4f30545 100644
  		MESSAGE_END();
  
  		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-@@ -3536,10 +3582,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3536,10 +3583,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
  void CBasePlayer :: FlashlightTurnOff( void )
  {
  	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -3123,7 +3124,7 @@ index 85b67c4..4f30545 100644
  	MESSAGE_END();
  
  	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-@@ -4105,6 +4152,11 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4105,6 +4153,11 @@ void CBasePlayer :: UpdateClientData( void )
  			WRITE_BYTE( 0 );
  		MESSAGE_END();
  
@@ -3135,7 +3136,7 @@ index 85b67c4..4f30545 100644
  		if ( !m_fGameHUDInitialized )
  		{
  			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
-@@ -4129,6 +4181,7 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4129,6 +4182,7 @@ void CBasePlayer :: UpdateClientData( void )
  		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
  			WRITE_BYTE( FlashlightIsOn() ? 1 : 0 );
  			WRITE_BYTE( m_iFlashBattery );
@@ -3143,7 +3144,7 @@ index 85b67c4..4f30545 100644
  		MESSAGE_END();
  	}
  
-@@ -4425,6 +4478,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
+@@ -4425,6 +4479,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
  // set crosshair position to point to enemey
  //=========================================================
  Vector CBasePlayer :: GetAutoaimVector( float flDelta )
@@ -3156,7 +3157,7 @@ index 85b67c4..4f30545 100644
  {
  	if (g_iSkillLevel == SKILL_HARD)
  	{
-@@ -4432,7 +4491,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+@@ -4432,7 +4492,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
  		return gpGlobals->v_forward;
  	}
  
@@ -3165,7 +3166,7 @@ index 85b67c4..4f30545 100644
  	float flDist = 8192;
  
  	// always use non-sticky autoaim
-@@ -5015,6 +5074,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+@@ -5015,6 +5075,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
  
  void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
  {

@@ -321,6 +321,23 @@ bool FlashlightAllowed() {
     return State().Has(night_vision ? kNightVisionItem : kFlashlightItem);
 }
 
+void RefuseFlashlight() {
+    // Held down or pressed repeatedly, the key would say this every frame.
+    // Reset when the clock goes backwards (a new map) as the pickup refusal does.
+    static float last_said = -1000.0f;
+    if (gpGlobals->time < last_said) {
+        last_said = -1000.0f;
+    }
+    if (gpGlobals->time - last_said < 1.0f) {
+        return;
+    }
+    last_said = gpGlobals->time;
+    const bool night_vision =
+        Data().CampaignOfMap(CurrentMap()).key == "opposing_force";
+    Notify(std::string("You have not found the ") +
+           (night_vision ? kNightVisionItem : kFlashlightItem) + " yet.");
+}
+
 void EnforceFlashlight() {
     // Turning it off writes a user message, which must wait for the client;
     // a transition carries the light over before the client is back in.

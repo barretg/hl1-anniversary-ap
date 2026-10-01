@@ -53,6 +53,8 @@ bool CanCollect(CBasePlayer* player, const std::string& classname);
 // and Blue Shift's maps, the Night Vision Goggles on Opposing Force's, and free
 // on the hub. An unshuffled seed has the client send both from the start.
 bool FlashlightAllowed();
+// The flashlight key was pressed while `FlashlightAllowed` says no: say why.
+void RefuseFlashlight();
 // Every frame: turn it off on a map where it is not allowed.
 void EnforceFlashlight();
 
