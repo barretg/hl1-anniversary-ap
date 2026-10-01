@@ -54,7 +54,8 @@ want -- one key, no pause, no `ap_` prefix to type.
 | --- | --- | --- |
 | `!ap` | `ap` | every mission and its unlock status |
 | `!warp <number or name>` | `ap_warp …` | travel to an unlocked mission |
-| `!warp <mission> <part>` | `ap_warp …` | to a part you have already reached |
+| `!warp <mission> <part>` | `ap_warp …` | to a part you have already reached; the part as `3`, `p3`, `part 3` or `pt 3` |
+| `!warp <map>` | `ap_warp …` | that map's part of its mission, such as `!warp c2a3b` |
 | `!warp <name>` | `ap_warp …` | to a warp point of your own |
 | `!setwarp [name]` | `ap_setwarp …` | make a warp point where you stand |
 | `!warps` | `ap_warps` | the warp points you have made |

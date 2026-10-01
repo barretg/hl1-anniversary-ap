@@ -78,6 +78,8 @@ Typed in the game console (`~`), or in chat (`Y`) with `!` in place of `ap_`
 - `ap` -- every mission and its unlock status
 - `ap_warp <number or name>` -- travel to an unlocked mission
 - `ap_warp <mission> <part>` -- travel to a part of a mission you have reached
+  (the part as `3`, `p3`, `part 3` or `pt 3`)
+- `ap_warp <map>`, such as `ap_warp c2a3b`: that map's part of its mission
 - `ap_setwarp [name]`, `ap_warps` -- make and list warp points of your own
 - `ap_hub` -- return to the hub
 - `ap_tracker [map]` -- locations found and still out there

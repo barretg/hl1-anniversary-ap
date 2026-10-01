@@ -129,6 +129,9 @@ bool IsNumber(const std::string& text) {
            text.find_first_not_of("0123456789") == std::string::npos;
 }
 
+// The part a warp names after the mission: `3`, `p3`, `part 3` or `pt 3`, as
+// the Sven plugin takes them. Only with something left in front of it, and only
+// a part from 1 up.
 WarpRequest ParseWarp(const std::string& text) {
     WarpRequest request;
     request.where = text;
@@ -138,15 +141,44 @@ WarpRequest ParseWarp(const std::string& text) {
         return request;  // one word: all of it is the mission
     }
 
-    const std::string tail = Trim(text.substr(space + 1));
-    const std::string head = Trim(text.substr(0, space));
-    if (head.empty() || !IsNumber(tail)) {
+    std::string tail = Lower(Trim(text.substr(space + 1)));
+    std::string head = Trim(text.substr(0, space));
+    if (tail.size() > 1 && tail[0] == 'p' && IsNumber(tail.substr(1))) {
+        tail = tail.substr(1);  // `p3`
+    } else if (IsNumber(tail)) {
+        // `part 3`, `pt 3`: the word goes too, when there is a mission before it.
+        const size_t word = head.find_last_of(" \t");
+        if (word != std::string::npos) {
+            const std::string before = Lower(Trim(head.substr(word + 1)));
+            if (before == "part" || before == "pt") {
+                head = Trim(head.substr(0, word));
+            }
+        }
+    } else {
         return request;
     }
 
+    const long part = ParseLong(tail, 0);
+    if (head.empty() || part <= 0) {
+        return request;
+    }
     request.where = head;
-    request.part = static_cast<int>(ParseLong(tail, 0));
+    request.part = static_cast<int>(part);
     return request;
+}
+
+// A map named exactly, `c2a3b` or `of4a2`: its mission, and which part it is.
+const Chapter* ChapterByMap(const std::string& text, int& part) {
+    const std::string wanted = Lower(Trim(text));
+    for (const Chapter& chapter : Data().chapters) {
+        for (size_t i = 0; i < chapter.maps.size(); ++i) {
+            if (Lower(chapter.maps[i]) == wanted) {
+                part = static_cast<int>(i) + 1;
+                return &chapter;
+            }
+        }
+    }
+    return nullptr;
 }
 
 // Has this mission's own completion check been sent?
@@ -395,6 +427,8 @@ void Help() {
     Say("!ap                       every mission and its unlock status");
     Say("!warp <number or name>    travel to an unlocked mission");
     Say("!warp <mission> <part>    to a part of it you have already reached");
+    Say("                          the part as 3, p3, part 3 or pt 3");
+    Say("!warp <map>               that map's part of its mission: !warp c2a3b");
     Say("!warp <game> <number>     a mission counted within one game: !warp of 3");
     Say("!warp <name>              to a warp point of your own");
     Say("!setwarp                  reset this part's warp point to where you stand");
@@ -450,18 +484,26 @@ void Warp(const std::string& argument) {
         return;
     }
     if (argument.empty()) {
-        Say("Usage: ap_warp <number, name or warp point> [part], or ap_warp <game> "
-            "<number>. ap lists them.");
+        Say("Usage: ap_warp <number, name, map or warp point> [part], or ap_warp "
+            "<game> <number>. A part is 3, p3 or part 3. ap lists them.");
         return;
     }
 
     WarpRequest request = ParseWarp(argument);
 
-    const Chapter* chapter = nullptr;
+    // A map name is that very part of its mission, through the same part gate
+    // below. Asked first, since `ChapterByName` would take it to the mission's
+    // first map.
+    const Chapter* chapter = ChapterByMap(argument, request.part);
+    if (chapter != nullptr) {
+        request.where = argument;
+    }
     // `of 3`, `bs 2`, `hl 5`: a mission counted within one game, from 0 like
     // the global numbers. With a part after it, `of 3 2`, ParseWarp has taken
     // the part off already and left `of 3`.
-    chapter = ChapterInGame(request.where);
+    if (chapter == nullptr) {
+        chapter = ChapterInGame(request.where);
+    }
     if (chapter == nullptr && request.part > 0) {
         chapter = ChapterInGame(argument);
         if (chapter != nullptr) {
