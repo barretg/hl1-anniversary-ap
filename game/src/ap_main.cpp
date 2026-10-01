@@ -565,7 +565,7 @@ void AnnounceArrivals(const std::string& had_session,
         if (had_chapters.find(key) == had_chapters.end()) {
             const Chapter* chapter = Data().ChapterByKey(key);
             Notify(std::string(chapter ? chapter->name : key) +
-                   " unlocked. ap_warp to travel there.");
+                   " unlocked. !warp to travel there.");
         }
     }
 

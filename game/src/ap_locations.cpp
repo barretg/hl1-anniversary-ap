@@ -91,6 +91,24 @@ const char* Bearing(CBasePlayer* player, const Vector& target) {
     return across > 0 ? "behind you and right" : "behind you and left";
 }
 
+// How far up or down it is, as the Sven plugin says it. Empty when roughly level.
+const char* HeightTo(CBasePlayer* player, const Vector& target) {
+    const float rise = target.z - player->pev->origin.z;
+    if (rise > 128.0f) return ", well above you";
+    if (rise > 48.0f) return ", a little above you";
+    if (rise < -128.0f) return ", well below you";
+    if (rise < -48.0f) return ", a little below you";
+    return "";
+}
+
+// Whether a straight line from the player's eyes reaches it.
+bool ClearLineTo(CBasePlayer* player, const Vector& target) {
+    TraceResult tr;
+    UTIL_TraceLine(player->pev->origin + player->pev->view_ofs, target,
+                   ignore_monsters, player->edict(), &tr);
+    return tr.flFraction >= 1.0f;
+}
+
 struct Colour {
     int r, g, b;
 };
@@ -842,10 +860,10 @@ void DescribeLocation(CBasePlayer* player, const Location& location,
         // A part warp only works somewhere already walked to, so offer it only
         // where it would be accepted. Otherwise the mission's own door.
         if (part > 0 && Visited(map)) {
-            std::snprintf(line, sizeof(line), "Get there with ap_warp %d %d.",
+            std::snprintf(line, sizeof(line), "Get there with !warp %d %d.",
                           chapter->index, part);
         } else {
-            std::snprintf(line, sizeof(line), "Get there with ap_warp %d.",
+            std::snprintf(line, sizeof(line), "Get there with !warp %d.",
                           chapter->index);
         }
         Notify(line);
@@ -880,10 +898,12 @@ void DescribeLocation(CBasePlayer* player, const Location& location,
         target->colour = LineColour(location);
     }
     char line[192];
-    std::snprintf(line, sizeof(line), "%s, about %d units away.",
-                  Bearing(player, at),
+    std::snprintf(line, sizeof(line), "%s%s, about %d units away.",
+                  Bearing(player, at), HeightTo(player, at),
                   static_cast<int>(WalkScore(player->pev->origin, at)));
     Notify(line);
+    Notify(ClearLineTo(player, at) ? "You have a clear line to it."
+                                   : "Something solid is in the way.");
 }
 
 // `Find`, also saying where it pointed when that is somewhere on this map.
