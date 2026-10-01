@@ -198,6 +198,13 @@ WEAPON_ANCHORS: dict[str, str] = {
     "Shock Roach": "of4a1",
 }
 
+# Chargers no player can reach, as `{map: {(classname, key position)}}`.
+UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # We Are Not Alone part 2: a healing pool there is no way into.
+    "of3a1b": {("trigger_hurt", (-632, -548, -124))},
+}
+
+
 OPPOSING_FORCE = Campaign(
     key="opposing_force",
     name="Opposing Force",
@@ -217,6 +224,7 @@ OPPOSING_FORCE = Campaign(
     weapon_anchors=WEAPON_ANCHORS,
     unreachable_copies=UNREACHABLE_COPIES,
     confirmed_copies=CONFIRMED_COPIES,
+    unreachable=UNREACHABLE_CHARGERS,
     weapon_source_gates=WEAPON_SOURCE_GATES,
     location_gates=LOCATION_GATES,
     # Boot camp: the training course, left out like Half-Life's hazard course.

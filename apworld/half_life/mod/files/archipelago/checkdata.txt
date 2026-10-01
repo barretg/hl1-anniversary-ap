@@ -20,7 +20,7 @@
 # of the unit. Brush model indices are deliberately not used: the game's
 # maps are recompiled by Valve from time to time and that renumbers them.
 V|6
-D|8923eb1d3238
+D|6795c3d07080
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -305,7 +305,6 @@ L|7760278|of3a1|map_reached||We Are Not Alone: Part 1 Reached
 L|7760279|of3a1|charger|func_healthcharger@592 1184 -204|We Are Not Alone: Health Charger (Part 1)|592 1186 -204
 L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone: HEV Charger (Part 1)|544 1186 -204
 L|7760281|of3a1b|map_reached||We Are Not Alone: Part 2 Reached
-L|7760282|of3a1b|charger|trigger_hurt@-632 -548 -124|We Are Not Alone: Healing Pool (Part 2)|-632 -548 -125
 L|7760283|of3a2|map_reached||We Are Not Alone: Part 3 Reached
 L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone: Health Charger (Part 3)|1204 2614 -3268|Displacer Cannon
 L|7760285|of3a4|map_reached||Crush Depth: Part 1 Reached

@@ -82,6 +82,11 @@ MOD_FILES = (
     # there until the console closes again. A bound key does not.
     ("files/autoexec.cfg", "autoexec.cfg"),
     ("files/apbinds.cfg", "apbinds.cfg"),
+    # The menu's keys, and the startup script that runs them. Not player-owned:
+    # every launch rebinds 8, 9 and 0 so !menu can page and close. valve.rc is
+    # retail's own, with one line added, and shadows it for this mod only.
+    ("files/apmenu.cfg", "apmenu.cfg"),
+    ("files/valve.rc", "valve.rc"),
 )
 
 # The lobby whiteboard's variants, one drawn at random per lobby load by

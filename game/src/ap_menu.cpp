@@ -226,7 +226,10 @@ bool TrackerReady() {
 void Main() {
     std::vector<Item> items = {{"Warp to a mission", "warp"},
                                {"Tracker", "track"},
-                               {"Nearest check here", "near"}};
+                               {"Nearest check here", "near"},
+                               {PathTraceActive() ? "Stop the path trace"
+                                                  : "Trace a path to the nearest check",
+                                "trace"}};
     if (!NamedWarps().empty()) {
         items.push_back({"Warp points", "points"});
     }
@@ -407,6 +410,8 @@ void Run(const std::string& action) {
         FindById(ParseLong(arg, -1));
     } else if (verb == "near") {
         RunCommand("find", "");
+    } else if (verb == "trace") {
+        RunCommand("trace", "");
     } else if (verb == "hub") {
         RunCommand("hub", "");
     }

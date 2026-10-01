@@ -12,4 +12,6 @@ creates them, and nothing here is read during generation.
 LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     # Sealed in a pocket only reachable through a transition; in v0.2 to v0.3.
     7760052: ("We've Got Hostiles - Health Charger 1 (Part 2)", "c1a3d"),
+    # A healing pool there is no way into; in v0.3-pre on.
+    7760282: ("We Are Not Alone - Healing Pool (Part 2)", "of3a1b"),
 }

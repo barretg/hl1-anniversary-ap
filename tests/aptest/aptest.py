@@ -604,6 +604,7 @@ def parity_scenarios(data: CheckData) -> list[Scenario]:
                 if l.kind == "map_reached" and l.map in maps]
 
     office = by_key["c1a2"]
+    blast = by_key["c1a4"]
     verdict = "!pass, or !fail <what was different>."
     out = [
         Scenario(
@@ -710,13 +711,15 @@ def parity_scenarios(data: CheckData) -> list[Scenario]:
     out += [
         Scenario(
             title="Parity O16: !menu warp pages",
-            map=office.maps[0], checked=reached(office.key), steps="\n".join([
+            map=office.maps[0], checked=reached(office.key), closed=[blast.key],
+            steps="\n".join([
                 "!menu: 'Archipelago' with Warp to a mission, Tracker, Nearest check",
-                "here, Return to the hub, and 0. Exit. The number keys pick, not weapons.",
+                "here, Trace a path to the nearest check, Return to the hub, and 0. Exit.",
+                "The number keys pick, not weapons.",
                 "1 (Warp), then Half-Life: its missions as '<n>. <name> [status]'.",
                 "9 shows the next 7, 8 comes back. Pick Office Complex: Start and",
                 "every part, each with its map; pick Part 3: you warp there.",
-                "!menu, 1, then a locked or sealed mission: refused as !warp refuses it.",
+                f"!menu, 1, Half-Life, then {blast.name} (locked): refused as !warp refuses it.",
                 verdict,
             ])),
         Scenario(
@@ -727,6 +730,8 @@ def parity_scenarios(data: CheckData) -> list[Scenario]:
                 "counts. Pick Office Complex: unfound first, found greyed '[done]'.",
                 "Picking one gives the !find answer for it.",
                 "!menu, 3: the !find answer for the nearest check.",
+                "!menu, 4: a path is drawn to it; !menu shows 'Stop the path trace',",
+                "and picking that removes the path.",
                 "!menu, 0: it closes and number keys pick weapons again.",
                 "!menu, Return to the hub: you go to the hub.",
                 verdict,

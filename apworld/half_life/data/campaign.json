@@ -1,5 +1,5 @@
 {
- "data_version": "8923eb1d3238",
+ "data_version": "6795c3d07080",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -4798,23 +4798,6 @@
     "type": "map_reached",
     "map": "of3a1b"
    }
-  },
-  {
-   "id": 7760282,
-   "name": "We Are Not Alone: Healing Pool (Part 2)",
-   "chapter": "of3a1",
-   "map": "of3a1b",
-   "trigger": {
-    "type": "charger",
-    "map": "of3a1b",
-    "classname": "trigger_hurt",
-    "at": "-632 -548 -124"
-   },
-   "position": [
-    -632,
-    -548,
-    -125
-   ]
   },
   {
    "id": 7760283,
