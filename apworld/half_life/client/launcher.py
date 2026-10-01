@@ -948,6 +948,16 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
     )
 
 
+def outgoing_chat(args: list[str]) -> dict | None:
+    """The `Say` for a line of game chat (`CHAT|player|text`), or None if empty.
+
+    Just the text: the server already names the slot it came from, so the
+    player's name in front would read "Slot: [Freeman] hello".
+    """
+    text = args[1].strip() if len(args) > 1 else ""
+    return {"cmd": "Say", "text": text} if text else None
+
+
 async def pump(ctx: HalfLifeContext) -> None:
     """One poll: drain the game's events, then publish the snapshot."""
     if ctx.bridge is None:
@@ -1006,10 +1016,9 @@ async def pump(ctx: HalfLifeContext) -> None:
                 )
         elif event.kind == "CHAT":
             if ctx.chat_relay and ctx.server and not ctx.server.socket.closed:
-                player = event.args[0] if event.args else "?"
-                text = event.args[1] if len(event.args) > 1 else ""
-                if text:
-                    await ctx.send_msgs([{"cmd": "Say", "text": f"[{player}] {text}"}])
+                say = outgoing_chat(event.args)
+                if say:
+                    await ctx.send_msgs([say])
         elif event.kind == "HELLO":
             logger.info(f"Game is on {event.arg}.")
             publish(ctx, force=True)

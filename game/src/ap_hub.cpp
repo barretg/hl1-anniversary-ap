@@ -739,8 +739,12 @@ bool HandleChat(CBasePlayer* player, const std::string& said) {
     }
 
     // `!` is the prefix, and `/` is accepted because half of everyone types
-    // that instead. A line starting with neither is chat, and stays chat.
+    // that instead. A line starting with neither is chat: it goes out to the
+    // multiworld (the client decides whether to relay it) and the engine still
+    // shows it here.
     if (text[0] != '!' && text[0] != '/') {
+        Wire().Send("CHAT", std::vector<std::string>{
+                                Sanitise(STRING(player->pev->netname)), Sanitise(text)});
         return false;
     }
     text.erase(text.begin());

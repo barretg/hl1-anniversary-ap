@@ -7,7 +7,7 @@ new keys, and must play exactly as it did: Half-Life alone, one finale.
 import logging
 import unittest
 
-from ..client.launcher import HALF_LIFE, HalfLifeContext, load_campaign
+from ..client.launcher import HALF_LIFE, HalfLifeContext, load_campaign, outgoing_chat
 
 
 def context() -> HalfLifeContext:
@@ -229,3 +229,14 @@ class TestLegacyChecks(unittest.TestCase):
     def test_never_for_a_seed_without_it(self) -> None:
         self.ctx.missing_locations = {self.reached}
         self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [])
+
+
+class TestOutgoingChat(unittest.TestCase):
+    """Game chat goes out as one `Say`, without the player's name in front."""
+
+    def test_the_text_alone(self) -> None:
+        self.assertEqual(outgoing_chat(["Gordon", "hello"]), {"cmd": "Say", "text": "hello"})
+
+    def test_an_empty_line_sends_nothing(self) -> None:
+        self.assertIsNone(outgoing_chat(["Gordon", "  "]))
+        self.assertIsNone(outgoing_chat(["Gordon"]))
