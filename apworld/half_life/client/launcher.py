@@ -501,13 +501,17 @@ class HalfLifeContext(SuperContext):
         )
         self.goal_chapter = slot_data.get("goal_chapter", self.goal_chapter)
         self.campaigns = list(slot_data.get("campaigns", [HALF_LIFE]))
-        self.goal_chapters = dict(
-            slot_data.get("goal_chapters", {HALF_LIFE: self.goal_chapter})
-        )
+        goals = slot_data.get("goal_chapters", {HALF_LIFE: self.goal_chapter})
+        # The Sven world writes a list of finale keys; this world writes game ->
+        # finale. Both read the same, so the two clients share one parser.
+        if not isinstance(goals, dict):
+            goals = {self.campaign_of_chapter.get(key, HALF_LIFE): key for key in goals}
+        self.goal_chapters = dict(goals)
         self.missions_required_by_campaign = {
-            key: int(value) for key, value in slot_data.get(
-                "missions_required_by_campaign",
-                {HALF_LIFE: self.missions_required},
+            key: int(value) for key, value in (
+                slot_data.get("missions_required_by_campaign")
+                or slot_data.get("campaign_missions_required")  # the Sven world's name
+                or {HALF_LIFE: self.missions_required}
             ).items()
         }
         # A game the seed does not include is out entirely, exactly like an

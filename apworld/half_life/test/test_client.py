@@ -95,6 +95,27 @@ class TestOldSeed(unittest.TestCase):
         self.assertNotIn("Melee Throw", self.ctx.always_unlocked)
 
 
+class TestSvenShapedSlotData(unittest.TestCase):
+    """The Sven world's spellings read the same, so one parser serves both."""
+
+    def setUp(self) -> None:
+        self.ctx = context()
+        self.ctx.apply_slot_data({
+            **OLD_SLOT_DATA,
+            "campaigns": [HALF_LIFE, "opposing_force"],
+            "goal_chapters": ["c4a3", "of6a4b"],
+            "campaign_missions_required": {HALF_LIFE: 2, "opposing_force": 1},
+        })
+
+    def test_a_list_of_finales_maps_to_their_games(self) -> None:
+        self.assertEqual(self.ctx.goal_chapters,
+                         {HALF_LIFE: "c4a3", "opposing_force": "of6a4b"})
+
+    def test_the_other_seal_name_is_read(self) -> None:
+        self.assertEqual(self.ctx.missions_required_by_campaign,
+                         {HALF_LIFE: 2, "opposing_force": 1})
+
+
 class TestEveryGameSeed(unittest.TestCase):
     def setUp(self) -> None:
         self.ctx = context()
