@@ -135,9 +135,12 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "underwater": UNDERWATER_WEAPONS,
     "tau_cannon": ["Tau Cannon"],
     "rpg": ["RPG"],
-    # Anything that can detonate a barrel from a distance: every ranged weapon,
-    # and the RPG, which `ranged` leaves out.
-    "barrel_shooter": RANGED_WEAPONS + ["RPG"],
+    # Anything that can detonate a barrel from a distance: the ranged weapons
+    # bar the Hivehand, whose hornets do not set one off, plus the RPG, which
+    # `ranged` leaves out, and the thrown explosives. Not the tripmine, which
+    # cannot be placed to reach it.
+    "barrel_shooter": [w for w in RANGED_WEAPONS if w != "Hivehand"]
+                      + ["RPG", "Hand Grenade", "Satchel Charge"],
     # What clears On A Rail's crates. The MP5's grenade launcher does too, but
     # only loose logic counts on it.
     "crate_breaker": ["Hand Grenade", "Satchel Charge", "MP5"],

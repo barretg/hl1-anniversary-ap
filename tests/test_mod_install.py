@@ -83,23 +83,6 @@ def test_reinstalling_keeps_the_players_own_binds(install: Path) -> None:
     assert not binds.exists()
 
 
-def test_menu_keys_are_bound_on_every_install(install: Path) -> None:
-    """!menu pages and closes on 8, 9 and 0, which retail leaves unbound. These
-    reach existing installs too, so they are not player-owned."""
-    mod.install(install)
-    rc = install / MOD_DIR / "valve.rc"
-    keys = install / MOD_DIR / "apmenu.cfg"
-    text = rc.read_text(encoding="utf-8")
-    assert text.index("exec autoexec.cfg") < text.index("exec apmenu.cfg")
-    assert "exec language.cfg" in text and "stuffcmds" in text
-    for line in ('bind "8" "slot8"', 'bind "9" "slot9"', 'bind "0" "slot10"'):
-        assert line in keys.read_text(encoding="utf-8")
-
-    keys.write_text("", encoding="utf-8")
-    mod.install(install)
-    assert 'bind "0" "slot10"' in keys.read_text(encoding="utf-8")
-
-
 def test_install_puts_checkdata_where_the_bridge_looks(install: Path) -> None:
     mod.install(install)
     assert (find_store_dir(install) / "checkdata.txt").is_file()

@@ -515,6 +515,22 @@ class TestDutyCallsBarrel(HalfLifeTestBase):
         state.collect(world.create_item("RPG"))
         self.assertTrue(state.can_reach_region("ba_canal1b", self.player))
 
+    def test_which_weapons_alone_get_past_the_barrel(self) -> None:
+        from ..data import REQUIREMENT_GROUPS
+        world = self.multiworld.worlds[self.player]
+        for name, passes in (("Hand Grenade", True), ("Satchel Charge", True),
+                             ("Snarks", True), ("Hivehand", False),
+                             ("Tripmine", False)):
+            with self.subTest(name):
+                state = self.multiworld.get_all_state(False)
+                for item in state.multiworld.itempool:
+                    if (item.player == self.player
+                            and item.name in REQUIREMENT_GROUPS["barrel_shooter"]):
+                        state.remove(item)
+                state.sweep_for_advancements()
+                state.collect(world.create_item(name))
+                self.assertEqual(state.can_reach_region("ba_canal1b", self.player), passes)
+
 
 class TestEveryGame(CampaignMixin, StartingMissionMixin, HalfLifeTestBase):
     options = {"include_opposing_force": True, "include_blue_shift": True,

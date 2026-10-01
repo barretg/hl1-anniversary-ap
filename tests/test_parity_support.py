@@ -87,6 +87,16 @@ def test_sdk_patch_hunks_add_up() -> None:
     assert not problems, "\n".join(problems)
 
 
+def test_the_client_takes_the_menu_keys() -> None:
+    """!menu's Back, More and Exit are 8, 9 and 0, which retail leaves unbound
+    and a cfg bind cannot fix (config.cfg runs unbindall), so the client dll
+    answers number keys itself while a menu is up."""
+    patch = (REPO / "game" / "sdk.patch").read_text(encoding="utf-8")
+    hunk = patch[patch.index("+++ b/cl_dll/input.cpp"):]
+    assert "+\tif ( gHUD.m_Menu.m_fMenuDisplayed && keynum >= '0' && keynum <= '9' )" in hunk
+    assert "+\t\t\t\tgHUD.m_Menu.SelectMenuItem( item );" in hunk
+
+
 def test_parity_steps_reflow_into_whole_sentences() -> None:
     """Each step reaches the chat area as one message, so none may be a
     fragment of a wrapped sentence or wider than the area shows."""
