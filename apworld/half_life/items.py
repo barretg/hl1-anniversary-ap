@@ -42,10 +42,12 @@ unlock_item_for_chapter: dict[str, str] = {
 }
 
 item_name_groups: dict[str, set[str]] = {
-    "Weapons": set(weapon_items),
+    # Melee weapons are weapons too; the Sven world's group holds them as well.
+    "Weapons": set(weapon_items) | set(melee_items),
     "Mission Unlocks": set(chapter_unlock_items),
     "Equipment": set(optional_items),
     "Melee Weapons": set(melee_items),
+    "Abilities": {e["name"] for e in ITEMS if e.get("group") == "ability"},
     "Filler": set(filler_items),
     "Traps": set(trap_items),
 }

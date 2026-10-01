@@ -286,6 +286,19 @@ class TestChargesanityOn(HalfLifeTestBase):
         self.assertIn("Office Complex: Health Charger 1 (Part 1)", names)
 
 
+class TestItemGroups(HalfLifeTestBase):
+    """The groups the Sven world also has, with the same membership rules."""
+
+    def test_weapons_holds_the_melee_weapons(self) -> None:
+        from ..items import item_name_groups, melee_items
+        self.assertTrue(melee_items)
+        self.assertLessEqual(set(melee_items), item_name_groups["Weapons"])
+
+    def test_abilities_holds_melee_throw(self) -> None:
+        from ..items import item_name_groups
+        self.assertIn("Melee Throw", item_name_groups["Abilities"])
+
+
 class TestOldLocationNames(HalfLifeTestBase):
     """Names from before `Mission: Thing` still name exactly their location."""
 
