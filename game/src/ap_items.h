@@ -60,6 +60,11 @@ void EnforceFlashlight();
 // Never reported as finding one, and never refused by the gate.
 void ReturnWeapon(CBasePlayer* player, const std::string& classname);
 
+// Forget which consumables (grenades, satchels, tripmines, snarks) have been had,
+// so the loadout gives them again. Called on a mission or hub load only, never
+// on a transition between a mission's parts or a save restored after a death.
+void ResetConsumables();
+
 // One filler delivery: ammo, health, armour. Named as the item list names them.
 void GrantFiller(CBasePlayer* player, const std::string& item_name);
 

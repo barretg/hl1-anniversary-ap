@@ -6,6 +6,7 @@
 
 #include "ap_items.h"
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -28,6 +29,17 @@ bool g_granting = false;
 
 // A spawn asked for the loadout and StartFrame has not applied it yet.
 bool g_loadout_wanted = false;
+
+// Consumables the player has had since the last mission or hub load. These are
+// the weapons that vanish once used up, so the loadout regranting them on every
+// snapshot change was a free refill per check. Each is given once, and again
+// only after the next mission or hub load (`ResetConsumables`).
+std::set<std::string> g_consumables_had;
+
+bool IsConsumable(const std::string& classname) {
+    return classname == "weapon_handgrenade" || classname == "weapon_satchel" ||
+           classname == "weapon_tripmine" || classname == "weapon_snark";
+}
 
 const char* const kSuitItem = "HEV Suit";
 const char* const kLongJumpItem = "Long Jump Module";
@@ -329,7 +341,9 @@ void ClampArmour() {
     }
 }
 
-bool CanCollect(CBasePlayer* player, const std::string& classname) {
+namespace {
+
+bool CanCollectGated(const std::string& classname) {
     if (g_granting) {
         return true;
     }
@@ -351,6 +365,21 @@ bool CanCollect(CBasePlayer* player, const std::string& classname) {
         return true;  // ammo, health, a battery: never gated
     }
     return State().Has(item);
+}
+
+}  // namespace
+
+bool CanCollect(CBasePlayer* player, const std::string& classname) {
+    const bool allowed = CanCollectGated(classname);
+    // One picked up and used before any loadout ran has still been had.
+    if (allowed && IsConsumable(classname)) {
+        g_consumables_had.insert(classname);
+    }
+    return allowed;
+}
+
+void ResetConsumables() {
+    g_consumables_had.clear();
 }
 
 bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
@@ -534,10 +563,24 @@ void ApplyLoadout(CBasePlayer* player) {
             }
         }
         if (already_held) {
+            if (IsConsumable(classnames.front())) {
+                g_consumables_had.insert(classnames.front());
+            }
+            continue;
+        }
+        // Used up since it was last given: not again until the next mission or
+        // hub load.
+        if (IsConsumable(classnames.front()) &&
+            g_consumables_had.count(classnames.front()) != 0) {
             continue;
         }
 
-        gave_something |= Give(player, classnames.front());
+        if (Give(player, classnames.front())) {
+            gave_something = true;
+            if (IsConsumable(classnames.front())) {
+                g_consumables_had.insert(classnames.front());
+            }
+        }
     }
 
 #ifdef HLAP_TEST_BUILD

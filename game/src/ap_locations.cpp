@@ -16,6 +16,7 @@
 #include "ap_bridge.h"
 #include "ap_checkdata.h"
 #include "ap_hub.h"
+#include "ap_items.h"
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
@@ -464,6 +465,7 @@ void OnMapStart(const std::string& map_name) {
         // way to have got here that needs questioning.
         g_map_authorised = true;
         g_arrival_owed = false;
+        ResetConsumables();
         NoteArrival(previous, map_name, true);
         return;
     }
@@ -478,6 +480,11 @@ void OnMapStart(const std::string& map_name) {
     // is the case worth questioning, and `AuthoriseMap` questions it.
     const bool requested = WasRequested(map_name);
     g_map_authorised = requested;
+    // A mission load the mod asked for (a warp, a part warp, a warp point)
+    // starts a new stay; the engine's own transition between parts does not.
+    if (requested) {
+        ResetConsumables();
+    }
     g_arrival_owed = true;
     g_bounce_announced = false;
 
