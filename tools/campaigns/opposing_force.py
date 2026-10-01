@@ -84,7 +84,8 @@ _RANGED_WEAPONS = ["Desert Eagle", "M249", "Sniper Rifle", "Shock Roach",
 REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "ranged": _RANGED_WEAPONS,
     "barrel_shooter": _RANGED_WEAPONS,
-    "heavy": ["Desert Eagle", "M249", "Sniper Rifle"],
+    # The Desert Eagle is a pistol: ranged, not heavy.
+    "heavy": ["M249", "Sniper Rifle"],
     "explosives": ["Spore Launcher"],
     "underwater": ["Desert Eagle"],
     "barnacle_grapple": ["Barnacle"],
