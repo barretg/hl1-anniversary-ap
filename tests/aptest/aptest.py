@@ -45,8 +45,16 @@ Scenarios come from the installed `checkdata.txt`, so they track the data:
 the line's colour and route, the fallback where a map has no nodes, toggling
 off, retargeting, a target off the map, and the chat colour.
 
+`--parity` runs only the Sven parity scenarios (see `parity_scenarios`): the
+behaviour this game was brought in line with the Sven Co-op plugin on. They
+use three more verbs, standing in for what the real client would deliver:
+    !item <name>       a filler item arrives (Ammo Cache, Medkit, ...)
+    !trap <name>       a trap arrives (Scientist Trap, ...)
+    !deathlink         somebody else's DeathLink arrives
+and the harness shows every DEATH and CHAT the game sends.
+
 Usage:
-    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace]
+    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace | --parity]
 """
 
 from __future__ import annotations
@@ -177,6 +185,9 @@ class Scenario:
     # Missions locked for this scenario, and the seed's `ally_weapon_drops`.
     closed: list[str] = field(default_factory=list)
     ally_drops: bool = True
+    # Locations the server already has, such as a part's arrival, so a part
+    # warp to it is allowed.
+    checked: list[int] = field(default_factory=list)
 
 
 def cache_key(data: CheckData) -> str:
@@ -535,6 +546,153 @@ def trace_scenarios(data: CheckData, nodes: dict[str, int]) -> list[Scenario]:
     return out
 
 
+def parity_scenarios(data: CheckData) -> list[Scenario]:
+    """The behaviour brought in line with the Sven Co-op plugin, one scenario
+    per change (the ids are `.claude/sven-parity-handoff.md`'s).
+
+    Missions are looked up by key, so the scenarios follow the data.
+    """
+    by_key = {c.key: c for c in data.chapters}
+    index = {c.key: i for i, c in enumerate(data.chapters)}
+
+    def reached(key: str) -> list[int]:
+        """Every part of a mission arrived at, so each can be part-warped to."""
+        maps = set(by_key[key].maps)
+        return [l.id for l in data.locations.values()
+                if l.kind == "map_reached" and l.map in maps]
+
+    office = by_key["c1a2"]
+    verdict = "!pass, or !fail <what was different>."
+    out = [
+        Scenario(
+            title="Parity B1/B5: !find wording and old-style names",
+            map=office.maps[0], steps="\n".join([
+                f"!find {office.name.lower()} - health charger 1 (part 1), then",
+                f"!find {office.name.lower()}: health charger 1 (part 1).",
+                f"Both name '{office.name}: Health Charger 1 (Part 1)' and answer in",
+                "two lines: '<direction>, <height>, about N units away.' (the height",
+                "as 'level with you', 'a little above you', 'well below you' ...),",
+                "then 'You have a clear line to it.' or 'Something solid is in the way.'",
+                f"Then !find {office.name.lower()}: health charger 1 (part 2): it is off",
+                "this map, and the last line says 'Get there with !warp ...'.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity B2: melee throw does four times a swing",
+            map=office.maps[0], steps="\n".join([
+                "Find a zombie (later in this map). Throw the crowbar at it",
+                "(the throw key): a zombie on Normal dies in two throws, where",
+                "it takes five swings.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O4/O11: !ap numbers and the new !warp forms",
+            map=office.maps[0], checked=reached(office.key), steps="\n".join([
+                "!ap: each line ends '(hl N)', '(of N)' or '(bs N)' before its status,",
+                f"{office.name} as '(hl {sum(1 for c in data.chapters[:index[office.key]] if c.campaign == office.campaign)})'.",
+                "!warp hl <that number> goes there. Every part is marked reached, so",
+                f"each of these goes to {office.name} part 2: !warp office 2,",
+                "!warp office p2, !warp office part 2, !warp office pt 2,",
+                f"and !warp {office.maps[1]} (the map name).",
+                f"!warp {by_key['c2a3'].maps[2]}: refused, part 3 of a mission not reached.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O6/O12: renamed weapons and the tracker's weapon blocks",
+            map=office.maps[0], steps="\n".join([
+                "!find displacer cannon and !find barnacle grapple each name",
+                "'Opposing Force: First Displacer Cannon' / '... First Barnacle Grapple'.",
+                "!tracker weapons: one 'Half-Life: Weapons (f/t)' block per game, the",
+                "weapon checks under it and no longer under any map.",
+                "!tracker opposing: Opposing Force's missions and its weapons block.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O8: grenades once per mission load",
+            map=office.maps[0], steps="\n".join([
+                "Throw every hand grenade (and use up satchels, tripmines, snarks).",
+                "!take Flashlight then !give Flashlight (a new snapshot): none come back.",
+                "Walk on into part 2: still none. Die and reload: still none.",
+                "!redo (a mission load): they are back.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O9: the flashlight key without the flashlight",
+            map=office.maps[0], take=["Flashlight"], steps="\n".join([
+                "Press the flashlight key: 'You have not found the Flashlight yet.'",
+                "Hold it down or mash it: at most once a second.",
+                "!give Flashlight: the key works.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O9: the night vision key without the goggles",
+            map=by_key["of1a1"].maps[0], take=["Night Vision Goggles"],
+            steps="\n".join([
+                "Press the flashlight key: 'You have not found the Night Vision",
+                "Goggles yet.' At most once a second.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O10/O15: Ammo Cache and trap messages",
+            map=office.maps[0], steps="\n".join([
+                "Fire off some of several weapons' ammo, then !item Ammo Cache:",
+                "every weapon you carry is topped up, not only the one in your hands",
+                "(two clips' worth; 20 for grenades and the like; 2 RPG rockets).",
+                "!trap Scientist Trap: 'Someone called for a science team.'",
+                "!trap Headcrab Trap: 'What remarkable specimen!'",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O13: plain chat goes out, commands do not",
+            map=office.maps[0], steps="\n".join([
+                "Say 'hello' in chat: the harness shows 'CHAT: <your name> | hello',",
+                "and the line still shows in game. !ap: no CHAT for it.",
+                verdict,
+            ])),
+    ]
+
+    for key, name in (("c1a2", "Freeman"), ("of1a1", "Shephard"),
+                      ("ba_security1", "Barney")):
+        chapter = by_key.get(key)
+        if chapter is None:
+            continue
+        out.append(Scenario(
+            title=f"Parity O14: a death in {chapter.name} is {name}'s",
+            map=chapter.maps[0], steps="\n".join([
+                f"kill in the console: the harness shows 'DEATH: {name} | ...'.",
+                "!deathlink: you die, and the harness shows no DEATH for it",
+                "(within 2 seconds it is the DeathLink's, not yours).",
+                verdict,
+            ])))
+
+    out += [
+        Scenario(
+            title="Parity O16: !menu warp pages",
+            map=office.maps[0], checked=reached(office.key), steps="\n".join([
+                "!menu: 'Archipelago' with Warp to a mission, Tracker, Nearest check",
+                "here, Return to the hub, and 0. Exit. The number keys pick, not weapons.",
+                "1 (Warp), then Half-Life: its missions as '<n>. <name> [status]'.",
+                "9 shows the next 7, 8 comes back. Pick Office Complex: Start and",
+                "every part, each with its map; pick Part 3: you warp there.",
+                "!menu, 1, then a locked or sealed mission: refused as !warp refuses it.",
+                verdict,
+            ])),
+        Scenario(
+            title="Parity O16: !menu tracker, nearest, warp points, hub, exit",
+            map=office.maps[0], steps="\n".join([
+                "!setwarp here, then !menu: Warp points is listed; it warps to it.",
+                "!menu, 2 (Tracker), a game: Weapons f/t first, then missions with",
+                "counts. Pick Office Complex: unfound first, found greyed '[done]'.",
+                "Picking one gives the !find answer for it.",
+                "!menu, 3: the !find answer for the nearest check.",
+                "!menu, 0: it closes and number keys pick weapons again.",
+                "!menu, Return to the hub: you go to the hub.",
+                verdict,
+            ])),
+    ]
+    return out
+
+
 def build_scenarios(data: CheckData,
                     only: dict[tuple[int, str], str] | None = None) -> list[Scenario]:
     """Appended to, never reordered: results are recorded by title, but a
@@ -675,13 +833,15 @@ class DllSwap:
 class Harness:
     def __init__(self, store: Path, bridge_module, find: bool,
                  game_root: Path | None = None,
-                 trace_root: Path | None = None) -> None:
+                 trace_root: Path | None = None, parity: bool = False) -> None:
         self.store = store
         self.data = read_checkdata(store / "checkdata.txt")
         only = None
         if game_root is not None:
             only = unproven_sources(self.data, game_root, store / "aptest_unproven.txt")
-        if trace_root is not None:
+        if parity:
+            self.scenarios = parity_scenarios(self.data)
+        elif trace_root is not None:
             self.scenarios = trace_scenarios(self.data, node_counts(self.data, trace_root))
         elif find:
             self.scenarios = find_scenarios(self.data)
@@ -738,8 +898,8 @@ class Harness:
             excluded=[],
             ungated=[],
             starting=["weapon_crowbar"],
-            checked=[],
-            missing=sorted(self.data.locations),
+            checked=sorted(s.checked) if s is not None else [],
+            missing=sorted(set(self.data.locations) - set(s.checked if s else [])),
             data_version=self.data.data_version,
             slot="aptest:1",
             force=force,
@@ -865,6 +1025,14 @@ class Harness:
                 self.status()
             elif verb == "list":
                 self.list(arg)
+            elif verb in ("item", "trap") and arg:
+                self.bridge.queue_event(verb.upper(), arg)
+                self.publish()
+                self.tell(f"[aptest] {verb} sent: {arg}")
+            elif verb == "deathlink":
+                self.bridge.queue_event("DEATHLINK", "APTest~a test DeathLink")
+                self.publish()
+                self.tell("[aptest] DeathLink sent.")
             elif verb in ("give", "take") and arg:
                 # Chat is not careful about case; the snapshot is.
                 arg = next((n for n in self.base_items() if n.lower() == arg.lower()), arg)
@@ -873,7 +1041,7 @@ class Harness:
                 self.tell(f"[aptest] {verb}: {arg}")
             else:
                 self.tell("[aptest] !pass !fail !note !next !prev !redo !go <n> !info "
-                          "!status !list !give !take !tp")
+                          "!status !list !give !take !tp !item !trap !deathlink")
 
     # Game to us.
 
@@ -902,6 +1070,8 @@ class Harness:
                         self.judge(int(event.arg))
                     elif event.kind == "ACK":
                         self.bridge.acknowledge(int(event.arg))
+                    elif event.kind in ("DEATH", "CHAT"):
+                        self.tell(f"[aptest] {event.kind}: " + " | ".join(event.args))
                     elif event.kind == "HELLO":
                         self.publish(force=True)
                     elif event.kind == "APTEST" and event.args:
@@ -927,6 +1097,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="only the !find scenarios")
     parser.add_argument("--trace", action="store_true",
                         help="only the !trace scenarios, in each game")
+    parser.add_argument("--parity", action="store_true",
+                        help="only the Sven parity scenarios")
     args = parser.parse_args(argv)
     if args.game_root is None:
         parser.error("--game-root is required")
@@ -965,7 +1137,7 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
           "test dll.")
     harness = Harness(store, bridge_module, args.find,
                       args.game_root if args.unproven else None,
-                      args.game_root if args.trace else None)
+                      args.game_root if args.trace else None, args.parity)
     harness.publish(force=True)
     print(f"{len(harness.scenarios)} scenarios from {store / 'checkdata.txt'}.")
     print("Drive it from the game: !next to begin, !pass / !fail <note> / !note <text>.")

@@ -272,6 +272,10 @@ the current map, with missions locked and an item missing.
 line on the map with the most nodes, standing on the check, the straight-line
 fallback on a map with no nodes, `!trace` with no text, a healing pool, a target
 off the map and a map change mid-trace, with the chat colour checked as it goes.
+`--parity` runs only the behaviour brought in line with the Sven Co-op plugin
+(`!find` wording, `!warp` forms, `!menu`, consumables, DeathLink names and the
+rest), standing in for the client with `!item <name>`, `!trap <name>` and
+`!deathlink`, and showing each DEATH and CHAT the game sends.
 Verdicts go to `hlap/archipelago/aptest_results.txt`. A failed source becomes an
 `unreachable_copies` or `weapon_source_gates` entry.
 
