@@ -473,6 +473,9 @@ def trace_scenarios(data: CheckData, nodes: dict[str, int]) -> list[Scenario]:
                 map=map_name, pos=pos, steps="\n".join([
                     f"You are next to it. !trace {query(location)}: a short line in {want}",
                     "straight to it, and no 'No walking route' line.",
+                    "Then collect it (use the charger, take the weapon): the line",
+                    "goes away by itself, with nothing printed but the check itself.",
+                    "!trace it again: a line, which collecting it again does not end.",
                     off, verdict,
                 ])))
 

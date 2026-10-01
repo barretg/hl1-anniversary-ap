@@ -147,6 +147,8 @@ struct TraceState {
     // Whether the last drawing followed the graph, so the fallback is said once.
     bool routed = true;
     bool said_fallback = false;
+    // Already found when the trace began, so finding it again does not end it.
+    bool was_collected = false;
 };
 TraceState g_trace;
 int g_beam_sprite = 0;
@@ -1003,6 +1005,16 @@ void StopPathTrace() {
     g_segments.clear();
 }
 
+// The location the trace points at, or null.
+const Location* TracedLocation() {
+    for (const Location& location : Data().locations) {
+        if (location.id == g_trace.target.location_id) {
+            return &location;
+        }
+    }
+    return nullptr;
+}
+
 void PathTrace(const std::string& text) {
     // Off says nothing: the line going away is the answer.
     if (g_trace.on && Trim(text).empty()) {
@@ -1021,6 +1033,8 @@ void PathTrace(const std::string& text) {
     g_trace.map = g_map;
     g_trace.target = target;
     g_trace.next_draw = 0.0f;
+    const Location* location = TracedLocation();
+    g_trace.was_collected = location != nullptr && Collected(*location);
 }
 
 void RunPathTrace() {
@@ -1032,6 +1046,14 @@ void RunPathTrace() {
     if (g_trace.map != g_map) {
         StopPathTrace();
         return;
+    }
+    // Got there: the check going out is the answer, so this says nothing.
+    if (!g_trace.was_collected) {
+        const Location* location = TracedLocation();
+        if (location != nullptr && Collected(*location)) {
+            StopPathTrace();
+            return;
+        }
     }
     // The clock restarts on a load; a draw due far in the future is a stale one.
     if (gpGlobals->time < g_trace.next_draw &&

@@ -91,8 +91,9 @@ void Find(const std::string& text);
 
 // `ap_trace`: a toggle. Off, it answers exactly as `Find` does with the same
 // text, and if the check it names is on this map, draws a line to it along the
-// map's node graph, redrawn from wherever the player is until it is turned off.
-// On, with no text, it stops drawing and says nothing; with text, it retargets.
+// map's node graph, redrawn from wherever the player is until it is turned off
+// or the check is collected. On, with no text, it stops drawing and says
+// nothing; with text, it retargets.
 // Red for health, orange for HEV chargers, blue for weapons.
 void PathTrace(const std::string& text);
 bool PathTraceActive();
