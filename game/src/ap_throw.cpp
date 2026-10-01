@@ -26,6 +26,8 @@ constexpr float kThrowSpeed = 1100.0f;
 constexpr float kThrowLift = 100.0f;
 constexpr float kThrowGravity = 0.6f;
 constexpr float kThrowSpin = -1500.0f;
+// A throw gives up the weapon for a while, so it hits harder than a swing.
+constexpr float kThrowDamageScale = 4.0f;
 // Back in the player's hands after this long wherever it went, so a throw off
 // a ledge or into slime does not leave them unarmed for the rest of the level.
 constexpr float kReturnSeconds = 10.0f;
@@ -52,8 +54,8 @@ struct Throwable {
     float (*damage)();
 };
 
-float CrowbarDamage() { return gSkillData.plrDmgCrowbar; }
-float KnifeDamage() { return gSkillData.plrDmgKnife; }
+float CrowbarDamage() { return gSkillData.plrDmgCrowbar * kThrowDamageScale; }
+float KnifeDamage() { return gSkillData.plrDmgKnife * kThrowDamageScale; }
 
 const Throwable kThrowables[] = {
     {"weapon_crowbar", "models/w_crowbar.mdl", "weapons/cbar_hit1.wav",

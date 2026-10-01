@@ -204,9 +204,9 @@ class ShuffleFlashlight(Toggle):
 class MeleeThrow(Toggle):
     """Add Melee Throw to the item pool.
 
-    Once it arrives, secondary fire throws the crowbar or the knife. It hits as
-    hard as a swing and lands on the floor; walk over it to pick it back up, or
-    it returns to you by itself after ten seconds.
+    Once it arrives, secondary fire throws the crowbar or the knife. It hits four
+    times as hard as a swing and lands on the floor; walk over it to pick it back
+    up, or it returns to you by itself after ten seconds.
 
     When off, there is no throw at all.
     """
