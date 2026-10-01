@@ -223,7 +223,7 @@ written. Everything else is generated and cannot desync the parser.
 The DeathLink payload joins its two fields with `~` because the game splits the
 event line on `|`.
 
-Delivering a `DEATHLINK` kills the player, and for a second and a half after that
+Delivering a `DEATHLINK` kills the player, and for two seconds after that
 the game treats a death as its own rather than the player's: no amnesty is spent
 and **no `DEATH` is sent**. Both halves matter. Spending amnesty would let another
 slot's mistakes empty an allowance meant for the player's own, and reporting the
