@@ -307,6 +307,22 @@ const Chapter* ChapterInGame(const std::string& text) {
     return nullptr;
 }
 
+// The mission's number within its own game, from 0: what `ChapterInGame` takes,
+// so `!warp of 3` and the list agree. The Sven plugin counts from 1 for a game
+// with no intro mission; every game here has one, so 0 always.
+int RelativeNumber(const Chapter& chapter) {
+    int number = 0;
+    for (const Chapter& other : Data().chapters) {
+        if (&other == &chapter) {
+            break;
+        }
+        if (other.campaign == chapter.campaign) {
+            ++number;
+        }
+    }
+    return number;
+}
+
 const char* StatusOf(const Chapter& chapter) {
     const Snapshot& state = State();
     // Said instead of "unlocked", and instead of a finale's seal, rather than
@@ -361,9 +377,12 @@ void ListMissions() {
                 Say(campaign->name + " (" + campaign->shortname + "):");
             }
         }
-        char line[160];
-        std::snprintf(line, sizeof(line), "  %2d. %-26s [%s]", chapter.index,
-                      chapter.name.c_str(), StatusOf(chapter));
+        const Campaign* campaign = Data().CampaignByKey(chapter.campaign);
+        char line[192];
+        std::snprintf(line, sizeof(line), "  %2d. %-26s (%s %d)  [%s]", chapter.index,
+                      chapter.name.c_str(),
+                      campaign != nullptr ? campaign->shortname.c_str() : "?",
+                      RelativeNumber(chapter), StatusOf(chapter));
         Say(line);
     }
     Say("Press a panel in the hub, or !warp <number or name>, plus a part number "
