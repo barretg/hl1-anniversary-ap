@@ -41,6 +41,9 @@ struct Snapshot {
     bool ammo_relief = false;
     // Half-Life's viewmodels everywhere, rather than each game's own hands.
     bool gordon_hands = false;
+    // An ally's drop counts as a weapon source. Off in every seed that does not
+    // ask for it, and in snapshots from clients older than the option.
+    bool ally_weapon_drops = false;
     int death_link_amnesty = 0;
 
     std::set<long> checked;   // for ap_tracker

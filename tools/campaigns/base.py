@@ -60,12 +60,14 @@ class Campaign:
     # `{item: map}` for a weapon check the entity lump cannot place: the weapon
     # is never lying in a map, only dropped by something that is.
     weapon_anchors: dict[str, str] = field(default_factory=dict)
-    # `{item: [maps]}` whose copies (placed or dropped) do not count toward its
-    # "First ..." check: a prop out of bounds, a scripted monster that never
-    # fights. Each mission's source moves on to its next map that holds one.
+    # `{item: [maps or copies]}` whose copies (placed or dropped) do not count
+    # toward its "First ..." check: a prop out of bounds, a scripted monster
+    # that never fights. A bare map covers every copy on it; `map@x y z` one
+    # copy, by its origin, and the map's next copy is used instead. Each
+    # mission's source moves on to its next copy.
     unreachable_copies: dict[str, list[str]] = field(default_factory=dict)
-    # `{item: [maps]}` whose copies were confirmed reachable in play where the
-    # maps alone could not prove it. Logic is unchanged; the scenario harness
+    # `{item: [maps or copies]}` confirmed reachable in play where the maps
+    # alone could not prove it, in the same form as `unreachable_copies`. Logic is unchanged; the scenario harness
     # stops asking about them (`tests/aptest/aptest.py --unproven`).
     confirmed_copies: dict[str, list[str]] = field(default_factory=dict)
     # `{map: {item: gates}}` for a mission's copy of a weapon that sits past
@@ -122,8 +124,10 @@ class Campaign:
             raise ValueError(f"{self.key}: a map is in two chapters")
         for map_name in (*self.map_check_gates, *self.weapon_source_gates,
                          *self.location_gates,
-                         *(m for ms in self.unreachable_copies.values() for m in ms),
-                         *(m for ms in self.confirmed_copies.values() for m in ms)):
+                         *(m.split("@")[0] for ms in self.unreachable_copies.values()
+                           for m in ms),
+                         *(m.split("@")[0] for ms in self.confirmed_copies.values()
+                           for m in ms)):
             if map_name not in maps:
                 raise ValueError(f"{self.key}: gate or copy on {map_name!r}, "
                                  "which is not one of its maps")

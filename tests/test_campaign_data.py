@@ -907,11 +907,18 @@ def test_confirmed_copies_are_sources(campaign: dict) -> None:
     """A confirmation naming no source is a typo the harness would never catch."""
     from campaigns import KNOWN_CAMPAIGNS
 
-    sources = {
-        (entry["name"], source["map"])
-        for entry in campaign["locations"] for source in entry.get("sources", ())
-    }
+    sources = set()
+    for entry in campaign["locations"]:
+        for source in entry.get("sources", ()):
+            sources.add((entry["name"], source["map"]))
+            if "position" in source:
+                at = " ".join(str(v) for v in source["position"])
+                sources.add((entry["name"], f"{source['map']}@{at}"))
     for c in KNOWN_CAMPAIGNS:
-        for item, maps in c.confirmed_copies.items():
-            for map_name in maps:
-                assert (c.display(f"First {item}"), map_name) in sources, (item, map_name)
+        for item, keys in c.confirmed_copies.items():
+            for key in keys:
+                assert (c.display(f"First {item}"), key) in sources, (item, key)
+        # And nothing excluded is still a way in.
+        for item, keys in c.unreachable_copies.items():
+            for key in keys:
+                assert (c.display(f"First {item}"), key) not in sources, (item, key)

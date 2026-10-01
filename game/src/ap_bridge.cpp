@@ -127,6 +127,8 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
             parsed.ammo_relief = ParseBool(value);
         } else if (key == "gordon_hands") {
             parsed.gordon_hands = ParseBool(value);
+        } else if (key == "ally_weapon_drops") {
+            parsed.ally_weapon_drops = ParseBool(value);
         } else if (key == "death_link") {
             parsed.death_link = ParseBool(value);
         } else if (key == "death_link_amnesty") {

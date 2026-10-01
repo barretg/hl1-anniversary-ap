@@ -306,6 +306,8 @@ class HalfLifeContext(SuperContext):
         # Half-Life's viewmodels on every game's maps. Off in every seed that
         # does not ask for it.
         self.gordon_hands = False
+        # Whether an ally's drop is a weapon source. Off unless the seed says.
+        self.ally_weapon_drops = False
         self.goal_sent = False
         self.chat_relay = True
         self.bridge_failures = 0
@@ -537,6 +539,7 @@ class HalfLifeContext(SuperContext):
         )
         self.ammo_relief = bool(slot_data.get("ammo_relief", self.ammo_relief))
         self.gordon_hands = slot_data.get("viewmodel_style", "per_campaign") == "always_gordon"
+        self.ally_weapon_drops = bool(slot_data.get("ally_weapon_drops", False))
 
     def relay_to_game(self, args: dict) -> None:
         """Show multiworld chat in the game.
@@ -933,6 +936,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         death_link_amnesty=ctx.death_link_amnesty,
         ammo_relief=ctx.ammo_relief,
         gordon_hands=ctx.gordon_hands,
+        ally_weapon_drops=ctx.ally_weapon_drops,
         excluded=sorted(ctx.excluded_chapters),
         ungated=sorted(ctx.ungated_classnames),
         starting=list(ctx.starting_weapons),

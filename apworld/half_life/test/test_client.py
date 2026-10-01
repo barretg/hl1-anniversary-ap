@@ -27,6 +27,7 @@ def context() -> HalfLifeContext:
     ctx.death_link_amnesty = 4
     ctx.ammo_relief = False
     ctx.gordon_hands = False
+    ctx.ally_weapon_drops = False
     ctx.completed_missions = set()
     ctx.unlocked_chapters = set()
     return ctx
@@ -87,6 +88,9 @@ class TestOldSeed(unittest.TestCase):
         # Shuffled suit: nothing granted up front, as before.
         self.assertNotIn("HEV Suit", self.ctx.always_unlocked)
 
+    def test_ally_drops_stay_off(self) -> None:
+        self.assertFalse(self.ctx.ally_weapon_drops)
+
     def test_the_flashlight_works_as_before(self) -> None:
         self.assertTrue({"Flashlight", "Night Vision Goggles"} <= self.ctx.always_unlocked)
         self.assertNotIn("Melee Throw", self.ctx.always_unlocked)
@@ -103,6 +107,7 @@ class TestEveryGameSeed(unittest.TestCase):
             "missions_required_by_campaign": {HALF_LIFE: 1, "opposing_force": 1,
                                               "blue_shift": 1},
             "viewmodel_style": "always_gordon",
+            "ally_weapon_drops": True,
         })
 
     def test_each_seal_counts_its_own_game(self) -> None:
@@ -119,6 +124,9 @@ class TestEveryGameSeed(unittest.TestCase):
 
     def test_presentation_option(self) -> None:
         self.assertTrue(self.ctx.gordon_hands)
+
+    def test_ally_drops_reach_the_game(self) -> None:
+        self.assertTrue(self.ctx.ally_weapon_drops)
 
 
 class TestMissingGameWarning(unittest.TestCase):

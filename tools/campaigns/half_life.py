@@ -145,14 +145,46 @@ MAP_GATES: dict[str, dict[str, list[str]]] = {
 
 # Copies that do not count toward their weapon's check, `{item: [maps]}`.
 UNREACHABLE_COPIES: dict[str, list[str]] = {
-    # The guard waving at the tram, which the player never leaves.
-    "Glock": ["c0a0"],
+    # The guard waving at the tram, which the player never leaves. The rest
+    # from the scenario harness, 2026-09-30.
+    "Glock": [
+        "c0a0",
+        "c0a0b@2070 632 -2312",  # out of bounds
+        "c1a0@-132 -1083 -216",  # carries no Glock
+        # Not this guard: the first to drop one opens the door after the suit.
+        "c1a0@-184 408 -222",
+        "c1a0c@1348 -216 -360",  # unconscious; a later guard in the mission has one
+        "c1a3@35 1047 0",  # part of a cutscene, drops nothing
+        "c2a1@-472 46 96",  # hands over the .357, has no Glock
+        "c2a5c@-688 400 -272",  # carries a shotgun
+    ],
+    "MP5": [
+        "c2a4d@384 560 16",  # a maker that spawns conditionally; others here drop
+    ],
 }
 
 # Copies confirmed reachable in play that the flood fill could not prove.
 CONFIRMED_COPIES: dict[str, list[str]] = {
     # The Lambda Core armoury, beside the Tau Cannon the fill does reach.
     "Tripmine": ["c3a2d"],
+    # The rest from the scenario harness, 2026-09-30.
+    "Glock": [
+        "c0a0d@-2017 -458 -221", "c1a0d@-2579 -706 -272", "c1a1@1168 1968 728",
+        "c2a5d@-640 864 -1152", "c1a2a@-716 -60 -256", "c1a4i@-826 -479 -744", "c2a2@-1532 -2800 -1352",
+        "c2a3d@976 -1224 788", "c2a4a@-232 -1008 0", "c2a4d@144 32 16", "c2a5e",
+        "c3a1@480 -884 576", "c3a2a@-2316 576 -1",
+    ],
+    "MP5": [
+        "c2a1@-92 320 -1", "c2a4e@-560 -96 224", "c2a2b1@-3352 -716 368", "c2a3@-481 -416 1524",
+        "c2a5@1679 319 64", "c3a1a@-3400 168 304",
+    ],
+    "Shotgun": [
+        "c2a2b2@2304 420 -8",
+        "c2a4e@-80 -496 128",  # roams; met nearby rather than at this spot
+        "c2a5@2016 320 32",
+    ],
+    "Satchel Charge": ["c2a5e", "c4a3"],
+    "Hand Grenade": ["c2a5e"],
 }
 
 # --- Weapons --------------------------------------------------------------

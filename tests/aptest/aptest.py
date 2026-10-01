@@ -1,14 +1,28 @@
 """APTest: an in-game scenario harness for the retail world.
 
-Stands in for the Python client. Each scenario writes the snapshot the client
-would (`ap_in.txt`, every mission open and every item held unless the scenario
-takes one away) and the destination for the game (`aptest_go.txt`). In game,
-`ap_test_go` loads the map and drops you at the spot; this script then watches
-`ap_out.txt` and marks every check the game sends as expected or not.
+Stands in for the Python client, and is driven entirely from the game. Start it
+in a terminal and leave it: each scenario writes the snapshot the client would
+(`ap_in.txt`, every mission open and every item held unless the scenario takes
+one away), and the game loads the scenario's map and puts you at its spot on
+its own. What the harness has to say appears on screen. Verdicts and every
+check the game sends go to `aptest_results.txt`.
 
-Needs the test build of the dll (`cmake --build build/game-test`), which is the
-only one with the `ap_test_*` commands. Close the real client first: both write
-`ap_in.txt`, and the real one rewrites it when it next connects.
+Needs the test build of the dll (`cmake --build build/game-test`), the only one
+that answers these. The harness swaps it into the installed mod on start and
+puts the original back when it stops, so start it before the game. Close the
+real client first: both write `ap_in.txt`.
+
+In game, in chat (or `testing_aptest <verb>` in the console):
+    !next              start the first untested scenario, then the one after
+    !pass [note]       record a verdict; the next untested scenario loads
+    !fail <note>
+    !note <text>       a finding that is not pass or fail
+    !redo / !prev / !go <n>
+    !tp                back to the scenario's spot
+    !info / !status / !list [text]
+    !give <item> / !take <item>    change what the snapshot holds
+
+The same verbs, without the `!`, can be typed into the terminal.
 
 Scenarios come from the installed `checkdata.txt`, so they track the data:
 
@@ -17,31 +31,18 @@ Scenarios come from the installed `checkdata.txt`, so they track the data:
   leaves it on the floor. Pass if a player could walk there from the mission
   start with only the mission's own requirements; fail naming what else it
   needs, which becomes a `weapon_source_gates` or `unreachable_copies` entry.
-  For a drop, the monster that carries it is there instead: kill it and touch
-  what it drops.
-* Gated: every check whose data says it needs an item. You start at the map's
-  spawn holding everything. Pass if it is reached with the item and not
-  without it.
+  For a drop, you are put where the monster that carries it starts: kill it
+  and touch what it drops.
+* Gated: every check whose data says it needs an item.
 * Crates: On A Rail from `c2a2e`, with each explosive in turn.
-
-Commands:
-    list [text]        scenarios, filtered by title
-    go <n>             start scenario n (then `ap_test_go` in game)
-    next / prev / redo
-    info               the current scenario's steps again
-    pass [note]        record a pass and move to the next
-    fail <note>        record a failure and move to the next
-    note <text>        record a finding without a verdict and move on
-    status             verdict counts and the first untested scenario
-    give <item> / take <item>   change what the snapshot holds
-    quit
-
-Usage:
-    python tests/aptest/aptest.py --game-root "<Half-Life>"
-    python tests/aptest/aptest.py --game-root "<Half-Life>" --unproven
 
 `--unproven` keeps only the weapon sources the maps cannot prove reachable (see
 `unproven_sources`), each saying why it is on the list.
+
+`--find` runs only the `!find` scenarios (see `find_scenarios`).
+
+Usage:
+    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find]
 """
 
 from __future__ import annotations
@@ -49,6 +50,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
+import shutil
+import signal
 import sys
 import threading
 import time
@@ -61,6 +64,12 @@ REPO = Path(__file__).resolve().parents[2]
 # `K` records.
 EQUIPMENT = ["HEV Suit", "Long Jump Module", "Flashlight", "PCV",
              "Night Vision Goggles", "Security Armor", "Melee Throw"]
+
+# The test build of the server dll, which is the only one that answers the
+# harness. Swapped into the installed mod for as long as the harness runs.
+TEST_DLL = REPO / "build" / "game-test" / "hl.dll"
+# Something only the test build carries, to tell the two apart.
+TEST_DLL_MARKER = b"testing_aptest"
 
 CRATE_MAP = "c2a2e"
 
@@ -159,6 +168,9 @@ class Scenario:
     take: list[str] = field(default_factory=list)
     expect: list[int] = field(default_factory=list)
     steps: str = ""
+    # Missions locked for this scenario, and the seed's `ally_weapon_drops`.
+    closed: list[str] = field(default_factory=list)
+    ally_drops: bool = True
 
 
 def cache_key(data: CheckData) -> str:
@@ -202,15 +214,18 @@ def unproven_sources(data: CheckData, game_root: Path,
 
     game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
     # Already settled in play: `confirmed_copies` in tools/campaigns.
+    # A map, or one copy as `map@x y z`.
     confirmed = {
-        (f"{c.display('First ' + item)}", m)
-        for c in KNOWN_CAMPAIGNS for item, maps in c.confirmed_copies.items()
-        for m in maps
+        (f"{c.display('First ' + item)}", key)
+        for c in KNOWN_CAMPAIGNS for item, keys in c.confirmed_copies.items()
+        for key in keys
     }
     found: dict[tuple[int, str], str] = {}
     for source in data.sources:
         key = (source.id, source.map)
-        if (data.locations[source.id].name, source.map) in confirmed:
+        name = data.locations[source.id].name
+        if ((name, source.map) in confirmed
+                or (name, f"{source.map}@{source.pos}") in confirmed):
             continue
         if source.drop:
             found[key] = f"dropped by an {source.drop}" if source.drop == "ally" \
@@ -239,6 +254,113 @@ def unproven_sources(data: CheckData, game_root: Path,
         f"{i}|{m}|{why}" for (i, m), why in found.items()
     ]) + "\n", encoding="utf-8")
     return found
+
+
+def find_scenarios(data: CheckData) -> list[Scenario]:
+    """`!find` for a weapon with no copy on the current map: the earliest copy
+    the player can reach, or the earliest at all when none can be.
+
+    Mirrors `EarliestSource` in ap_locations.cpp: campaign order, ally drops
+    left out (as the seed's default), a copy available when its mission is open
+    and its `needs` are held.
+    """
+    order = {c.key: i for i, c in enumerate(data.chapters)}
+
+    def rank(source: Source) -> tuple[int, int]:
+        chapter = data.chapter_of(source.map)
+        return order[chapter.key], chapter.maps.index(source.map)
+
+    def where(source: Source) -> str:
+        chapter = data.chapter_of(source.map)
+        part = chapter.maps.index(source.map) + 1
+        return f"{chapter.name}, part {part} ({source.map})"
+
+    # A weapon with copies in at least three missions, so locking the earliest
+    # still leaves a later one to fall back to.
+    by_id: dict[int, list[Source]] = {}
+    for source in data.sources:
+        if source.drop != "ally" and data.chapter_of(source.map) is not None:
+            by_id.setdefault(source.id, []).append(source)
+    # `!find` matches by substring, and "First Glock" is inside "Blue Shift:
+    # First Glock", so only a name nothing else contains answers by itself.
+    names = [l.name.lower() for l in data.locations.values()]
+
+    def unique(name: str) -> bool:
+        return sum(name.lower() in n for n in names) == 1
+
+    candidates = []
+    for id_, sources in by_id.items():
+        if not unique(data.locations[id_].name):
+            continue
+        sources.sort(key=rank)
+        chapters = {data.chapter_of(s.map).key for s in sources}
+        if len(chapters) >= 3 and not sources[0].needs:
+            candidates.append((len(chapters), id_))
+    _, weapon_id = max(candidates)
+    sources = by_id[weapon_id]
+    location = data.locations[weapon_id]
+    first = data.chapter_of(sources[0].map)
+    second = next(s for s in sources if data.chapter_of(s.map) is not first)
+    # Somewhere to stand with no copy of it.
+    copy_maps = {s.map for s in data.sources if s.id == weapon_id}
+    stand = next(m for c in data.chapters for m in c.maps if m not in copy_maps)
+    query = location.name.lower()
+    every = sorted({data.chapter_of(s.map).key for s in sources})
+
+    def scenario(title: str, closed: list[str], expect: list[str]) -> Scenario:
+        return Scenario(
+            title=f"Find: {title}", map=stand, closed=closed, ally_drops=False,
+            steps="\n".join([f"Type !find {query} and expect:", *expect,
+                              "!pass if it matches, else !fail <what it said>."]),
+        )
+
+    out = [
+        scenario(f"{location.name}, every mission open", [], [
+            "  '...the earliest available is in:'",
+            f"  In {where(sources[0])}, with an ap_warp line.",
+        ]),
+        scenario(f"{location.name}, {first.name} locked", [first.key], [
+            "  '...the earliest available is in:'",
+            f"  In {where(second)}, with an ap_warp line.",
+        ]),
+        scenario(f"{location.name}, every copy's mission locked", every, [
+            "  '...the earliest is in a locked map:'",
+            f"  In {where(sources[0])}, and no ap_warp line.",
+        ]),
+    ]
+
+    # A copy behind an item: skipped while the item is missing.
+    gated = [(rank(s), s) for s in data.sources
+             if s.needs and s.drop != "ally" and data.chapter_of(s.map) is not None
+             and unique(data.locations[s.id].name)
+             and all(rank(o) >= rank(s) for o in data.sources
+                     if o.id == s.id and o.drop != "ally"
+                     and data.chapter_of(o.map) is not None)]
+    if gated:
+        _, source = min(gated, key=lambda g: g[0])
+        location = data.locations[source.id]
+        others = [o for o in data.sources if o.id == source.id and o is not source
+                  and o.drop != "ally" and data.chapter_of(o.map) is not None]
+        item = source.needs.split(" or ")[0]
+        query = location.name.lower()
+        copy_maps = {o.map for o in data.sources if o.id == source.id}
+        stand = next(m for c in data.chapters for m in c.maps if m not in copy_maps)
+        nxt = min(others, key=rank) if others else None
+        out.append(Scenario(
+            title=f"Find: {location.name} without the {item}",
+            map=stand, take=[item], ally_drops=False,
+            steps="\n".join([
+                f"Its earliest copy, {where(source)}, needs the {item}, which you",
+                f"do not hold. Type !find {query} and expect:",
+                *([f"  '...the earliest available is in:' {where(nxt)}."] if nxt else
+                  [f"  '...the earliest needs the {source.needs}, which you do not have:'",
+                   f"  In {where(source)}, with an ap_warp line."]),
+                f"Then !give {item}, !find {query} again, and expect {where(source)}",
+                f"after '...the earliest available is in:', with 'Needs the {source.needs} to reach.'",
+                "!pass if both match, else !fail <what it said>.",
+            ]),
+        ))
+    return out
 
 
 def build_scenarios(data: CheckData,
@@ -272,7 +394,10 @@ def build_scenarios(data: CheckData,
             how = (f"Handed over on {source.map}, not left lying: play to it: "
                    f"expect '{location.name}'.")
         scenarios.append(Scenario(
-            title=f"Source: {location.name} in {where}{drop}",
+            # The position tells two carriers on one map apart, so one
+            # replacing another is a new scenario, not an old verdict.
+            title=f"Source: {location.name} in {where}"
+                  + (f" at {source.pos}" if source.pos else "") + drop,
             map=source.map, pos=source.pos,
             take=[item] if item else [], expect=[location.id],
             steps="\n".join(filter(None, [
@@ -281,7 +406,7 @@ def build_scenarios(data: CheckData,
                 f"Data says it needs: {source.needs}." if source.needs else "",
                 "Could a player walk here from the mission start with only its own",
                 "requirements" + (" and the item above" if source.needs else "")
-                + "? pass, or fail <what else it needs>.",
+                + "? !pass, or !fail <what else it needs>.",
             ])),
         ))
 
@@ -300,8 +425,8 @@ def build_scenarios(data: CheckData,
                 f"You start at the map's spawn holding {location.needs}.",
                 f"Reach '{location.name}' in {where}"
                 + (f" (at {location.pos})" if location.pos else "") + ".",
-                f"Then `take {location.needs.split(' or ')[0]}` and confirm it cannot be",
-                "reached without it. pass if both hold, else fail <what you found>.",
+                f"Then !take {location.needs.split(' or ')[0]} and confirm it cannot be",
+                "reached without it. !pass if both hold, else !fail <what you found>.",
             ]),
         ))
 
@@ -313,7 +438,7 @@ def build_scenarios(data: CheckData,
             take=[e for e in EXPLOSIVES if e != explosive],
             steps="\n".join([
                 f"Holding {held}. Ride on to the crates that block the track.",
-                "Can you clear them and carry on? note <yes/no, and how>.",
+                "Can you clear them and carry on? !note <yes/no, and how>.",
                 "Logic: loose takes Hand Grenade, Satchel Charge or the MP5's",
                 "grenades; strict only Hand Grenade or Satchel Charge.",
             ]),
@@ -322,26 +447,100 @@ def build_scenarios(data: CheckData,
     return scenarios
 
 
+# -------------------------------------------------------------- the dll
+
+
+class DllSwap:
+    """The installed `hl.dll` swapped for the test build, and back.
+
+    The original is moved aside beside it, never copied, so it comes back byte
+    for byte. A backup already there means an earlier run never got to restore
+    it, and is kept: it is the real one, and what is installed is a test dll.
+    Every move is a rename within the folder, so a running game keeps the dll
+    it loaded and sees the other one on its next launch.
+    """
+
+    def __init__(self, installed: Path, test_dll: Path) -> None:
+        self.installed = installed
+        self.test_dll = test_dll
+        self.backup = installed.with_name(installed.name + ".aptest-original")
+
+    def check(self) -> str | None:
+        """Why the swap cannot go ahead, or None."""
+        if not self.test_dll.is_file():
+            return f"{self.test_dll} not found; cmake --build build/game-test first"
+        if TEST_DLL_MARKER not in self.test_dll.read_bytes():
+            return f"{self.test_dll} is not a test build (HLAP_TEST_BUILD off)"
+        if not self.installed.is_file() and not self.backup.is_file():
+            return f"{self.installed} not found; install the mod first"
+        return None
+
+    def stale(self) -> list[Path]:
+        """Game sources newer than the test dll: it may not be what you think."""
+        built = self.test_dll.stat().st_mtime
+        return sorted(p for p in (REPO / "game" / "src").rglob("*")
+                      if p.is_file() and p.stat().st_mtime > built)
+
+    def swap_in(self) -> None:
+        if self.backup.is_file():
+            print(f"Keeping {self.backup.name}, left by a run that did not finish.")
+        else:
+            os.replace(self.installed, self.backup)
+        temp = self.installed.with_name(self.installed.name + ".aptest-tmp")
+        shutil.copy2(self.test_dll, temp)
+        os.replace(temp, self.installed)
+        print(f"Test dll in place: {self.installed}")
+
+    def restore(self) -> None:
+        if self.backup.is_file():
+            os.replace(self.backup, self.installed)
+            print(f"Original dll restored: {self.installed}")
+
+
 # -------------------------------------------------------------- the harness
 
 
 class Harness:
-    def __init__(self, store: Path, bridge_module,
+    def __init__(self, store: Path, bridge_module, find: bool,
                  game_root: Path | None = None) -> None:
         self.store = store
         self.data = read_checkdata(store / "checkdata.txt")
         only = None
         if game_root is not None:
             only = unproven_sources(self.data, game_root, store / "aptest_unproven.txt")
-        self.scenarios = build_scenarios(self.data, only)
+        self.scenarios = (find_scenarios(self.data) if find
+                          else build_scenarios(self.data, only))
         self.bridge = bridge_module.Bridge(store)
         self.bridge.reset_cursor()
         self.results_path = store / "aptest_results.txt"
+        self.go_path = store / "aptest_go.txt"
+        self.say_path = store / "aptest_say.txt"
+        self.say_path.write_text("", encoding="utf-8")
+        self.seq = self.last_seq()
         self.current = -1
-        self.items: set[str] = set()
+        self.items: set[str] = self.base_items()
         self.seen: set[int] = set()
-        self.lock = threading.Lock()
+        # Re-entrant: a verdict from the game arrives inside the poll and
+        # starts the next scenario, which takes the lock again.
+        self.lock = threading.RLock()
         self.running = True
+
+    # Talking to the player, in game and here.
+
+    def tell(self, text: str, hud: bool = True) -> None:
+        print(text)
+        with self.say_path.open("a", encoding="utf-8") as handle:
+            for line in text.strip("\n").splitlines():
+                handle.write(("hud|" if hud else "con|") + line.strip() + "\n")
+
+    def last_seq(self) -> int:
+        """The sequence number of the scenario the game last saw, so a
+        restarted harness never repeats one the game would ignore."""
+        if self.go_path.is_file():
+            for line in self.go_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("seq="):
+                    return int(line[4:] or 0)
+        return 0
 
     # The snapshot.
 
@@ -349,18 +548,21 @@ class Harness:
         return set(EQUIPMENT) | set(self.data.gated.values())
 
     def publish(self, force: bool = False) -> None:
-        all_ids = sorted(self.data.locations)
+        s = self.scenario()
         self.bridge.write_snapshot(
             connected=True,
-            chapters=[c.key for c in self.data.chapters],
+            chapters=[c.key for c in self.data.chapters
+                      if s is None or c.key not in s.closed],
             items=sorted(self.items),
             goal_open=True,
             death_link=False,
+            # Ally drops are among the scenarios, so `!find` should show them.
+            ally_weapon_drops=s.ally_drops if s is not None else True,
             excluded=[],
             ungated=[],
             starting=["weapon_crowbar"],
             checked=[],
-            missing=all_ids,
+            missing=sorted(self.data.locations),
             data_version=self.data.data_version,
             slot="aptest:1",
             force=force,
@@ -375,7 +577,7 @@ class Harness:
 
     def start(self, index: int) -> None:
         if not 0 <= index < len(self.scenarios):
-            print(f"no scenario {index}; `list` shows them.")
+            self.tell(f"[aptest] No scenario {index}; there are {len(self.scenarios)}.")
             return
         with self.lock:
             self.current = index
@@ -383,36 +585,46 @@ class Harness:
             self.items = self.base_items() - set(s.take)
             self.seen = set()
             self.publish(force=True)
-            go = [f"map={s.map}"] + ([f"pos={s.pos}"] if s.pos else [])
-            (self.store / "aptest_go.txt").write_text("\n".join(go) + "\n",
-                                                      encoding="utf-8")
-        print(f"\nScenario {index}: {s.title}")
-        if s.take:
-            print(f"  without: {', '.join(s.take)}")
-        print("  In game: ap_test_go   (ap_test_tp puts you back at the spot)")
-        self.info()
+            # The game loads the map when the sequence number moves, so a
+            # redo of the same scenario reloads it too.
+            self.seq += 1
+            go = [f"seq={self.seq}", f"map={s.map}"] + ([f"pos={s.pos}"] if s.pos else [])
+            self.go_path.write_text("\n".join(go) + "\n", encoding="utf-8")
+            self.tell(f"[aptest] {index}/{len(self.scenarios) - 1}: {s.title}")
+            if s.take:
+                self.tell(f"[aptest] Without: {', '.join(s.take)}")
+            self.info()
 
     def info(self) -> None:
         s = self.scenario()
         if s is None:
-            print("no scenario running.")
+            self.tell("[aptest] No scenario running. !next starts the first untested.")
             return
         for line in s.steps.splitlines():
-            print(f"  {line}")
+            self.tell(line)
+
+    def first_untested(self, after: int = -1) -> int | None:
+        verdicts = self.latest_verdicts()
+        return next((i for i, s in enumerate(self.scenarios)
+                     if i > after and s.title not in verdicts), None)
 
     def record(self, verdict: str, note: str) -> None:
         s = self.scenario()
         if s is None:
-            print("no scenario running.")
+            self.tell("[aptest] No scenario running.")
             return
         sent = ",".join(str(i) for i in sorted(self.seen))
         line = "|".join([time.strftime("%Y-%m-%d %H:%M:%S"), str(self.current),
                          s.title, verdict, note.replace("|", "/"), sent])
         with self.results_path.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
-        print(f"recorded {verdict}: {s.title}")
-        if self.current + 1 < len(self.scenarios):
-            self.start(self.current + 1)
+        self.tell(f"[aptest] Recorded {verdict}.")
+        following = self.first_untested(self.current)
+        if following is None:
+            self.tell("[aptest] That was the last untested scenario.")
+            self.status()
+        else:
+            self.start(following)
 
     def latest_verdicts(self) -> dict[str, str]:
         verdicts: dict[str, str] = {}
@@ -426,22 +638,65 @@ class Harness:
     def status(self) -> None:
         verdicts = self.latest_verdicts()
         counts: dict[str, int] = {}
-        first = None
-        for index, s in enumerate(self.scenarios):
+        for s in self.scenarios:
             verdict = verdicts.get(s.title, "untested")
             counts[verdict] = counts.get(verdict, 0) + 1
-            if verdict == "untested" and first is None:
-                first = index
-        print(", ".join(f"{k} {v}" for k, v in sorted(counts.items())))
+        self.tell("[aptest] " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())))
+        first = self.first_untested()
         if first is not None:
-            print(f"first untested: {first} {self.scenarios[first].title}")
+            self.tell(f"[aptest] First untested: {first} {self.scenarios[first].title}")
 
     def list(self, text: str) -> None:
         verdicts = self.latest_verdicts()
+        shown = 0
         for index, s in enumerate(self.scenarios):
             if text.lower() in s.title.lower():
                 mark = verdicts.get(s.title, "")
-                print(f"{index:4} {('[' + mark + '] ') if mark else ''}{s.title}")
+                self.tell(f"{index:4} {('[' + mark + '] ') if mark else ''}{s.title}",
+                          hud=False)
+                shown += 1
+        self.tell(f"[aptest] {shown} listed in the console (~).")
+
+    def command(self, verb: str, arg: str) -> None:
+        """One verb, from the game (`!pass`) or typed here (`pass`)."""
+        with self.lock:
+            if verb == "pass":
+                self.record("pass", arg)
+            elif verb in ("fail", "note"):
+                if arg:
+                    self.record(verb, arg)
+                else:
+                    self.tell(f"[aptest] !{verb} needs a note.")
+            elif verb == "next":
+                if self.current < 0:
+                    first = self.first_untested()
+                    self.start(0 if first is None else first)
+                else:
+                    self.start(self.current + 1)
+            elif verb == "prev":
+                self.start(self.current - 1)
+            elif verb == "redo":
+                if self.current < 0:
+                    self.tell("[aptest] Nothing to redo. !next starts the first untested.")
+                else:
+                    self.start(self.current)
+            elif verb == "go" and arg.isdigit():
+                self.start(int(arg))
+            elif verb == "info":
+                self.info()
+            elif verb == "status":
+                self.status()
+            elif verb == "list":
+                self.list(arg)
+            elif verb in ("give", "take") and arg:
+                # Chat is not careful about case; the snapshot is.
+                arg = next((n for n in self.base_items() if n.lower() == arg.lower()), arg)
+                (self.items.add if verb == "give" else self.items.discard)(arg)
+                self.publish()
+                self.tell(f"[aptest] {verb}: {arg}")
+            else:
+                self.tell("[aptest] !pass !fail !note !next !prev !redo !go <n> !info "
+                          "!status !list !give !take !tp")
 
     # Game to us.
 
@@ -453,9 +708,9 @@ class Harness:
             return  # every arrival sends one; noise here
         if s is not None and location_id in s.expect:
             if location_id not in self.seen:
-                print(f"\n  PASS: check '{name}' arrived.")
+                self.tell(f"[aptest] Expected check arrived: {name}. !pass if reachable.")
         else:
-            print(f"\n  note: other check '{name}'")
+            self.tell(f"[aptest] Other check: {name}")
         self.seen.add(location_id)
 
     def poll(self) -> None:
@@ -472,8 +727,12 @@ class Harness:
                         self.bridge.acknowledge(int(event.arg))
                     elif event.kind == "HELLO":
                         self.publish(force=True)
-                if self.current >= 0:
-                    self.publish()
+                    elif event.kind == "APTEST" and event.args:
+                        verb = event.args[0]
+                        arg = event.args[1] if len(event.args) > 1 else ""
+                        print(f"(from game) {verb} {arg}".rstrip())
+                        self.command(verb, arg.strip())
+                self.publish()
             time.sleep(0.2)
 
 
@@ -483,8 +742,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--game-root", type=Path,
                         default=os.environ.get("HL_ROOT"),
                         help="the Half-Life install (or set HL_ROOT)")
+    parser.add_argument("--test-dll", type=Path, default=TEST_DLL,
+                        help="the test build of hl.dll to swap in (default: %(default)s)")
     parser.add_argument("--unproven", action="store_true",
                         help="only the weapon sources the maps cannot prove reachable")
+    parser.add_argument("--find", action="store_true",
+                        help="only the !find scenarios")
     args = parser.parse_args(argv)
     if args.game_root is None:
         parser.error("--game-root is required")
@@ -494,45 +757,62 @@ def main(argv: list[str] | None = None) -> int:
     if not (store / "checkdata.txt").is_file():
         parser.error(f"{store / 'checkdata.txt'} not found; install the mod first")
 
-    harness = Harness(store, bridge_module,
+    swap = DllSwap(store.parent / "dlls" / "hl.dll", args.test_dll)
+    problem = swap.check()
+    if problem:
+        parser.error(problem)
+    newer = swap.stale()
+    if newer:
+        print(f"Warning: {len(newer)} game source file(s) are newer than the test dll, "
+              f"e.g. {newer[0].relative_to(REPO)}. Rebuild with "
+              "cmake --build build/game-test.")
+
+    # A closed terminal or a kill still puts the real dll back.
+    def stop(signum, frame):
+        raise KeyboardInterrupt
+    for name in ("SIGTERM", "SIGHUP"):
+        if hasattr(signal, name):
+            signal.signal(getattr(signal, name), stop)
+
+    swap.swap_in()
+    try:
+        return run(args, store, bridge_module)
+    finally:
+        swap.restore()
+
+
+def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
+    print("Launch Half-Life now (or restart it if it is running) so it loads the "
+          "test dll.")
+    harness = Harness(store, bridge_module, args.find,
                       args.game_root if args.unproven else None)
+    harness.publish(force=True)
     print(f"{len(harness.scenarios)} scenarios from {store / 'checkdata.txt'}.")
+    print("Drive it from the game: !next to begin, !pass / !fail <note> / !note <text>.")
     harness.status()
     threading.Thread(target=harness.poll, daemon=True).start()
 
-    commands = {
-        "next": lambda a: harness.start(harness.current + 1),
-        "prev": lambda a: harness.start(harness.current - 1),
-        "redo": lambda a: harness.start(harness.current),
-        "info": lambda a: harness.info(),
-        "status": lambda a: harness.status(),
-        "list": lambda a: harness.list(a),
-        "pass": lambda a: harness.record("pass", a),
-        "fail": lambda a: harness.record("fail", a) if a else print("fail <note>"),
-        "note": lambda a: harness.record("note", a) if a else print("note <text>"),
-    }
+    # The same verbs here, for whoever is at the terminal anyway.
     while True:
         try:
-            line = input("aptest> ").strip()
-        except (EOFError, KeyboardInterrupt):
+            line = input().strip()
+        except KeyboardInterrupt:
             break
+        except EOFError:
+            # No terminal to read: run on, driven from the game, until ^C.
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                break
         verb, _, arg = line.partition(" ")
-        arg = arg.strip()
         if verb in ("quit", "exit"):
             break
-        if verb == "go" and arg.isdigit():
-            harness.start(int(arg))
-        elif verb in ("give", "take") and arg:
-            with harness.lock:
-                (harness.items.add if verb == "give" else harness.items.discard)(arg)
-                harness.publish()
-            print(f"{verb}: {arg}")
-        elif verb in commands:
-            commands[verb](arg)
-        elif verb:
-            print("commands: list go next prev redo info pass fail note status "
-                  "give take quit")
+        if verb:
+            harness.command(verb, arg.strip())
     harness.running = False
+    # A game started later must not load a scenario nobody is running.
+    harness.go_path.unlink(missing_ok=True)
     return 0
 
 

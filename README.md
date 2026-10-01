@@ -243,19 +243,31 @@ Anything the maps cannot prove (a copy out of bounds, a room only a teleport
 reaches, crates only an explosive clears) is confirmed by playing it.
 `tests/aptest/aptest.py` stands in for the client and walks through scenarios
 built from the installed `checkdata.txt`: one per weapon source, one per gated
-check, and On A Rail's crates with each explosive. It needs the test build of
-the dll, which adds `ap_test_go` and `ap_test_tp`:
+check, and On A Rail's crates with each explosive. It is driven from the game,
+so once it is running the terminal can be left alone. It needs the test build
+of the dll:
 
 ```bash
 cmake --build build/game-test      # stages the test dll; rebuild the release one after
-python tests/aptest/aptest.py --game-root "<Half-Life>"
-# aptest> go 0        then in game: ap_test_go
-# aptest> pass | fail <what else it needs> | note <finding>
+python tests/aptest/aptest.py --game-root "<Half-Life>" --unproven
 ```
+
+The harness swaps `build/game-test/hl.dll` into the installed mod when it starts
+and puts the original back when it stops (Ctrl-C, `quit`, or the terminal
+closing). Start it before launching the game. A run killed outright leaves the
+original beside it as `hl.dll.aptest-original`, and the next run restores it.
+
+Then in game chat: `!next` loads the first untested scenario and puts you at
+the spot; `!pass`, `!fail <what it needs>` or `!note <finding>` records a verdict
+and loads the next. `!redo`, `!prev`, `!go <n>`, `!tp`, `!info`, `!status`,
+`!list`, `!give` and `!take` do what they say.
 
 `--unproven` narrows it to the weapon sources the maps cannot prove reachable:
 drops, gated or handed-over copies, and placed copies whose flood fill never
 connects to a way into the map. The first run takes a few minutes and is cached.
+Copies confirmed in play go in `confirmed_copies` and drop off the list.
+`--find` runs only the `!find` scenarios: which copy it names when none is on
+the current map, with missions locked and an item missing.
 Verdicts go to `hlap/archipelago/aptest_results.txt`. A failed source becomes an
 `unreachable_copies` or `weapon_source_gates` entry.
 

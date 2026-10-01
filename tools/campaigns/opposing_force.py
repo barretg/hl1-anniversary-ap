@@ -113,15 +113,27 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
     "Shotgun": ["of2a4", "of0a0"],
     # Out of bounds; We Are Pulling Out's source moves on to its next map.
     # Also the Osprey ride in, whose marines nobody can reach.
-    "Glock": ["of1a5", "of0a0"],
+    "Glock": [
+        "of1a5", "of0a0",
+        "of1a1@688 -1047 0",  # shut in with the G-Man
+    ],
     "MP5": ["of0a0"],
-    "Desert Eagle": ["of0a0"],
+    "Desert Eagle": [
+        "of0a0",
+        "of1a5@1560 -3424 1339",  # a preview of the next map, past the changelevel
+        "of1a5b@112 -2096 1344",  # drops nothing
+        "of5a3@-712 -960 80",  # holds the blowtorch, not a gun
+        "of6a3@1408 2508 -160",  # unarmed
+    ],
     # Props: the only real displacer is the one handed over going into Xen
     # for the first time, of3a2's maker.
     "Displacer": ["of3a5", "of4a5"],
     # The one shock trooper here waits for a script rather than a fight (see
     # `WEAPON_ANCHORS`).
-    "Shock Roach": ["of1a5b"],
+    "Shock Roach": [
+        "of1a5b",
+        "of6a2@-354 -1200 90",  # this maker never spawned one
+    ],
 }
 
 # Copies confirmed reachable in play that the flood fill could not prove.
@@ -130,6 +142,27 @@ CONFIRMED_COPIES: dict[str, list[str]] = {
     "Barnacle": ["of4a3"],
     # Handed over going into Xen for the first time.
     "Displacer": ["of3a2"],
+    # The rest from the scenario harness, 2026-09-30. of3a2's shotgun and
+    # of6a2's grenades with the Displacer, as gated.
+    "Glock": ["of5a3@-632 -944 80", "of6a4@672 2044 32", "of6a4b@-1976 -1064 -488"],
+    "MP5": [
+        "of1a5b@-1408 -2992 2204", "of2a5@320 -1408 1176", "of5a1@-3419 1024 16",
+        "of6a1@1328 960 128", "of6a4b@-2067 2560 -576",
+    ],
+    "Shotgun": ["of3a2", "of5a1@-928 40 112"],
+    "RPG": ["of6a3"],
+    "Satchel Charge": ["of1a6"],
+    "Snarks": ["of4a2"],
+    "Hand Grenade": ["of1a6", "of6a2"],
+    "Desert Eagle": [
+        "of1a2", "of1a1@-1328 -136 -128", "of2a3@-976 1104 2", "of2a6",
+        "of3a4@-944 8 112",
+    ],
+    "M249": ["of1a6@-272 112 -144", "of2a6@-352 432 -440"],
+    "Spore Launcher": ["of4a2"],
+    "Shock Roach": ["of4a1", "of3a6@-2154 1238 -288", "of6a2@-370 -1440 90",
+                    # Boxed troopers, judged where their script lands them.
+                    "of5a2@1864 1400 192", "of6a4b@-3216 560 -624"],
 }
 
 # Copies past a displacer teleport, from the same play.

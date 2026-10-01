@@ -413,13 +413,77 @@ int PartOf(const Chapter& chapter, const std::string& map_name) {
 
 // The copy of a weapon check on this map, if it has one. Any mission's first
 // copy sends it, so the one in front of the player is the one worth pointing at.
+// An ally's drop only when the seed counts them: otherwise logic never expects
+// it, and pointing at a guard to kill would be bad advice.
 const Location::Source* SourceHere(const Location& location) {
     for (const Location::Source& source : location.sources) {
+        if (source.drop == "ally" && !State().ally_weapon_drops) {
+            continue;
+        }
         if (source.map == g_map) {
             return &source;
         }
     }
     return nullptr;
+}
+
+// Every item named in a source's `needs` ("A or B and C") is held.
+bool NeedsMet(const std::string& needs) {
+    size_t start = 0;
+    while (start <= needs.size()) {
+        size_t end = needs.find(" and ", start);
+        if (end == std::string::npos) {
+            end = needs.size();
+        }
+        const std::string group = needs.substr(start, end - start);
+        bool any = group.empty();
+        size_t at = 0;
+        while (!any && at <= group.size()) {
+            size_t stop = group.find(" or ", at);
+            if (stop == std::string::npos) {
+                stop = group.size();
+            }
+            any = State().Has(group.substr(at, stop - at));
+            at = stop + 4;
+        }
+        if (!any) {
+            return false;
+        }
+        start = end + 5;
+    }
+    return true;
+}
+
+// The earliest copy of a weapon check in campaign order, preferring one the
+// player can reach now: its mission open and its `needs` held. `available` says
+// which it was. Null if every copy is in a mission left out of the seed.
+const Location::Source* EarliestSource(const Location& location, bool& available) {
+    const Location::Source* best_open = nullptr;
+    const Location::Source* best_any = nullptr;
+    long open_rank = 0;
+    long any_rank = 0;
+    for (const Location::Source& source : location.sources) {
+        if (source.drop == "ally" && !State().ally_weapon_drops) {
+            continue;
+        }
+        const Chapter* chapter = Data().ChapterOfMap(source.map);
+        if (chapter == nullptr || State().ChapterExcluded(chapter->key)) {
+            continue;
+        }
+        const long rank = static_cast<long>(chapter->index) * 1000 +
+                          PartOf(*chapter, source.map);
+        if (best_any == nullptr || rank < any_rank) {
+            best_any = &source;
+            any_rank = rank;
+        }
+        if (ChapterIsOpen(*chapter) && NeedsMet(source.needs) &&
+            (best_open == nullptr || rank < open_rank)) {
+            best_open = &source;
+            open_rank = rank;
+        }
+    }
+    available = best_open != nullptr;
+    return available ? best_open : best_any;
 }
 
 // Point the player at one location, wherever it is.
@@ -438,19 +502,36 @@ void DescribeLocation(CBasePlayer* player, const Location& location) {
 
     Notify((Collected(location) ? "[found] " : "") + location.name);
 
-    // This map's copy if there is one, else the check itself.
+    // This map's copy if there is one, else the earliest one the player can
+    // get to now, else the earliest at all. Not a weapon check: the check itself.
     const Location::Source* source = SourceHere(location);
+    const bool here = source != nullptr;
+    bool available = true;
+    if (source == nullptr && !location.sources.empty()) {
+        source = EarliestSource(location, available);
+    }
     const std::string& map = source != nullptr ? source->map : location.map;
     const bool has_position = source != nullptr ? source->has_position
                                                 : location.has_position;
     const float* position = source != nullptr ? source->position : location.position;
     const std::string& needs = source != nullptr ? source->needs : location.needs;
 
-    if (!needs.empty()) {
+    // No copy reachable now: say why the earliest is not, a locked mission or
+    // an item the player does not hold.
+    const Chapter* source_chapter = Data().ChapterOfMap(map);
+    const bool locked = !available && source_chapter != nullptr &&
+                        !ChapterIsOpen(*source_chapter);
+    const bool missing_item = !available && !locked && !needs.empty();
+    if (!needs.empty() && !missing_item) {
         Notify("Needs the " + needs + " to reach.");
     }
     if (location.type == TriggerType::WeaponPickup && !location.sources.empty()) {
-        Notify("Any copy in this game sends it; one is here:");
+        Notify(here           ? "Any copy in this game sends it; one is here:"
+               : available    ? "Any copy in this game sends it; the earliest available is in:"
+               : locked       ? "Any copy in this game sends it; the earliest is in a locked map:"
+               : missing_item ? "Any copy in this game sends it; the earliest needs the " +
+                                    needs + ", which you do not have:"
+                              : "Any copy in this game sends it; the earliest is in:");
     }
 
     if (map != g_map) {
@@ -471,6 +552,10 @@ void DescribeLocation(CBasePlayer* player, const Location& location) {
         }
         Notify(line);
 
+        // A locked mission's door would refuse the warp.
+        if (!ChapterIsOpen(*chapter)) {
+            return;
+        }
         // A part warp only works somewhere already walked to, so offer it only
         // where it would be accepted. Otherwise the mission's own door.
         if (part > 0 && Visited(map)) {

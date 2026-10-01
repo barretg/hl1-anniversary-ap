@@ -216,6 +216,7 @@ class Bridge:
         death_link_amnesty: int = 0,
         ammo_relief: bool = False,
         gordon_hands: bool = False,
+        ally_weapon_drops: bool = False,
         data_version: str = "",
         slot: str = "",
         force: bool = False,
@@ -252,6 +253,9 @@ class Bridge:
             # Half-Life's own viewmodels on every map, instead of Shephard's
             # and Barney's hands on theirs. Presentation only.
             f"gordon_hands={1 if gordon_hands else 0}",
+            # Whether an ally's drop counts as a weapon source in this seed.
+            # `!find` only points at an ally's weapon when logic expects it.
+            f"ally_weapon_drops={1 if ally_weapon_drops else 0}",
             "chapters=" + ",".join(sorted(chapters)),
             # Missions the seed left out. Distinct from "locked": no item will
             # ever unlock these, and the game should say so rather than leaving

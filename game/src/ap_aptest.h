@@ -1,24 +1,38 @@
 // In-game half of the scenario harness, `tests/aptest/aptest.py`.
 //
 // The Python script stands in for the client: it writes the snapshot, watches
-// the checks the game sends and records verdicts. What it cannot do from
-// outside is move the player, so it leaves the scenario's destination in
-// `archipelago/aptest_go.txt` and these commands act on it:
+// the checks the game sends and records verdicts. It runs untouched in a
+// terminal; the player drives it from here, in chat or the console:
 //
-//   ap_test_go    load the scenario's map and, once the player is in, put
-//                 them at its spot
-//   ap_test_tp    back to the scenario's spot on this map
+//   !pass [note]  !fail <note>  !note <text>   record a verdict, next scenario
+//   !next  !prev  !redo  !go <n>               move between scenarios
+//   !info  !status  !list [text]               what the harness knows
+//   !give <item>  !take <item>                 change what the snapshot holds
+//   !tp                                        back to the scenario's spot
 //
-// Test builds only (`HLAP_TEST_BUILD`); a release dll registers nothing.
+// (`testing_aptest <verb> ...` in the console.) Every verb but `tp` goes to the
+// harness as an `APTEST` line in `ap_out.txt`. The harness answers in
+// `aptest_say.txt`, which is shown here, and starts a scenario by rewriting
+// `aptest_go.txt`, which loads its map and puts the player at its spot.
+//
+// Test builds only (`HLAP_TEST_BUILD`); a release dll registers nothing and
+// `TestDispatch` declines everything.
 
 #pragma once
+
+#include <string>
 
 namespace ap {
 
 // Once, at GameDLLInit.
 void RegisterTestCommands();
 
-// Every frame: finishes a pending `ap_test_go` once the player has spawned.
+// A harness verb typed in chat (`!pass`). False if it is not one, or in a
+// release build.
+bool TestDispatch(const std::string& name, const std::string& rest);
+
+// Every frame: shows what the harness said, loads a scenario it started, and
+// places the player once they have spawned.
 void RunTestHarness();
 
 }  // namespace ap

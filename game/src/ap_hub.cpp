@@ -583,6 +583,11 @@ void Cmd_ApNoWarps() {
 // console or from chat. The console names are the long ones (`ap_warp`); chat
 // takes the short ones too, because `!warp 3` is what a player will type.
 bool Dispatch(const std::string& name, const std::string& rest) {
+    // The scenario harness, test builds only. Answered by the harness itself,
+    // so no reply of ours ("nothing to report") either.
+    if (TestDispatch(name, rest)) {
+        return true;
+    }
     // Named as the player said it, so the HUD line for a console-length reply
     // names the command they actually typed.
     Reply reply(StartsWith(name, "ap") ? name : "!" + name);

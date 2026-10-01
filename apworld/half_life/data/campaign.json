@@ -6062,31 +6062,31 @@
     },
     {
      "chapter": "c0a0",
-     "map": "c0a0b",
+     "map": "c0a0d",
      "position": [
-      2070,
-      632,
-      -2312
+      -2017,
+      -458,
+      -221
      ],
      "drop": "ally"
     },
     {
      "chapter": "c1a0",
-     "map": "c1a0",
+     "map": "c1a0d",
      "position": [
-      -132,
-      -1083,
-      -216
+      -2579,
+      -706,
+      -272
      ],
      "drop": "ally"
     },
     {
      "chapter": "c1a0c",
-     "map": "c1a0c",
+     "map": "c1a1",
      "position": [
-      1348,
-      -216,
-      -360
+      1168,
+      1968,
+      728
      ],
      "drop": "ally"
     },
@@ -6101,32 +6101,12 @@
      "drop": "ally"
     },
     {
-     "chapter": "c1a3",
-     "map": "c1a3",
-     "position": [
-      35,
-      1047,
-      0
-     ],
-     "drop": "ally"
-    },
-    {
      "chapter": "c1a4",
      "map": "c1a4i",
      "position": [
       -826,
       -479,
       -744
-     ],
-     "drop": "ally"
-    },
-    {
-     "chapter": "c2a1",
-     "map": "c2a1",
-     "position": [
-      -472,
-      46,
-      96
      ],
      "drop": "ally"
     },
@@ -6172,11 +6152,11 @@
     },
     {
      "chapter": "c2a5",
-     "map": "c2a5c",
+     "map": "c2a5d",
      "position": [
-      -688,
-      400,
-      -272
+      -640,
+      864,
+      -1152
      ],
      "drop": "ally"
     },
@@ -6328,11 +6308,11 @@
     },
     {
      "chapter": "c2a4d",
-     "map": "c2a4d",
+     "map": "c2a4e",
      "position": [
-      384,
-      560,
-      16
+      -560,
+      -96,
+      224
      ],
      "drop": "hostile"
     },
@@ -7082,16 +7062,6 @@
      ]
     },
     {
-     "chapter": "of1a1",
-     "map": "of1a1",
-     "position": [
-      688,
-      -1047,
-      0
-     ],
-     "drop": "ally"
-    },
-    {
      "chapter": "of2a4",
      "map": "of2a4",
      "position": [
@@ -7638,16 +7608,6 @@
      "drop": "ally"
     },
     {
-     "chapter": "of1a5",
-     "map": "of1a5",
-     "position": [
-      1560,
-      -3424,
-      1339
-     ],
-     "drop": "ally"
-    },
-    {
      "chapter": "of2a1",
      "map": "of2a3",
      "position": [
@@ -7693,26 +7653,6 @@
       -868,
       416
      ]
-    },
-    {
-     "chapter": "of5a1",
-     "map": "of5a3",
-     "position": [
-      -712,
-      -960,
-      80
-     ],
-     "drop": "ally"
-    },
-    {
-     "chapter": "of6a1",
-     "map": "of6a3",
-     "position": [
-      1408,
-      2508,
-      -160
-     ],
-     "drop": "ally"
     }
    ]
   },
@@ -7926,9 +7866,9 @@
      "chapter": "of5a1",
      "map": "of5a2",
      "position": [
-      -320,
-      3168,
-      64
+      1864,
+      1400,
+      192
      ],
      "drop": "hostile"
     },
@@ -7936,8 +7876,8 @@
      "chapter": "of6a1",
      "map": "of6a2",
      "position": [
-      -354,
-      -1200,
+      -370,
+      -1440,
       90
      ],
      "drop": "hostile"
@@ -7946,9 +7886,9 @@
      "chapter": "of6a4b",
      "map": "of6a4b",
      "position": [
-      -152,
-      -1512,
-      -592
+      -3216,
+      560,
+      -624
      ],
      "drop": "hostile"
     }
@@ -8077,16 +8017,6 @@
       1684,
       420
      ]
-    },
-    {
-     "chapter": "ba_tram1",
-     "map": "ba_tram1",
-     "position": [
-      -2844,
-      916,
-      64
-     ],
-     "drop": "ally"
     },
     {
      "chapter": "ba_security1",
@@ -8256,11 +8186,11 @@
     },
     {
      "chapter": "ba_teleport2",
-     "map": "ba_teleport2",
+     "map": "ba_power1",
      "position": [
-      -1456,
-      -816,
-      0
+      952,
+      128,
+      -480
      ],
      "drop": "hostile"
     }

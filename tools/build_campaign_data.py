@@ -428,6 +428,21 @@ def weapon_copy(entity: dict[str, str], wanted: set[str]) -> str | None:
     return None
 
 
+def staged_arrivals(ents: list[dict[str, str]]) -> dict[str, str]:
+    """Monster targetname -> where a script teleports it into play.
+
+    Opposing Force keeps shock troopers in sealed boxes until a trigger fires a
+    `scripted_sequence` with an instant move (`m_fMoveTo` 4) that puts them in
+    the level, so their spawn origin is somewhere no player can go.
+    """
+    arrivals: dict[str, str] = {}
+    for e in ents:
+        if (e.get("classname") == "scripted_sequence" and e.get("m_fMoveTo") == "4"
+                and e.get("m_iszEntity") and e.get("origin")):
+            arrivals.setdefault(e["m_iszEntity"], e["origin"])
+    return arrivals
+
+
 def _gate_set(gates: dict[str, list[str]] | None) -> set[tuple[str, str]]:
     return {(mode, group) for mode, groups in (gates or {}).items() for group in groups}
 
@@ -472,8 +487,19 @@ def weapon_sources(
         for map_name in chapter["maps"]:
             if map_name in skip:
                 continue
+            arrivals = staged_arrivals(entities[map_name])
             copies = [(k, e) for e in entities[map_name]
-                      if (k := weapon_copy(e, wanted)) is not None]
+                      if (k := weapon_copy(e, wanted)) is not None
+                      and copy_key(map_name, e) not in skip]
+            # A dropper teleported in from a staging box is met where it
+            # arrives. Its key stays its spawn origin; short moves are only a
+            # script lining it up and keep it where it stands.
+            for i, (k, e) in enumerate(copies):
+                at = arrivals.get(e.get("targetname", "")) if k != "placed" else None
+                if at and math.dist(entity_origin(at), entity_origin(e.get("origin", ""))) > 256:
+                    copies[i] = (k, {**e, "_arrival": at})
+            copies = [(k, e) for k, e in copies if "_arrival" not in e
+                      or copy_key(map_name, {"origin": e["_arrival"]}) not in skip]
             if not copies:
                 continue
             kind, entity = min(copies, key=lambda c: COPY_KINDS.index(c[0]))
@@ -496,11 +522,20 @@ def weapon_sources(
     return found
 
 
+def copy_key(map_name: str, entity: dict[str, str]) -> str:
+    """One copy of a weapon, as `unreachable_copies` and `confirmed_copies`
+    name it: `map@x y z`, its origin to the unit. A bare map name in those
+    lists covers every copy on the map."""
+    origin = entity_origin(entity.get("origin", ""))
+    return f"{map_name}@" + " ".join(str(int(round(v))) for v in origin)
+
+
 def source_record(source: dict, extra_gates: dict | None = None) -> dict:
     """One way to a weapon check, as the apworld and the game read it."""
     record: dict = {"chapter": source["chapter"]["key"], "map": source["map"]}
     if source["entity"] is not None:
-        origin = entity_origin(source["entity"].get("origin", ""))
+        entity = source["entity"]
+        origin = entity_origin(entity.get("_arrival") or entity.get("origin", ""))
         record["position"] = [int(round(v)) for v in origin]
     if source["kind"] != "placed":
         # Killing something is how this copy is had: `hostile` always counts,
