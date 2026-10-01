@@ -112,15 +112,16 @@ class ViewmodelStyle(Choice):
 class LogicDifficulty(Choice):
     """How much firepower logic assumes you need to clear a mission.
 
-    strict: a mission is only expected of you once you own a weapon suited to it.
-    Anything from We've Got Hostiles onward wants a firearm; Forget About Freeman
-    and Lambda Core want something heavier than a pistol; Xen onward wants the Tau
-    cannon and the RPG by name, plus the long jump module and HEV suit when those
-    are shuffled. Safe for anyone, and the default.
-    loose: weapon requirements are dropped entirely, so the generator may expect
-    you to clear Surface Tension with a crowbar and will happily place your only
-    gun behind a mission that assumes you already have one. The equipment gates on
-    Xen still apply.
+    strict: a mission is only expected of you once you own weapons suited to it.
+    In Half-Life that means a firearm from We've Got Hostiles, explosives from
+    Blast Pit, and heavier weapons with explosives from Power Up on; Xen wants the
+    Tau cannon and the RPG, plus the long jump module and HEV suit when those are
+    shuffled. Opposing Force and Blue Shift ask for a firearm, then heavier
+    weapons, as their fights grow. Safe for anyone, and the default.
+    loose: weapon requirements are dropped, so the generator may expect you to
+    clear Surface Tension with a crowbar. What a mission cannot be crossed without
+    still applies at any difficulty: the Xen equipment, Opposing Force's grapple,
+    and the firearm Duty Calls needs to get past its barrel.
 
     Gates are per mission, not per part: being in logic means the mission is
     enterable, not that every corner of it is comfortable.
