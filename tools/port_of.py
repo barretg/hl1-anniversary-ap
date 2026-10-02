@@ -166,6 +166,10 @@ def convert(text):
     text = re.sub(r"PLAYBACK_EVENT_FULL\((?:[^()]|\([^()]*\))*\)",
                   lambda m: re.sub(r"(?<![&\w])g_vecZero\b", "(float*)&g_vecZero", m.group(0)), text)
     text = text.replace("CWorld::World->edict()", "INDEXENT(0)")
+    # Prediction carries the zoom in pev->fov here, as the crossbow sets it; the
+    # Updated SDK carries m_iFOV. Set both, read pev->fov.
+    text = re.sub(r"\bm_pPlayer->m_iFOV = ", "m_pPlayer->pev->fov = m_pPlayer->m_iFOV = ", text)
+    text = re.sub(r"\bm_pPlayer->m_iFOV(?! = )", "m_pPlayer->pev->fov", text)
     # sv_oldgrapple is fixed at 0 (of_cvars.cpp), so the client needs no cvar
     # lookup, nor cl_dll.h, whose Vector clashes with the server's.
     text = text.replace('#else\n#include "cl_dll.h"\n#endif\n', "#endif\n")
