@@ -150,6 +150,7 @@ Client-side commands, typed in the client rather than the game:
 | `/missions` | mission unlock status |
 | `/deathlink`, `/amnesty <n>` | toggle DeathLink, set the forgiven-deaths allowance |
 | `/chat` | toggle relaying chat between the game and the multiworld |
+| `/force_melee_throw` | toggle Melee Throw on in a seed that has no Melee Throw item |
 
 ## How a run goes
 

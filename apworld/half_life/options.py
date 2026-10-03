@@ -13,7 +13,7 @@ from Options import (
     Visibility,
 )
 
-from .data import MAX_MISSIONS, MAX_MISSIONS_BY_CAMPAIGN
+from .data import AIR_ACCELERATE_CAP, MAX_MISSIONS, MAX_MISSIONS_BY_CAMPAIGN
 
 
 class MissionsRequired(Range):
@@ -215,6 +215,43 @@ class MeleeThrow(Toggle):
     display_name = "Add Melee Throw"
 
 
+class ProgressiveAirAcceleration(Toggle):
+    """Add Progressive Air Acceleration items to the item pool.
+
+    Air acceleration (`sv_airaccelerate`) is how much you can steer and gain
+    speed in mid-air by strafing. It starts at Air Acceleration Minimum and each
+    item raises it a step, the last one reaching Air Acceleration Maximum. Steps
+    start at 2 and grow by about a tenth each, so the count follows from the two
+    bounds: 15 items for the defaults, 23 for the full 0 to 150.
+
+    When off, air acceleration is left at whatever the game has (10 in retail).
+    """
+
+    display_name = "Progressive Air Acceleration"
+
+
+class AirAccelerationMinimum(Range):
+    """Air acceleration before any Progressive Air Acceleration item arrives.
+    Ignored unless Progressive Air Acceleration is on. Retail is 10; 0 is no air
+    control at all."""
+
+    display_name = "Air Acceleration Minimum"
+    range_start = 0
+    range_end = AIR_ACCELERATE_CAP
+    default = 10
+
+
+class AirAccelerationMaximum(Range):
+    """Air acceleration once every Progressive Air Acceleration item has
+    arrived. Ignored unless Progressive Air Acceleration is on. Gains past 150
+    are negligible, so that is the ceiling."""
+
+    display_name = "Air Acceleration Maximum"
+    range_start = 0
+    range_end = AIR_ACCELERATE_CAP
+    default = 100
+
+
 class AllyWeaponDrops(Toggle):
     """Let logic expect weapons dropped by allies you kill.
 
@@ -249,19 +286,37 @@ class AmmoRelief(Toggle):
     visibility = Visibility.none
 
 
+class ButterfingersReissue(DefaultOnToggle):
+    """Whether the suit hands back a weapon the Butterfingers Trap knocked away.
+
+    When on, it comes back after half a minute if you have not picked it up.
+
+    When off, you have to go and get it. The suit only steps in once you have no
+    weapons left at all. Moving to another map still returns it.
+    """
+
+    display_name = "Butterfingers Reissue"
+
+
 class TrapPercentage(Range):
     """Percentage of your filler items replaced by traps.
 
-    Four exist, all nuisances rather than punishments -- none can cost you a run:
+    Seven exist, all nuisances rather than punishments -- none can cost you a run:
 
     - Scientist Trap: four scientists appear around you and start following you
       about.
     - Headcrab Trap: four headcrabs, same idea, considerably less friendly.
-    - Butterfingers Trap: you drop the weapon you are holding. The suit reissues
-      it after half a minute if you cannot find it again.
+    - Butterfingers Trap: you fling away the weapon you are holding. The suit
+      reissues it after half a minute if you cannot find it again (see
+      Butterfingers Reissue).
     - Bot Swarm Trap: six crowbar-wielding bots appear around you, run about
       crouch-jumping over things, and swing at whatever they bump into --
       you included.
+    - Bunny Hop Trap: you jump every time you land, for fifteen seconds.
+    - Sticky Key Trap: one movement key (forward, back, or a strafe) is held
+      down for fifteen seconds. You are told which.
+    - Reload Trap: the weapon in your hands reloads from empty. The clip goes
+      back into your reserve first, so no ammo is lost.
     """
 
     display_name = "Trap Percentage"
@@ -287,9 +342,13 @@ class HalfLifeOptions(PerGameCommonOptions):
     shuffle_longjump: ShuffleLongJump
     shuffle_flashlight: ShuffleFlashlight
     melee_throw: MeleeThrow
+    progressive_air_acceleration: ProgressiveAirAcceleration
+    air_acceleration_minimum: AirAccelerationMinimum
+    air_acceleration_maximum: AirAccelerationMaximum
     ally_weapon_drops: AllyWeaponDrops
     ammo_relief: AmmoRelief
     trap_percentage: TrapPercentage
+    butterfingers_reissue: ButterfingersReissue
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink
     death_link_amnesty: DeathLinkAmnesty

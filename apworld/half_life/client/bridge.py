@@ -216,6 +216,9 @@ class Bridge:
         death_link_amnesty: int = 0,
         gordon_hands: bool = False,
         ally_weapon_drops: bool = False,
+        butterfingers_reissue: bool = True,
+        air_accelerate: int = -1,
+        melee_throw: bool = False,
         data_version: str = "",
         slot: str = "",
         force: bool = False,
@@ -251,6 +254,15 @@ class Bridge:
             # Whether an ally's drop counts as a weapon source in this seed.
             # `!find` only points at an ally's weapon when logic expects it.
             f"ally_weapon_drops={1 if ally_weapon_drops else 0}",
+            # Whether Butterfingers hands the weapon back after its timer, or
+            # only once the player has no weapons left at all.
+            f"butterfingers_reissue={1 if butterfingers_reissue else 0}",
+            # The `sv_airaccelerate` to hold, from Progressive Air Acceleration.
+            # -1 leaves it to the game.
+            f"air_accelerate={int(air_accelerate)}",
+            # Melee Throw is in the pool, so a throw before it arrives is
+            # refused out loud rather than silently.
+            f"melee_throw={1 if melee_throw else 0}",
             "chapters=" + ",".join(sorted(chapters)),
             # Missions the seed left out. Distinct from "locked": no item will
             # ever unlock these, and the game should say so rather than leaving

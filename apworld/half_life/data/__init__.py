@@ -104,6 +104,54 @@ OPTIONAL_ITEM_CAMPAIGNS: dict[str, tuple[str, ...]] = {
 # above, off means the ability is absent, not granted.
 ABILITY_ITEM_NAMES: dict[str, str] = {"Melee Throw": "melee_throw"}
 
+# Several copies, each a step up `sv_airaccelerate`. Not in the table above,
+# which places one copy of each.
+AIR_ACCELERATE_ITEM = "Progressive Air Acceleration"
+# Past this, more air acceleration buys next to nothing.
+AIR_ACCELERATE_CAP = 150
+
+
+def _air_accelerate_ladder() -> list[int]:
+    """Every value the items can stop at, 0 to the cap: steps of 2 at first,
+    each about a tenth longer than the last."""
+    ladder = [0]
+    step = 2.0
+    while ladder[-1] < AIR_ACCELERATE_CAP:
+        ladder.append(min(ladder[-1] + round(step), AIR_ACCELERATE_CAP))
+        step *= 1.1
+    return ladder
+
+
+AIR_ACCELERATE_LADDER: list[int] = _air_accelerate_ladder()
+
+
+def air_accelerate_bounds(minimum: int, maximum: int) -> tuple[int, int]:
+    """The two options clamped to 0..cap, swapped if given the wrong way round."""
+    low, high = (max(0, min(int(v), AIR_ACCELERATE_CAP)) for v in (minimum, maximum))
+    return min(low, high), max(low, high)
+
+
+def air_accelerate_steps(minimum: int, maximum: int) -> list[int]:
+    """What each item raises air acceleration to, in order, from the minimum.
+
+    The ladder values strictly between the bounds, then the maximum itself: the
+    count rounds up to the ladder, and the last item lands exactly on the
+    maximum rather than on the ladder value past it. Equal bounds need no items.
+    """
+    low, high = air_accelerate_bounds(minimum, maximum)
+    if low == high:
+        return []
+    return [v for v in AIR_ACCELERATE_LADDER if low < v < high] + [high]
+
+
+def air_accelerate_value(minimum: int, maximum: int, received: int) -> int:
+    """Air acceleration with `received` items: the minimum with none, the
+    maximum once every item the seed placed has arrived."""
+    steps = air_accelerate_steps(minimum, maximum)
+    if received <= 0 or not steps:
+        return air_accelerate_bounds(minimum, maximum)[0]
+    return steps[min(received, len(steps)) - 1]
+
 # Of those, the ones that stay where Half-Life puts them when the toggle is off,
 # rather than being handed over at the start of the run: item -> the location it
 # is locked to.

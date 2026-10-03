@@ -1,4 +1,4 @@
-// The four traps. All nuisances rather than punishments: none can cost a run.
+// The traps. All nuisances rather than punishments: none can cost a run.
 //
 //   Scientist Trap      four scientists appear and follow the player about
 //   Headcrab Trap       four headcrabs, same idea, considerably less friendly
@@ -8,8 +8,15 @@
 //                       is in their way and swing at whatever they bump into.
 //                       See game/src/ap_bots.h
 //
+//   Bunny Hop Trap      the player jumps whenever they land, for a while
+//   Sticky Key Trap     one movement key (forward, back, either strafe) is
+//                       held down for a while, and the player is told which
+//   Reload Trap         the weapon in hand reloads from empty, its clip going
+//                       back into the reserve first, so no ammo is lost
+//
 // Each has a console command that springs it at once, for testing:
-// trap_scientist, trap_headcrab, trap_butterfingers, trap_bot_swarm.
+// trap_scientist, trap_headcrab, trap_butterfingers, trap_bot_swarm,
+// trap_bunny_hop, trap_sticky_key, trap_reload.
 //
 // The hazard is precache. GoldSrc fatally errors on an unprecached model and the
 // precache table is finite, so everything a trap can spawn is precached at map
@@ -47,6 +54,19 @@ void QueueTrap(const std::string& trap_name);
 // Springs whatever is due, and hands back a Butterfingers victim's weapon.
 void RunTrapTimers();
 
+// StartFrame, every frame rather than every poll: the Butterfingers copy's
+// bounces and braking are per-frame physics.
+void RunDroppedWeapon();
+
+// StartFrame, every frame: taps +jump for Bunny Hop and lets go of a stuck key
+// when its time is up.
+void RunHeldKeys();
+
+// Let go of anything Bunny Hop or Sticky Key is holding. Called on map load,
+// whose clock the timers were measured on: the client's keys outlive the level,
+// and a stuck key nobody lets go of stays stuck.
+void ReleaseHeldKeys();
+
 // Called at map start. Re-times anything still queued against the new level's
 // clock, because `gpGlobals->time` restarts with the map and this queue does
 // not: a due time carried over from the previous map is measured against a
@@ -75,6 +95,9 @@ constexpr float kTrapDelaySeconds = 5.0f;
 
 // How long a Butterfingers victim goes without their weapon.
 constexpr float kButterfingersReturnSeconds = 30.0f;
+
+// How long Bunny Hop and Sticky Key last.
+constexpr float kHeldKeySeconds = 15.0f;
 
 // How many of a thing a trap spawns.
 constexpr int kTrapSpawnCount = 4;

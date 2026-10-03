@@ -246,6 +246,11 @@ void Notify(const std::string& text) {
     Queue(text, true);
 }
 
+// The longest piece of a notice sent to the HUD at once. TextMsg is a byte of
+// destination, the string and its terminator, under the engine's 192-byte cap
+// on a user message, with room to spare.
+constexpr size_t kMaxHudLine = 160;
+
 void FlushNotices() {
     if (g_notices.empty()) {
         return;
@@ -292,10 +297,26 @@ void FlushNotices() {
                 c = ' ';
             }
         }
-        if (hud[0] == '#') {
-            hud.insert(hud.begin(), ' ');
+        // Sent in pieces: the engine refuses a user message over 192 bytes with
+        // a Host_Error, which ends the game. Broken at a space where there is
+        // one, and each piece guarded against '#' like the whole line.
+        while (!hud.empty()) {
+            std::string piece = hud;
+            if (piece.size() > kMaxHudLine) {
+                size_t cut = hud.rfind(' ', kMaxHudLine);
+                if (cut == std::string::npos || cut == 0) {
+                    cut = kMaxHudLine;
+                }
+                piece = hud.substr(0, cut) + "\n";
+                hud.erase(0, hud[cut] == ' ' ? cut + 1 : cut);
+            } else {
+                hud.clear();
+            }
+            if (piece[0] == '#') {
+                piece.insert(piece.begin(), ' ');
+            }
+            ClientPrint(player->pev, HUD_PRINTTALK, piece.c_str());
         }
-        ClientPrint(player->pev, HUD_PRINTTALK, hud.c_str());
     }
 
     g_notices.erase(g_notices.begin(), g_notices.begin() + take);
@@ -418,6 +439,8 @@ void Startup() {
     g_frames_this_map = 0;
     // A weapon Butterfingers threw on the floor went with the old level.
     ClearWithheld();
+    // A key a trap is holding down was timed on the old level's clock.
+    ReleaseHeldKeys();
     // Likewise a thrown crowbar or knife.
     ClearThrown();
     // A lobby countdown was on the old level's clock. See `CancelHubWarp`.
@@ -471,6 +494,8 @@ void RunFrame() {
     FixPlayerModels();
     RunLoadout();
     RunThrows();
+    RunDroppedWeapon();
+    RunHeldKeys();
     RunSeamDoors();
     DressHubChamber();
     RunWarpSave();
@@ -496,6 +521,7 @@ void RunFrame() {
     const std::set<std::string> had_items = State().held_items;
     const std::set<std::string> had_chapters = State().open_chapters;
     const bool had_goal = State().goal_open;
+    const int had_air_accelerate = State().air_accelerate;
     const std::string had_session = State().session;
     const std::string had_slot = State().slot;
 
@@ -516,7 +542,8 @@ void RunFrame() {
             RequestMap(kHubMap);
         }
 
-        AnnounceArrivals(had_session, had_items, had_chapters, had_goal);
+        AnnounceArrivals(had_session, had_items, had_chapters, had_goal,
+                         had_air_accelerate);
 
         for (const PendingEvent& event : events) {
             ApplyEvent(event);
@@ -536,6 +563,7 @@ void RunFrame() {
     // level reloads and not the dll -- and a map that never got an answer would
     // otherwise sit unauthorised forever, firing nothing and saying nothing.
     AuthoriseMap();
+    EnforceAirAccelerate();
 
     RunTrapTimers();
     // A weapon the player is already holding never fires a touch, so the crowbar
@@ -547,7 +575,7 @@ void RunFrame() {
 void AnnounceArrivals(const std::string& had_session,
                       const std::set<std::string>& had_items,
                       const std::set<std::string>& had_chapters,
-                      bool had_goal) {
+                      bool had_goal, int had_air_accelerate) {
     const Snapshot& now = State();
 
     // The first snapshot of a session is everything at once: every item the
@@ -570,6 +598,12 @@ void AnnounceArrivals(const std::string& had_session,
             Notify(std::string(chapter ? chapter->name : key) +
                    " unlocked. !warp to travel there.");
         }
+    }
+
+    // Counted, not held, so it never shows up in the item diff above.
+    if (had_air_accelerate >= 0 && now.air_accelerate > had_air_accelerate) {
+        Notify("Received: Progressive Air Acceleration (air acceleration " +
+               std::to_string(now.air_accelerate) + ")");
     }
 
     if (now.goal_open && !had_goal) {

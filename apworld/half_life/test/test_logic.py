@@ -6,10 +6,21 @@ Run these from an Archipelago source checkout:
     pytest worlds/half_life/test
 """
 
+import unittest
+
 from BaseClasses import CollectionState
 
 from . import HalfLifeTestBase
-from ..data import CHAPTERS, CHAPTERS_BY_KEY, LOCATIONS, MAX_MISSIONS
+from ..data import (
+    AIR_ACCELERATE_CAP,
+    AIR_ACCELERATE_LADDER,
+    CHAPTERS,
+    CHAPTERS_BY_KEY,
+    LOCATIONS,
+    MAX_MISSIONS,
+    air_accelerate_steps,
+    air_accelerate_value,
+)
 from ..items import chapter_unlock_items, unlock_item_for_chapter
 
 
@@ -567,6 +578,53 @@ class TestFlashlightHalfLife(EquipmentPoolMixin, HalfLifeTestBase):
         self.assertIn("Flashlight", self.pool())
         self.assertIn("Melee Throw", self.pool())
         self.assertNotIn("Night Vision Goggles", self.pool())
+
+
+class TestAirAccelerationDefault(EquipmentPoolMixin, HalfLifeTestBase):
+    def test_no_air_acceleration_items(self) -> None:
+        self.assertNotIn("Progressive Air Acceleration", self.pool())
+
+    def test_slot_data_leaves_it_to_the_game(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertIsNone(world.fill_slot_data()["air_acceleration"])
+
+
+class TestAirAccelerationOn(HalfLifeTestBase):
+    # Given the wrong way round on purpose: the bounds are swapped.
+    options = {"progressive_air_acceleration": True,
+               "air_acceleration_minimum": 150, "air_acceleration_maximum": 0}
+
+    def test_one_item_per_step_of_the_curve(self) -> None:
+        copies = [item for item in self.multiworld.itempool
+                  if item.player == self.player
+                  and item.name == "Progressive Air Acceleration"]
+        self.assertEqual(len(copies), len(air_accelerate_steps(0, 150)))
+        self.assertEqual(len(copies), 23)
+
+    def test_slot_data_bounds(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        self.assertEqual(world.fill_slot_data()["air_acceleration"], [0, 150])
+
+
+class TestAirAccelerationCurve(unittest.TestCase):
+    def test_steps_start_at_two_and_grow(self) -> None:
+        ladder = AIR_ACCELERATE_LADDER
+        gaps = [b - a for a, b in zip(ladder, ladder[1:-1])]
+        self.assertEqual(gaps[0], 2)
+        self.assertEqual(gaps, sorted(gaps))
+        self.assertEqual(ladder[-1], AIR_ACCELERATE_CAP)
+
+    def test_count_rounds_up_and_ends_on_the_maximum(self) -> None:
+        self.assertEqual(air_accelerate_steps(10, 100)[-1], 100)
+        self.assertEqual(len(air_accelerate_steps(10, 100)), 15)
+        self.assertEqual(air_accelerate_steps(10, 11), [11])
+        self.assertEqual(air_accelerate_steps(10, 10), [])
+
+    def test_value(self) -> None:
+        self.assertEqual(air_accelerate_value(10, 100, 0), 10)
+        self.assertEqual(air_accelerate_value(10, 100, 1), 12)
+        self.assertEqual(air_accelerate_value(10, 100, 99), 100)
+        self.assertEqual(air_accelerate_value(10, 10, 5), 10)
 
 
 class TestFlashlightEveryGame(EquipmentPoolMixin, HalfLifeTestBase):

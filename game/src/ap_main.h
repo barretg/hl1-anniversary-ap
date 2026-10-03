@@ -85,7 +85,7 @@ void ApplyEvent(const PendingEvent& event);
 void AnnounceArrivals(const std::string& had_session,
                       const std::set<std::string>& had_items,
                       const std::set<std::string>& had_chapters,
-                      bool had_goal);
+                      bool had_goal, int had_air_accelerate);
 
 // The single player. Null between map load and ClientPutInServer, which is most
 // of what can go wrong in here, so every caller checks.

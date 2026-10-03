@@ -15,6 +15,7 @@
 #include "ap_items.h"
 #include "ap_locations.h"
 #include "ap_main.h"
+#include "ap_state.h"
 
 namespace ap {
 namespace {
@@ -42,6 +43,251 @@ float g_owed_at = 0.0f;
 // player had been carrying for an hour. An `EHANDLE` rather than a raw pointer
 // because the level can take the entity away underneath us.
 EHANDLE g_dropped;
+
+// Written into the copy's netname, which weapons never use and a save keeps.
+// `g_dropped` is forgotten on a reissue and on every load, and the copy is
+// still a trap drop after either.
+const char* const kTrapDropMark = "ap_butterfingers";
+
+// Its velocity as of the last frame, to hear it hit things by, and when it left
+// the player's hands.
+Vector g_dropped_last_velocity;
+float g_dropped_at = 0.0f;
+// Whether `RestDropped` has run on it.
+bool g_dropped_rested = false;
+// How many times it has bounced.
+int g_dropped_bounces = 0;
+
+// The Butterfingers toss. Released no further than `kDropReach` ahead of the
+// eyes, and `kDropWallMargin` short of a wall that is closer than that.
+constexpr float kDropReach = 32.0f;
+constexpr float kDropWallMargin = 12.0f;
+// The engine's MOVETYPE_BOUNCE keeps `1 - friction` of the speed into a
+// surface: 0.4 keeps 60%.
+constexpr float kDropBounceFriction = 0.4f;
+constexpr float kDropThrowSpeed = 650.0f;
+constexpr float kDropThrowLift = 90.0f;
+constexpr float kDropSpin = 720.0f;           // degrees per second
+// Along the floor: a constant braking, like a player's own ground friction, so
+// it stops within a short skid rather than gliding off at a fraction of its
+// landing speed. And each bounce off the floor keeps only this much of the
+// speed along it.
+constexpr float kDropGroundDecel = 900.0f;    // units per second, per second
+constexpr float kDropFloorImpactKeep = 0.5f;
+constexpr float kDropStopSpeed = 8.0f;
+// A change in velocity this large between two frames is a bounce. Gravity and
+// floor friction alone come nowhere near it at any sane frame rate.
+constexpr float kDropClatterSpeed = 100.0f;
+// After this many bounces it stops bouncing: MOVETYPE_TOSS, which stops dead on
+// the next floor and slides along a wall rather than off it.
+constexpr int kDropMaxBounces = 10;
+// Owned no longer than this, landed or not. Water never sets FL_ONGROUND, so a
+// weapon that falls in would otherwise stay out of the player's reach.
+constexpr float kDropOwnedSeconds = 3.0f;
+// At rest, kept this far from any wall, so the model is not half inside it.
+constexpr float kDropRestClearance = 14.0f;
+
+// Once, when it has come to rest. It moves as a point, because the engine
+// moves anything wider than three units with a whole player's hull, so it
+// settles with its origin against a wall and the rest of the model inside it.
+// And a point is all a player can touch to pick it up, so one against a wall is
+// out of reach. Pushed clear of the walls around it, then given the pickup box
+// every `item_*` has, which only matters now that it no longer moves.
+void RestDropped(CBaseEntity* dropped) {
+    entvars_t* pev = dropped->pev;
+    Vector origin = pev->origin + Vector(0.0f, 0.0f, 1.0f);
+    for (int i = 0; i < 8; ++i) {
+        const float yaw = i * 45.0f * (M_PI / 180.0f);
+        const Vector dir(cosf(yaw), sinf(yaw), 0.0f);
+        TraceResult tr;
+        UTIL_TraceLine(origin, origin + dir * kDropRestClearance,
+                       ignore_monsters, dropped->edict(), &tr);
+        if (tr.fStartSolid == 0 && tr.flFraction < 1.0f) {
+            origin = origin - dir * (kDropRestClearance * (1.0f - tr.flFraction));
+        }
+    }
+    // Back down onto the floor, in case the push went over an edge.
+    TraceResult floor;
+    UTIL_TraceLine(origin, origin - Vector(0.0f, 0.0f, 64.0f), ignore_monsters,
+                   dropped->edict(), &floor);
+    if (floor.fStartSolid == 0) {
+        origin = floor.vecEndPos;
+    }
+    UTIL_SetSize(pev, Vector(-16, -16, 0), Vector(16, 16, 16));
+    UTIL_SetOrigin(pev, origin);
+}
+
+// Every frame while the thrown copy is out. MOVETYPE_BOUNCE has no friction
+// along a surface, so on the floor it would skid at its landing speed until it
+// hit a wall; this drags it to a stop and keeps it from spinning in place.
+bool HasAnyWeapon(CBasePlayer* player) {
+    if (player == nullptr) {
+        return true;  // nobody to reissue to; nothing to decide
+    }
+    for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
+        if (player->m_rgpPlayerItems[slot] != nullptr) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void SettleDropped() {
+    CBaseEntity* dropped = g_dropped;
+    if (dropped == nullptr) {
+        return;
+    }
+    entvars_t* pev = dropped->pev;
+
+    // On the floor, measured rather than read from FL_ONGROUND: the engine
+    // clears that flag on every bounce and hop, so a skid that keeps hopping
+    // would never be braked.
+    TraceResult below;
+    UTIL_TraceLine(pev->origin, pev->origin - Vector(0.0f, 0.0f, 2.0f),
+                   ignore_monsters, dropped->edict(), &below);
+    const bool on_floor =
+        below.flFraction < 1.0f && below.vecPlaneNormal.z > 0.7f;
+
+    const Vector change = pev->velocity - g_dropped_last_velocity;
+    if (change.Length() > kDropClatterSpeed) {
+        if (on_floor) {
+            pev->velocity.x *= kDropFloorImpactKeep;
+            pev->velocity.y *= kDropFloorImpactKeep;
+        }
+        if (pev->solid != SOLID_TRIGGER) {
+            const float volume = change.Length() / 400.0f;
+            EMIT_SOUND_DYN(dropped->edict(), CHAN_VOICE, "items/weapondrop1.wav",
+                           volume > 1.0f ? 1.0f : volume, ATTN_NORM, 0,
+                           95 + RANDOM_LONG(0, 29));
+        }
+        if (++g_dropped_bounces >= kDropMaxBounces &&
+            pev->movetype == MOVETYPE_BOUNCE) {
+            pev->movetype = MOVETYPE_TOSS;
+        }
+    }
+
+    if (on_floor && pev->velocity.z < kDropClatterSpeed) {
+        const float speed = pev->velocity.Make2D().Length();
+        const float slowed = speed - kDropGroundDecel * gpGlobals->frametime;
+        const float keep = speed > 0.0f && slowed > 0.0f ? slowed / speed : 0.0f;
+        pev->velocity.x *= keep;
+        pev->velocity.y *= keep;
+        if (pev->velocity.Length() < kDropStopSpeed) {
+            pev->velocity = g_vecZero;
+        }
+        pev->avelocity = g_vecZero;
+        pev->angles.x = 0.0f;
+        pev->angles.z = 0.0f;
+    }
+
+    if (!g_dropped_rested && pev->solid == SOLID_TRIGGER &&
+        (pev->flags & FL_ONGROUND) != 0 && pev->velocity == g_vecZero) {
+        g_dropped_rested = true;
+        RestDropped(dropped);
+    }
+
+    // `Materialize` has run: it has landed and become a pickup. Let go of it,
+    // or the player it was taken from could never collect it.
+    const bool settled = pev->solid == SOLID_TRIGGER ||
+                         gpGlobals->time >= g_dropped_at + kDropOwnedSeconds;
+    if (settled && !FNullEnt(pev->owner)) {
+        pev->owner = nullptr;
+    }
+
+    g_dropped_last_velocity = pev->velocity;
+}
+
+// --- held keys ---------------------------------------------------------------
+//
+// Bunny Hop and Sticky Key press the player's own movement commands, through
+// the console a listen server shares with the client (the path `ExecBinds`
+// takes). The client then predicts the movement as if the key were held, where
+// forcing it on the server would fight the prediction every frame. Queued, not
+// executed: run on the next host frame, before the client samples its input.
+void PressKey(const char* command) {
+    char line[64];
+    snprintf(line, sizeof(line), "%s\n", command);
+    SERVER_COMMAND(line);
+}
+
+// Bunny Hop: when it ends, and whether +jump is down. Jumping again needs the
+// key released between hops (`PM_Jump` refuses a held jump), so it is tapped:
+// down on a frame the player is on the ground, up on the next.
+float g_hop_until = 0.0f;
+bool g_hop_down = false;
+
+// Sticky Key: the +command held, and when it lets go.
+struct StuckKey {
+    const char* command;
+    const char* release;
+    const char* name;
+};
+const StuckKey kStuckKeys[] = {
+    {"+forward", "-forward", "forward"},
+    {"+back", "-back", "back"},
+    {"+moveleft", "-moveleft", "strafe left"},
+    {"+moveright", "-moveright", "strafe right"},
+};
+const StuckKey* g_stuck = nullptr;
+float g_stuck_until = 0.0f;
+
+void ReleaseStuck() {
+    if (g_stuck != nullptr) {
+        PressKey(g_stuck->release);
+        g_stuck = nullptr;
+    }
+}
+
+void ReleaseHop() {
+    if (g_hop_down) {
+        PressKey("-jump");
+        g_hop_down = false;
+    }
+    g_hop_until = 0.0f;
+}
+
+void SpringBunnyHop() {
+    g_hop_until = gpGlobals->time + kHeldKeySeconds;
+    Notify("Bunny hop! You can't stop jumping.");
+}
+
+void SpringStickyKey() {
+    // A second one while the first is held swaps the key and restarts the
+    // clock, rather than holding two at once.
+    ReleaseStuck();
+    g_stuck = &kStuckKeys[RANDOM_LONG(0, 3)];
+    g_stuck_until = gpGlobals->time + kHeldKeySeconds;
+    PressKey(g_stuck->command);
+    Notify(std::string("Sticky key! Your ") + g_stuck->name + " key is stuck.");
+}
+
+// Reload: the clip goes back into the reserve and the weapon reloads from
+// empty. Weapons are predicted on the client, so the server never sends a
+// reload's animation to the player who started it; it is sent here instead.
+void SpringReload(CBasePlayer* player) {
+    Notify("Reload!");
+    CBasePlayerItem* held = player->m_pActiveItem;
+    if (held == nullptr || held->GetWeaponPtr() == nullptr) {
+        return;
+    }
+    auto* weapon = static_cast<CBasePlayerWeapon*>(held->GetWeaponPtr());
+    const int ammo = weapon->PrimaryAmmoIndex();
+    if (weapon->iMaxClip() == WEAPON_NOCLIP || weapon->m_iClip <= 0 || ammo < 0 ||
+        weapon->m_fInReload) {
+        return;  // nothing to empty: a crowbar, a grenade, or already reloading
+    }
+    player->m_rgAmmo[ammo] += weapon->m_iClip;
+    weapon->m_iClip = 0;
+    player->TabulateAmmo();
+    const int before = player->pev->weaponanim;
+    weapon->Reload();
+    if (player->pev->weaponanim != before) {
+        MESSAGE_BEGIN(MSG_ONE, SVC_WEAPONANIM, NULL, player->pev);
+        WRITE_BYTE(player->pev->weaponanim);
+        WRITE_BYTE(weapon->pev->body);
+        MESSAGE_END();
+    }
+}
 
 // Everything a trap can spawn. Fixed, and precached at map load whether or not a
 // trap ever arrives.
@@ -224,6 +470,12 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
                 SpawnBot(spot, bearing + 180.0f, false);
             }
         }
+    } else if (name == "Bunny Hop Trap") {
+        SpringBunnyHop();
+    } else if (name == "Sticky Key Trap") {
+        SpringStickyKey();
+    } else if (name == "Reload Trap") {
+        SpringReload(player);
     } else if (name == "Butterfingers Trap") {
         CBasePlayerItem* held = player->m_pActiveItem;
         if (held == nullptr) {
@@ -243,9 +495,20 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
         player->RemovePlayerItem(held);
         held->Kill();
 
+        // Released from the eyes, and never past the first thing in front of
+        // them. A fixed point ahead of the player lands inside the wall they
+        // are facing, and the weapon then falls through the far side of it.
         UTIL_MakeVectors(player->pev->v_angle);
-        const Vector at = player->pev->origin + gpGlobals->v_forward * 48 +
-                          Vector(0, 0, 16);
+        const Vector eye = player->pev->origin + player->pev->view_ofs;
+        TraceResult reach;
+        UTIL_TraceLine(eye, eye + gpGlobals->v_forward * kDropReach,
+                       ignore_monsters, player->edict(), &reach);
+        float out = kDropReach * reach.flFraction;
+        if (reach.flFraction < 1.0f) {
+            out -= kDropWallMargin;
+        }
+        const Vector at = eye + gpGlobals->v_forward * (out > 0.0f ? out : 0.0f);
+
         // `Intern`, because `Create` stores the pointer rather than the
         // characters -- see the comment on `Intern` in ap_main.h. A dropped
         // weapon whose classname turned to freed heap could not be picked back
@@ -253,17 +516,42 @@ void SpringNow(CBasePlayer* player, const std::string& name) {
         CBaseEntity* dropped = CBaseEntity::Create(
             (char*)Intern(classname), at, player->pev->angles);
         if (dropped != nullptr) {
-            // A gentle toss. Hard enough to land somewhere else, soft enough
-            // that it does not go over the railing every time.
-            dropped->pev->velocity =
-                gpGlobals->v_forward * 180 + Vector(0, 0, 160);
+            // Sven Co-op's fumble: it tumbles, bounces off whatever it meets
+            // and skids to a stop. `FallInit` leaves it as MOVETYPE_TOSS, which
+            // stops dead on the first surface and slides along walls instead
+            // of off them. Settling along the floor is `SettleDropped`'s job.
+            dropped->pev->movetype = MOVETYPE_BOUNCE;
+            dropped->pev->friction = kDropBounceFriction;
+            // Flung, not set down, and carrying the player's own speed so a
+            // running player does not overtake it.
+            dropped->pev->velocity = gpGlobals->v_forward * kDropThrowSpeed +
+                                     Vector(0, 0, kDropThrowLift) +
+                                     player->pev->velocity;
+            dropped->pev->avelocity =
+                Vector(RANDOM_FLOAT(-kDropSpin, kDropSpin),
+                       RANDOM_FLOAT(-kDropSpin, kDropSpin) * 0.5f, 0.0f);
+            // Owned while in the air, so a bounce back off the wall does not
+            // land it straight back in the player's hands: the engine never
+            // touches an entity against its owner. It also gets the SDK's
+            // landing clatter in `FallThink`. `SettleDropped` lets go once it
+            // has landed.
+            dropped->pev->owner = player->edict();
+            dropped->pev->netname = MAKE_STRING(kTrapDropMark);
+            g_dropped_last_velocity = dropped->pev->velocity;
+            g_dropped_at = gpGlobals->time;
+            g_dropped_rested = false;
+            g_dropped_bounces = 0;
         }
         g_dropped = dropped;
 
         g_owed_weapon = classname;
         g_owed_at = gpGlobals->time + kButterfingersReturnSeconds;
-        Notify("Butterfingers! Pick it back up, or the suit reissues it in "
-               "half a minute.");
+        if (State().butterfingers_reissue) {
+            Notify("Butterfingers! Pick it back up, or the suit reissues it in "
+                   "half a minute.");
+        } else {
+            Notify("Butterfingers! Go and pick it back up.");
+        }
     }
     // An unknown trap name is a trap from a newer apworld. Nothing happens,
     // which is the right outcome: the alternative is guessing.
@@ -284,6 +572,9 @@ void Cmd_TrapScientist() { SpringFromConsole("Scientist Trap"); }
 void Cmd_TrapHeadcrab() { SpringFromConsole("Headcrab Trap"); }
 void Cmd_TrapButterfingers() { SpringFromConsole("Butterfingers Trap"); }
 void Cmd_TrapBotSwarm() { SpringFromConsole("Bot Swarm Trap"); }
+void Cmd_TrapBunnyHop() { SpringFromConsole("Bunny Hop Trap"); }
+void Cmd_TrapStickyKey() { SpringFromConsole("Sticky Key Trap"); }
+void Cmd_TrapReload() { SpringFromConsole("Reload Trap"); }
 
 }  // namespace
 
@@ -315,6 +606,9 @@ void RegisterTrapCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"trap_butterfingers",
                                    Cmd_TrapButterfingers);
     g_engfuncs.pfnAddServerCommand((char*)"trap_bot_swarm", Cmd_TrapBotSwarm);
+    g_engfuncs.pfnAddServerCommand((char*)"trap_bunny_hop", Cmd_TrapBunnyHop);
+    g_engfuncs.pfnAddServerCommand((char*)"trap_sticky_key", Cmd_TrapStickyKey);
+    g_engfuncs.pfnAddServerCommand((char*)"trap_reload", Cmd_TrapReload);
 }
 
 void PrecacheTraps() {
@@ -401,8 +695,18 @@ void RunTrapTimers() {
         return;
     }
 
-    if (gpGlobals->time >= g_owed_at) {
+    // Without the reissue the timer only means something once the player has
+    // nothing left to fight with: then the suit steps in after all, rather than
+    // leave them punching air until the next map.
+    if (gpGlobals->time >= g_owed_at &&
+        (State().butterfingers_reissue || !HasAnyWeapon(player))) {
         g_owed_weapon.clear();
+        // The floor copy goes with the reissue: left lying there it is a
+        // second crowbar, and its pickup a weapon check for one nobody found.
+        CBaseEntity* dropped = g_dropped;
+        if (dropped != nullptr) {
+            UTIL_Remove(dropped);
+        }
         g_dropped = nullptr;
         if (player != nullptr) {
             // Through the loadout rather than by hand, so the reissue obeys the
@@ -413,6 +717,38 @@ void RunTrapTimers() {
     }
 }
 
+void RunDroppedWeapon() {
+    if (!g_owed_weapon.empty()) {
+        SettleDropped();
+    }
+}
+
+void RunHeldKeys() {
+    if (g_stuck != nullptr && gpGlobals->time >= g_stuck_until) {
+        ReleaseStuck();
+    }
+    if (g_hop_down) {
+        PressKey("-jump");
+        g_hop_down = false;
+    } else if (g_hop_until > 0.0f) {
+        if (gpGlobals->time >= g_hop_until) {
+            ReleaseHop();
+            return;
+        }
+        CBasePlayer* player = Player();
+        if (player != nullptr && player->IsAlive() &&
+            (player->pev->flags & FL_ONGROUND) != 0) {
+            PressKey("+jump");
+            g_hop_down = true;
+        }
+    }
+}
+
+void ReleaseHeldKeys() {
+    ReleaseStuck();
+    ReleaseHop();
+}
+
 bool Withheld(const std::string& classname) {
     return !g_owed_weapon.empty() && g_owed_weapon == classname;
 }
@@ -420,6 +756,10 @@ bool Withheld(const std::string& classname) {
 bool IsTrapDrop(CBaseEntity* pickup) {
     if (pickup == nullptr) {
         return false;
+    }
+    if (!FStringNull(pickup->pev->netname) &&
+        FStrEq(STRING(pickup->pev->netname), kTrapDropMark)) {
+        return true;
     }
     CBaseEntity* dropped = g_dropped;
     return dropped != nullptr && dropped == pickup;

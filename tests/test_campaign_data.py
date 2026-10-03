@@ -389,7 +389,7 @@ def test_traps_exist_and_are_classified_as_traps(campaign: dict) -> None:
     traps = [item for item in campaign["items"] if item.get("group") == "trap"]
     assert {item["name"] for item in traps} == {
         "Scientist Trap", "Headcrab Trap", "Butterfingers Trap",
-        "Bot Swarm Trap",
+        "Bot Swarm Trap", "Bunny Hop Trap", "Sticky Key Trap", "Reload Trap",
     }
     for item in traps:
         assert item["classification"] == "trap", item["name"]

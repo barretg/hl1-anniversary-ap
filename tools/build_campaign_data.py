@@ -1743,6 +1743,9 @@ def build_items(
 
     # Abilities behind a YAML toggle, in any seed. Not needed by logic.
     add("Melee Throw", "useful", group="ability")
+    # Several copies, each raising sv_airaccelerate a step. See
+    # `progressive_air_acceleration`.
+    add("Progressive Air Acceleration", "useful", group="ability")
 
     for name, classnames, weight in (
         ("Ammo Cache", ["ammo_generic"], 40),
@@ -1761,6 +1764,9 @@ def build_items(
         # Newest, so last: ids are handed out in order of first appearance, and
         # a seed from before it existed simply never sends one.
         ("Bot Swarm Trap", 25),
+        ("Bunny Hop Trap", 25),
+        ("Sticky Key Trap", 25),
+        ("Reload Trap", 25),
     ):
         add(name, "trap", group="trap", weight=weight)
 

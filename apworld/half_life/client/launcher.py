@@ -37,6 +37,9 @@ except ModuleNotFoundError:
     TRACKER_LOADED = False
 
 from .. import mod
+from ..data import AIR_ACCELERATE_ITEM, air_accelerate_value
+
+MELEE_THROW_ITEM = "Melee Throw"
 from ..data.legacy import LEGACY_LOCATIONS
 from . import settings
 from .bridge import Bridge, find_store_dir, is_game_dir, warp_save_key
@@ -218,6 +221,15 @@ class HalfLifeCommandProcessor(ClientCommandProcessor):
         logger.info(f"Chat relay {'enabled' if self.ctx.chat_relay else 'disabled'}.")
         return True
 
+    def _cmd_force_melee_throw(self) -> bool:
+        """Toggle Melee Throw on for a seed that has no Melee Throw item."""
+        if self.ctx.melee_throw:
+            logger.info("This seed has Melee Throw in its pool; find the item to throw.")
+            return True
+        self.ctx.force_melee_throw = not self.ctx.force_melee_throw
+        logger.info(f"Melee Throw {'forced on' if self.ctx.force_melee_throw else 'off'}.")
+        return True
+
     def _cmd_commands(self) -> bool:
         """List the console commands you type inside the game."""
         self.ctx.print_in_game_commands()
@@ -306,6 +318,17 @@ class HalfLifeContext(SuperContext):
         self.gordon_hands = False
         # Whether an ally's drop is a weapon source. Off unless the seed says.
         self.ally_weapon_drops = False
+        # Whether a Butterfingers victim's weapon comes back after half a
+        # minute. On in seeds from before the option, which is how they played.
+        self.butterfingers_reissue = True
+        # [minimum, maximum] air acceleration, or None to leave it to the game,
+        # and how many Progressive Air Acceleration items have arrived.
+        self.air_acceleration: list[int] | None = None
+        self.air_accelerate_received = 0
+        # Melee Throw is in this seed's pool.
+        self.melee_throw = False
+        # Melee Throw turned on by hand, for seeds from before the item.
+        self.force_melee_throw = False
         self.goal_sent = False
         # The slot the per-run state above belongs to. See `forget_other_slot`.
         self.state_slot = ""
@@ -546,6 +569,9 @@ class HalfLifeContext(SuperContext):
         )
         self.gordon_hands = slot_data.get("viewmodel_style", "per_campaign") == "always_gordon"
         self.ally_weapon_drops = bool(slot_data.get("ally_weapon_drops", False))
+        self.butterfingers_reissue = bool(slot_data.get("butterfingers_reissue", True))
+        self.air_acceleration = slot_data.get("air_acceleration")
+        self.melee_throw = bool(slot_data.get("melee_throw", False))
 
     def relay_to_game(self, args: dict) -> None:
         """Show multiworld chat in the game.
@@ -592,6 +618,7 @@ class HalfLifeContext(SuperContext):
             # Full resync. Rebuild unlock state from scratch.
             self.unlocked_chapters.clear()
             self.unlocked_items.clear()
+            self.air_accelerate_received = 0
 
         # Everything the server had for us at connect time. Applied for its
         # unlocks, never for its one-shot effects.
@@ -616,9 +643,12 @@ class HalfLifeContext(SuperContext):
         if entry is None:
             return
         group = entry.get("group")
-        if group == "chapter":
+        if entry["name"] == AIR_ACCELERATE_ITEM:
+            # Counted rather than held: each copy is a step.
+            self.air_accelerate_received += 1
+        elif group == "chapter":
             self.unlocked_chapters.add(entry["chapter"])
-        elif group in ("weapon", "optional", "melee"):
+        elif group in ("weapon", "optional", "melee", "ability"):
             self.unlocked_items.add(entry["name"])
         elif group == "filler" and deliver_filler and self.bridge:
             self.bridge.queue_event("ITEM", entry["name"])
@@ -680,6 +710,7 @@ class HalfLifeContext(SuperContext):
         if self.state_slot:
             logger.info("Connected to a different slot; forgetting the last one's "
                         "finished missions.")
+            self.force_melee_throw = False
         self.state_slot = identity
         self.completed_missions.clear()
         self.legacy_sent.clear()
@@ -743,13 +774,24 @@ class HalfLifeContext(SuperContext):
             logger.info(f"Cleared {removed} warp point savegames for this run.")
 
     @property
+    def air_accelerate(self) -> int:
+        """The `sv_airaccelerate` the game should hold, or -1 to leave it be."""
+        if not self.air_acceleration:
+            return -1
+        minimum, maximum = self.air_acceleration
+        return air_accelerate_value(minimum, maximum, self.air_accelerate_received)
+
+    @property
     def held_item_names(self) -> set[str]:
         """Everything the game should treat as held, received or not.
 
         Not `item_names`: CommonContext owns that one for its datapackage lookup,
         and shadowing it with a read-only property breaks its constructor.
         """
-        return self.unlocked_items | self.always_unlocked
+        held = self.unlocked_items | self.always_unlocked
+        if self.force_melee_throw and not self.melee_throw:
+            held = held | {MELEE_THROW_ITEM}
+        return held
 
     def completed_in(self, campaign: str) -> int:
         """Missions of one game finished, its finale aside."""
@@ -967,6 +1009,9 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         death_link_amnesty=ctx.death_link_amnesty,
         gordon_hands=ctx.gordon_hands,
         ally_weapon_drops=ctx.ally_weapon_drops,
+        butterfingers_reissue=ctx.butterfingers_reissue,
+        air_accelerate=ctx.air_accelerate,
+        melee_throw=ctx.melee_throw,
         excluded=sorted(ctx.excluded_chapters),
         ungated=sorted(ctx.ungated_classnames),
         starting=list(ctx.starting_weapons),

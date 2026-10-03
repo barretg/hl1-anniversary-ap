@@ -170,27 +170,30 @@ def test_mission_exits_are_walk_in_triggers_into_a_later_mission() -> None:
 def test_clear_drops_one_group_and_keeps_a_copy(tmp_path) -> None:
     results = tmp_path / "aptest_results.txt"
     results.write_text("\n".join([
-        "t|0|Completion: a|pass||1|completion",
+        "t|0|Completion: a|pass||1|0.4.0",
         "t|1|Parity B2: b|fail|x||parity",
+        # Recorded under the group's former name.
+        "t|4|Completion: e|pass||1|completion",
         # Written before verdicts named their group: matched by title.
         "t|2|Completion: c|pass||",
         "t|3|Source: d|pass||",
     ]) + "\n", encoding="utf-8")
 
-    count = aptest.clear_results(results, "completion", {"Completion: c"})
+    count = aptest.clear_results(results, "0.4.0", {"Completion: c"})
 
-    assert count == 2
+    assert count == 3
     assert results.read_text(encoding="utf-8").splitlines() == [
         "t|1|Parity B2: b|fail|x||parity",
         "t|3|Source: d|pass||",
     ]
     cleared = (tmp_path / "aptest_results_cleared.txt").read_text(encoding="utf-8")
-    assert "Completion: a" in cleared and "Completion: c" in cleared
+    for title in ("Completion: a", "Completion: c", "Completion: e"):
+        assert title in cleared
 
 
 def test_clear_with_nothing_to_drop_leaves_the_file_alone(tmp_path) -> None:
     results = tmp_path / "aptest_results.txt"
-    assert aptest.clear_results(results, "completion", set()) == 0
+    assert aptest.clear_results(results, "0.4.0", set()) == 0
     assert not results.exists()
     assert not (tmp_path / "aptest_results_cleared.txt").exists()
 

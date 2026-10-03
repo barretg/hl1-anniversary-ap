@@ -1,5 +1,5 @@
 {
- "data_version": "6795c3d07080",
+ "data_version": "2f6ec6f7f435",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -1380,6 +1380,12 @@
    "group": "ability"
   },
   {
+   "id": 7750071,
+   "name": "Progressive Air Acceleration",
+   "classification": "useful",
+   "group": "ability"
+  },
+  {
    "id": 7750032,
    "name": "Ammo Cache",
    "classification": "filler",
@@ -1443,6 +1449,27 @@
   {
    "id": 7750039,
    "name": "Bot Swarm Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 25
+  },
+  {
+   "id": 7750072,
+   "name": "Bunny Hop Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 25
+  },
+  {
+   "id": 7750073,
+   "name": "Sticky Key Trap",
+   "classification": "trap",
+   "group": "trap",
+   "weight": 25
+  },
+  {
+   "id": 7750074,
+   "name": "Reload Trap",
    "classification": "trap",
    "group": "trap",
    "weight": 25

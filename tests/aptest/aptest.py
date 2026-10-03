@@ -45,8 +45,9 @@ Scenarios come from the installed `checkdata.txt`, so they track the data:
 the line's colour and route, the fallback where a map has no nodes, toggling
 off, retargeting, a target off the map, and the chat colour.
 
-`--completion` runs only the mission completion scenarios (see
-`completion_scenarios`): a `COMPLETE` goes out with its checks or not at all.
+`--0.4.0` runs only the scenarios for what changed in 0.4.0 (see
+`release_0_4_0_scenarios`): a mission's `COMPLETE` goes out with its checks or
+not at all, and the Butterfingers toss. `--completion` is the old name for it.
 They use two more verbs, standing in for the client's connection:
     !connect / !disconnect    what the snapshot says about the client
 and the harness shows every COMPLETE and GOAL the game sends.
@@ -67,7 +68,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace | --parity | --completion] [--clear]
+    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace | --parity | --0.4.0] [--clear]
 """
 
 from __future__ import annotations
@@ -112,6 +113,21 @@ def load_bridge():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def load_data():
+    """The world's data module, by path for the same reason. Registered under
+    its own name first, which `pkgutil.get_data` looks it up by."""
+    path = REPO / "apworld" / "half_life" / "data" / "__init__.py"
+    spec = importlib.util.spec_from_file_location("aptest_data", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+# The air acceleration curve, the same one the client walks.
+DATA = load_data()
 
 
 # -------------------------------------------------------------- checkdata
@@ -210,6 +226,13 @@ class Scenario:
     # Missions whose `COMPLETE` this scenario is waiting for. Any other one the
     # game sends is called out.
     expect_complete: list[str] = field(default_factory=list)
+    # The seed's `butterfingers_reissue`.
+    butterfingers_reissue: bool = True
+    # The seed's air acceleration [minimum, maximum], or None to leave it to the
+    # game. `!give` / `!take Progressive Air Acceleration` step it.
+    air_acceleration: tuple[int, int] | None = None
+    # The seed's `melee_throw`: whether Melee Throw is in the pool at all.
+    melee_throw: bool = True
 
 
 def cache_key(data: CheckData) -> str:
@@ -607,7 +630,8 @@ def reflow(steps: str) -> list[str]:
 # What `!item` and `!trap` can send: the names `GrantFiller` and `SpringNow`
 # in the game answer to.
 FILLER = ("Medkit", "Health Charge", "Armor Battery", "Ammo Cache")
-TRAPS = ("Scientist Trap", "Headcrab Trap", "Bot Swarm Trap", "Butterfingers Trap")
+TRAPS = ("Scientist Trap", "Headcrab Trap", "Bot Swarm Trap", "Butterfingers Trap",
+         "Bunny Hop Trap", "Sticky Key Trap", "Reload Trap")
 
 
 def parity_scenarios(data: CheckData) -> list[Scenario]:
@@ -853,6 +877,235 @@ def completion_scenarios(data: CheckData,
     return out
 
 
+def butterfingers_scenarios(data: CheckData) -> list[Scenario]:
+    """The Butterfingers toss bounces like Sven Co-op's, and never ends up
+    inside a wall.
+
+    It used to appear at a fixed point ahead of the player, which facing a wall
+    put inside it, and stop dead on the first surface it met.
+    """
+    # Anomalous Materials: the lobby and the corridors past it are quiet, with
+    # open floor, close walls and railings, and nothing to shoot at you while
+    # you watch where the weapon lands.
+    stage = next((c for c in data.chapters if c.key == "c1a0"), None)
+    if stage is None:
+        return []
+    verdict = "!pass, or !fail <what was different>."
+    return [
+        Scenario(
+            title="0.4.0: Butterfingers bounces and stays out of walls",
+            map=stage.maps[0], steps="\n".join([
+                "Each time, hold a weapon and spring it with trap_butterfingers in",
+                "the console (at once) or !trap Butterfingers Trap (after the delay).",
+                "Open floor, looking ahead: it tumbles, bounces two or three times",
+                "with a clatter on each, skids to a stop and lies flat.",
+                "Nose against a wall: it bounces back off the wall into the room,",
+                "never into or through it, and you do not catch it in the air.",
+                "Looking straight down: it bounces up off the floor at your feet.",
+                "Each time, once it has landed you can walk over it and pick it up.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Butterfingers without the reissue",
+            map=stage.maps[0], butterfingers_reissue=False, steps="\n".join([
+                "The seed has butterfingers_reissue off. Hold a gun and spring",
+                "trap_butterfingers in the console: 'Butterfingers! Go and pick it",
+                "back up.', with no mention of the suit. Leave it on the floor and",
+                "wait over 30 seconds: it does not come back, and the gun on the",
+                "floor still picks up.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Butterfingers without the reissue, last weapon",
+            map=stage.maps[0], butterfingers_reissue=False,
+            # Only the crowbar, which every scenario starts with.
+            take=sorted({item for classname, item in data.gated.items()
+                         if classname.startswith("weapon_")
+                         and classname != "weapon_crowbar"}),
+            steps="\n".join([
+                "The seed has butterfingers_reissue off and you carry only the",
+                "crowbar. trap_butterfingers in the console with it in hand, then",
+                "leave it on the floor: once 30 seconds are up, 'The suit reissues",
+                "your weapon.' and the crowbar is back, since you had nothing else.",
+                verdict,
+            ])),
+    ]
+
+
+def air_acceleration_scenarios(data: CheckData) -> list[Scenario]:
+    """Progressive Air Acceleration holds sv_airaccelerate where the items say,
+    and gives it back when a seed does not ask for it."""
+    stage = next((c for c in data.chapters if c.key == "c1a0"), None)
+    if stage is None:
+        return []
+    verdict = "!pass, or !fail <what was different>."
+    item = "Progressive Air Acceleration"
+    return [
+        Scenario(
+            title="0.4.0: Progressive Air Acceleration steps",
+            map=stage.maps[0], air_acceleration=(0, 150), steps="\n".join([
+                "The seed runs air acceleration 0 to 150. sv_airaccelerate in the",
+                "console reads 0, and strafing in mid-air does not steer you.",
+                f"!give {item}: 'Received: {item} (air acceleration 2)', and the",
+                "console reads 2. Each further !give goes 4, 6, 9, 12, 15...",
+                "Type sv_airaccelerate 50 in the console: back within a moment.",
+                f"!take {item} lowers it a step, silently. Give it enough times and",
+                "it stops at 150 and says nothing more. Air strafing turns sharply.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Air acceleration left to the game",
+            map=stage.maps[0], steps="\n".join([
+                "The seed has Progressive Air Acceleration off. Straight after the",
+                "scenario above: sv_airaccelerate reads what it did before that",
+                "one (10 in retail). Set it to 30 yourself: it stays 30.",
+                verdict,
+            ])),
+    ]
+
+
+def throw_refusal_scenarios(data: CheckData) -> list[Scenario]:
+    """A throw before Melee Throw arrives says why nothing happened, as the
+    flashlight key does, and stays silent in a seed without it."""
+    stage = next((c for c in data.chapters if c.key == "c1a0"), None)
+    if stage is None:
+        return []
+    verdict = "!pass, or !fail <what was different>."
+    item = "Melee Throw"
+    return [
+        Scenario(
+            title="0.4.0: Melee Throw refused until it arrives",
+            map=stage.maps[0], take=[item], steps="\n".join([
+                "Melee Throw is in the seed but not sent. Crowbar in hand, press",
+                f"mouse2: nothing is thrown, and 'You have not found {item} yet.'",
+                "Hold mouse2 down: the message repeats at most once a second.",
+                f"!give {item}, then mouse2: the crowbar is thrown, no message.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Melee Throw not in the seed",
+            map=stage.maps[0], take=[item], melee_throw=False, steps="\n".join([
+                "The seed has melee_throw off. Crowbar in hand, press mouse2:",
+                "nothing is thrown and nothing is said.",
+                verdict,
+            ])),
+    ]
+
+
+def sniper_scope_scenarios(data: CheckData) -> list[Scenario]:
+    """The Sniper Rifle's mouse2 zooms, as the crossbow's does."""
+    stage = next((c for c in data.chapters if c.key == "of1a1"), None)
+    if stage is None:
+        return []
+    item = "Sniper Rifle"
+    return [
+        Scenario(
+            title="0.4.0: Sniper Rifle scope",
+            map=stage.maps[0], take=[item], steps="\n".join([
+                f"!give {item}: it is handed to you. Switch to it.",
+                "mouse2: the view zooms in tight. mouse2 again: back to normal.",
+                "Zoom, then reload: the zoom drops for the reload.",
+                "Zoom, then switch weapons: the new weapon is not zoomed.",
+                "Zoomed shots land where the view is centred.",
+                "!pass, or !fail <what was different>.",
+            ])),
+    ]
+
+
+def thrown_break_scenarios(data: CheckData) -> list[Scenario]:
+    """A thrown crowbar breaks what it hits hard enough, and flies on through."""
+    stage = next((c for c in data.chapters if c.key == "c1a0"), None)
+    if stage is None:
+        return []
+    return [
+        Scenario(
+            title="0.4.0: Thrown melee breaks through breakables",
+            map=stage.maps[0], steps="\n".join([
+                "Crowbar in hand. Throw it (mouse2) at a window: the glass breaks",
+                "and the crowbar carries on through the gap, landing beyond it.",
+                "Throw it at a breakable that takes more than one hit: it is",
+                "damaged, the crowbar drops in front of it. Throw until it breaks:",
+                "the last throw carries on through.",
+                "Throw it at a plain wall: it stops and drops, as before.",
+                "!pass, or !fail <what was different>.",
+            ])),
+    ]
+
+
+def new_trap_scenarios(data: CheckData) -> list[Scenario]:
+    """The three 0.4.0 traps. Each springs five seconds after `!trap`."""
+    stage = next((c for c in data.chapters if c.key == "c1a0"), None)
+    if stage is None:
+        return []
+    verdict = "!pass, or !fail <what was different>."
+    return [
+        Scenario(
+            title="0.4.0: Bunny Hop Trap",
+            map=stage.maps[0], steps="\n".join([
+                "!trap Bunny Hop Trap: 'Bunny hop! You can't stop jumping.' You",
+                "jump every time you land, smoothly, for fifteen seconds; moving",
+                "and strafing still work. Then it stops on its own.",
+                "Spring it again and change level (or load a save) mid-hop: the",
+                "hopping stops in the new map.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Sticky Key Trap",
+            map=stage.maps[0], steps="\n".join([
+                "!trap Sticky Key Trap: 'Sticky key! Your <key> key is stuck.'",
+                "You move that way (forward, back, strafe left or strafe right)",
+                "without touching it, for fifteen seconds. Pressing and letting",
+                "go of that key yourself does not unstick it. Then it lets go.",
+                "Spring it twice in a row: the second picks a key afresh and you",
+                "only ever move one way at a time.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Reload Trap",
+            map=stage.maps[0], steps="\n".join([
+                "Hold a weapon with a full clip (9mm handgun or MP5), note the",
+                "clip and reserve. !trap Reload Trap: 'Reload!', and the full",
+                "reload animation plays. Afterwards the clip is full again and",
+                "clip plus reserve is what it was: no ammo lost or gained.",
+                "With the shotgun: it reloads shell by shell from empty.",
+                "With the crowbar: just 'Reload!', nothing else happens.",
+                verdict,
+            ])),
+    ]
+
+
+def reissue_scenarios(data: CheckData) -> list[Scenario]:
+    """A reissued weapon's floor copy goes, and never sends a weapon check."""
+    stage = next((c for c in data.chapters if c.key == "c1a0"), None)
+    if stage is None:
+        return []
+    return [
+        Scenario(
+            title="0.4.0: Butterfingers reissue takes the floor copy",
+            map=stage.maps[0], steps="\n".join([
+                "Crowbar in hand. !trap Butterfingers Trap and leave the crowbar",
+                "on the floor. Half a minute later 'The suit reissues your",
+                "weapon.': you hold it again and the floor copy is gone.",
+                "Spring it again, quicksave while the crowbar is on the floor,",
+                "quickload, wait for the reissue if it comes, and walk over",
+                "wherever a copy lies: no 'Found: ... Crowbar' check is sent.",
+                "!pass, or !fail <what was different>.",
+            ])),
+    ]
+
+
+def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """What changed in 0.4.0. Appended to, never reordered."""
+    return (completion_scenarios(data, mission_exits(data, game_root))
+            + butterfingers_scenarios(data)
+            + air_acceleration_scenarios(data)
+            + throw_refusal_scenarios(data)
+            + sniper_scope_scenarios(data)
+            + thrown_break_scenarios(data)
+            + new_trap_scenarios(data)
+            + reissue_scenarios(data))
+
+
 def build_scenarios(data: CheckData,
                     only: dict[tuple[int, str], str] | None = None) -> list[Scenario]:
     """Appended to, never reordered: results are recorded by title, but a
@@ -992,7 +1245,10 @@ class DllSwap:
 
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
-GROUPS = ("sources", "find", "trace", "parity", "completion")
+GROUPS = ("sources", "find", "trace", "parity", "0.4.0")
+
+# Groups since renamed: their verdicts are the new group's.
+FORMER_GROUPS = {"completion": "0.4.0"}
 
 
 def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
@@ -1003,8 +1259,8 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return trace_scenarios(data, node_counts(data, game_root))
     if group == "find":
         return find_scenarios(data)
-    if group == "completion":
-        return completion_scenarios(data, mission_exits(data, game_root))
+    if group == "0.4.0":
+        return release_0_4_0_scenarios(data, game_root)
     only = None
     if unproven:
         only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
@@ -1025,6 +1281,7 @@ def clear_results(results: Path, group: str, titles: set[str]) -> int:
     for line in results.read_text(encoding="utf-8").splitlines():
         parts = line.split("|")
         named = parts[6] if len(parts) > 6 else ""
+        named = FORMER_GROUPS.get(named, named)
         ours = named == group or (not named and len(parts) > 2 and parts[2] in titles)
         (dropped if ours else kept).append(line)
     if dropped:
@@ -1051,6 +1308,8 @@ class Harness:
         self.seq = self.last_seq()
         self.current = -1
         self.items: set[str] = self.base_items()
+        # Progressive Air Acceleration copies given: counted, not held.
+        self.air_received = 0
         self.seen: set[int] = set()
         self.connected = True
         # Re-entrant: a verdict from the game arrives inside the poll and
@@ -1080,6 +1339,12 @@ class Harness:
     def base_items(self) -> set[str]:
         return set(EQUIPMENT) | set(self.data.gated.values())
 
+    def air_accelerate(self) -> int:
+        s = self.scenario()
+        if s is None or s.air_acceleration is None:
+            return -1
+        return DATA.air_accelerate_value(*s.air_acceleration, self.air_received)
+
     def publish(self, force: bool = False) -> None:
         s = self.scenario()
         self.bridge.write_snapshot(
@@ -1091,6 +1356,9 @@ class Harness:
             death_link=False,
             # Ally drops are among the scenarios, so `!find` should show them.
             ally_weapon_drops=s.ally_drops if s is not None else True,
+            butterfingers_reissue=s.butterfingers_reissue if s is not None else True,
+            air_accelerate=self.air_accelerate(),
+            melee_throw=s.melee_throw if s is not None else True,
             excluded=[],
             ungated=[],
             starting=["weapon_crowbar"],
@@ -1116,6 +1384,7 @@ class Harness:
             self.current = index
             s = self.scenarios[index]
             self.items = self.base_items() - set(s.take)
+            self.air_received = 0
             self.seen = set()
             self.connected = s.connected
             self.publish(force=True)
@@ -1258,6 +1527,11 @@ class Harness:
                 self.bridge.queue_event("DEATHLINK", "APTest~a test DeathLink")
                 self.publish()
                 self.tell("[aptest] DeathLink sent.")
+            elif verb in ("give", "take") and arg.lower() == DATA.AIR_ACCELERATE_ITEM.lower():
+                self.air_received = max(0, self.air_received + (1 if verb == "give" else -1))
+                self.publish()
+                self.tell(f"[aptest] {verb}: {DATA.AIR_ACCELERATE_ITEM} "
+                          f"({self.air_received}, sv_airaccelerate {self.air_accelerate()})")
             elif verb in ("give", "take") and arg:
                 # Chat is not careful about case; the snapshot is.
                 arg = next((n for n in self.base_items() if n.lower() == arg.lower()), arg)
@@ -1334,17 +1608,20 @@ def main(argv: list[str] | None = None) -> int:
                         help="only the !trace scenarios, in each game")
     parser.add_argument("--parity", action="store_true",
                         help="only the Sven parity scenarios")
-    parser.add_argument("--completion", action="store_true",
-                        help="only the mission completion scenarios")
+    parser.add_argument("--0.4.0", "--completion", dest="v0_4_0",
+                        action="store_true",
+                        help="only the 0.4.0 scenarios: mission completion and the "
+                             "Butterfingers toss (--completion is the old name)")
     parser.add_argument("--clear", action="store_true",
                         help="drop the chosen group's results and exit; nothing is "
                              "launched or swapped")
     args = parser.parse_args(argv)
     if args.game_root is None:
         parser.error("--game-root is required")
-    chosen = [g for g in ("find", "trace", "parity", "completion") if getattr(args, g)]
+    flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0"}
+    chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if len(chosen) > 1:
-        parser.error("pick one of --find, --trace, --parity, --completion")
+        parser.error("pick one of --find, --trace, --parity, --0.4.0")
     args.group = chosen[0] if chosen else "sources"
 
     bridge_module = load_bridge()

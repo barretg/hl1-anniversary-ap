@@ -41,6 +41,16 @@ struct Snapshot {
     // An ally's drop counts as a weapon source. Off in every seed that does not
     // ask for it, and in snapshots from clients older than the option.
     bool ally_weapon_drops = false;
+    // Butterfingers hands the weapon back after its timer. Off, only once the
+    // player has no weapons left. On in snapshots from clients older than the
+    // option, which is how those seeds played.
+    bool butterfingers_reissue = true;
+    // The sv_airaccelerate Progressive Air Acceleration has reached. -1 leaves
+    // it to the game: seeds without the option, and older clients.
+    int air_accelerate = -1;
+    // Melee Throw is in this seed's pool, so a throw before it arrives says
+    // why nothing happened. Off from older clients: mouse2 stays silent.
+    bool melee_throw = false;
     int death_link_amnesty = 0;
 
     std::set<long> checked;   // for ap_tracker

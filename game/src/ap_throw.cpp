@@ -38,7 +38,7 @@ constexpr int kTrailLife = 6;
 constexpr int kTrailWidth = 3;
 constexpr int kTrailBrightness = 200;
 
-// The bar flies as an 8-unit cube but lands in the 32x32x16 pickup box, which
+// The bar flies as a point but lands in the 32x32x16 pickup box, which
 // stopped flush against a wall is buried in it and drags itself out a few units
 // per frame. Stepping back along the surface normal first drops it into open
 // space instead.
@@ -73,6 +73,20 @@ const Throwable* ThrowableFor(const char* classname) {
     return nullptr;
 }
 
+// Mouse2 held calls the attack every frame; once a second is plenty. Reset when
+// the clock goes backwards (a new map), as the flashlight's refusal does.
+void RefuseThrow() {
+    static float last_said = -1000.0f;
+    if (gpGlobals->time < last_said) {
+        last_said = -1000.0f;
+    }
+    if (gpGlobals->time - last_said < 1.0f) {
+        return;
+    }
+    last_said = gpGlobals->time;
+    Notify(std::string("You have not found ") + kThrowItem + " yet.");
+}
+
 // Classnames in flight or on the floor, and the weapon each throw leaves to be
 // taken out of the inventory on the next frame.
 std::set<std::string> g_thrown;
@@ -101,10 +115,16 @@ public:
     void EXPORT FlyTouch(CBaseEntity* other);
     void EXPORT PickupTouch(CBaseEntity* other);
     void EXPORT ReturnThink();
+    void EXPORT ResumeThink();
 
     const Throwable* Kind() const { return ThrowableFor(STRING(m_weapon)); }
 
     string_t m_weapon;
+    // Flight through something it broke: the velocity it had going in, and when
+    // the return think was due before the resume took its place.
+    Vector m_resume_velocity;
+    Vector m_resume_spin;
+    float m_return_at = 0;
 
 private:
     void Land();
@@ -119,6 +139,9 @@ LINK_ENTITY_TO_CLASS(ap_thrown_melee, CApThrownMelee);
 
 TYPEDESCRIPTION CApThrownMelee::m_SaveData[] = {
     DEFINE_FIELD(CApThrownMelee, m_weapon, FIELD_STRING),
+    DEFINE_FIELD(CApThrownMelee, m_resume_velocity, FIELD_VECTOR),
+    DEFINE_FIELD(CApThrownMelee, m_resume_spin, FIELD_VECTOR),
+    DEFINE_FIELD(CApThrownMelee, m_return_at, FIELD_TIME),
 };
 IMPLEMENT_SAVERESTORE(CApThrownMelee, CBaseAnimating);
 
@@ -129,7 +152,10 @@ void CApThrownMelee::Spawn() {
     pev->friction = 0.8f;
     const Throwable* kind = Kind();
     SET_MODEL(ENT(pev), kind != nullptr ? kind->model : "models/w_crowbar.mdl");
-    UTIL_SetSize(pev, Vector(-4, -4, -4), Vector(4, 4, 4));
+    // A point in flight. The engine moves anything wider than three units with
+    // a whole player's hull, which closes a window too short for a player to
+    // stand in: the bar struck the wall around the glass and never touched it.
+    UTIL_SetSize(pev, g_vecZero, g_vecZero);
     UTIL_SetOrigin(pev, pev->origin);
     SetTouch(&CApThrownMelee::FlyTouch);
 }
@@ -141,8 +167,20 @@ void CApThrownMelee::FlyTouch(CBaseEntity* other) {
     const Throwable* kind = Kind();
     if (kind != nullptr && other->pev->takedamage != DAMAGE_NO) {
         CBaseEntity* thrower = CBaseEntity::Instance(pev->owner);
+        const bool brush = other->pev->solid == SOLID_BSP;
         other->TakeDamage(pev, thrower != nullptr ? thrower->pev : pev, kind->damage(),
                           DMG_CLUB);
+        if (brush && other->pev->solid == SOLID_NOT) {
+            // Broke it (a func_breakable goes non-solid as it dies): carry on
+            // through the gap. The engine clips the velocity against the face
+            // once this returns, so it is put back on the next frame.
+            m_resume_velocity = pev->velocity;
+            m_resume_spin = pev->avelocity;
+            m_return_at = pev->nextthink;
+            SetThink(&CApThrownMelee::ResumeThink);
+            pev->nextthink = gpGlobals->time;
+            return;
+        }
         const bool flesh = other->Classify() != CLASS_NONE &&
                            other->Classify() != CLASS_MACHINE;
         EMIT_SOUND(ENT(pev), CHAN_WEAPON, flesh ? kind->hit_body : kind->hit_wall, 1,
@@ -212,6 +250,14 @@ void CApThrownMelee::ReturnThink() {
     }
 }
 
+void CApThrownMelee::ResumeThink() {
+    pev->velocity = m_resume_velocity;
+    pev->avelocity = m_resume_spin;
+    pev->flags &= ~FL_ONGROUND;
+    SetThink(&CApThrownMelee::ReturnThink);
+    pev->nextthink = m_return_at;
+}
+
 bool CApThrownMelee::GiveBack() {
     CBasePlayer* player = ap::Player();
     if (player == nullptr || !player->IsAlive()) {
@@ -247,11 +293,19 @@ bool ThrowMelee(CBasePlayerWeapon* weapon) {
     if (weapon == nullptr || weapon->m_pPlayer == nullptr) {
         return false;
     }
-    if (!Data().Loaded() || !State().Has(kThrowItem)) {
-        return false;  // not in this seed, or not sent yet: mouse2 does nothing
-    }
     const Throwable* kind = ThrowableFor(STRING(weapon->pev->classname));
-    if (kind == nullptr || Thrown(kind->classname)) {
+    if (!Data().Loaded() || kind == nullptr) {
+        return false;
+    }
+    if (!State().Has(kThrowItem)) {
+        // Not sent yet: say so, as the flashlight does. Not in this seed at
+        // all: mouse2 does nothing, as in retail.
+        if (State().melee_throw) {
+            RefuseThrow();
+        }
+        return false;
+    }
+    if (Thrown(kind->classname)) {
         return false;
     }
     CBasePlayer* player = weapon->m_pPlayer;

@@ -430,3 +430,21 @@ def test_snapshot_carries_the_tracker_location_sets(bridge: Bridge) -> None:
 
     # A check landing has to reach the game, so this counts as a change.
     assert snapshot(bridge, checked=[7760001, 7760002, 7760003], missing=[]) is True
+
+
+def test_snapshot_carries_air_accelerate(bridge: Bridge) -> None:
+    """-1, left to the game, unless the seed manages it."""
+    snapshot(bridge)
+    assert "air_accelerate=-1" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, air_accelerate=27) is True
+    assert "air_accelerate=27" in bridge.in_path.read_text(encoding="utf-8")
+
+
+def test_snapshot_carries_butterfingers_reissue(bridge: Bridge) -> None:
+    """On unless the seed says otherwise, which is how older seeds played."""
+    snapshot(bridge)
+    assert "butterfingers_reissue=1" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, butterfingers_reissue=False) is True
+    assert "butterfingers_reissue=0" in bridge.in_path.read_text(encoding="utf-8")

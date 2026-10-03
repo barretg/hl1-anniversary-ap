@@ -77,6 +77,11 @@ void GrantFiller(CBasePlayer* player, const std::string& item_name);
 void ClampArmour();
 bool ArmourAllowed();
 
+// Hold sv_airaccelerate at what Progressive Air Acceleration has reached. A
+// snapshot that leaves it to the game puts back the value we found, once.
+// Every poll, so a console change does not outlast the next one.
+void EnforceAirAccelerate();
+
 // The suit bit, held on every frame. "Granted, never removed" is the rule, and
 // this is where it is kept rather than only on a spawn and a snapshot change.
 //

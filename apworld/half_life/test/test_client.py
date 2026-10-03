@@ -7,7 +7,9 @@ new keys, and must play exactly as it did: Half-Life alone, one finale.
 import logging
 import unittest
 
-from ..client.launcher import HALF_LIFE, HalfLifeContext, load_campaign, outgoing_chat
+from ..client.launcher import (
+    HALF_LIFE, HalfLifeCommandProcessor, HalfLifeContext, load_campaign, outgoing_chat,
+)
 
 
 def context() -> HalfLifeContext:
@@ -29,6 +31,11 @@ def context() -> HalfLifeContext:
     ctx.ally_weapon_drops = False
     ctx.completed_missions = set()
     ctx.unlocked_chapters = set()
+    ctx.unlocked_items = set()
+    ctx.air_accelerate_received = 0
+    ctx.force_melee_throw = False
+    ctx.item_by_id = {entry["id"]: entry for entry in ctx.campaign["items"]}
+    ctx.bridge = None
     return ctx
 
 
@@ -90,6 +97,13 @@ class TestOldSeed(unittest.TestCase):
     def test_ally_drops_stay_off(self) -> None:
         self.assertFalse(self.ctx.ally_weapon_drops)
 
+    def test_butterfingers_still_reissues(self) -> None:
+        self.assertTrue(self.ctx.butterfingers_reissue)
+
+    def test_air_acceleration_is_left_to_the_game(self) -> None:
+        self.assertIsNone(self.ctx.air_acceleration)
+        self.assertEqual(self.ctx.air_accelerate, -1)
+
     def test_the_flashlight_works_as_before(self) -> None:
         self.assertTrue({"Flashlight", "Night Vision Goggles"} <= self.ctx.always_unlocked)
         self.assertNotIn("Melee Throw", self.ctx.always_unlocked)
@@ -128,6 +142,7 @@ class TestEveryGameSeed(unittest.TestCase):
                                               "blue_shift": 1},
             "viewmodel_style": "always_gordon",
             "ally_weapon_drops": True,
+            "butterfingers_reissue": False,
         })
 
     def test_each_seal_counts_its_own_game(self) -> None:
@@ -147,6 +162,53 @@ class TestEveryGameSeed(unittest.TestCase):
 
     def test_ally_drops_reach_the_game(self) -> None:
         self.assertTrue(self.ctx.ally_weapon_drops)
+
+    def test_butterfingers_reissue_reaches_the_game(self) -> None:
+        self.assertFalse(self.ctx.butterfingers_reissue)
+
+
+class TestReceivedAbilities(unittest.TestCase):
+    def setUp(self) -> None:
+        self.ctx = context()
+        self.ctx.apply_slot_data({**OLD_SLOT_DATA, "air_acceleration": [10, 100]})
+        self.ids = {entry["name"]: entry["id"] for entry in self.ctx.campaign["items"]}
+
+    def test_melee_throw_is_held(self) -> None:
+        self.ctx.apply_item(self.ids["Melee Throw"])
+        self.assertIn("Melee Throw", self.ctx.held_item_names)
+
+    def test_air_acceleration_climbs_one_step_per_copy(self) -> None:
+        self.assertEqual(self.ctx.air_accelerate, 10)
+        self.ctx.apply_item(self.ids["Progressive Air Acceleration"])
+        self.assertEqual(self.ctx.air_accelerate, 12)
+        for _ in range(30):
+            self.ctx.apply_item(self.ids["Progressive Air Acceleration"])
+        self.assertEqual(self.ctx.air_accelerate, 100)
+        self.assertNotIn("Progressive Air Acceleration", self.ctx.held_item_names)
+
+
+class TestForceMeleeThrow(unittest.TestCase):
+    """`/force_melee_throw` turns the throw on for seeds without the item."""
+
+    def force(self, ctx: HalfLifeContext) -> None:
+        processor = HalfLifeCommandProcessor.__new__(HalfLifeCommandProcessor)
+        processor.ctx = ctx
+        processor._cmd_force_melee_throw()
+
+    def test_an_old_seed_can_turn_it_on_and_off(self) -> None:
+        ctx = context()
+        ctx.apply_slot_data(OLD_SLOT_DATA)
+        self.assertNotIn("Melee Throw", ctx.held_item_names)
+        self.force(ctx)
+        self.assertIn("Melee Throw", ctx.held_item_names)
+        self.force(ctx)
+        self.assertNotIn("Melee Throw", ctx.held_item_names)
+
+    def test_a_seed_with_the_item_must_find_it(self) -> None:
+        ctx = context()
+        ctx.apply_slot_data({**OLD_SLOT_DATA, "melee_throw": True})
+        self.force(ctx)
+        self.assertNotIn("Melee Throw", ctx.held_item_names)
 
 
 class TestMissingGameWarning(unittest.TestCase):

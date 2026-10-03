@@ -358,6 +358,28 @@ void ClampArmour() {
     }
 }
 
+void EnforceAirAccelerate() {
+    // What the game had before we first changed it, or -1 while it is ours to
+    // leave alone. Kept across map loads, as the cvar itself is.
+    static float s_original = -1.0f;
+
+    const int wanted = State().air_accelerate;
+    const float current = CVAR_GET_FLOAT("sv_airaccelerate");
+    if (wanted < 0) {
+        if (s_original >= 0.0f) {
+            CVAR_SET_FLOAT("sv_airaccelerate", s_original);
+            s_original = -1.0f;
+        }
+        return;
+    }
+    if (current != static_cast<float>(wanted)) {
+        if (s_original < 0.0f) {
+            s_original = current;
+        }
+        CVAR_SET_FLOAT("sv_airaccelerate", static_cast<float>(wanted));
+    }
+}
+
 namespace {
 
 bool CanCollectGated(const std::string& classname) {

@@ -35,10 +35,13 @@ from .data import (
     HALF_LIFE,
     ITEMS,
     ABILITY_ITEM_NAMES,
+    AIR_ACCELERATE_ITEM,
     OPTIONAL_ITEM_CAMPAIGNS,
     OPTIONAL_ITEM_NAMES,
     VANILLA_WHEN_UNSHUFFLED,
     VICTORY,
+    air_accelerate_bounds,
+    air_accelerate_steps,
     campaign_of,
 )
 from .items import (
@@ -62,6 +65,8 @@ from .locations import (
     location_table,
 )
 from .options import (
+    AirAccelerationMaximum,
+    AirAccelerationMinimum,
     AllyWeaponDrops,
     BlueShiftMissionsRequired,
     HalfLifeOptions,
@@ -71,6 +76,7 @@ from .options import (
     MeleeThrow,
     MissionsRequired,
     OpposingForceMissionsRequired,
+    ProgressiveAirAcceleration,
     RandomStartingWeapon,
     ShuffleFlashlight,
     ViewmodelStyle,
@@ -141,7 +147,8 @@ class HalfLifeWeb(WebWorld):
         OptionGroup(
             "Experimental Features",
             [RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
-             AllyWeaponDrops],
+             AllyWeaponDrops, ProgressiveAirAcceleration, AirAccelerationMinimum,
+             AirAccelerationMaximum],
             start_collapsed=True,
         ),
     ]
@@ -390,6 +397,10 @@ class HalfLifeWorld(World):
                 location.place_locked_item(self.create_item(name))
                 continue
             pool.append(self.create_item(name))
+        pool += [
+            self.create_item(AIR_ACCELERATE_ITEM)
+            for _ in range(self.air_accelerate_item_count)
+        ]
 
         remaining = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
         if remaining < 0:
@@ -399,6 +410,16 @@ class HalfLifeWorld(World):
         pool += [self.create_item(name) for name in self.get_filler_names(remaining)]
 
         self.multiworld.itempool += pool
+
+    @property
+    def air_accelerate_item_count(self) -> int:
+        """How many Progressive Air Acceleration items this seed places."""
+        if not self.options.progressive_air_acceleration:
+            return 0
+        return len(air_accelerate_steps(
+            self.options.air_acceleration_minimum.value,
+            self.options.air_acceleration_maximum.value,
+        ))
 
     def get_filler_names(self, count: int) -> list[str]:
         """Fill the leftover locations, with `trap_percentage` of them traps."""
@@ -460,6 +481,14 @@ class HalfLifeWorld(World):
             "shuffle_longjump": bool(self.options.shuffle_longjump),
             "shuffle_flashlight": bool(self.options.shuffle_flashlight),
             "melee_throw": bool(self.options.melee_throw),
+            # [minimum, maximum] the client walks the items between, or None
+            # when air acceleration is left to the game. Swapped and clamped
+            # here so the client never has to second-guess them.
+            "air_acceleration": list(air_accelerate_bounds(
+                self.options.air_acceleration_minimum.value,
+                self.options.air_acceleration_maximum.value,
+            )) if self.options.progressive_air_acceleration else None,
+            "butterfingers_reissue": bool(self.options.butterfingers_reissue),
             # Logic only, for Universal Tracker: whether killing an ally for
             # their weapon counts toward its check.
             "ally_weapon_drops": self.ally_weapon_drops,
