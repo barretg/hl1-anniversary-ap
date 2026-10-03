@@ -307,6 +307,8 @@ class HalfLifeContext(SuperContext):
         # Whether an ally's drop is a weapon source. Off unless the seed says.
         self.ally_weapon_drops = False
         self.goal_sent = False
+        # The slot the per-run state above belongs to. See `forget_other_slot`.
+        self.state_slot = ""
         self.chat_relay = True
         self.bridge_failures = 0
         # How far through the server's item history we have got. Guards against
@@ -446,6 +448,9 @@ class HalfLifeContext(SuperContext):
         # Universal Tracker does its work in here when its context is the base,
         # so it has to see every packet. Harmless otherwise.
         super().on_package(cmd, args)
+
+        if cmd == "Connected":
+            self.forget_other_slot()
 
         # Any packet can move `checked_locations` on: RoomUpdate carries them
         # after somebody releases, and ReceivedItems after a collect. A mission
@@ -655,6 +660,26 @@ class HalfLifeContext(SuperContext):
             and location_id not in self.legacy_sent
             and self.reached_id_by_map.get(map_name) in reached
         )
+
+    def forget_other_slot(self) -> None:
+        """Drop what this client run learned about a different slot.
+
+        `completed_missions` only ever grows, so connecting one client to a
+        second slot or seed carried the first one's finished missions into it,
+        counted toward a seal they had nothing to do with. A reconnect to the same
+        slot keeps everything: the game may have reported a completion the server
+        has not echoed yet.
+        """
+        identity = self.slot_identity
+        if identity == self.state_slot:
+            return
+        if self.state_slot:
+            logger.info("Connected to a different slot; forgetting the last one's "
+                        "finished missions.")
+        self.state_slot = identity
+        self.completed_missions.clear()
+        self.legacy_sent.clear()
+        self.goal_sent = False
 
     def sync_completed_missions(self) -> None:
         """Rebuild the finished-mission set from the server's checked locations.

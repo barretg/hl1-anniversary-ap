@@ -240,3 +240,34 @@ class TestOutgoingChat(unittest.TestCase):
     def test_an_empty_line_sends_nothing(self) -> None:
         self.assertIsNone(outgoing_chat(["Gordon", "  "]))
         self.assertIsNone(outgoing_chat(["Gordon"]))
+
+
+class TestSlotChange(unittest.TestCase):
+    """Finished missions belong to one slot, not to the client run."""
+
+    def setUp(self) -> None:
+        self.ctx = context()
+        self.ctx.legacy_sent = set()
+        self.ctx.goal_sent = False
+        self.ctx.state_slot = ""
+        self.ctx.seed_name = "seed-a"
+        self.ctx.slot = 1
+        self.ctx.forget_other_slot()
+        self.ctx.completed_missions.update({"c4a1", "c4a2"})
+        self.ctx.goal_sent = True
+
+    def test_a_reconnect_keeps_them(self) -> None:
+        self.ctx.forget_other_slot()
+        self.assertEqual(self.ctx.completed_missions, {"c4a1", "c4a2"})
+        self.assertTrue(self.ctx.goal_sent)
+
+    def test_another_slot_starts_empty(self) -> None:
+        self.ctx.slot = 2
+        self.ctx.forget_other_slot()
+        self.assertEqual(self.ctx.completed_missions, set())
+        self.assertFalse(self.ctx.goal_sent)
+
+    def test_another_seed_starts_empty(self) -> None:
+        self.ctx.seed_name = "seed-b"
+        self.ctx.forget_other_slot()
+        self.assertEqual(self.ctx.completed_missions, set())

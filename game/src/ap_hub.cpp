@@ -1226,9 +1226,11 @@ bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map
     // be unlocked -- but it is not an achievement.
     const bool forwards = to != nullptr && to->index > from->index;
 
-    if (forwards) {
-        SendChapterComplete(*from);
+    if (forwards && SendChapterComplete(*from)) {
         Notify(from->name + " complete. Returning to the hub.");
+    } else if (forwards) {
+        Notify(from->name + " could not be recorded: the client is not connected. "
+               "Returning to the hub.");
     } else {
         Notify(std::string("That way leads out of ") + from->name +
                ". Returning to the hub.");
@@ -1251,8 +1253,12 @@ bool InterceptEndSection(const std::string& map_name) {
     // has nowhere further to go, and retail drops to the main menu. That is the
     // mission finished, and the hub rather than the menu is where the run
     // carries on.
-    SendChapterComplete(*chapter);
-    Notify(chapter->name + " complete. Returning to the hub.");
+    if (SendChapterComplete(*chapter)) {
+        Notify(chapter->name + " complete. Returning to the hub.");
+    } else {
+        Notify(chapter->name + " could not be recorded: the client is not connected. "
+               "Returning to the hub.");
+    }
     RequestMap(kHubMap);
     return true;
 }

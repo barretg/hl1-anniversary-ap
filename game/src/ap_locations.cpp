@@ -569,7 +569,16 @@ void AuthoriseMap() {
     }
 }
 
-void SendChapterComplete(const Chapter& chapter) {
+bool SendChapterComplete(const Chapter& chapter) {
+    // The same guards as `SendCheck`. Every check in here is refused without
+    // them, and a `COMPLETE` sent anyway counted toward the finale's seal a
+    // mission whose completion check the server never got: played while the
+    // client was disconnected, or on a map restored from a save the seed does
+    // not allow.
+    if (!Live() || !g_map_authorised) {
+        return false;
+    }
+
     for (const Location& location : Data().locations) {
         if (location.type == TriggerType::ChapterComplete &&
             location.chapter == chapter.key) {
@@ -583,6 +592,7 @@ void SendChapterComplete(const Chapter& chapter) {
     if (chapter.is_goal) {
         Wire().Send("GOAL", chapter.key);
     }
+    return true;
 }
 
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target) {

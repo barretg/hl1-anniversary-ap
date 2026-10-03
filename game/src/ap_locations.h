@@ -47,8 +47,9 @@ void AuthoriseMap();
 
 // This mission is over: send its completion check and tell the client. Called
 // from the mission-boundary interception, which is where finishing normally
-// happens, and from `OnMapStart` for the finale.
-void SendChapterComplete(const Chapter& chapter);
+// happens, and from `OnMapStart` for the finale. False, having sent nothing,
+// when no check could be sent from here: not live, or the map not authorised.
+bool SendChapterComplete(const Chapter& chapter);
 
 // The player pressed +use on something. Matches it against the charger table by
 // classname and by where it stands.
