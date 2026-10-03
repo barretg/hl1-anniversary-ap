@@ -180,7 +180,8 @@ void Teleport() {
 // Everything but `tp` is the harness's to answer.
 const char* const kHarnessVerbs[] = {
     "pass", "fail", "note", "next", "prev", "redo", "go", "info", "status",
-    "list", "give", "take", "item", "trap", "deathlink",
+    "list", "give", "take", "item", "trap", "deathlink", "clear", "connect",
+    "disconnect",
 };
 
 void Cmd_Test() {
@@ -191,7 +192,7 @@ void Cmd_Test() {
     }
     if (!TestDispatch(verb, rest)) {
         Notify("[aptest] testing_aptest pass|fail|note|next|prev|redo|go|info|status|"
-               "list|give|take|item|trap|deathlink|tp");
+               "list|clear|give|take|item|trap|deathlink|connect|disconnect|tp");
     }
 }
 

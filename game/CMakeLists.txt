@@ -231,20 +231,27 @@ if(HLAP_CLIENT AND MSVC)
     set_target_properties(client PROPERTIES OUTPUT_NAME "client" PREFIX "")
     set_property(TARGET client PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     # Staged like hl.dll below; mod.CLIENT_DLL_NAME is the same path.
-    add_custom_command(TARGET client POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/cl_dlls"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:client>"
-                "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/cl_dlls/client.dll"
-        COMMENT "Staging client.dll into the apworld")
+    if(NOT HLAP_TEST_BUILD)
+        add_custom_command(TARGET client POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/cl_dlls"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:client>"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/cl_dlls/client.dll"
+            COMMENT "Staging client.dll into the apworld")
+    endif()
 endif()
 
 # Stage every build where `tools/build_apworld.py` packages it from, so the
 # apworld can never carry a dll older than the code. This used to be a manual
 # copy, and a missed copy meant testing yesterday's dll with nothing to say so.
 # `mod.DLL_NAME` in apworld/half_life/mod/__init__.py is the same path.
-set(AP_STAGED_DLL
-    "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/dlls/hl.dll")
-add_custom_command(TARGET hl POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/dlls"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:hl>" "${AP_STAGED_DLL}"
-    COMMENT "Staging hl.dll into the apworld")
+#
+# Not the test build: its dll answers the aptest harness, and staging it would
+# ship that in the next apworld. The harness swaps it in by itself.
+if(NOT HLAP_TEST_BUILD)
+    set(AP_STAGED_DLL
+        "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/dlls/hl.dll")
+    add_custom_command(TARGET hl POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/../apworld/half_life/mod/files/dlls"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:hl>" "${AP_STAGED_DLL}"
+        COMMENT "Staging hl.dll into the apworld")
+endif()

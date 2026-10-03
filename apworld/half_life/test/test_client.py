@@ -250,6 +250,7 @@ class TestSlotChange(unittest.TestCase):
         self.ctx.legacy_sent = set()
         self.ctx.goal_sent = False
         self.ctx.state_slot = ""
+        self.ctx.checked_locations = set()
         self.ctx.seed_name = "seed-a"
         self.ctx.slot = 1
         self.ctx.forget_other_slot()

@@ -45,6 +45,19 @@ Scenarios come from the installed `checkdata.txt`, so they track the data:
 the line's colour and route, the fallback where a map has no nodes, toggling
 off, retargeting, a target off the map, and the chat colour.
 
+`--completion` runs only the mission completion scenarios (see
+`completion_scenarios`): a `COMPLETE` goes out with its checks or not at all.
+They use two more verbs, standing in for the client's connection:
+    !connect / !disconnect    what the snapshot says about the client
+and the harness shows every COMPLETE and GOAL the game sends.
+
+Every verdict is recorded with its group (the mode it was run in). To start a
+group over:
+    !clear             asks; !clear yes drops this group's results
+    --clear            the same from the command line, with the group's flag,
+                       without launching anything
+What is dropped is kept in `aptest_results_cleared.txt`.
+
 `--parity` runs only the Sven parity scenarios (see `parity_scenarios`): the
 behaviour this game was brought in line with the Sven Co-op plugin on. They
 use three more verbs, standing in for what the real client would deliver:
@@ -54,7 +67,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace | --parity]
+    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace | --parity | --completion] [--clear]
 """
 
 from __future__ import annotations
@@ -139,6 +152,7 @@ class CheckData:
     locations: dict[int, Location] = field(default_factory=dict)
     sources: list[Source] = field(default_factory=list)
     gated: dict[str, str] = field(default_factory=dict)  # classname -> item
+    goal_chapter: str = ""
 
     def chapter_of(self, map_name: str) -> Chapter | None:
         return next((c for c in self.chapters if map_name in c.maps), None)
@@ -155,6 +169,8 @@ def read_checkdata(path: Path) -> CheckData:
         f = line.split("|")
         if f[0] == "D":
             data.data_version = f[1]
+        elif f[0] == "G" and len(f) >= 2:
+            data.goal_chapter = f[1]
         elif f[0] == "C" and len(f) >= 6:
             data.chapters.append(Chapter(f[2], f[3], f[4].split(","),
                                          f[7] if len(f) > 7 else ""))
@@ -188,6 +204,12 @@ class Scenario:
     # Locations the server already has, such as a part's arrival, so a part
     # warp to it is allowed.
     checked: list[int] = field(default_factory=list)
+    # Whether the snapshot says the client is connected. `!connect` and
+    # `!disconnect` change it mid-scenario.
+    connected: bool = True
+    # Missions whose `COMPLETE` this scenario is waiting for. Any other one the
+    # game sends is called out.
+    expect_complete: list[str] = field(default_factory=list)
 
 
 def cache_key(data: CheckData) -> str:
@@ -740,6 +762,97 @@ def parity_scenarios(data: CheckData) -> list[Scenario]:
     return out
 
 
+def mission_exits(data: CheckData, game_root: Path) -> dict[str, tuple[str, str]]:
+    """Each mission's walk-in exit: `{key: (map, "x y z")}`.
+
+    A `trigger_changelevel` into a later mission that fires on touch, not one a
+    script or a button fires, so standing in it is enough.
+    """
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import brush_model_centres, load_map
+    from campaigns import KNOWN_CAMPAIGNS
+
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+    order = {m: i for i, c in enumerate(data.chapters) for m in c.maps}
+    exits: dict[str, tuple[str, str]] = {}
+    for index, chapter in enumerate(data.chapters):
+        for map_name in chapter.maps:
+            bsp = game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
+            if not bsp.is_file():
+                continue
+            centres = brush_model_centres(bsp)
+            for entity in load_map(bsp):
+                if (entity.get("classname") != "trigger_changelevel"
+                        or entity.get("targetname")
+                        or order.get(entity.get("map", ""), -1) <= index):
+                    continue
+                centre = centres.get(entity.get("model", ""))
+                if centre is not None and chapter.key not in exits:
+                    exits[chapter.key] = (map_name, " ".join(f"{v:g}" for v in centre))
+    return exits
+
+
+def completion_scenarios(data: CheckData,
+                         exits: dict[str, tuple[str, str]]) -> list[Scenario]:
+    """A mission's `COMPLETE` goes out only with its checks.
+
+    It used to be sent whatever became of them, and the client counted it toward
+    the finale's seal: a mission walked out of while the client was disconnected
+    opened Nihilanth a mission early.
+    """
+    by_key = {c.key: c for c in data.chapters}
+    complete = {l.arg: l for l in data.locations.values() if l.kind == "chapter_complete"}
+    verdict = "!pass, or !fail <what was different>."
+    out: list[Scenario] = []
+
+    # The first Half-Life mission with an exit you can walk into.
+    key = next((c.key for c in data.chapters
+                if c.key in exits and c.key in complete and c.campaign == "half_life"),
+               None)
+    if key is not None:
+        chapter = by_key[key]
+        exit_map, exit_pos = exits[key]
+        check = complete[key]
+        out += [
+            Scenario(
+                title=f"Completion: leaving {chapter.name} while connected",
+                map=exit_map, pos=exit_pos, expect=[check.id], expect_complete=[key],
+                steps="\n".join([
+                    f"You are put in {chapter.name}'s exit ({exit_map}); it fires at once.",
+                    f"On screen: '{chapter.name} complete. Returning to the hub.'",
+                    f"The harness shows the check '{check.name}' and COMPLETE {key}.",
+                    "The control for the next scenario. " + verdict,
+                ])),
+            Scenario(
+                title=f"Completion: leaving {chapter.name} while disconnected",
+                map=exit_map, pos=exit_pos, connected=False,
+                steps="\n".join([
+                    f"The client reads as disconnected. You are put in {chapter.name}'s",
+                    f"exit ({exit_map}); it fires at once.",
+                    f"On screen: '{chapter.name} could not be recorded: the client is",
+                    "not connected. Returning to the hub.' You end up in the hub.",
+                    "The harness shows no check and no COMPLETE: one here means the",
+                    "seal would count a mission the server never heard of. " + verdict,
+                ])),
+        ]
+
+    # The finale finishes on arrival, which waits for the client instead.
+    finale = next((c for c in data.chapters if c.key == data.goal_chapter), None)
+    if finale is not None and len(finale.maps) > 1 and finale.key in complete:
+        last = finale.maps[-1]
+        check = complete[finale.key]
+        out.append(Scenario(
+            title=f"Completion: arriving on {finale.name}'s last map disconnected",
+            map=last, connected=False, expect=[check.id], expect_complete=[finale.key],
+            steps="\n".join([
+                f"The client reads as disconnected; you arrive on {last}.",
+                "The harness shows nothing: no check, no COMPLETE, no GOAL.",
+                f"!connect: now '{check.name}' arrives, with COMPLETE {finale.key}",
+                "and GOAL. The arrival was held, not dropped. " + verdict,
+            ])))
+    return out
+
+
 def build_scenarios(data: CheckData,
                     only: dict[tuple[int, str], str] | None = None) -> list[Scenario]:
     """Appended to, never reordered: results are recorded by title, but a
@@ -877,23 +990,58 @@ class DllSwap:
 # -------------------------------------------------------------- the harness
 
 
+# The scenario groups, one per run mode. Each run records its group with every
+# verdict, so `clear` can drop one group's results and leave the others.
+GROUPS = ("sources", "find", "trace", "parity", "completion")
+
+
+def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
+                     unproven: bool = False) -> list[Scenario]:
+    if group == "parity":
+        return parity_scenarios(data)
+    if group == "trace":
+        return trace_scenarios(data, node_counts(data, game_root))
+    if group == "find":
+        return find_scenarios(data)
+    if group == "completion":
+        return completion_scenarios(data, mission_exits(data, game_root))
+    only = None
+    if unproven:
+        only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
+    return build_scenarios(data, only)
+
+
+def clear_results(results: Path, group: str, titles: set[str]) -> int:
+    """Drop one group's verdicts from `results`. Returns how many went.
+
+    A line is the group's if it names the group, or, written before lines named
+    one, if its title is one of the group's scenarios. What is dropped is kept
+    in `aptest_results_cleared.txt` beside it, so a clear can be undone by hand.
+    """
+    if not results.exists():
+        return 0
+    kept: list[str] = []
+    dropped: list[str] = []
+    for line in results.read_text(encoding="utf-8").splitlines():
+        parts = line.split("|")
+        named = parts[6] if len(parts) > 6 else ""
+        ours = named == group or (not named and len(parts) > 2 and parts[2] in titles)
+        (dropped if ours else kept).append(line)
+    if dropped:
+        backup = results.with_name("aptest_results_cleared.txt")
+        with backup.open("a", encoding="utf-8") as handle:
+            handle.write("".join(line + "\n" for line in dropped))
+        results.write_text("".join(line + "\n" for line in kept), encoding="utf-8")
+    return len(dropped)
+
+
 class Harness:
-    def __init__(self, store: Path, bridge_module, find: bool,
-                 game_root: Path | None = None,
-                 trace_root: Path | None = None, parity: bool = False) -> None:
+    def __init__(self, store: Path, bridge_module, group: str,
+                 scenarios: list[Scenario]) -> None:
         self.store = store
         self.data = read_checkdata(store / "checkdata.txt")
-        only = None
-        if game_root is not None:
-            only = unproven_sources(self.data, game_root, store / "aptest_unproven.txt")
-        if parity:
-            self.scenarios = parity_scenarios(self.data)
-        elif trace_root is not None:
-            self.scenarios = trace_scenarios(self.data, node_counts(self.data, trace_root))
-        elif find:
-            self.scenarios = find_scenarios(self.data)
-        else:
-            self.scenarios = build_scenarios(self.data, only)
+        self.group = group
+        self.scenarios = scenarios
         self.bridge = bridge_module.Bridge(store)
         self.bridge.reset_cursor()
         self.results_path = store / "aptest_results.txt"
@@ -904,6 +1052,7 @@ class Harness:
         self.current = -1
         self.items: set[str] = self.base_items()
         self.seen: set[int] = set()
+        self.connected = True
         # Re-entrant: a verdict from the game arrives inside the poll and
         # starts the next scenario, which takes the lock again.
         self.lock = threading.RLock()
@@ -934,7 +1083,7 @@ class Harness:
     def publish(self, force: bool = False) -> None:
         s = self.scenario()
         self.bridge.write_snapshot(
-            connected=True,
+            connected=self.connected,
             chapters=[c.key for c in self.data.chapters
                       if s is None or c.key not in s.closed],
             items=sorted(self.items),
@@ -968,6 +1117,7 @@ class Harness:
             s = self.scenarios[index]
             self.items = self.base_items() - set(s.take)
             self.seen = set()
+            self.connected = s.connected
             self.publish(force=True)
             # The game loads the map when the sequence number moves, so a
             # redo of the same scenario reloads it too.
@@ -977,6 +1127,8 @@ class Harness:
             self.tell(f"[aptest] {index}/{len(self.scenarios) - 1}: {s.title}")
             if s.take:
                 self.tell(f"[aptest] Without: {', '.join(s.take)}")
+            if not s.connected:
+                self.tell("[aptest] The client reads as disconnected. !connect to change.")
             self.info()
 
     def info(self) -> None:
@@ -999,7 +1151,7 @@ class Harness:
             return
         sent = ",".join(str(i) for i in sorted(self.seen))
         line = "|".join([time.strftime("%Y-%m-%d %H:%M:%S"), str(self.current),
-                         s.title, verdict, note.replace("|", "/"), sent])
+                         s.title, verdict, note.replace("|", "/"), sent, self.group])
         with self.results_path.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
         self.tell(f"[aptest] Recorded {verdict}.")
@@ -1041,6 +1193,18 @@ class Harness:
                 shown += 1
         self.tell(f"[aptest] {shown} listed in the console (~).")
 
+    def clear(self, arg: str) -> None:
+        """`!clear` asks, `!clear yes` drops every verdict in this run's group."""
+        if arg.lower() != "yes":
+            self.tell(f"[aptest] This drops every '{self.group}' result "
+                      f"({len(self.scenarios)} scenarios). !clear yes to go ahead.")
+            return
+        count = clear_results(self.results_path, self.group,
+                              {s.title for s in self.scenarios})
+        self.tell(f"[aptest] Cleared {count} '{self.group}' result(s); "
+                  "they are kept in aptest_results_cleared.txt.")
+        self.status()
+
     def command(self, verb: str, arg: str) -> None:
         """One verb, from the game (`!pass`) or typed here (`pass`)."""
         with self.lock:
@@ -1072,6 +1236,12 @@ class Harness:
                 self.status()
             elif verb == "list":
                 self.list(arg)
+            elif verb == "clear":
+                self.clear(arg)
+            elif verb in ("connect", "disconnect"):
+                self.connected = verb == "connect"
+                self.publish()
+                self.tell(f"[aptest] The client now reads as {verb}ed.")
             elif verb in ("item", "trap") and arg:
                 # The game ignores a name it does not know, so check it here
                 # and say what would have worked. Chat is not careful about case.
@@ -1096,7 +1266,8 @@ class Harness:
                 self.tell(f"[aptest] {verb}: {arg}")
             else:
                 self.tell("[aptest] !pass !fail !note !next !prev !redo !go <n> !info "
-                          "!status !list !give !take !tp !item !trap !deathlink")
+                          "!status !list !clear !give !take !tp !item !trap !deathlink "
+                          "!connect !disconnect")
 
     # Game to us.
 
@@ -1113,6 +1284,13 @@ class Harness:
             self.tell(f"[aptest] Other check: {name}")
         self.seen.add(location_id)
 
+    def judge_complete(self, kind: str, key: str) -> None:
+        s = self.scenario()
+        if s is not None and key in s.expect_complete:
+            self.tell(f"[aptest] Expected {kind} arrived: {key}.")
+        else:
+            self.tell(f"[aptest] Unexpected {kind}: {key}. Was it meant to be sent?")
+
     def poll(self) -> None:
         while self.running:
             try:
@@ -1125,6 +1303,8 @@ class Harness:
                         self.judge(int(event.arg))
                     elif event.kind == "ACK":
                         self.bridge.acknowledge(int(event.arg))
+                    elif event.kind in ("COMPLETE", "GOAL"):
+                        self.judge_complete(event.kind, event.arg)
                     elif event.kind in ("DEATH", "CHAT"):
                         self.tell(f"[aptest] {event.kind}: " + " | ".join(event.args))
                     elif event.kind == "HELLO":
@@ -1154,14 +1334,32 @@ def main(argv: list[str] | None = None) -> int:
                         help="only the !trace scenarios, in each game")
     parser.add_argument("--parity", action="store_true",
                         help="only the Sven parity scenarios")
+    parser.add_argument("--completion", action="store_true",
+                        help="only the mission completion scenarios")
+    parser.add_argument("--clear", action="store_true",
+                        help="drop the chosen group's results and exit; nothing is "
+                             "launched or swapped")
     args = parser.parse_args(argv)
     if args.game_root is None:
         parser.error("--game-root is required")
+    chosen = [g for g in ("find", "trace", "parity", "completion") if getattr(args, g)]
+    if len(chosen) > 1:
+        parser.error("pick one of --find, --trace, --parity, --completion")
+    args.group = chosen[0] if chosen else "sources"
 
     bridge_module = load_bridge()
     store = bridge_module.find_store_dir(args.game_root)
     if not (store / "checkdata.txt").is_file():
         parser.error(f"{store / 'checkdata.txt'} not found; install the mod first")
+
+    if args.clear:
+        data = read_checkdata(store / "checkdata.txt")
+        scenarios = select_scenarios(args.group, data, store, args.game_root)
+        count = clear_results(store / "aptest_results.txt", args.group,
+                              {s.title for s in scenarios})
+        print(f"Cleared {count} '{args.group}' result(s); "
+              "kept in aptest_results_cleared.txt.")
+        return 0
 
     swap = DllSwap(store.parent / "dlls" / "hl.dll", args.test_dll)
     problem = swap.check()
@@ -1217,9 +1415,10 @@ def running_harness(lock: Path) -> int | None:
 def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
     print("Launch Half-Life now (or restart it if it is running) so it loads the "
           "test dll.")
-    harness = Harness(store, bridge_module, args.find,
-                      args.game_root if args.unproven else None,
-                      args.game_root if args.trace else None, args.parity)
+    data = read_checkdata(store / "checkdata.txt")
+    harness = Harness(store, bridge_module, args.group,
+                      select_scenarios(args.group, data, store, args.game_root,
+                                       args.unproven))
     harness.publish(force=True)
     print(f"{len(harness.scenarios)} scenarios from {store / 'checkdata.txt'}.")
     print("Drive it from the game: !next to begin, !pass / !fail <note> / !note <text>.")

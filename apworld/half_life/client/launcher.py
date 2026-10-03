@@ -669,6 +669,10 @@ class HalfLifeContext(SuperContext):
         counted toward a seal they had nothing to do with. A reconnect to the same
         slot keeps everything: the game may have reported a completion the server
         has not echoed yet.
+
+        The new slot's finished missions are then taken from its checked
+        completions at once, rather than left to the next packet: those count
+        toward its seal however they were checked, collected included.
         """
         identity = self.slot_identity
         if identity == self.state_slot:
@@ -680,6 +684,7 @@ class HalfLifeContext(SuperContext):
         self.completed_missions.clear()
         self.legacy_sent.clear()
         self.goal_sent = False
+        self.sync_completed_missions()
 
     def sync_completed_missions(self) -> None:
         """Rebuild the finished-mission set from the server's checked locations.
