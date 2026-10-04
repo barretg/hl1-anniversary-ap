@@ -1,0 +1,2 @@
+# The built plugin, staged here so packaging picks it up.
+mod/files/addons/hlap.dll

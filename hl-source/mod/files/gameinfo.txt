@@ -1,0 +1,45 @@
+"GameInfo"
+{
+	game		"Half-Life: Source Archipelago"
+	title		"HALF-LIFE"
+	type		singleplayer_only
+
+	hashdcontent	1
+
+	FileSystem
+	{
+		// Launch through Half-Life: Source's own hl2.exe, so the engine is the
+		// one HL:S's server.dll was built against.
+		SteamAppId		280
+		ToolsAppId		211
+
+		// The stock hl1/gameinfo.txt's search paths, with this folder first.
+		// Paths without |gameinfo_path| are relative to the folder holding
+		// hl2.exe, so they reach the real HL:S install wherever this mod lives.
+		SearchPaths
+		{
+			game+mod			|gameinfo_path|custom/*
+			// `game` as well as `mod`: the engine finds addons/*.vdf plugins on the
+			// game path.
+			game+mod+mod_write+default_write_path	|gameinfo_path|.
+
+			game_lv				hl1/hl1_lv.vpk
+			game+mod			hl1/hl1_sound_vo_english.vpk
+			game+mod			hl1/hl1_pak.vpk
+			game				|all_source_engine_paths|hl2/hl2_textures.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
+			game				|all_source_engine_paths|hl2/hl2_misc.vpk
+			platform			|all_source_engine_paths|platform/platform_misc.vpk
+
+			// Saves and other game writes stay in this folder, not hl1.
+			game				hl1
+
+			// HL:S's own, unmodified server.dll and client.dll.
+			gamebin				hl1/bin
+
+			game				|all_source_engine_paths|hl2
+			platform			|all_source_engine_paths|platform
+		}
+	}
+}
