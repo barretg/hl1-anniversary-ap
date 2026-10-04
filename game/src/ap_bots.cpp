@@ -99,9 +99,9 @@ cvar_t bot_zombie = {(char*)"bot_zombie", (char*)"0"};
 
 // Every multiplayer skin Half-Life ships in valve/models/player. A bot wears
 // one at random. Each costs a model precache slot on every map, and a missing
-// file is a fatal precache error, so the list is only what retail installs:
-// spelled as on disk, since several are capitalised and not every filesystem
-// forgives that. All of them carry the player skeleton and sequences, so the
+// file is a fatal precache error, so only those found on disk are precached:
+// not every install has them all. Spelled as on disk, since several are
+// capitalised and not every filesystem forgives that. All of them carry the player skeleton and sequences, so the
 // crowbar and the animation names below fit any of them.
 const char* const kBotModels[] = {
     "models/player/barney/barney.mdl",
@@ -120,6 +120,9 @@ const char* const kBotModels[] = {
     "models/player/zombie/zombie.mdl",
 };
 constexpr int kBotModelCount = sizeof(kBotModels) / sizeof(kBotModels[0]);
+
+// Worn when none of the skins is on disk; every install has it.
+const char* const kFallbackBotModel = "models/player.mdl";
 
 // Opposing Force's multiplayer skins, which `/install` links in when OF is
 // owned. All carry the same skeleton and sequences. Its zombie is left out:
@@ -147,7 +150,8 @@ constexpr int kOpForBotModelCount = sizeof(kOpForBotModels) / sizeof(kOpForBotMo
 // most of the 512. So each load gets a few of OF's, picked at random. A bot in
 // a save needs no help: CBaseEntity::Restore precaches its own model.
 constexpr int kOpForSkinsPerMap = 6;
-const char* g_mapSkins[kOpForSkinsPerMap];
+// The skins precached this map: the Half-Life ones on disk, then a few of OF's.
+const char* g_mapSkins[kBotModelCount + kOpForSkinsPerMap];
 int g_mapSkinCount = 0;
 const char* const kCrowbarModel = "models/p_crowbar.mdl";
 
@@ -228,9 +232,9 @@ IMPLEMENT_SAVERESTORE(CApBot, CBaseMonster);
 
 void CApBot::Spawn() {
     // A restore does not come through here: the saved model is kept.
-    const int pick = RANDOM_LONG(0, kBotModelCount + g_mapSkinCount - 1);
-    SET_MODEL(ENT(pev), pick < kBotModelCount ? kBotModels[pick]
-                                               : g_mapSkins[pick - kBotModelCount]);
+    SET_MODEL(ENT(pev), g_mapSkinCount > 0
+                            ? g_mapSkins[RANDOM_LONG(0, g_mapSkinCount - 1)]
+                            : kFallbackBotModel);
     // Shirt and trousers, as a player's topcolor and bottomcolor: a hue each,
     // low byte and high byte. The client remaps any studio model by it, and it
     // is saved with the rest of entvars.
@@ -799,26 +803,39 @@ int Quota() {
 
 bool BotZombie() { return bot_zombie.value != 0.0f; }
 
+static bool ModelOnDisk(const char* model) {
+    return g_engfuncs.pfnGetFileSize(const_cast<char*>(model)) > 0;
+}
+
 void PrecacheBots() {
-    for (const char* model : kBotModels) {
-        PRECACHE_MODEL((char*)model);
-    }
     g_mapSkinCount = 0;
+    for (const char* model : kBotModels) {
+        if (ModelOnDisk(model)) {
+            PRECACHE_MODEL((char*)model);
+            g_mapSkins[g_mapSkinCount++] = model;
+        }
+    }
+    if (g_mapSkinCount == 0) {
+        PRECACHE_MODEL((char*)kFallbackBotModel);
+    }
     if (IsMountedCampaign("opposing_force")) {
         // A partial shuffle: the first few of a random ordering, no repeats.
         const char* order[kOpForBotModelCount];
         for (int i = 0; i < kOpForBotModelCount; ++i) {
             order[i] = kOpForBotModels[i];
         }
-        for (int i = 0; i < kOpForSkinsPerMap; ++i) {
+        int taken = 0;
+        for (int i = 0; i < kOpForBotModelCount && taken < kOpForSkinsPerMap; ++i) {
             const int j = RANDOM_LONG(i, kOpForBotModelCount - 1);
             const char* swap = order[i];
             order[i] = order[j];
             order[j] = swap;
-            g_mapSkins[i] = order[i];
-            PRECACHE_MODEL((char*)g_mapSkins[i]);
+            if (ModelOnDisk(order[i])) {
+                PRECACHE_MODEL((char*)order[i]);
+                g_mapSkins[g_mapSkinCount++] = order[i];
+                ++taken;
+            }
         }
-        g_mapSkinCount = kOpForSkinsPerMap;
     }
     PRECACHE_MODEL((char*)kCrowbarModel);
     PRECACHE_SOUND((char*)"weapons/cbar_hit1.wav");
