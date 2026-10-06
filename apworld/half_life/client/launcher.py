@@ -507,15 +507,6 @@ class HalfLifeContext(SuperContext):
         elif cmd == "PrintJSON":
             self.relay_to_game(args)
 
-        elif cmd == "Bounced":
-            tags = args.get("tags", [])
-            if "DeathLink" in tags and self.death_link_enabled and self.bridge:
-                data = args.get("data", {})
-                source = data.get("source", "someone")
-                cause = data.get("cause") or "an unknown fate"
-                # The game splits the event line on '|', so the two fields are
-                # joined with '~' instead.
-                self.bridge.queue_event("DEATHLINK", f"{source}~{cause}")
 
     def apply_slot_data(self, slot_data: dict) -> None:
         """Take in what the seed says about itself.
@@ -914,9 +905,17 @@ class HalfLifeContext(SuperContext):
         return ui
 
     def on_deathlink(self, data: dict) -> None:
-        # CommonContext calls this for DeathLink bounces too; the Bounced handler
-        # above already queued it, so there is nothing extra to do here.
+        # CommonContext only calls this for a DeathLink that is not our own echo,
+        # which is why it is handled here rather than on every Bounced packet.
         super().on_deathlink(data)
+        if self.death_link_enabled and self.bridge:
+            source = data.get("source", "someone")
+            # The cause is already a whole sentence that names the player, so the
+            # game shows it as it is and only falls back to the source without one.
+            cause = data.get("cause") or ""
+            # The game splits the event line on '|', so the two fields are joined
+            # with '~' instead.
+            self.bridge.queue_event("DEATHLINK", f"{source}~{cause}")
 
 
 def load_campaign() -> dict:

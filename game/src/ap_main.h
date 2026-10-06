@@ -13,6 +13,7 @@
 //   dlls/client.cpp      ClientPrecache               -> ap::PrecacheTraps
 //   dlls/player.cpp      CBasePlayer::Spawn           -> ap::ApplyLoadout
 //   dlls/player.cpp      CBasePlayer::Killed          -> ap::OnPlayerKilled
+//   dlls/player.cpp      CBasePlayer::TakeDamage      -> ap::OnPlayerDamaged
 //   dlls/player.cpp      CRevertSaved::Use            -> ap::OnRevertSaved
 //   dlls/player.cpp      CBasePlayer::PlayerUse       -> ap::OnPlayerUse
 //   dlls/gamerules.cpp   CGameRules::CanHavePlayerItem-> ap::CanCollect
@@ -58,6 +59,8 @@ bool FlashlightAllowed();                                   // ap_items
 void RefuseFlashlight();                                    // ap_items
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
+void OnPlayerDamaged(CBasePlayer* player, entvars_t* inflictor,    // ap_deathlink
+                     entvars_t* attacker, int damage_type);
 void OnRevertSaved();                                       // ap_deathlink
 void OnHealingTouch(CBaseEntity* player, CBaseEntity* pool);// ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub

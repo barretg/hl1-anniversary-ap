@@ -6,6 +6,7 @@
 #include "ap_deathlink.h"
 
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -110,7 +111,145 @@ bool DeathLinkImmune() {
 // not inside the window.
 float g_reverted_at = -1000.0f;
 
+void ReportDeath(CBasePlayer* player, const std::string& cause);
+
+// What last hurt the player, kept until `Killed` asks. Ongoing damage --
+// poison, radiation, a drowning player's air running out -- comes back as the
+// player hurting themselves with DMG_GENERIC, and is not allowed to overwrite
+// the thing that started it.
+struct LastHurt {
+    std::string inflictor;
+    std::string attacker;
+    int damage_type = 0;
+    float when = -1000.0f;
+};
+LastHurt g_last_hurt;
+
+// How long the last hurt still explains a death. Long enough for a poison tick
+// to finish what a headcrab started; a map change resets the clock below it.
+constexpr float kLastHurtSeconds = 30.0f;
+
+// Classnames whose plain name reads badly or says nothing.
+const char* NamedCause(const std::string& classname) {
+    static const struct {
+        const char* classname;
+        const char* text;
+    } kNames[] = {
+        {"monster_tripmine", "a tripmine"},
+        {"monster_satchel", "a satchel charge"},
+        {"grenade", "a grenade"},
+        {"rpg_rocket", "a rocket"},
+        {"hvr_rocket", "a rocket"},
+        {"monster_snark", "a snark"},
+        {"hornet", "a hornet"},
+        {"bolt", "a crossbow bolt"},
+        {"garg_stomp", "a gargantua"},
+        {"monster_mortar", "a mortar"},
+        {"func_tank", "a mounted gun"},
+        {"func_tanklaser", "a mounted laser"},
+        {"func_tankrocket", "a mounted rocket launcher"},
+        {"func_tankmortar", "a mounted mortar"},
+    };
+    for (const auto& name : kNames) {
+        if (classname == name.classname) {
+            return name.text;
+        }
+    }
+    return nullptr;
+}
+
+// The level itself rather than anything in it: the damage type says more.
+bool IsEnvironment(const std::string& classname) {
+    return classname.empty() || classname == "player" ||
+           classname == "worldspawn" || classname.rfind("trigger_", 0) == 0 ||
+           classname.rfind("func_", 0) == 0 || classname.rfind("env_", 0) == 0;
+}
+
+const char* DamageTypeCause(int damage_type) {
+    if (damage_type & DMG_FALL) return "a fall";
+    if (damage_type & (DMG_BLAST | DMG_MORTAR)) return "an explosion";
+    if (damage_type & DMG_CRUSH) return "being crushed";
+    if (damage_type & DMG_DROWN) return "drowning";
+    if (damage_type & DMG_RADIATION) return "radiation";
+    if (damage_type & (DMG_ACID | DMG_POISON | DMG_NERVEGAS)) return "toxic waste";
+    if (damage_type & (DMG_BURN | DMG_SLOWBURN)) return "fire";
+    if (damage_type & (DMG_FREEZE | DMG_SLOWFREEZE)) return "freezing";
+    if (damage_type & DMG_SHOCK) return "electricity";
+    if (damage_type & DMG_ENERGYBEAM) return "a laser";
+    if (damage_type & DMG_SONIC) return "a shockwave";
+    if (damage_type & DMG_BULLET) return "gunfire";
+    return nullptr;
+}
+
+// "monster_alien_grunt" -> "an alien grunt".
+std::string PlainCause(const std::string& classname) {
+    std::string name = classname;
+    for (const char* prefix : {"monster_", "weapon_", "ammo_"}) {
+        if (name.rfind(prefix, 0) == 0) {
+            name = name.substr(std::strlen(prefix));
+            break;
+        }
+    }
+    for (char& c : name) {
+        if (c == '_') {
+            c = ' ';
+        }
+    }
+    if (name.empty()) {
+        return "an unknown fate";
+    }
+    const bool vowel = std::strchr("aeiou", name[0]) != nullptr;
+    return (vowel ? "an " : "a ") + name;
+}
+
+// What a death is put down to. The inflictor first, because it is the thing
+// that landed: the player's own tripmine is still a tripmine. Then whoever
+// owned it, and failing both, what kind of damage it was.
+std::string DescribeCause(const std::string& attacker_from_killed) {
+    std::string inflictor;
+    std::string attacker = attacker_from_killed;
+    int damage_type = 0;
+    const float since = gpGlobals->time - g_last_hurt.when;
+    if (since >= 0.0f && since < kLastHurtSeconds) {
+        inflictor = g_last_hurt.inflictor;
+        attacker = g_last_hurt.attacker;
+        damage_type = g_last_hurt.damage_type;
+    }
+    g_last_hurt = LastHurt();
+
+    for (const std::string& who : {inflictor, attacker}) {
+        if (const char* named = NamedCause(who)) {
+            return named;
+        }
+        if (!IsEnvironment(who)) {
+            return PlainCause(who);
+        }
+    }
+    if (const char* typed = DamageTypeCause(damage_type)) {
+        return typed;
+    }
+    return attacker == "player" ? "their own hand" : "the environment";
+}
+
 }  // namespace
+
+void OnPlayerDamaged(CBasePlayer* player, entvars_t* inflictor,
+                     entvars_t* attacker, int damage_type) {
+    if (player == nullptr) {
+        return;
+    }
+    const bool self_tick = damage_type == DMG_GENERIC &&
+                           (inflictor == nullptr || inflictor == player->pev) &&
+                           (attacker == nullptr || attacker == player->pev);
+    const float since = gpGlobals->time - g_last_hurt.when;
+    if (self_tick && since >= 0.0f && since < kLastHurtSeconds) {
+        return;
+    }
+    g_last_hurt.inflictor = inflictor ? STRING(inflictor->classname) : "";
+    g_last_hurt.attacker = attacker ? STRING(attacker->classname) : "";
+    g_last_hurt.damage_type = damage_type;
+    g_last_hurt.when = gpGlobals->time;
+}
 
 void OnRevertSaved() {
     // Traced, and traced in every branch, because this is the one hook whose
@@ -145,10 +284,17 @@ void OnRevertSaved() {
     // Deliberately vague, because the entity does not know either: the same
     // entity ends a fall into the void, a scientist dying and a hostage lost.
     // What the multiworld needs is that the run was cut short, not the reason.
-    OnPlayerKilled(player, "a fatal mistake");
+    g_last_hurt = LastHurt();
+    ReportDeath(player, "a fatal mistake");
 }
 
-void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
+void OnPlayerKilled(CBasePlayer* player, const std::string& attacker) {
+    ReportDeath(player, DescribeCause(attacker));
+}
+
+namespace {
+
+void ReportDeath(CBasePlayer* player, const std::string& cause) {
     if (player == nullptr || !Live()) {
         return;
     }
@@ -196,10 +342,12 @@ void OnPlayerKilled(CBasePlayer* player, const std::string& cause) {
 
     std::vector<std::string> args;
     args.push_back(ProtagonistOf(Data().CampaignOfMap(CurrentMap()).key));
-    args.push_back(Sanitise(cause.empty() ? std::string("an unknown fate") : cause));
+    args.push_back(Sanitise(cause));
     args.push_back(forgiven ? "1" : "0");
     Wire().Send("DEATH", args);
 }
+
+}  // namespace
 
 void OnDeathLinkReceived(const std::string& source, const std::string& cause,
                          long stamp) {
@@ -222,7 +370,9 @@ void OnDeathLinkReceived(const std::string& source, const std::string& cause,
         return;
     }
 
-    Notify(source + " died to " + cause + ".");
+    // The cause is the sender's whole sentence, slot name included where their
+    // game puts one; only a DeathLink without one needs the source spelled out.
+    Notify(cause.empty() ? source + " died." : cause);
 
     // Before the damage, never after: `TakeDamage` raises `CBasePlayer::Killed`
     // inside this call, so a window opened on the next line would open after the

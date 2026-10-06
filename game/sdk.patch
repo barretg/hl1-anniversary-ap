@@ -3042,7 +3042,7 @@ index eacfd2c..465ec32 100644
  //
  // Track Train
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..2e07beb 100644
+index 85b67c4..2d2e861 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -3090,7 +3090,17 @@ index 85b67c4..2e07beb 100644
  	gmsgDeathMsg = REG_USER_MSG( "DeathMsg", -1 );
  	gmsgScoreInfo = REG_USER_MSG( "ScoreInfo", 9 );
  	gmsgTeamInfo = REG_USER_MSG( "TeamInfo", -1 );  // sets the name of a player's team
-@@ -928,6 +936,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
+@@ -458,6 +466,9 @@ int CBasePlayer :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
+ 	flBonus = ARMOR_BONUS;
+ 	flRatio = ARMOR_RATIO;
+ 
++	// Archipelago: what hurt the player, for the death that may follow.
++	ap::OnPlayerDamaged( this, pevInflictor, pevAttacker, bitsDamageType );
++
+ 	if ( ( bitsDamageType & DMG_BLAST ) && g_pGameRules->IsMultiplayer() )
+ 	{
+ 		// blasts damage armor more.
+@@ -928,6 +939,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
  {
  	CSound *pSound;
  
@@ -3100,7 +3110,7 @@ index 85b67c4..2e07beb 100644
  	// Holster weapon immediately, to allow it to cleanup
  	if ( m_pActiveItem )
  		m_pActiveItem->Holster( );
-@@ -1075,6 +1086,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
+@@ -1075,6 +1089,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
  			m_IdealActivity = ACT_WALK;
  		}
  		break;
@@ -3119,7 +3129,7 @@ index 85b67c4..2e07beb 100644
  	}
  
  	switch (m_IdealActivity)
-@@ -1204,6 +1227,8 @@ void CBasePlayer::TabulateAmmo()
+@@ -1204,6 +1230,8 @@ void CBasePlayer::TabulateAmmo()
  	ammo_rockets = AmmoInventory( GetAmmoIndex( "rockets" ) );
  	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
  	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
@@ -3128,7 +3138,7 @@ index 85b67c4..2e07beb 100644
  }
  
  
-@@ -1666,6 +1691,10 @@ void CBasePlayer::PlayerUse ( void )
+@@ -1666,6 +1694,10 @@ void CBasePlayer::PlayerUse ( void )
  		if ( m_afButtonPressed & IN_USE )
  			EMIT_SOUND( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM);
  
@@ -3139,7 +3149,7 @@ index 85b67c4..2e07beb 100644
  		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
  			 ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
  		{
-@@ -2001,6 +2030,9 @@ void CBasePlayer::PreThink(void)
+@@ -2001,6 +2033,9 @@ void CBasePlayer::PreThink(void)
  	else 
  		pev->flags &= ~FL_ONTRAIN;
  
@@ -3149,7 +3159,7 @@ index 85b67c4..2e07beb 100644
  	// Train speed control
  	if ( m_afPhysicsFlags & PFLAG_ONTRAIN )
  	{
-@@ -3085,6 +3117,12 @@ void CBasePlayer::Spawn( void )
+@@ -3085,6 +3120,12 @@ void CBasePlayer::Spawn( void )
  	m_flNextChatTime = gpGlobals->time;
  
  	g_pGameRules->PlayerSpawn( this );
@@ -3162,7 +3172,7 @@ index 85b67c4..2e07beb 100644
  }
  
  
-@@ -3507,7 +3545,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
+@@ -3507,7 +3548,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
  
  BOOL CBasePlayer :: FlashlightIsOn( void )
  {
@@ -3171,7 +3181,7 @@ index 85b67c4..2e07beb 100644
  }
  
  
-@@ -3518,13 +3556,22 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3518,13 +3559,22 @@ void CBasePlayer :: FlashlightTurnOn( void )
  		return;
  	}
  
@@ -3195,7 +3205,7 @@ index 85b67c4..2e07beb 100644
  		MESSAGE_END();
  
  		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-@@ -3536,10 +3583,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3536,10 +3586,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
  void CBasePlayer :: FlashlightTurnOff( void )
  {
  	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -3208,7 +3218,7 @@ index 85b67c4..2e07beb 100644
  	MESSAGE_END();
  
  	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-@@ -4105,6 +4153,11 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4105,6 +4156,11 @@ void CBasePlayer :: UpdateClientData( void )
  			WRITE_BYTE( 0 );
  		MESSAGE_END();
  
@@ -3220,7 +3230,7 @@ index 85b67c4..2e07beb 100644
  		if ( !m_fGameHUDInitialized )
  		{
  			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
-@@ -4129,6 +4182,7 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4129,6 +4185,7 @@ void CBasePlayer :: UpdateClientData( void )
  		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
  			WRITE_BYTE( FlashlightIsOn() ? 1 : 0 );
  			WRITE_BYTE( m_iFlashBattery );
@@ -3228,7 +3238,7 @@ index 85b67c4..2e07beb 100644
  		MESSAGE_END();
  	}
  
-@@ -4425,6 +4479,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
+@@ -4425,6 +4482,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
  // set crosshair position to point to enemey
  //=========================================================
  Vector CBasePlayer :: GetAutoaimVector( float flDelta )
@@ -3241,7 +3251,7 @@ index 85b67c4..2e07beb 100644
  {
  	if (g_iSkillLevel == SKILL_HARD)
  	{
-@@ -4432,7 +4492,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+@@ -4432,7 +4495,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
  		return gpGlobals->v_forward;
  	}
  
@@ -3250,7 +3260,7 @@ index 85b67c4..2e07beb 100644
  	float flDist = 8192;
  
  	// always use non-sticky autoaim
-@@ -5015,6 +5075,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+@@ -5015,6 +5078,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
  
  void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
  {

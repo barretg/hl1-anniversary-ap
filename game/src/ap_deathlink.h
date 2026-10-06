@@ -23,6 +23,7 @@
 #include <string>
 
 class CBasePlayer;
+typedef struct entvars_s entvars_t;
 
 namespace ap {
 
@@ -45,6 +46,13 @@ constexpr float kRevertQuietSeconds = 15.0f;
 // decides what becomes of it, because deciding here from a cached flag means a
 // stale snapshot silently swallows deaths.
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);
+
+// From CBasePlayer::TakeDamage, before anything is dealt. `Killed` is only told
+// the attacker, and the attacker is the wrong half: a tripmine the player shot
+// is the player's, and a fall is the world's. The inflictor and the damage type
+// say what actually did it.
+void OnPlayerDamaged(CBasePlayer* player, entvars_t* inflictor,
+                     entvars_t* attacker, int damage_type);
 
 // From `CRevertSaved::Use` (`player_loadsaved`), which is how Half-Life ends a
 // run of events without killing the player: the screen fades, a message shows,

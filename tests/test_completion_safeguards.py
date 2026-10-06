@@ -27,7 +27,7 @@ CHECKDATA = REPO / "apworld" / "half_life" / "mod" / "files" / "archipelago" / "
 CAMPAIGN = REPO / "apworld" / "half_life" / "data" / "campaign.json"
 LAUNCHER = REPO / "apworld" / "half_life" / "client" / "launcher.py"
 LOCATIONS_CPP = REPO / "game" / "src" / "ap_locations.cpp"
-DEFAULT_GAME_ROOT = Path("/mnt/win/f/SteamLibrary/steamapps/common/Half-Life")
+DEFAULT_GAME_ROOT = Path("/games/SteamLibrary/steamapps/common/Half-Life")
 
 sys.path.insert(0, str(REPO / "tests" / "aptest"))
 import aptest  # noqa: E402

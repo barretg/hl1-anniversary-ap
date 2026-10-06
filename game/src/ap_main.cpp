@@ -629,7 +629,7 @@ void ApplyEvent(const PendingEvent& event) {
         const std::string source =
             split == std::string::npos ? event.payload : event.payload.substr(0, split);
         const std::string cause =
-            split == std::string::npos ? std::string("an unknown fate")
+            split == std::string::npos ? std::string()
                                        : event.payload.substr(split + 1);
         OnDeathLinkReceived(source, cause, event.stamp);
     } else if (event.kind == "CHAT") {

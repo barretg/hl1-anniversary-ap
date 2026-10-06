@@ -24,7 +24,7 @@ from campaigns import (  # noqa: E402
 )
 
 GAME_ROOT = Path(os.environ.get(
-    "HL_GAME_ROOT", "/mnt/win/f/SteamLibrary/steamapps/common/Half-Life"
+    "HL_GAME_ROOT", "/games/SteamLibrary/steamapps/common/Half-Life"
 ))
 
 
