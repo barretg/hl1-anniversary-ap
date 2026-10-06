@@ -89,6 +89,7 @@ def render(campaign: dict) -> str:
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
         "# maps are recompiled by Valve from time to time and that renumbers them.",
+        "# A fired check's <arg> is the targetname whose firing sends it.",
         f"V|{FORMAT_VERSION}",
         f"D|{campaign['data_version']}",
         f"G|{campaign['goal_chapter']}",
@@ -135,6 +136,11 @@ def render(campaign: dict) -> str:
             # its classname and where it stands, rounded the same way on both
             # sides. See `charger_key_position` in build_campaign_data.py.
             arg = f"{trigger['classname']}@{trigger['at']}"
+        elif "fires" in trigger:
+            # A map event, whatever the YAML calls its category: the game
+            # matches the targetname the map fired.
+            kind = "fired"
+            arg = trigger["fires"]
         else:  # map_reached
             arg = ""
         # A seventh field where we know where the thing is, which is what

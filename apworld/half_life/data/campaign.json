@@ -1,5 +1,5 @@
 {
- "data_version": "2f6ec6f7f435",
+ "data_version": "e6ed01993250",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -1605,6 +1605,22 @@
     -3372,
     1556,
     -232
+   ]
+  },
+  {
+   "id": 7760418,
+   "name": "Anomalous Materials: Microwave",
+   "chapter": "c1a0",
+   "map": "c1a0d",
+   "trigger": {
+    "type": "microwave",
+    "map": "c1a0d",
+    "fires": "microwavepopmm1"
+   },
+   "position": [
+    -2147,
+    1197,
+    -237
    ]
   },
   {

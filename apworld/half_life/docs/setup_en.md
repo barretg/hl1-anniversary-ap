@@ -177,6 +177,7 @@ server.
 | --- | --- | --- |
 | `missions_required` | all of them | how many missions open Nihilanth |
 | `chargesanity` | on | every health and HEV wall unit, and every Xen healing pool, is a check (122 in Half-Life) |
+| `include_microwave` | off | the Anomalous Materials break room microwave is a check: keep pressing its button until the food inside explodes |
 | `exclude_intro_missions` | on | drop Black Mesa Inbound, the tram ride |
 | `logic_difficulty` | strict | whether logic expects a suitable weapon per mission |
 | `shuffle_hev_suit` | off | armour stays at zero until the item arrives |

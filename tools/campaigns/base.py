@@ -84,6 +84,10 @@ class Campaign:
     # Display names for this campaign's presentation of a shared item. Display
     # strings only, never ids.
     weapon_aliases: dict[str, str] = field(default_factory=dict)
+    # One-off checks for a map event: `{map: [(category, targetname, name)]}`.
+    # The check is sent when the map fires that targetname, and the category is
+    # its trigger type, which is what the YAML option switching it off names.
+    fired_checks: dict[str, list[tuple[str, str, str]]] = field(default_factory=dict)
     # Which charger classnames produce checks here. Blue Shift's HEV-style wall
     # units are scenery, so it lists health chargers only.
     charger_classnames: tuple[str, ...] = ("func_healthcharger", "func_recharge")

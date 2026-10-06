@@ -146,6 +146,16 @@ class Chargesanity(DefaultOnToggle):
     display_name = "Chargesanity"
 
 
+class IncludeMicrowave(Toggle):
+    """The break room microwave in Anomalous Materials is a check.
+
+    One press only starts it beeping: keep pressing its button until the
+    casserole inside explodes.
+    """
+
+    display_name = "Include Microwave"
+
+
 class ExcludeIntroMissions(DefaultOnToggle):
     """Leave each included game's opening ride out of the seed.
 
@@ -338,6 +348,7 @@ class HalfLifeOptions(PerGameCommonOptions):
     logic_difficulty: LogicDifficulty
     exclude_intro_missions: ExcludeIntroMissions
     chargesanity: Chargesanity
+    include_microwave: IncludeMicrowave
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
     shuffle_flashlight: ShuffleFlashlight

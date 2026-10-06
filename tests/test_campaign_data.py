@@ -755,8 +755,8 @@ def test_optional_equipment_is_gated_by_classname(
 def test_placeable_locations_carry_a_position(campaign: dict) -> None:
     """`ap_find` can only point at a check that knows where it is.
 
-    Chargers and weapon pickups are somewhere; reaching a map or finishing a
-    mission is not a place, so those carry nothing and `ap_find` says so.
+    Chargers, weapon pickups and map events (the microwave) are somewhere;
+    reaching a map or finishing a mission is not a place, so those carry nothing and `ap_find` says so.
     """
     # Anchored checks have no copy lying in the map: the Shock Roach is only
     # ever dropped by a shock trooper.
@@ -765,7 +765,7 @@ def test_placeable_locations_carry_a_position(campaign: dict) -> None:
         kind = entry["trigger"]["type"]
         if entry["name"] in anchored:
             assert "position" not in entry, entry["name"]
-        elif kind in ("charger", "weapon_pickup"):
+        elif kind in ("charger", "weapon_pickup") or "fires" in entry["trigger"]:
             assert "position" in entry, entry["name"]
             assert len(entry["position"]) == 3, entry["name"]
             assert all(isinstance(v, int) for v in entry["position"]), entry["name"]

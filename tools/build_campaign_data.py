@@ -293,6 +293,8 @@ def location_key(chapter_key: str, map_name: str, trigger: dict,
         arg = trigger["chapter"]
     elif kind == "charger":
         arg = f"{trigger['classname']}@{trigger['at']}"
+    elif "fires" in trigger:
+        arg = trigger["fires"]
     elif kind == "weapon_pickup":
         # A campaign-wide location: its identity is the weapon, not where the
         # earliest copy happens to sit. Anchoring the key to the map would
@@ -739,6 +741,22 @@ def build(
                             builder.locations[-1]["gates"] = gate
                             gated_units.add((map_name,
                                              f"{classname}:{entity.get('model', '')}"))
+
+            # One-off map events, sent when the map fires their targetname.
+            # Placed where the entity firing it stands, for `ap_find`.
+            for category, targetname, base_name in campaign.fired_checks.get(map_name, ()):
+                if category not in enabled:
+                    continue
+                fired = next((e for e in ents if e.get("targetname") == targetname), None)
+                if fired is None:
+                    raise SystemExit(f"{map_name}: no entity named {targetname}")
+                builder.add(
+                    chapter,
+                    map_name,
+                    base_name,
+                    {"type": category, "map": map_name, "fires": targetname},
+                    position=entity_origin(fired.get("origin", "")),
+                )
 
             # Every distinct pickup classname present in the map becomes one
             # check -- collecting any instance of it fires the check once.

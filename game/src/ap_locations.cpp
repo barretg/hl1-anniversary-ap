@@ -656,6 +656,18 @@ void OnHealingTouch(CBaseEntity* toucher, CBaseEntity* pool) {
     }
 }
 
+void OnTargetFired(const char* targetname) {
+    // From `FireTargets`, which every trigger, button and multi_manager in the
+    // game goes through, so nearly every call matches nothing.
+    if (targetname == nullptr || !Live()) {
+        return;
+    }
+    const Location* location = Data().FiredBy(g_map, targetname);
+    if (location != nullptr) {
+        SendCheck(location->id);
+    }
+}
+
 void OnWeaponCollected(CBasePlayer* player, const std::string& classname) {
     if (player == nullptr || !Live()) {
         return;

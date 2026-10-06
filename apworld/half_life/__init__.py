@@ -33,6 +33,7 @@ from .data import (
     CHAPTERS,
     CHARGER_TRIGGER,
     HALF_LIFE,
+    MICROWAVE_TRIGGER,
     ITEMS,
     ABILITY_ITEM_NAMES,
     AIR_ACCELERATE_ITEM,
@@ -249,6 +250,8 @@ class HalfLifeWorld(World):
             )
         if not self.options.chargesanity:
             self.excluded_triggers.add(CHARGER_TRIGGER)
+        if not self.options.include_microwave:
+            self.excluded_triggers.add(MICROWAVE_TRIGGER)
 
         # Both sets come straight from the seed under the tracker: it may be
         # working without the YAML, in which case its options are defaults and
@@ -258,6 +261,9 @@ class HalfLifeWorld(World):
                 c["key"] for c in CHAPTERS if campaign_of(c) not in self.campaigns
             }
             self.excluded_triggers = set(passthrough.get("excluded_triggers", ()))
+            # A seed from before the microwave was a check has none.
+            if not passthrough.get("include_microwave", False):
+                self.excluded_triggers.add(MICROWAVE_TRIGGER)
 
         self.ally_weapon_drops = bool(self.options.ally_weapon_drops)
         if passthrough:
@@ -471,6 +477,9 @@ class HalfLifeWorld(World):
             # working without the YAML, and would otherwise expect chargers a
             # `chargesanity: false` seed does not contain.
             "excluded_triggers": sorted(self.excluded_triggers),
+            # Also for the tracker: seeds from before this key had no microwave
+            # check, though their `excluded_triggers` does not say so.
+            "include_microwave": MICROWAVE_TRIGGER not in self.excluded_triggers,
             # What the run opens with, and what the game must therefore never
             # take away.
             "starting_weapons": [self.starting_weapon],

@@ -238,6 +238,14 @@ OPTIONAL_ITEMS: dict[str, list[str]] = {
 # now found by `pocketed_chargers`.
 UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {}
 
+# The break room microwave. Five buttons share its panel, each mastered by the
+# multisource the one before fired, so only the fifth press reaches
+# `microwavepopmm1`: the multi_manager that bursts the casserole. The first
+# press alone only beeps.
+FIRED_CHECKS: dict[str, list[tuple[str, str, str]]] = {
+    "c1a0d": [("microwave", "microwavepopmm1", "Microwave")],
+}
+
 
 HALF_LIFE = Campaign(
     key="half_life",
@@ -256,6 +264,7 @@ HALF_LIFE = Campaign(
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     melee=STARTING_WEAPONS,
     unreachable=UNREACHABLE_CHARGERS,
+    fired_checks=FIRED_CHECKS,
     # The hazard course: a training course rather than part of the campaign.
     # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and
     # look single-player (no deathmatch spawns) without being campaign maps.

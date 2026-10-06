@@ -168,6 +168,10 @@ VANILLA_WHEN_UNSHUFFLED: dict[str, str] = {"Long Jump Module": "First Long Jump 
 # Trigger type of the health / HEV charger checks, switched off by `chargesanity`.
 CHARGER_TRIGGER = "charger"
 
+# Trigger type of the Anomalous Materials microwave check, switched on by
+# `include_microwave`.
+MICROWAVE_TRIGGER = "microwave"
+
 # --- Event items ----------------------------------------------------------
 #
 # Events carry no id and never reach the datapackage, so their names are free to

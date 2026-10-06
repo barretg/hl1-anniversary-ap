@@ -301,6 +301,7 @@ ENABLED_LOCATION_TYPES = {
     "chapter_complete",
     "charger",
     "weapon_pickup",
+    "microwave",
     # "pickup",  # the per-map variant, superseded by weapon_pickup
     # "kill",
     # "kill_count",

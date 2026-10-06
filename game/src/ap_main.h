@@ -22,6 +22,7 @@
 //   dlls/triggers.cpp    CTriggerEndSection           -> ap::InterceptEndSection
 //   dlls/triggers.cpp    CTriggerHurt::HurtTouch      -> ap::OnHealingTouch
 //   dlls/triggers.cpp    CBaseTrigger::MultiTouch     -> ap::TouchHubTrigger
+//   dlls/subs.cpp        FireTargets                  -> ap::OnTargetFired
 
 #pragma once
 
@@ -63,6 +64,7 @@ void OnPlayerDamaged(CBasePlayer* player, entvars_t* inflictor,    // ap_deathli
                      entvars_t* attacker, int damage_type);
 void OnRevertSaved();                                       // ap_deathlink
 void OnHealingTouch(CBaseEntity* player, CBaseEntity* pool);// ap_locations
+void OnTargetFired(const char* targetname);                 // ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool MenuSelect(CBasePlayer* player, int key);                       // ap_menu
 bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub

@@ -26,6 +26,7 @@ static TriggerType TriggerFromName(const std::string& name) {
     if (name == "chapter_complete") return TriggerType::ChapterComplete;
     if (name == "charger") return TriggerType::Charger;
     if (name == "weapon_pickup") return TriggerType::WeaponPickup;
+    if (name == "fired") return TriggerType::Fired;
     return TriggerType::Unknown;
 }
 
@@ -107,6 +108,9 @@ bool CheckData::Load(const std::string& path) {
                     break;
                 case TriggerType::WeaponPickup:
                     location.classnames = Split(f[4], ',');
+                    break;
+                case TriggerType::Fired:
+                    location.fires = f[4];
                     break;
                 case TriggerType::Charger:
                     if (!ParseChargerArg(f[4], location)) {
@@ -324,6 +328,17 @@ const Location* CheckData::ChargerAt(const std::string& map,
     }
 
     return best;
+}
+
+const Location* CheckData::FiredBy(const std::string& map,
+                                   const char* targetname) const {
+    for (const Location& location : locations) {
+        if (location.type == TriggerType::Fired && location.fires == targetname &&
+            location.map == map) {
+            return &location;
+        }
+    }
+    return nullptr;
 }
 
 const Location* CheckData::WeaponPickupFor(const std::string& classname,

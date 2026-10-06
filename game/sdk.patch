@@ -3768,6 +3768,27 @@ index 6ff1701..34c2a68 100644
  	static TYPEDESCRIPTION m_SaveData[];
  
  	int	Save( CSave &save ); 
+diff --git a/dlls/subs.cpp b/dlls/subs.cpp
+index 288d78a..176a57d 100644
+--- a/dlls/subs.cpp
++++ b/dlls/subs.cpp
+@@ -26,6 +26,7 @@
+ #include "saverestore.h"
+ #include "nodes.h"
+ #include "doors.h"
++#include "ap_main.h"
+ 
+ extern CGraph WorldGraph;
+ 
+@@ -192,6 +193,8 @@ void FireTargets( const char *targetName, CBaseEntity *pActivator, CBaseEntity *
+ 	if ( !targetName )
+ 		return;
+ 
++	ap::OnTargetFired( targetName );
++
+ 	ALERT( at_aiconsole, "Firing: (%s)\n", targetName );
+ 
+ 	for (;;)
 diff --git a/dlls/talkmonster.cpp b/dlls/talkmonster.cpp
 index 027d7fc..9c661d9 100644
 --- a/dlls/talkmonster.cpp

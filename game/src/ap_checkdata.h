@@ -29,6 +29,7 @@ enum class TriggerType {
     ChapterComplete,
     Charger,
     WeaponPickup,
+    Fired,
 };
 
 struct Location {
@@ -45,6 +46,9 @@ struct Location {
     // charger: the classname of the unit and where it stands.
     std::string charger_classname;
     float at[3] = {0, 0, 0};
+
+    // fired: the targetname whose firing sends it.
+    std::string fires;
 
     // Where in the world this check is, for ap_find. Not every kind has one:
     // reaching a map is not somewhere a player can be pointed.
@@ -192,6 +196,10 @@ public:
     // kChargerMatchRadius. Null when the player pressed use on something else.
     const Location* ChargerAt(const std::string& map, const std::string& classname,
                               const float at[3]) const;
+
+    // The check this map sends when it fires `targetname`. Null for nearly
+    // every firing there is, so it is cheap to ask about all of them.
+    const Location* FiredBy(const std::string& map, const char* targetname) const;
 
     // The weapon check this classname fires *in this map*, if any.
     //

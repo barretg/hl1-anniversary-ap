@@ -297,6 +297,33 @@ class TestChargesanityOn(HalfLifeTestBase):
         self.assertIn("Office Complex: Health Charger 1 (Part 1)", names)
 
 
+MICROWAVE = "Anomalous Materials: Microwave"
+
+
+class TestMicrowaveDefault(HalfLifeTestBase):
+    options = {}
+
+    def test_off_by_default(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertNotIn(MICROWAVE, names)
+        self.assertFalse(self.world.fill_slot_data()["include_microwave"])
+        self.assertIn("microwave", self.world.fill_slot_data()["excluded_triggers"])
+
+
+class TestMicrowaveIncluded(HalfLifeTestBase):
+    options = {"include_microwave": True}
+
+    def test_microwave_is_a_check(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        self.assertIn(MICROWAVE, names)
+        self.assertTrue(self.world.fill_slot_data()["include_microwave"])
+        self.assertNotIn("microwave", self.world.fill_slot_data()["excluded_triggers"])
+
+
 class TestItemGroups(HalfLifeTestBase):
     """The groups the Sven world also has, with the same membership rules."""
 

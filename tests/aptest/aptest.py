@@ -68,7 +68,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py --game-root "<Half-Life>" [--unproven | --find | --trace | --parity | --0.4.0] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0] [--clear]
 """
 
 from __future__ import annotations
@@ -1094,6 +1094,27 @@ def reissue_scenarios(data: CheckData) -> list[Scenario]:
     ]
 
 
+def microwave_scenarios(data: CheckData) -> list[Scenario]:
+    """The Anomalous Materials microwave is sent when the casserole bursts,
+    which takes all five presses of its button, not the first."""
+    location = next((l for l in data.locations.values()
+                     if l.kind == "fired" and l.arg == "microwavepopmm1"), None)
+    if location is None:
+        return []
+    return [
+        Scenario(
+            title="0.4.0: Microwave check",
+            map=location.map, pos=location.pos, expect=[location.id], steps="\n".join([
+                "You stand by the break room microwave. Press its button once: it",
+                "beeps, and the harness shows no check.",
+                "Keep pressing it: each press beeps, and the fifth bursts the",
+                f"casserole with goop on the walls. Only then '{location.name}'",
+                "arrives, once. Pressing it again sends nothing more.",
+                "!pass, or !fail <what was different>.",
+            ])),
+    ]
+
+
 def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     """What changed in 0.4.0. Appended to, never reordered."""
     return (completion_scenarios(data, mission_exits(data, game_root))
@@ -1103,7 +1124,8 @@ def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             + sniper_scope_scenarios(data)
             + thrown_break_scenarios(data)
             + new_trap_scenarios(data)
-            + reissue_scenarios(data))
+            + reissue_scenarios(data)
+            + microwave_scenarios(data))
 
 
 def build_scenarios(data: CheckData,
@@ -1592,12 +1614,18 @@ class Harness:
             time.sleep(0.2)
 
 
+# Where Steam puts Half-Life on the development machine.
+LINUX_GAME_ROOT = Path("/games/SteamLibrary/steamapps/common/Half-Life")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--game-root", type=Path,
-                        default=os.environ.get("HL_ROOT"),
-                        help="the Half-Life install (or set HL_ROOT)")
+                        default=os.environ.get("HL_ROOT") or (
+                            LINUX_GAME_ROOT if sys.platform.startswith("linux") else None),
+                        help="the Half-Life install (or set HL_ROOT; on Linux, "
+                             f"defaults to {LINUX_GAME_ROOT})")
     parser.add_argument("--test-dll", type=Path, default=TEST_DLL,
                         help="the test build of hl.dll to swap in (default: %(default)s)")
     parser.add_argument("--unproven", action="store_true",
