@@ -145,6 +145,7 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     # only loose logic counts on it.
     "crate_breaker": ["Hand Grenade", "Satchel Charge", "MP5"],
     "thrown_explosives": ["Hand Grenade", "Satchel Charge"],
+    "flashlight": ["Flashlight"],
 }
 
 # --- Weapon drops ---------------------------------------------------------

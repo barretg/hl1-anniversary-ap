@@ -1,8 +1,123 @@
 ﻿diff --git a/cl_dll/ammo.cpp b/cl_dll/ammo.cpp
-index 7c4a6ea..b1b1f09 100644
+index 7c4a6ea..f0f48ba 100644
 --- a/cl_dll/ammo.cpp
 +++ b/cl_dll/ammo.cpp
-@@ -237,6 +237,32 @@ WEAPON* WeaponsResource :: GetNextActivePos( int iSlot, int iSlotPos )
+@@ -70,6 +70,34 @@ int WeaponsResource :: HasAmmo( WEAPON *p )
+ }
+ 
+ 
++// Archipelago: Opposing Force's weapon lists name sheets Half-Life also ships
++// (640hud7, crosshairs) with different contents, so those weapons drew their
++// icons from Half-Life's sheet. The content installer moves Opposing Force's
++// copies under sprites/ap_of, and its weapons load those when they are there.
++static const char *gszOFWeapons[] =
++{
++	"weapon_displacer", "weapon_eagle", "weapon_grapple", "weapon_knife",
++	"weapon_m249", "weapon_penguin", "weapon_pipewrench", "weapon_shockrifle",
++	"weapon_sniperrifle", "weapon_sporelauncher", NULL
++};
++
++static HSPRITE LoadWeaponSprite( const WEAPON *pWeapon, const char *pszSprite )
++{
++	char sz[128];
++	for ( const char **name = gszOFWeapons; *name; name++ )
++	{
++		if ( strcmp( *name, pWeapon->szName ) )
++			continue;
++		sprintf( sz, "sprites/ap_of/%s.spr", pszSprite );
++		HSPRITE hSprite = APSPR_Load( sz );
++		if ( hSprite )
++			return hSprite;
++		break;
++	}
++	sprintf( sz, "sprites/%s.spr", pszSprite );
++	return SPR_Load( sz );
++}
++
+ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ {
+ 	int i, iRes;
+@@ -111,8 +139,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList( pList, "crosshair", iRes, i );
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hCrosshair = SPR_Load(sz);
++		pWeapon->hCrosshair = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcCrosshair = p->rc;
+ 	}
+ 	else
+@@ -121,8 +148,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList(pList, "autoaim", iRes, i);
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hAutoaim = SPR_Load(sz);
++		pWeapon->hAutoaim = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcAutoaim = p->rc;
+ 	}
+ 	else
+@@ -131,8 +157,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList( pList, "zoom", iRes, i );
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hZoomedCrosshair = SPR_Load(sz);
++		pWeapon->hZoomedCrosshair = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcZoomedCrosshair = p->rc;
+ 	}
+ 	else
+@@ -144,8 +169,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList(pList, "zoom_autoaim", iRes, i);
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hZoomedAutoaim = SPR_Load(sz);
++		pWeapon->hZoomedAutoaim = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcZoomedAutoaim = p->rc;
+ 	}
+ 	else
+@@ -157,8 +181,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList(pList, "weapon", iRes, i);
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hInactive = SPR_Load(sz);
++		pWeapon->hInactive = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcInactive = p->rc;
+ 
+ 		gHR.iHistoryGap = max( gHR.iHistoryGap, pWeapon->rcActive.bottom - pWeapon->rcActive.top );
+@@ -169,8 +192,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList(pList, "weapon_s", iRes, i);
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hActive = SPR_Load(sz);
++		pWeapon->hActive = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcActive = p->rc;
+ 	}
+ 	else
+@@ -179,8 +201,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList(pList, "ammo", iRes, i);
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hAmmo = SPR_Load(sz);
++		pWeapon->hAmmo = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcAmmo = p->rc;
+ 
+ 		gHR.iHistoryGap = max( gHR.iHistoryGap, pWeapon->rcActive.bottom - pWeapon->rcActive.top );
+@@ -191,8 +212,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
+ 	p = GetSpriteList(pList, "ammo2", iRes, i);
+ 	if (p)
+ 	{
+-		sprintf(sz, "sprites/%s.spr", p->szSprite);
+-		pWeapon->hAmmo2 = SPR_Load(sz);
++		pWeapon->hAmmo2 = LoadWeaponSprite( pWeapon, p->szSprite );
+ 		pWeapon->rcAmmo2 = p->rc;
+ 
+ 		gHR.iHistoryGap = max( gHR.iHistoryGap, pWeapon->rcActive.bottom - pWeapon->rcActive.top );
+@@ -237,6 +257,32 @@ WEAPON* WeaponsResource :: GetNextActivePos( int iSlot, int iSlotPos )
  int giBucketHeight, giBucketWidth, giABHeight, giABWidth; // Ammo Bar width and height
  
  HSPRITE ghsprBuckets;					// Sprite for top row of weapons menu
@@ -35,7 +150,7 @@ index 7c4a6ea..b1b1f09 100644
  
  DECLARE_MESSAGE(m_Ammo, CurWeapon );	// Current weapon and clip
  DECLARE_MESSAGE(m_Ammo, WeaponList);	// new weapon type
-@@ -323,6 +349,24 @@ int CHudAmmo::VidInit(void)
+@@ -323,6 +369,24 @@ int CHudAmmo::VidInit(void)
  	m_HUD_bucket0 = gHUD.GetSpriteIndex( "bucket1" );
  	m_HUD_selection = gHUD.GetSpriteIndex( "selection" );
  
@@ -60,7 +175,7 @@ index 7c4a6ea..b1b1f09 100644
  	ghsprBuckets = gHUD.GetSprite(m_HUD_bucket0);
  	giBucketWidth = gHUD.GetSpriteRect(m_HUD_bucket0).right - gHUD.GetSpriteRect(m_HUD_bucket0).left;
  	giBucketHeight = gHUD.GetSpriteRect(m_HUD_bucket0).bottom - gHUD.GetSpriteRect(m_HUD_bucket0).top;
-@@ -1087,7 +1131,6 @@ int CHudAmmo::DrawWList(float flTime)
+@@ -1087,7 +1151,6 @@ int CHudAmmo::DrawWList(float flTime)
  			a = 192;
  
  		ScaleColors(r, g, b, 255);
@@ -68,7 +183,7 @@ index 7c4a6ea..b1b1f09 100644
  
  		// make active slot wide enough to accomodate gun pictures
  		if ( i == iActiveSlot )
-@@ -1101,7 +1144,19 @@ int CHudAmmo::DrawWList(float flTime)
+@@ -1101,7 +1164,19 @@ int CHudAmmo::DrawWList(float flTime)
  		else
  			iWidth = giBucketWidth;
  
@@ -89,7 +204,7 @@ index 7c4a6ea..b1b1f09 100644
  		
  		x += iWidth + 5;
  	}
-@@ -1223,12 +1278,20 @@ client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes
+@@ -1223,12 +1298,20 @@ client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes
  	int i = iCount;
  	client_sprite_t *p = pList;
  	
@@ -4374,3 +4489,48 @@ index 5e1d634..985c8da 100644
  	
  #if 1
  	CVAR_SET_STRING("sv_gravity", "800"); // 67ft/sec
+diff --git a/pm_shared/pm_shared.c b/pm_shared/pm_shared.c
+index ae07e8b..76eb73e 100644
+--- a/pm_shared/pm_shared.c
++++ b/pm_shared/pm_shared.c
+@@ -1408,6 +1408,31 @@ void PM_WaterMove (void)
+ }
+ 
+ 
++physent_t *PM_Ladder( void );
++
++// Archipelago: Progressive Air Acceleration can start at 0. Climbing turns
++// "forward" into "up", so a player coming off the top of a ladder has no speed
++// toward the ledge, and without air control falls back onto the ladder. Just
++// above a ladder, retail air control is the least they get. 64 units covers
++// the highest a player rises after letting go.
++#define AP_LADDER_EXIT_ACCELERATE 10.0f
++#define AP_LADDER_EXIT_REACH 64.0f
++
++static float AP_AirAccelerate( void )
++{
++	float accel = pmove->movevars->airaccelerate;
++	qboolean nearLadder;
++
++	if ( accel >= AP_LADDER_EXIT_ACCELERATE )
++		return accel;
++
++	pmove->origin[2] -= AP_LADDER_EXIT_REACH;
++	nearLadder = PM_Ladder() != NULL;
++	pmove->origin[2] += AP_LADDER_EXIT_REACH;
++
++	return nearLadder ? AP_LADDER_EXIT_ACCELERATE : accel;
++}
++
+ /*
+ ===================
+ PM_AirMove
+@@ -1452,7 +1477,7 @@ void PM_AirMove (void)
+ 		wishspeed = pmove->maxspeed;
+ 	}
+ 	
+-	PM_AirAccelerate (wishdir, wishspeed, pmove->movevars->airaccelerate);
++	PM_AirAccelerate (wishdir, wishspeed, AP_AirAccelerate());
+ 
+ 	// Add in any base velocity to the current velocity.
+ 	VectorAdd (pmove->velocity, pmove->basevelocity, pmove->velocity );

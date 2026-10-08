@@ -42,8 +42,12 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
 # opened by shooting an explosive barrel. Nothing melee reaches it, so from
 # `ba_canal1b` on the mission needs a ranged weapon or the RPG at any logic
 # difficulty.
+#
+# Captive Freight: part 3 on is dark enough that strict logic wants the
+# flashlight.
 MAP_GATES: dict[str, dict[str, list[str]]] = {
     "ba_canal1b": {"always": ["barrel_shooter"]},
+    "ba_yard3a": {"strict": ["flashlight"]},
 }
 
 # Barney's armour: the vest and helmet, gating armour on BS maps. Blue Shift's
@@ -61,7 +65,7 @@ UNRANDOMISED_WEAPON_LOCATIONS: dict[str, list[str]] = {
 # Copies confirmed reachable in play that the flood fill could not prove.
 CONFIRMED_COPIES: dict[str, list[str]] = {
     # The guard hands it over. The rest from the scenario harness, 2026-09-30.
-    "Glock": ["ba_security2", "ba_security1@-864 2544 480", "ba_canal1@1928 208 24"],
+    "Glock": ["ba_security2", "ba_security1@-864 2544 480"],
     "MP5": ["ba_yard1@676 -964 0", "ba_teleport2@624 644 272"],
     "Shotgun": ["ba_yard1@768 -832 0", "ba_power1@952 128 -480"],
 }
@@ -71,7 +75,9 @@ CONFIRMED_COPIES: dict[str, list[str]] = {
 UNREACHABLE_COPIES: dict[str, list[str]] = {
     # Cutscene guards on the intro mission.
     "Glock": ["ba_tram1@-2844 916 64", "ba_tram2@3488 -672 2272",
-              "ba_tram3@1600 3680 541"],
+              "ba_tram3@1600 3680 541",
+              # The guard at the start of Duty Calls; he drops nothing.
+              "ba_canal1@1928 208 24"],
     # Unarmed when met; a grunt earlier in the mission drops one.
     "Shotgun": ["ba_teleport2@-1456 -816 0"],
 }

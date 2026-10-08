@@ -418,9 +418,9 @@ void ListMissions() {
                       RelativeNumber(chapter), StatusOf(chapter));
         Say(line);
     }
-    Say("Press a panel in the hub, or !warp <number or name>, plus a part number "
-        "to return to somewhere you have been. !hub to come back. !help for the "
-        "rest.");
+    Say("Head into a mission from the hub, or !warp <number or name>, plus a "
+        "part number to return to somewhere you have been. !hub to come back. "
+        "!help for the rest.");
 }
 
 void Help() {
@@ -444,7 +444,7 @@ void Help() {
     Say("!trace [text]             as !find, and draw a path to it; again to stop");
     Say("!menu                     the warp and tracker as a menu: pick with 1-9, 0");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
-    Say("In the hub you can press a mission's panel instead of typing anything.");
+    Say("In the hub, each mission can be entered from the room itself, without typing.");
 }
 
 // Go to a map the player is allowed to be on, by the best route there is: a warp

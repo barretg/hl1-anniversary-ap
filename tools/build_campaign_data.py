@@ -1745,9 +1745,11 @@ def build_items(
 
     for campaign in campaigns:
         for name, classnames in campaign.optional_items.items():
-            # Equipment with no pickup (the flashlight) gates nothing logic
-            # knows about.
-            add(name, "progression" if classnames else "useful", group="optional",
+            # Equipment with no pickup is progression only where a requirement
+            # group names it: the flashlight, for Captive Freight's dark part.
+            gating = bool(classnames) or any(
+                name in group for group in requirement_groups(campaigns).values())
+            add(name, "progression" if gating else "useful", group="optional",
                 classnames=classnames, campaign=campaign.key,
                 armour=name == campaign.armour_item)
 

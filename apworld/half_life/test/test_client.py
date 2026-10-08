@@ -4,8 +4,10 @@ A seed generated before Opposing Force and Blue Shift existed has none of the
 new keys, and must play exactly as it did: Half-Life alone, one finale.
 """
 
+import asyncio
 import logging
 import unittest
+from types import SimpleNamespace
 
 from ..client.launcher import (
     HALF_LIFE, HalfLifeCommandProcessor, HalfLifeContext, load_campaign, outgoing_chat,
@@ -302,6 +304,55 @@ class TestOutgoingChat(unittest.TestCase):
     def test_an_empty_line_sends_nothing(self) -> None:
         self.assertIsNone(outgoing_chat(["Gordon", "  "]))
         self.assertIsNone(outgoing_chat(["Gordon"]))
+
+
+class FakeBridge:
+    def __init__(self) -> None:
+        self.events: list[tuple[str, str]] = []
+
+    def queue_event(self, kind: str, payload: str) -> None:
+        self.events.append((kind, payload))
+
+
+class TestDeathReport(unittest.TestCase):
+    """A death that goes out as a DeathLink is confirmed in the game."""
+
+    def setUp(self) -> None:
+        self.ctx = context()
+        self.ctx.bridge = FakeBridge()
+        self.ctx.death_link_enabled = True
+        self.ctx.server = SimpleNamespace(socket=SimpleNamespace(closed=False))
+        self.sent: list[str] = []
+
+        async def send_death(cause: str = "") -> None:
+            self.sent.append(cause)
+
+        self.ctx.send_death = send_death
+
+    def report(self, *args: str) -> None:
+        asyncio.run(self.ctx.report_death(list(args)))
+
+    def test_a_sent_deathlink_is_announced(self) -> None:
+        self.report("Freeman", "a headcrab", "0")
+        self.assertEqual(self.sent, ["Freeman died to a headcrab."])
+        self.assertEqual(self.ctx.bridge.events, [("CHAT", "DeathLink sent.")])
+
+    def test_a_forgiven_death_sends_nothing(self) -> None:
+        self.report("Freeman", "a headcrab", "1")
+        self.assertEqual(self.sent, [])
+        self.assertEqual(self.ctx.bridge.events, [])
+
+    def test_offline_claims_nothing(self) -> None:
+        self.ctx.server = None
+        self.report("Freeman", "a headcrab", "0")
+        self.assertEqual(self.sent, [])
+        self.assertEqual(self.ctx.bridge.events, [])
+
+    def test_deathlink_off_sends_nothing(self) -> None:
+        self.ctx.death_link_enabled = False
+        self.report("Freeman", "a headcrab", "0")
+        self.assertEqual(self.sent, [])
+        self.assertEqual(self.ctx.bridge.events, [])
 
 
 class TestSlotChange(unittest.TestCase):

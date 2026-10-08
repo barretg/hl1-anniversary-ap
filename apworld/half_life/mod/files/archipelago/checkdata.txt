@@ -569,7 +569,7 @@ F|7760389|of2a6|-1620 2344 -540||
 L|7760390|ba_security2|weapon_pickup|weapon_glock,weapon_9mmhandgun|Blue Shift: First Glock|592 1684 420
 F|7760390|ba_security2|592 1684 420||
 F|7760390|ba_security1|-864 2544 480||ally
-F|7760390|ba_canal1|1928 208 24||ally
+F|7760390|ba_canal3|-1376 768 280||ally
 F|7760390|ba_yard3|1344 440 -560||
 F|7760390|ba_power1|-204 772 -512||
 L|7760391|ba_yard1|weapon_pickup|weapon_357,weapon_python|Blue Shift: First .357 Magnum|-72 -1765 0

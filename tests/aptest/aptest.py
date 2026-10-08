@@ -1115,6 +1115,59 @@ def microwave_scenarios(data: CheckData) -> list[Scenario]:
     ]
 
 
+def playtest_fix_scenarios(data: CheckData) -> list[Scenario]:
+    """Fixes from playtesting: ladder tops without air control, Opposing
+    Force's ammo icons, Captive Freight's dark part, and the hub's help."""
+    verdict = "!pass, or !fail <what was different>."
+    maps = {m for c in data.chapters for m in c.maps}
+    scenarios: list[Scenario] = []
+    if "c2a1" in maps:
+        scenarios.append(Scenario(
+            # At the foot of a ladder with a ledge at its top.
+            title="0.4.0: Off the top of a ladder at air acceleration 0",
+            map="c2a1", pos="-896 169 -72", air_acceleration=(0, 150),
+            steps="\n".join([
+                "Air acceleration is 0: sv_airaccelerate reads 0. A ladder is in",
+                "front of you. Climb it holding forward: at the top you carry on",
+                "onto the ledge rather than dropping back onto the ladder.",
+                "Away from ladders, strafing in mid-air still does not steer you.",
+                verdict,
+            ])))
+    # Past the intro rides, where the player can move and use the console.
+    if "of1a1" in maps:
+        scenarios.append(Scenario(
+            title="0.4.0: Opposing Force ammo icons",
+            map="of1a1", steps="\n".join([
+                "In the console: sv_cheats 1, then give weapon_sporelauncher,",
+                "give weapon_shockrifle, give weapon_penguin, give weapon_eagle,",
+                "give weapon_m249, give weapon_sniperrifle, give weapon_displacer.",
+                "Holding each, its ammo icon shows bottom right beside the count,",
+                "the Opposing Force icon rather than a blank or a Half-Life one.",
+                "The pickup list on the right shows the same icons.",
+                verdict,
+            ])))
+    if "ba_yard3a" in maps:
+        scenarios.append(Scenario(
+            title="0.4.0: Captive Freight part 3 needs the flashlight",
+            map="ba_yard3a", take=["Flashlight"], steps="\n".join([
+                "You hold no Flashlight. Play on from the start of the part: it is",
+                "too dark to find the way on, and the flashlight key does nothing.",
+                "!give Flashlight: the flashlight works, and the way on can be seen.",
+                "!pass if strict logic is right to want it, else !fail <why>.",
+            ])))
+    if "c1a0" in maps:
+        scenarios.append(Scenario(
+            title="0.4.0: Hub help names no panels",
+            map="c1a0", steps="\n".join([
+                "!hub. Then !ap: its last line begins 'Head into a mission from the",
+                "hub'. !help: its last line is 'In the hub, each mission can be",
+                "entered from the room itself, without typing.' Neither mentions a",
+                "panel, a button or a trigger.",
+                verdict,
+            ])))
+    return scenarios
+
+
 def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     """What changed in 0.4.0. Appended to, never reordered."""
     return (completion_scenarios(data, mission_exits(data, game_root))
@@ -1125,7 +1178,8 @@ def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             + thrown_break_scenarios(data)
             + new_trap_scenarios(data)
             + reissue_scenarios(data)
-            + microwave_scenarios(data))
+            + microwave_scenarios(data)
+            + playtest_fix_scenarios(data))
 
 
 def build_scenarios(data: CheckData,

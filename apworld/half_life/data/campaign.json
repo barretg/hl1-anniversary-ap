@@ -765,6 +765,13 @@
      "ranged"
     ]
    },
+   "map_gates": {
+    "ba_yard3a": {
+     "strict": [
+      "flashlight"
+     ]
+    }
+   },
    "complete_on_arrival": false,
    "campaign": "blue_shift",
    "complete_on": "forward_exit"
@@ -1305,7 +1312,7 @@
   {
    "id": 7750068,
    "name": "Flashlight",
-   "classification": "useful",
+   "classification": "progression",
    "group": "optional",
    "classnames": [],
    "campaign": "half_life",
@@ -8056,11 +8063,11 @@
     },
     {
      "chapter": "ba_canal1",
-     "map": "ba_canal1",
+     "map": "ba_canal3",
      "position": [
-      1928,
-      208,
-      24
+      -1376,
+      768,
+      280
      ],
      "drop": "ally"
     },
@@ -8927,6 +8934,9 @@
   "thrown_explosives": [
    "Hand Grenade",
    "Satchel Charge"
+  ],
+  "flashlight": [
+   "Flashlight"
   ],
   "barnacle_grapple": [
    "Barnacle Grapple"

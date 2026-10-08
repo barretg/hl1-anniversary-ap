@@ -904,6 +904,32 @@ class HalfLifeContext(SuperContext):
         ui.base_title = f"Archipelago {GAME_NAME} Client"
         return ui
 
+    async def report_death(self, args: list[str]) -> None:
+        """A death the game reported: send it as a DeathLink, or say why not."""
+        player = args[0] if args else "Freeman"
+        cause = args[1] if len(args) > 1 else "an unknown fate"
+        # The game reports every death and says whether its amnesty allowance
+        # absorbed this one.
+        forgiven = len(args) > 2 and args[2] == "1"
+        if forgiven:
+            logger.debug(f"{player} died ({cause}); absorbed by DeathLink amnesty.")
+        elif self.death_link_enabled and self.server and not self.server.socket.closed:
+            await self.send_death(f"{player} died to {cause}.")
+            logger.info("DeathLink sent.")
+            # The game cannot tell a death that went out from one the client
+            # dropped, so the confirmation comes from here.
+            if self.bridge:
+                self.bridge.queue_event("CHAT", "DeathLink sent.")
+        elif self.death_link_enabled:
+            logger.info(f"{player} died ({cause}); not connected, no DeathLink sent.")
+        else:
+            # The game reports every death and lets us decide, so this is the
+            # only place that can explain a DeathLink not going out. Say so
+            # rather than dropping it silently.
+            logger.debug(
+                f"{player} died ({cause}) but DeathLink is off; use /deathlink."
+            )
+
     def on_deathlink(self, data: dict) -> None:
         # CommonContext only calls this for a DeathLink that is not our own echo,
         # which is why it is handled here rather than on every Bounced packet.
@@ -1072,22 +1098,7 @@ async def pump(ctx: HalfLifeContext) -> None:
         elif event.kind == "ACK":
             ctx.bridge.acknowledge(int(event.arg))
         elif event.kind == "DEATH":
-            player = event.args[0] if event.args else "Freeman"
-            cause = event.args[1] if len(event.args) > 1 else "an unknown fate"
-            # The game reports every death and says whether its amnesty allowance
-            # absorbed this one.
-            forgiven = len(event.args) > 2 and event.args[2] == "1"
-            if forgiven:
-                logger.debug(f"{player} died ({cause}); absorbed by DeathLink amnesty.")
-            elif ctx.death_link_enabled:
-                await ctx.send_death(f"{player} died to {cause}.")
-            else:
-                # The game reports every death and lets us decide, so this is the
-                # only place that can explain a DeathLink not going out. Say so
-                # rather than dropping it silently.
-                logger.debug(
-                    f"{player} died ({cause}) but DeathLink is off; use /deathlink."
-                )
+            await ctx.report_death(event.args)
         elif event.kind == "CHAT":
             if ctx.chat_relay and ctx.server and not ctx.server.socket.closed:
                 say = outgoing_chat(event.args)
