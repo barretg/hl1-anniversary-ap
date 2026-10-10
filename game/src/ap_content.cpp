@@ -520,7 +520,7 @@ void PrecacheTextureModels() {
     CVAR_SET_FLOAT("ap_hd_locked", 1.0f);
     Notify(std::string("Warning! Pre-cache limit reached: disabling ")
            + (hd ? "non-HD" : "HD")
-           + " models. Toggling this setting before returning to the hub will crash "
+           + " models. Toggling this setting before returning to the hub may crash "
              "the game.");
 }
 

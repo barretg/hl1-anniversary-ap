@@ -1369,9 +1369,18 @@ index 41aa5cf..72a4677 100644
  	HOOK_MESSAGE( SetFOV );
  	HOOK_MESSAGE( Concuss );
 diff --git a/cl_dll/hud.h b/cl_dll/hud.h
-index 3519999..6564706 100644
+index 3519999..56bc2ec 100644
 --- a/cl_dll/hud.h
 +++ b/cl_dll/hud.h
+@@ -309,7 +309,7 @@ public:
+ 	int VidInit( void );
+ 	int Draw( float flTime );
+ 	int MsgFunc_SayText( const char *pszName, int iSize, void *pbuf );
+-	void SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex = -1 );
++	void SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex = -1, bool inConsole = false );	// AP: inConsole
+ 	void EnsureTextFitsInOneLineAndWrapIfHaveTo( int line );
+ friend class CHudSpectator;
+ 
 @@ -367,6 +367,12 @@ private:
  	int	  m_fOn;
  	float m_fFade;
@@ -1603,10 +1612,19 @@ index 199fb2c..9052bde 100644
 +	}
 +}
 diff --git a/cl_dll/saytext.cpp b/cl_dll/saytext.cpp
-index 8069d86..856133d 100644
+index 8069d86..e9e9198 100644
 --- a/cl_dll/saytext.cpp
 +++ b/cl_dll/saytext.cpp
-@@ -48,6 +48,14 @@ static int line_height = 0;
+@@ -42,12 +42,23 @@ static char g_szLineBuffer[ MAX_LINES + 1 ][ MAX_CHARS_PER_LINE ];
+ static float *g_pflNameColors[ MAX_LINES + 1 ];
+ static int g_iNameLengths[ MAX_LINES + 1 ];
+ static float flScrollTime = 0;  // the time at which the lines next scroll up
++// AP: a line the server already printed to the console, so scrolling it off the
++// chat area does not print it a second time, seconds late among newer lines
++static bool g_bAPInConsole[ MAX_LINES + 1 ];
+ 
+ static int Y_START = 0;
+ static int line_height = 0;
  
  DECLARE_MESSAGE( m_SayText, SayText );
  
@@ -1621,7 +1639,30 @@ index 8069d86..856133d 100644
  int CHudSayText :: Init( void )
  {
  	gHUD.AddHudElem( this );
-@@ -143,6 +151,7 @@ int CHudSayText :: Draw( float flTime )
+@@ -70,6 +81,7 @@ void CHudSayText :: InitHUDData( void )
+ 	memset( g_szLineBuffer, 0, sizeof g_szLineBuffer );
+ 	memset( g_pflNameColors, 0, sizeof g_pflNameColors );
+ 	memset( g_iNameLengths, 0, sizeof g_iNameLengths );
++	memset( g_bAPInConsole, 0, sizeof g_bAPInConsole );	// AP
+ }
+ 
+ int CHudSayText :: VidInit( void )
+@@ -80,11 +92,13 @@ int CHudSayText :: VidInit( void )
+ 
+ int ScrollTextUp( void )
+ {
+-	ConsolePrint( g_szLineBuffer[0] ); // move the first line into the console buffer
++	if ( !g_bAPInConsole[0] )	// AP
++		ConsolePrint( g_szLineBuffer[0] ); // move the first line into the console buffer
+ 	g_szLineBuffer[MAX_LINES][0] = 0;
+ 	memmove( g_szLineBuffer[0], g_szLineBuffer[1], sizeof(g_szLineBuffer) - sizeof(g_szLineBuffer[0]) ); // overwrite the first line
+ 	memmove( &g_pflNameColors[0], &g_pflNameColors[1], sizeof(g_pflNameColors) - sizeof(g_pflNameColors[0]) );
+ 	memmove( &g_iNameLengths[0], &g_iNameLengths[1], sizeof(g_iNameLengths) - sizeof(g_iNameLengths[0]) );
++	memmove( &g_bAPInConsole[0], &g_bAPInConsole[1], sizeof(g_bAPInConsole) - sizeof(g_bAPInConsole[0]) );	// AP
+ 	g_szLineBuffer[MAX_LINES-1][0] = 0;
+ 
+ 	if ( g_szLineBuffer[0][0] == ' ' ) // also scroll up following lines
+@@ -143,6 +157,7 @@ int CHudSayText :: Draw( float flTime )
  					strncpy( buf, g_szLineBuffer[i] + g_iNameLengths[i], strlen( g_szLineBuffer[i] ));
  					buf[ strlen( g_szLineBuffer[i] + g_iNameLengths[i] ) - 1 ] = '\0';
  					// color is reset after each string draw
@@ -1629,7 +1670,7 @@ index 8069d86..856133d 100644
  					DrawConsoleString( x, y, buf ); 
  				}
  				else
-@@ -153,6 +162,7 @@ int CHudSayText :: Draw( float flTime )
+@@ -153,6 +168,7 @@ int CHudSayText :: Draw( float flTime )
  			else
  			{
  				// normal draw
@@ -1637,6 +1678,60 @@ index 8069d86..856133d 100644
  				DrawConsoleString( LINE_START, y, g_szLineBuffer[i] );
  			}
  		}
+@@ -173,12 +189,13 @@ int CHudSayText :: MsgFunc_SayText( const char *pszName, int iSize, void *pbuf )
+ 	return 1;
+ }
+ 
+-void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex )
++void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex, bool inConsole )
+ {
+ 	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )
+ 	{
+ 		// Print it straight to the console
+-		ConsolePrint( pszBuf );
++		if ( !inConsole )	// AP
++			ConsolePrint( pszBuf );
+ 		return;
+ 	}
+ 
+@@ -198,6 +215,7 @@ void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIn
+ 
+ 	g_iNameLengths[i] = 0;
+ 	g_pflNameColors[i] = NULL;
++	g_bAPInConsole[i] = inConsole;	// AP
+ 
+ 	// if it's a say message, search for the players name in the string
+ 	if ( *pszBuf == 2 && clientIndex > 0 )
+@@ -281,6 +299,7 @@ void CHudSayText :: EnsureTextFitsInOneLineAndWrapIfHaveTo( int line )
+ 
+ 				// find an empty string slot
+ 				int j;
++				const bool inConsole = g_bAPInConsole[line];	// AP
+ 				do 
+ 				{
+ 					for ( j = 0; j < MAX_LINES; j++ )
+@@ -317,6 +336,7 @@ void CHudSayText :: EnsureTextFitsInOneLineAndWrapIfHaveTo( int line )
+ 				}
+ 
+ 				*last_break = 0; // cut off the last string
++				g_bAPInConsole[j] = inConsole;	// AP: the wrapped rest is the same line
+ 
+ 				EnsureTextFitsInOneLineAndWrapIfHaveTo( j );
+ 				break;
+diff --git a/cl_dll/text_message.cpp b/cl_dll/text_message.cpp
+index 680ba25..17ed344 100644
+--- a/cl_dll/text_message.cpp
++++ b/cl_dll/text_message.cpp
+@@ -202,7 +202,8 @@ int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf
+ 
+ 	case HUD_PRINTTALK:
+ 		safe_sprintf( psz, MSG_BUF_SIZE, msg_text, sstr1, sstr2, sstr3, sstr4 );
+-		gHUD.m_SayText.SayTextPrint( ConvertCRtoNL( psz ), 128 );
++		// AP: the server prints its own console copy of these, in order
++		gHUD.m_SayText.SayTextPrint( ConvertCRtoNL( psz ), 128, -1, true );
+ 		break;
+ 
+ 	case HUD_PRINTCONSOLE:
 diff --git a/common/mathlib.h b/common/mathlib.h
 index c765eb5..8afc4de 100644
 --- a/common/mathlib.h

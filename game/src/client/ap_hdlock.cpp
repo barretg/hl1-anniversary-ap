@@ -26,10 +26,12 @@ void SetHDModels( void )
 	cvar_t *locked = gEngfuncs.pfnGetCvarPointer( "ap_hd_locked" );
 	if ( locked && locked->value != 0.0f )
 	{
-		gEngfuncs.Con_Printf( "[AP] HD models cannot be switched on this map: it is at the "
-			"precache limit. Switch after the next map loads.\n" );
-		gEngfuncs.pfnCenterPrint( "[AP] HD models cannot be switched on this map.\n"
-			"Switch after the next map loads." );
+		// The console once, and the chat area marked as already in it.
+		const char *const message = "[AP] HD models cannot be switched on this map: it is "
+			"at the precache limit. Switch after the next map loads.\n";
+		gEngfuncs.Con_Printf( "%s", message );
+		gHUD.m_SayText.SayTextPrint( message, static_cast<int>( strlen( message ) ) + 1, -1,
+			true );
 		return;
 	}
 	if ( g_pfnOriginal )
@@ -54,8 +56,8 @@ void APHDLock_VidInit()
 			return;
 		g_pfnOriginal = command->function;
 		command->function = SetHDModels;
-		gEngfuncs.Con_DPrintf( "[AP] %s hooked\n", kCommand );
+		gEngfuncs.Con_Printf( "[AP] %s hooked\n", kCommand );
 		return;
 	}
-	gEngfuncs.Con_DPrintf( "[AP] %s not found; the HD option is not locked\n", kCommand );
+	gEngfuncs.Con_Printf( "[AP] %s not found; the HD option is not locked\n", kCommand );
 }
