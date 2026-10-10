@@ -8321,7 +8321,12 @@
       1160,
       3384,
       -3576
-     ]
+     ],
+     "gates": {
+      "always": [
+       "flashlight"
+      ]
+     }
     },
     {
      "chapter": "ba_teleport2",

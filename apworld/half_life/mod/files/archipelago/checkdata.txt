@@ -589,7 +589,7 @@ L|7760395|ba_yard1|weapon_pickup|weapon_satchel|Blue Shift: First Satchel Charge
 F|7760395|ba_yard1|-2662 -1550 92||
 F|7760395|ba_power1|1029 -2475 -487||
 L|7760396|ba_xen2|weapon_pickup|weapon_snark|Blue Shift: First Snarks|1160 3384 -3576
-F|7760396|ba_xen2|1160 3384 -3576||
+F|7760396|ba_xen2|1160 3384 -3576|Flashlight|
 F|7760396|ba_power1|-890 -1822 -112||
 L|7760397|ba_yard1|weapon_pickup|weapon_handgrenade|Blue Shift: First Hand Grenade|-2635 -1550 92
 F|7760397|ba_yard1|-2635 -1550 92||

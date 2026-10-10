@@ -1221,6 +1221,74 @@ def hd_lock_scenarios(data: CheckData) -> list[Scenario]:
     ]
 
 
+def insecurity_guard_scenarios(data: CheckData) -> list[Scenario]:
+    """The guard at the end of Insecurity part 2 opens up once the glock and
+    the armour have been found, whether or not either has arrived, and on full
+    armour as well."""
+    wanted = {"Blue Shift: First Glock", "Blue Shift: First Security Armor"}
+    checks = [l.id for l in data.locations.values()
+              if l.map == "ba_security2" and l.name in wanted]
+    if len(checks) != len(wanted):
+        return []
+    verdict = "!pass, or !fail <what was different>."
+    # Beside the armour locker, a short walk from the range.
+    near_locker = "502 1360 236"
+    route = [
+        "Take the vest and helmet from the locker by the range, then the glock",
+        "the range guard hands over, then walk back to the guard at the exit",
+        "door by the lobby.",
+    ]
+    return [
+        Scenario(
+            title="0.4.0: Insecurity guard without the glock or armour",
+            map="ba_security2", pos=near_locker, take=["Glock", "Security Armor"],
+            expect=checks, steps="\n".join([
+                "You hold neither the Glock nor the Security Armor.",
+                *route,
+                "Each pickup is refused, but the checks for the first glock and",
+                "the first security armour arrive. Touching the pickups again",
+                "changes nothing. The exit guard says the door is open, presses",
+                "the button, and the door opens.",
+                verdict,
+            ])),
+        Scenario(
+            title="0.4.0: Insecurity guard on full armour",
+            map="ba_security2", pos=near_locker, expect=checks,
+            steps="\n".join([
+                "You hold the Glock and the Security Armor. In the console:",
+                "sv_cheats 1, then give item_battery until the armour reads 100.",
+                *route,
+                "The vest and helmet stay in the locker, but the exit guard still",
+                "says the door is open, presses the button, and the door opens.",
+                verdict,
+            ])),
+    ]
+
+
+def chumtoad_cave_scenarios(data: CheckData) -> list[Scenario]:
+    """Focal Point part 2's snarks, in the chumtoad cave at the bottom of the
+    pit, need the Flashlight in logic."""
+    snarks = next((l for l in data.locations.values()
+                   if l.name == "Blue Shift: First Snarks"), None)
+    if snarks is None:
+        return []
+    query = snarks.name.lower()
+    return [Scenario(
+        title="0.4.0: Focal Point chumtoad cave needs the flashlight",
+        # Treading water at the top of the pit, beside the healing pool.
+        map="ba_xen2", pos="1048 2088 -60", expect=[snarks.id],
+        steps="\n".join([
+            "You hold the Flashlight, at the top of the water over the pit.",
+            f"!trace {query}: a BLUE line down the pit into the cave.",
+            "Swim down and follow it without the flashlight on, then with it.",
+            "Take the snarks: the check arrives.",
+            f"!take Flashlight, then !find {query}: the cave copy is not offered,",
+            "the earliest available is in Power Struggle.",
+            "!pass if the cave is too dark to find without the flashlight, else",
+            "!fail <why>.",
+        ]))]
+
+
 def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     """What changed in 0.4.0. Appended to, never reordered."""
     return (completion_scenarios(data, mission_exits(data, game_root))
@@ -1233,7 +1301,9 @@ def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             + reissue_scenarios(data)
             + microwave_scenarios(data)
             + playtest_fix_scenarios(data)
-            + hd_lock_scenarios(data))
+            + hd_lock_scenarios(data)
+            + insecurity_guard_scenarios(data)
+            + chumtoad_cave_scenarios(data))
 
 
 # A map with at least this many brush models is a precache suspect: each one

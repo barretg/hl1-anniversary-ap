@@ -32,7 +32,16 @@ static BOOL GiveSecurityArmor( CBaseEntity *pItem, CBasePlayer *pPlayer, float a
 		return FALSE;
 
 	if ( pPlayer->pev->armorvalue >= MAX_NORMAL_BATTERY || !( pPlayer->pev->weapons & ( 1 << WEAPON_SUIT ) ) )
+	{
+		// Archipelago: refused, but the level still moves on. The guard at the
+		// end of `ba_security2` is mastered on the vest's and helmet's targets,
+		// and a player who arrives on full armour could never take either.
+		// Once only: the pickup stays and is touched again, and those targets
+		// are toggling relays.
+		pItem->SUB_UseTargets( pPlayer, USE_TOGGLE, 0 );
+		pItem->pev->target = 0;
 		return FALSE;
+	}
 
 	pPlayer->pev->armorvalue += amount;
 	pPlayer->pev->armorvalue = min<float>( pPlayer->pev->armorvalue, MAX_NORMAL_BATTERY );

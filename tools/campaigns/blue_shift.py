@@ -50,6 +50,12 @@ MAP_GATES: dict[str, dict[str, list[str]]] = {
     "ba_yard3a": {"strict": ["flashlight"]},
 }
 
+# Focal Point part 2: the snarks are in the chumtoad cave at the bottom of the
+# pit, too dark to find at any logic difficulty without the flashlight.
+WEAPON_SOURCE_GATES: dict[str, dict[str, dict[str, list[str]]]] = {
+    "ba_xen2": {"Snarks": {"always": ["flashlight"]}},
+}
+
 # Barney's armour: the vest and helmet, gating armour on BS maps. Blue Shift's
 # `item_suit` in `ba_tram1` is not armour (it only turns the HUD on) and is not
 # a check.
@@ -92,6 +98,7 @@ BLUE_SHIFT = Campaign(
     intro_chapter="ba_tram1",
     gates=CHAPTER_GATES,
     map_gates=MAP_GATES,
+    weapon_source_gates=WEAPON_SOURCE_GATES,
     optional_items=OPTIONAL_ITEMS,
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     confirmed_copies=CONFIRMED_COPIES,

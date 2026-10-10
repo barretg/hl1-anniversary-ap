@@ -407,6 +407,32 @@ bool CanCollectGated(const std::string& classname) {
     return State().Has(item);
 }
 
+// A refused pickup still does what taking it would have done to the level.
+//
+// The game fires a pickup's targets only once the player has it, so refusing
+// one leaves whatever the map hung off it waiting for an item the multiworld may
+// not send for hours. In `ba_security2` the guard at the exit is mastered on a
+// multisource fed by the glock, the vest and the helmet: without all three in
+// hand, Insecurity never got past him. The check is sent on that same touch, so
+// finding it is what moves the level on, as it is for the HEV suit.
+//
+// Once only. The pickup stays where it is and is touched again and again, and
+// targets like `ba_security2`'s are toggling relays: a second firing would take
+// back the first.
+void FireRefusedTargets(CBasePlayer* player, CBaseEntity* pickup) {
+    const std::string classname(STRING(pickup->pev->classname));
+    if (classname.rfind("weapon_", 0) == 0) {
+        // A weapon is a `CBaseDelay`, whose own version also honours `delay`
+        // and `killtarget`: the guard's glock kills the prop he holds out.
+        CBaseDelay* weapon = static_cast<CBaseDelay*>(pickup);
+        weapon->SUB_UseTargets(player, USE_TOGGLE, 0);
+        weapon->m_iszKillTarget = 0;
+    } else {
+        pickup->SUB_UseTargets(player, USE_TOGGLE, 0);
+    }
+    pickup->pev->target = 0;
+}
+
 }  // namespace
 
 bool CanCollect(CBasePlayer* player, const std::string& classname) {
@@ -472,6 +498,8 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup) {
 
     const bool allowed = CanCollect(player, classname);
     if (!allowed) {
+        FireRefusedTargets(player, pickup);
+
         // At most once every five seconds rather than on every touch: the
         // entity stays where it is, so the player walks over it repeatedly.
         //

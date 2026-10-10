@@ -757,6 +757,28 @@ class TestOpposingForceWeaponSources(HalfLifeTestBase):
                                                  self.player))
 
 
+class TestBlueShiftChumtoadCave(HalfLifeTestBase):
+    """Focal Point's snarks are in the dark chumtoad cave."""
+    options = {"include_half_life": False, "include_blue_shift": True,
+               "shuffle_flashlight": True, "logic_difficulty": "loose"}
+
+    def test_the_cave_needs_the_flashlight(self) -> None:
+        state = only_unlocks(self, "ba_xen1")
+        self.assertFalse(state.can_reach_location("Blue Shift: First Snarks", self.player))
+        state.collect(self.multiworld.worlds[self.player].create_item("Flashlight"),
+                      prevent_sweep=True)
+        self.assertTrue(state.can_reach_location("Blue Shift: First Snarks", self.player))
+
+
+class TestBlueShiftChumtoadCaveUnshuffled(HalfLifeTestBase):
+    options = {"include_half_life": False, "include_blue_shift": True,
+               "logic_difficulty": "loose"}
+
+    def test_no_gate_without_the_item(self) -> None:
+        state = only_unlocks(self, "ba_xen1")
+        self.assertTrue(state.can_reach_location("Blue Shift: First Snarks", self.player))
+
+
 class TestAllyDropsOff(HalfLifeTestBase):
     options = {"exclude_intro_missions": False, "logic_difficulty": "loose"}
 
