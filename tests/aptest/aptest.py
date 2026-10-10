@@ -1116,8 +1116,9 @@ def microwave_scenarios(data: CheckData) -> list[Scenario]:
 
 
 def playtest_fix_scenarios(data: CheckData) -> list[Scenario]:
-    """Fixes from playtesting: ladder tops without air control, Opposing
-    Force's ammo icons, Captive Freight's dark part, and the hub's help."""
+    """Fixes from playtesting: ladder tops and water exits without air
+    control, Opposing Force's ammo icons, Captive Freight's dark part, and the
+    hub's help."""
     verdict = "!pass, or !fail <what was different>."
     maps = {m for c in data.chapters for m in c.maps}
     scenarios: list[Scenario] = []
@@ -1131,6 +1132,19 @@ def playtest_fix_scenarios(data: CheckData) -> list[Scenario]:
                 "front of you. Climb it holding forward: at the top you carry on",
                 "onto the ledge rather than dropping back onto the ladder.",
                 "Away from ladders, strafing in mid-air still does not steer you.",
+                verdict,
+            ])))
+    if "c2a5" in maps:
+        scenarios.append(Scenario(
+            title="0.4.0: Out of water at air acceleration 0",
+            map="c2a5", air_acceleration=(0, 150),
+            steps="\n".join([
+                "Air acceleration is 0: sv_airaccelerate reads 0. Find water whose",
+                "edge is a low ledge above the surface (sv_cheats 1 and noclip if",
+                "need be). Swim to it and jump out holding forward: you land on",
+                "the ledge rather than dropping back into the water. Likewise",
+                "jumping from waist-deep water onto a step.",
+                "Away from water, strafing in mid-air still does not steer you.",
                 verdict,
             ])))
     # Past the intro rides, where the player can move and use the console.

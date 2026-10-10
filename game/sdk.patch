@@ -4490,10 +4490,10 @@ index 5e1d634..985c8da 100644
  #if 1
  	CVAR_SET_STRING("sv_gravity", "800"); // 67ft/sec
 diff --git a/pm_shared/pm_shared.c b/pm_shared/pm_shared.c
-index ae07e8b..76eb73e 100644
+index ae07e8b..b798597 100644
 --- a/pm_shared/pm_shared.c
 +++ b/pm_shared/pm_shared.c
-@@ -1408,6 +1408,31 @@ void PM_WaterMove (void)
+@@ -1408,6 +1408,49 @@ void PM_WaterMove (void)
  }
  
  
@@ -4501,31 +4501,49 @@ index ae07e8b..76eb73e 100644
 +
 +// Archipelago: Progressive Air Acceleration can start at 0. Climbing turns
 +// "forward" into "up", so a player coming off the top of a ladder has no speed
-+// toward the ledge, and without air control falls back onto the ladder. Just
-+// above a ladder, retail air control is the least they get. 64 units covers
-+// the highest a player rises after letting go.
-+#define AP_LADDER_EXIT_ACCELERATE 10.0f
-+#define AP_LADDER_EXIT_REACH 64.0f
++// toward the ledge, and without air control falls back onto the ladder. Jumping
++// or bobbing out of water is the same: the player rises with nothing carrying
++// them onto the bank. Just above a ladder or water, retail air control is the
++// least they get. 64 units covers the highest a player rises after letting go.
++#define AP_EXIT_ACCELERATE 10.0f
++#define AP_EXIT_REACH 64.0f
++
++static qboolean AP_NearWater( void )
++{
++	vec3_t point;
++	int cont;
++
++	if ( pmove->waterlevel )
++		return true;
++
++	VectorCopy( pmove->origin, point );
++	point[2] += pmove->player_mins[pmove->usehull][2] - AP_EXIT_REACH;
++	cont = pmove->PM_PointContents( point, NULL );
++	return cont <= CONTENTS_WATER && cont > CONTENTS_TRANSLUCENT;
++}
 +
 +static float AP_AirAccelerate( void )
 +{
 +	float accel = pmove->movevars->airaccelerate;
 +	qboolean nearLadder;
 +
-+	if ( accel >= AP_LADDER_EXIT_ACCELERATE )
++	if ( accel >= AP_EXIT_ACCELERATE )
 +		return accel;
 +
-+	pmove->origin[2] -= AP_LADDER_EXIT_REACH;
-+	nearLadder = PM_Ladder() != NULL;
-+	pmove->origin[2] += AP_LADDER_EXIT_REACH;
++	if ( AP_NearWater() )
++		return AP_EXIT_ACCELERATE;
 +
-+	return nearLadder ? AP_LADDER_EXIT_ACCELERATE : accel;
++	pmove->origin[2] -= AP_EXIT_REACH;
++	nearLadder = PM_Ladder() != NULL;
++	pmove->origin[2] += AP_EXIT_REACH;
++
++	return nearLadder ? AP_EXIT_ACCELERATE : accel;
 +}
 +
  /*
  ===================
  PM_AirMove
-@@ -1452,7 +1477,7 @@ void PM_AirMove (void)
+@@ -1452,7 +1495,7 @@ void PM_AirMove (void)
  		wishspeed = pmove->maxspeed;
  	}
  	

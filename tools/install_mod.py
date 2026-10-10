@@ -5,8 +5,11 @@ command runs. Useful when working on the game side without going through the
 Archipelago Launcher.
 
 Usage:
+    python tools/install_mod.py
     python tools/install_mod.py --game "F:/SteamLibrary/steamapps/common/Half-Life"
-    python tools/install_mod.py --game ... --uninstall
+    python tools/install_mod.py --uninstall
+
+`--game` defaults to `DEFAULT_GAME`.
 """
 
 from __future__ import annotations
@@ -20,10 +23,13 @@ sys.path.insert(0, str(REPO_ROOT / "apworld" / "half_life"))
 
 import mod  # noqa: E402
 
+DEFAULT_GAME = Path("/games/SteamLibrary/steamapps/common/Half-Life")
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--game", type=Path, required=True, help="Half-Life install path")
+    parser.add_argument("--game", type=Path, default=DEFAULT_GAME,
+                        help=f"Half-Life install path (default: {DEFAULT_GAME})")
     parser.add_argument("--uninstall", action="store_true")
     args = parser.parse_args(argv)
 
