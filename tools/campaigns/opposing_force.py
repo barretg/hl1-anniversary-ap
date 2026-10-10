@@ -202,6 +202,8 @@ WEAPON_ANCHORS: dict[str, str] = {
 UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # We Are Not Alone part 2: a healing pool there is no way into.
     "of3a1b": {("trigger_hurt", (-632, -548, -124))},
+    # Vicarious Reality part 2: the east one of the high pair, confirmed in play.
+    "of4a2": {("func_healthcharger", (544, -1320, 1148))},
 }
 
 

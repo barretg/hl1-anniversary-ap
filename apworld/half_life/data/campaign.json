@@ -1,5 +1,5 @@
 {
- "data_version": "e6ed01993250",
+ "data_version": "b15cfe1831cd",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -5061,28 +5061,6 @@
    },
    "position": [
     -544,
-    -1318,
-    1148
-   ],
-   "gates": {
-    "always": [
-     "barnacle_grapple"
-    ]
-   }
-  },
-  {
-   "id": 7760297,
-   "name": "Vicarious Reality: Health Charger 3 (Part 2)",
-   "chapter": "of4a1",
-   "map": "of4a2",
-   "trigger": {
-    "type": "charger",
-    "map": "of4a2",
-    "classname": "func_healthcharger",
-    "at": "544 -1320 1148"
-   },
-   "position": [
-    544,
     -1318,
     1148
    ],

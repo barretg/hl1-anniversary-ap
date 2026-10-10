@@ -696,7 +696,14 @@ void SweepNearbyPickups() {
     CBaseEntity* entity = nullptr;
     while ((entity = UTIL_FindEntityInSphere(entity, player->pev->origin,
                                              kPickupSweepRadius)) != nullptr) {
-        const std::string classname(STRING(entity->pev->classname));
+        std::string classname(STRING(entity->pev->classname));
+        // Opposing Force's Shock Roach is a live roach a dying trooper drops,
+        // and it only becomes the weapon on touching a player without one. A
+        // player already handed the rifle by the multiworld could never pick
+        // it up, so the roach reaching them is the discovery.
+        if (classname == "monster_shockroach" && entity->IsAlive()) {
+            classname = "weapon_shockrifle";
+        }
         if (!StartsWith(classname, "weapon_") && !StartsWith(classname, "item_")) {
             continue;
         }

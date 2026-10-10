@@ -14,4 +14,6 @@ LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     7760052: ("We've Got Hostiles - Health Charger 1 (Part 2)", "c1a3d"),
     # A healing pool there is no way into; in v0.3-pre on.
     7760282: ("We Are Not Alone - Healing Pool (Part 2)", "of3a1b"),
+    # Out of reach in play; in v0.3-pre.
+    7760297: ("Vicarious Reality: Health Charger 3 (Part 2)", "of4a2"),
 }

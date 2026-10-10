@@ -24,7 +24,7 @@
 # maps are recompiled by Valve from time to time and that renumbers them.
 # A fired check's <arg> is the targetname whose firing sends it.
 V|6
-D|e6ed01993250
+D|b15cfe1831cd
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -324,7 +324,6 @@ L|7760293|of4a1|charger|trigger_hurt@-172 -272 -840|Vicarious Reality: Healing P
 L|7760294|of4a2|map_reached||Vicarious Reality: Part 2 Reached
 L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality: Health Charger 1 (Part 2)|-2044 2 444|Barnacle Grapple
 L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality: Health Charger 2 (Part 2)|-544 -1318 1148|Barnacle Grapple
-L|7760297|of4a2|charger|func_healthcharger@544 -1320 1148|Vicarious Reality: Health Charger 3 (Part 2)|544 -1318 1148|Barnacle Grapple
 L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality: Healing Pool (Part 2)|-2192 -1456 262|Barnacle Grapple
 L|7760299|of4a3|map_reached||Vicarious Reality: Part 3 Reached
 L|7760300|of4a3|charger|func_healthcharger@176 -2116 356|Vicarious Reality: Health Charger (Part 3)|176 -2116 356
