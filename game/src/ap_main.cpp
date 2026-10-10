@@ -246,10 +246,11 @@ void Notify(const std::string& text) {
     Queue(text, true);
 }
 
-// The longest piece of a notice sent to the HUD at once. TextMsg is a byte of
-// destination, the string and its terminator, under the engine's 192-byte cap
-// on a user message, with room to spare.
-constexpr size_t kMaxHudLine = 160;
+// The longest piece of a notice sent to the HUD at once. The engine caps a user
+// message at 192 bytes, but the client's TextMsg handler is tighter: it copies
+// into a 128-byte buffer, and chat spends one byte of that on a colour prefix.
+// Anything past that is cut off silently.
+constexpr size_t kMaxHudLine = 120;
 
 void FlushNotices() {
     if (g_notices.empty()) {
@@ -277,40 +278,44 @@ void FlushNotices() {
     for (size_t i = 0; i < take; ++i) {
         const std::string line = "[AP] " + g_notices[i].text + "\n";
 
-        // The console, always. `CLIENT_PRINTF` takes the string as a string
-        // rather than a format, so a location name is safe in it verbatim.
-        CLIENT_PRINTF(player->edict(), print_console, line.c_str());
-
-        if (!g_notices[i].hud) {
-            continue;
-        }
-
-        // HUD_PRINTTALK: the message area chat uses, bottom left, a few lines
-        // deep and gone after a few seconds. The client runs this through
-        // titles.txt first, so a leading '#' would be read as a lookup key and
-        // a '%' as a substitution. Neither belongs in a location name, but
-        // neither is impossible, and a name that silently vanished would be
-        // worse than an ugly one.
-        std::string hud = line;
-        for (char& c : hud) {
-            if (c == '%') {
-                c = ' ';
-            }
-        }
         // Sent in pieces: the engine refuses a user message over 192 bytes with
-        // a Host_Error, which ends the game. Broken at a space where there is
-        // one, and each piece guarded against '#' like the whole line.
-        while (!hud.empty()) {
-            std::string piece = hud;
-            if (piece.size() > kMaxHudLine) {
-                size_t cut = hud.rfind(' ', kMaxHudLine);
-                if (cut == std::string::npos || cut == 0) {
-                    cut = kMaxHudLine;
+        // a Host_Error, which ends the game, and the client's chat cuts one off
+        // past `kMaxHudLine`. Broken at a space where there is one. The console
+        // gets the same pieces: its overlay does not wrap either, and runs off
+        // the right edge of the screen.
+        std::vector<std::string> pieces;
+        for (std::string rest = line; !rest.empty();) {
+            if (rest.size() <= kMaxHudLine) {
+                pieces.push_back(rest);
+                break;
+            }
+            size_t cut = rest.rfind(' ', kMaxHudLine);
+            if (cut == std::string::npos || cut == 0) {
+                cut = kMaxHudLine;
+            }
+            pieces.push_back(rest.substr(0, cut) + "\n");
+            rest.erase(0, rest[cut] == ' ' ? cut + 1 : cut);
+        }
+
+        for (std::string& piece : pieces) {
+            // The console, always. `CLIENT_PRINTF` takes the string as a string
+            // rather than a format, so a location name is safe in it verbatim.
+            CLIENT_PRINTF(player->edict(), print_console, piece.c_str());
+
+            if (!g_notices[i].hud) {
+                continue;
+            }
+
+            // HUD_PRINTTALK: the message area chat uses, bottom left, a few
+            // lines deep and gone after a few seconds. The client runs this
+            // through titles.txt first, so a leading '#' would be read as a
+            // lookup key and a '%' as a substitution. Neither belongs in a
+            // location name, but neither is impossible, and a name that
+            // silently vanished would be worse than an ugly one.
+            for (char& c : piece) {
+                if (c == '%') {
+                    c = ' ';
                 }
-                piece = hud.substr(0, cut) + "\n";
-                hud.erase(0, hud[cut] == ' ' ? cut + 1 : cut);
-            } else {
-                hud.clear();
             }
             if (piece[0] == '#') {
                 piece.insert(piece.begin(), ' ');
@@ -462,6 +467,10 @@ void Startup() {
 
     OnMapStart(CurrentMap());
     Trace("  map start done");
+
+    // Last: everything above may precache, and the texture files give way to
+    // all of it. See `PrecacheTextureModels`.
+    PrecacheTextureModels();
 }
 
 void RunFrame() {
@@ -472,11 +481,16 @@ void RunFrame() {
         ++g_frames_this_map;  // capped: only the first couple are interesting
     }
     if (g_frames_this_map == 1) {
-        char line[96];
-        snprintf(line, sizeof(line), "model slots on %s: %d of 512",
-                 STRING(gpGlobals->mapname), ModelSlotsUsed());
+        // Everything since the last of our own marks: ClientPrecache, the
+        // map's entities, and whatever a restored save brought with it.
+        PrecacheMark("player and map entities");
+        char line[128];
+        snprintf(line, sizeof(line), "slots on %s: models %d of 511, sounds %d of 511",
+                 STRING(gpGlobals->mapname), ModelSlotsUsed(), SoundSlotsUsed());
         Trace(line);
         ALERT(at_console, "[AP] %s\n", line);
+        TraceInventory(Player(), "on arrival");
+        TracePlayerModels();
     }
     static bool first = true;
     if (first) {

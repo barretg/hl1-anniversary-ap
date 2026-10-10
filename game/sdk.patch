@@ -229,26 +229,28 @@ index 7c4a6ea..f0f48ba 100644
 +	return best;
  }
 diff --git a/cl_dll/cdll_int.cpp b/cl_dll/cdll_int.cpp
-index e1e4724..0c8f50e 100644
+index e1e4724..ba8d273 100644
 --- a/cl_dll/cdll_int.cpp
 +++ b/cl_dll/cdll_int.cpp
-@@ -34,6 +34,7 @@ extern "C"
+@@ -34,6 +34,8 @@ extern "C"
  #include "hud_servers.h"
  #include "vgui_int.h"
  #include "interface.h"
 +#include "ap_whiteboard.h"	// AP
++#include "ap_hdlock.h"	// AP
  
  #ifdef _WIN32
  #include "winsani_in.h"
-@@ -175,6 +176,7 @@ int CL_DLLEXPORT HUD_VidInit( void )
+@@ -175,6 +177,8 @@ int CL_DLLEXPORT HUD_VidInit( void )
  {
  //	RecClHudVidInit();
  	gHUD.VidInit();
 +	APWhiteboard_VidInit();	// AP
++	APHDLock_VidInit();	// AP
  
  	VGui_Startup();
  
-@@ -214,6 +216,7 @@ int CL_DLLEXPORT HUD_Redraw( float time, int intermission )
+@@ -214,6 +218,7 @@ int CL_DLLEXPORT HUD_Redraw( float time, int intermission )
  //	RecClHudRedraw(time, intermission);
  
  	gHUD.Redraw( time, intermission );
@@ -4247,7 +4249,7 @@ index 1f9ea5b..7233b68 100644
 +
 +
 diff --git a/dlls/weapons.cpp b/dlls/weapons.cpp
-index b9baa31..6e7e869 100644
+index b9baa31..c37d394 100644
 --- a/dlls/weapons.cpp
 +++ b/dlls/weapons.cpp
 @@ -30,6 +30,7 @@
@@ -4258,10 +4260,11 @@ index b9baa31..6e7e869 100644
  
  extern CGraph	WorldGraph;
  extern int gEvilImpulse101;
-@@ -384,6 +385,28 @@ void W_Precache(void)
+@@ -384,6 +385,30 @@ void W_Precache(void)
  #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
  	// hornetgun
  	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
++	ap::PrecacheMark( "Half-Life weapons" );
 +
 +	// Opposing Force's, on every map: any campaign may hand them over. Only
 +	// when it is installed: without its files every one of these is a fatal
@@ -4284,10 +4287,11 @@ index b9baa31..6e7e869 100644
 +		PRECACHE_SOUND( "weapons/spore_hit2.wav" );
 +		PRECACHE_SOUND( "weapons/spore_hit3.wav" );
 +	}
++	ap::PrecacheMark( "Opposing Force weapons" );
  #endif
  
  
-@@ -1008,8 +1031,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
+@@ -1008,8 +1033,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
  		return FALSE;
  
  	m_pPlayer->TabulateAmmo();

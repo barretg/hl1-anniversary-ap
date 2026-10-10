@@ -38,8 +38,22 @@ void InstallContentHooks();
 // this map belongs to, and so which copies to use.
 void BeginMapContent();
 
-// Model precache slots in use on this map, of the engine's 512.
+// Model and sound precache slots in use on this map, of the engine's 512 each.
 int ModelSlotsUsed();
+int SoundSlotsUsed();
+
+// ap_boot.txt: what was precached since the last mark, under `label`, and the
+// running totals. Brackets each block of our own precaching.
+void PrecacheMark(const char* label);
+
+// End of ServerActivate, the last moment precaching is allowed: the classic
+// `<name>T.mdl` texture files held back during the load, while slots remain.
+// Any left over lock the HD option (`ap_hd_locked`) and warn the player.
+void PrecacheTextureModels();
+
+// ap_boot.txt (and the console, for a problem): each player's view and weapon
+// model, and whether this map precached it. One it did not is fatal to send.
+void TracePlayerModels();
 
 // The name a model is precached under on this map: the campaign's copy if it
 // relocated one. For names the engine reads back itself, without the dll.

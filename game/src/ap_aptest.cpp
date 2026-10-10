@@ -31,6 +31,8 @@ struct Destination {
     std::string map;
     bool has_position = false;
     float position[3] = {0, 0, 0};
+    // Placed crouched: the spot is in a vent a standing player does not fit.
+    bool crouch = false;
 };
 
 Destination g_destination;
@@ -74,6 +76,8 @@ bool ReadDestination(Destination& out) {
             out.map = value;
         } else if (key == "pos") {
             out.has_position = ParseVector(value, out.position);
+        } else if (key == "crouch") {
+            out.crouch = value == "1";
         }
     }
     return !out.map.empty();
@@ -131,7 +135,8 @@ void Load() {
 // monster origins sit in lockers, on shelves and against walls, and dropping a
 // player on the exact spot puts them in the geometry. Rings outward and upward,
 // each spot checked with the player hull, then settled onto the floor.
-bool StandSpot(CBasePlayer* player, const Vector& target, Vector& out) {
+bool StandSpot(CBasePlayer* player, const Vector& target, Vector& out,
+               int hull = human_hull) {
     static const float kRadii[] = {0.0f, 24.0f, 48.0f, 80.0f, 128.0f};
     static const float kHeights[] = {36.0f, 72.0f, 0.0f, 128.0f};
     for (float height : kHeights) {
@@ -142,13 +147,13 @@ bool StandSpot(CBasePlayer* player, const Vector& target, Vector& out) {
                 const Vector spot = target + Vector(radius * std::cos(angle),
                                                     radius * std::sin(angle), height);
                 TraceResult tr;
-                UTIL_TraceHull(spot, spot, ignore_monsters, human_hull,
+                UTIL_TraceHull(spot, spot, ignore_monsters, hull,
                                player->edict(), &tr);
                 if (tr.fStartSolid || tr.fAllSolid) {
                     continue;
                 }
                 UTIL_TraceHull(spot, spot - Vector(0, 0, 256), ignore_monsters,
-                               human_hull, player->edict(), &tr);
+                               hull, player->edict(), &tr);
                 out = tr.vecEndPos;
                 return true;
             }
@@ -169,7 +174,17 @@ void Teleport() {
     const Vector target(g_destination.position[0], g_destination.position[1],
                         g_destination.position[2]);
     Vector spot;
-    if (!StandSpot(player, target, spot)) {
+    if (g_destination.crouch) {
+        // Ducked as the movement code would leave it: crouched size and view,
+        // and it stays that way while there is no room to stand up.
+        if (!StandSpot(player, target, spot, head_hull)) {
+            spot = target;
+            Notify("[aptest] No room to crouch near the spot; placed on it anyway.");
+        }
+        player->pev->flags |= FL_DUCKING;
+        player->pev->view_ofs = VEC_DUCK_VIEW;
+        UTIL_SetSize(player->pev, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
+    } else if (!StandSpot(player, target, spot)) {
         spot = target;
         Notify("[aptest] No room to stand near the spot; placed on it anyway.");
     }

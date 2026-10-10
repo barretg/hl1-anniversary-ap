@@ -25,6 +25,9 @@ class CBaseEntity;
 
 namespace ap {
 
+// One line in ap_boot.txt: every item carried, its ammo, and the active one.
+void TraceInventory(CBasePlayer* player, const char* when);
+
 // Ask for the loadout to be applied. This is what `CBasePlayer::Spawn` calls.
 //
 // Never applied on the spot. Handing a weapon over sends a `WeapPickup` user

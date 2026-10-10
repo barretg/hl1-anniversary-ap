@@ -279,6 +279,20 @@ rest), standing in for the client with `!item <name>`, `!trap <name>` and
 Verdicts go to `hlap/archipelago/aptest_results.txt`. A failed source becomes an
 `unreachable_copies` or `weapon_source_gates` entry.
 
+Before every release, run the precache sweep with all three games installed:
+
+```bash
+python tests/aptest/aptest.py --game-root "<Half-Life>" --sweep
+```
+
+It runs unattended once a map is loaded: every map of every installed campaign
+in turn, holding every item, each read back from `ap_boot.txt`. A map fails if
+it crashes; it warns within 20 slots of either 511-slot table or when it drops
+HD texture files. After a crash, relaunch, load any map and press Enter to
+carry on, or rerun from scenario N with `--sweep --from N`. The summary is
+written to `build/precache_sweep.txt`, and `--sweep --clear` starts it over.
+Fix every fail before tagging.
+
 ## Adding a game
 
 A Half-Life mod with its own single-player maps goes in the same way Opposing

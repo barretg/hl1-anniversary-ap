@@ -19,6 +19,49 @@
 #include "ap_traps.h"
 
 namespace ap {
+
+// What the player is actually holding, by the name the inventory knows it under,
+// with its ammo. Written to ap_boot.txt.
+//
+// This exists because "the weapon is in my inventory but I cannot select it" has
+// two completely different causes and they cannot be told apart from outside.
+// Selecting a weapon in the HUD sends the name the *engine* registered for it
+// -- `weapon_9mmhandgun`, whatever the map or the grant called it -- and
+// `CBasePlayer::SelectItem` matches that against the classname of the instance
+// being carried. A mismatch there is silent. `lastinv` works either way, because
+// it follows a pointer and never looks at a name.
+//
+// So: the name we granted, the name in the inventory, and the ammo, all in one
+// line. Whichever of them is wrong, the line says so.
+void TraceInventory(CBasePlayer* player, const char* when) {
+    if (!kTraceLoad || player == nullptr) {
+        return;
+    }
+
+    std::string line = std::string("  inventory ") + when + ":";
+    for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
+        for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
+             item != nullptr; item = item->m_pNext) {
+            line += " ";
+            line += STRING(item->pev->classname);
+
+            const int ammo_type = item->PrimaryAmmoIndex();
+            if (ammo_type >= 0 && ammo_type < MAX_AMMO_SLOTS) {
+                char count[24];
+                std::snprintf(count, sizeof(count), "(ammo %d)",
+                              player->m_rgAmmo[ammo_type]);
+                line += count;
+            }
+        }
+    }
+
+    if (player->m_pActiveItem != nullptr) {
+        line += " | active ";
+        line += STRING(player->m_pActiveItem->pev->classname);
+    }
+    Trace(line.c_str());
+}
+
 namespace {
 
 // True while we are handing something over ourselves. `GiveNamedItem` spawns the
@@ -72,48 +115,6 @@ struct Granting {
     Granting() { g_granting = true; }
     ~Granting() { g_granting = false; }
 };
-
-// What the player is actually holding, by the name the inventory knows it under,
-// with its ammo. Written to ap_boot.txt.
-//
-// This exists because "the weapon is in my inventory but I cannot select it" has
-// two completely different causes and they cannot be told apart from outside.
-// Selecting a weapon in the HUD sends the name the *engine* registered for it
-// -- `weapon_9mmhandgun`, whatever the map or the grant called it -- and
-// `CBasePlayer::SelectItem` matches that against the classname of the instance
-// being carried. A mismatch there is silent. `lastinv` works either way, because
-// it follows a pointer and never looks at a name.
-//
-// So: the name we granted, the name in the inventory, and the ammo, all in one
-// line. Whichever of them is wrong, the line says so.
-void TraceInventory(CBasePlayer* player, const char* when) {
-    if (!kTraceLoad || player == nullptr) {
-        return;
-    }
-
-    std::string line = std::string("  inventory ") + when + ":";
-    for (int slot = 0; slot < MAX_ITEM_TYPES; ++slot) {
-        for (CBasePlayerItem* item = player->m_rgpPlayerItems[slot];
-             item != nullptr; item = item->m_pNext) {
-            line += " ";
-            line += STRING(item->pev->classname);
-
-            const int ammo_type = item->PrimaryAmmoIndex();
-            if (ammo_type >= 0 && ammo_type < MAX_AMMO_SLOTS) {
-                char count[24];
-                std::snprintf(count, sizeof(count), "(ammo %d)",
-                              player->m_rgAmmo[ammo_type]);
-                line += count;
-            }
-        }
-    }
-
-    if (player->m_pActiveItem != nullptr) {
-        line += " | active ";
-        line += STRING(player->m_pActiveItem->pev->classname);
-    }
-    Trace(line.c_str());
-}
 
 // How much ammo a granted weapon arrives with, as a share of what the player is
 // allowed to carry of it.

@@ -12,6 +12,7 @@
 
 #include "ap_bots.h"
 #include "ap_hub.h"
+#include "ap_content.h"
 #include "ap_items.h"
 #include "ap_locations.h"
 #include "ap_main.h"
@@ -628,14 +629,18 @@ void PrecacheTraps() {
         UTIL_PrecacheOther(classname);
     }
     Trace("  traps precached");
+    PrecacheMark("trap monsters");
 
     // Not a trap, but the same window and the only hook we have into it. The
     // SDK patch calls this one function from `CWorld::Precache`; adding a second
     // call site there would mean repatching every SDK checkout for no gain.
     PrecacheCarriedMonsters();
+    PrecacheMark("carried monsters");
     PrecacheBots();
+    PrecacheMark("bot skins");
     PrecacheThrow();
     PrecachePathTrace();
+    PrecacheMark("throw and path trace");
     // Off for now; see `DressHubChamber`.
     // PrecacheHubChamber();
 }

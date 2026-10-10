@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -15,6 +16,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#ifdef _WIN32
+#pragma comment(lib, "advapi32.lib")
+#endif
 
 namespace ap {
 
@@ -51,8 +56,53 @@ const char* const kSilence = "common/null.wav";
 bool g_gordon_hands = false;
 
 // The highest model slot handed out on this map. The engine numbers the world
-// and its brush models first, so this is every slot in use.
+// and its brush models first, so this is every slot in use. Likewise sounds.
 int g_model_slots = 0;
+int g_sound_slots = 0;
+
+// Precache diagnosis, written to ap_boot.txt. Overrunning either table is a
+// fatal engine error, so the file is all a crash leaves behind.
+//
+// Slots at the last `PrecacheMark`, for the cost of each block of our extras.
+int g_mark_models = 0;
+int g_mark_sounds = 0;
+// Every model name precached on this map, lowercase, for `TracePlayerModels`.
+std::set<std::string> g_model_names;
+
+// `<name>T.mdl` companions waiting for `PrecacheTextureModels`, in the order
+// their models were precached, and the same names lowercase to keep them unique.
+std::vector<const char*> g_pending_textures;
+std::set<std::string> g_pending_names;
+
+// Set while this map could not precache every companion. The client refuses
+// `_sethdmodels` while it is, since switching would load one never listed.
+cvar_t g_hd_locked = {const_cast<char*>("ap_hd_locked"), const_cast<char*>("0"), 0};
+// From this slot on, each new name is traced as it is precached: the last one
+// in the file is the one that did not fit.
+constexpr int kTraceSlotsFrom = 480;
+constexpr int kEngineSlots = 512;
+
+void TraceSlot(const char* table, int index, int previous, const char* name) {
+    if (index < kTraceSlotsFrom || index <= previous) {
+        return;
+    }
+    char line[160];
+    std::snprintf(line, sizeof(line), "  precache %s #%d of %d: %s", table, index,
+                  kEngineSlots - 1, name);
+    Trace(line);
+}
+
+// The first model the dll asks for is numbered after the world and its brush
+// models, which the engine precached itself.
+void TraceFirstModel(int index) {
+    if (g_model_slots != 0 || index <= 0) {
+        return;
+    }
+    char line[96];
+    std::snprintf(line, sizeof(line), "precache world and brush models: %d", index - 1);
+    Trace(line);
+    g_mark_models = index - 1;
+}
 
 // Redirected names, kept for the life of the process. The engine stores the
 // pointer it is given for a model name rather than copying it, so each one
@@ -232,10 +282,17 @@ int PrecacheModel(char* s) {
     name = EmulateMissing(name, "");
 #endif
     const int index = g_real.pfnPrecacheModel(const_cast<char*>(name));
+    TraceFirstModel(index);
+    TraceSlot("model", index, g_model_slots, name);
     g_model_slots = (std::max)(g_model_slots, index);
+    g_model_names.insert(Lower(name));
     // A classic model can keep its textures in `<name>T.mdl` where the HD one
     // has them inside. The engine precaches that file only for the version it
     // loaded, so switching HD mid-map would need one it never listed.
+    //
+    // Not precached here but at the end of the load, by `PrecacheTextureModels`,
+    // and only while slots remain: they serve only a mid-map HD switch, and the
+    // map's own models come first.
     const size_t len = std::strlen(name);
     if (len > 4 && Lower(name + len - 4) == ".mdl") {
         static std::unordered_map<std::string, bool> has_textures;
@@ -245,11 +302,18 @@ int PrecacheModel(char* s) {
             it = has_textures.emplace(textures,
                 g_real.pfnGetFileSize(const_cast<char*>(textures.c_str())) > 0).first;
         }
-        if (it->second) {
-            g_model_slots = (std::max)(g_model_slots,
-                g_real.pfnPrecacheModel(const_cast<char*>(Intern(textures))));
+        if (it->second && g_pending_names.insert(Lower(textures.c_str())).second) {
+            g_pending_textures.push_back(Intern(textures));
         }
     }
+    return index;
+}
+
+// The engine's sound precache, with the slot counted and traced.
+int CountedSound(const char* name) {
+    const int index = g_real.pfnPrecacheSound(const_cast<char*>(name));
+    TraceSlot("sound", index, g_sound_slots, name);
+    g_sound_slots = (std::max)(g_sound_slots, index);
     return index;
 }
 
@@ -259,7 +323,7 @@ int PrecacheSound(char* s) {
     // Nothing is relocated while emulating, so this never meets the redirect.
     const char* missing = EmulateMissing(s, "sound/");
     if (missing != s) {
-        return g_real.pfnPrecacheSound(const_cast<char*>(missing));
+        return CountedSound(missing);
     }
 #endif
     if (redirected != s) {
@@ -267,9 +331,9 @@ int PrecacheSound(char* s) {
         // asking the dll -- the player's footsteps, from its own movement code
         // -- and one that was never precached is silent and spams the console.
         // Those fall back to Half-Life's copy, which is the same step.
-        g_real.pfnPrecacheSound(s);
+        CountedSound(s);
     }
-    return g_real.pfnPrecacheSound(const_cast<char*>(redirected));
+    return CountedSound(redirected);
 }
 
 void SetModel(edict_t* e, const char* m) {
@@ -300,6 +364,7 @@ void InstallContentHooks() {
         return;
     }
     installed = true;
+    CVAR_REGISTER(&g_hd_locked);
     g_real = g_engfuncs;
     g_engfuncs.pfnPrecacheModel = PrecacheModel;
     g_engfuncs.pfnPrecacheSound = PrecacheSound;
@@ -326,6 +391,13 @@ void BeginMapContent() {
     Load();
     g_gordon_hands = ReadGordonHands();
     g_model_slots = 0;
+    g_sound_slots = 0;
+    g_mark_models = 0;
+    g_mark_sounds = 0;
+    g_model_names.clear();
+    g_pending_textures.clear();
+    g_pending_names.clear();
+    CVAR_SET_FLOAT("ap_hd_locked", 0.0f);
     const auto found = g_map_campaign.find(Lower(STRING(gpGlobals->mapname)));
     g_current = found == g_map_campaign.end() ? kHalfLife : found->second;
     const auto campaign = g_campaigns.find(g_current);
@@ -335,8 +407,10 @@ void BeginMapContent() {
         || (campaign->second.titles.empty() && campaign->second.sentences.empty())
         ? nullptr : &campaign->second;
     if (g_texts) {
-        g_real.pfnPrecacheSound(const_cast<char*>(kSilence));
+        CountedSound(kSilence);
     }
+    Trace(("precache begins on " + std::string(STRING(gpGlobals->mapname)) + " ("
+           + g_current + ")").c_str());
 }
 
 void RemapSpawn(entvars_t* pev) {
@@ -380,6 +454,96 @@ void FixPlayerModels() {
 
 int ModelSlotsUsed() {
     return g_model_slots;
+}
+
+int SoundSlotsUsed() {
+    return g_sound_slots;
+}
+
+void PrecacheMark(const char* label) {
+    char line[160];
+    std::snprintf(line, sizeof(line), "precache %s: +%d models, +%d sounds "
+                  "(now %d models, %d sounds, of %d each)", label,
+                  g_model_slots - g_mark_models, g_sound_slots - g_mark_sounds,
+                  g_model_slots, g_sound_slots, kEngineSlots - 1);
+    Trace(line);
+    g_mark_models = g_model_slots;
+    g_mark_sounds = g_sound_slots;
+}
+
+// The player's "Enable HD models" option. GameUI keeps it in the registry, and
+// `-nohdmodels` on the command line overrides it.
+bool HdModelsOn() {
+    if (g_real.pfnCheckParm("-nohdmodels", nullptr)) {
+        return false;
+    }
+#ifdef _WIN32
+    DWORD value = 0;
+    DWORD size = sizeof(value);
+    if (RegGetValueA(HKEY_CURRENT_USER, "Software\\Valve\\Half-Life\\Settings",
+                     "hdmodels", RRF_RT_REG_DWORD, nullptr, &value, &size)
+        == ERROR_SUCCESS) {
+        return value != 0;
+    }
+#endif
+    return false;
+}
+
+void PrecacheTextureModels() {
+    int precached = 0;
+    int dropped = 0;
+    for (const char* textures : g_pending_textures) {
+        if (g_model_names.count(Lower(textures))) {
+            continue;
+        }
+        // A name the engine already listed takes no new slot, but there is no
+        // asking which those are, and a new name past the last slot is fatal.
+        if (g_model_slots >= kEngineSlots - 1) {
+            ++dropped;
+            continue;
+        }
+        const int index = g_real.pfnPrecacheModel(const_cast<char*>(textures));
+        TraceSlot("model", index, g_model_slots, textures);
+        g_model_slots = (std::max)(g_model_slots, index);
+        g_model_names.insert(Lower(textures));
+        ++precached;
+    }
+    char line[96];
+    std::snprintf(line, sizeof(line), "texture models: %d precached, %d dropped",
+                  precached, dropped);
+    PrecacheMark(line);
+    if (dropped == 0) {
+        return;
+    }
+    // Whichever version is not in use: its textures are what went without.
+    const bool hd = HdModelsOn();
+    CVAR_SET_FLOAT("ap_hd_locked", 1.0f);
+    Notify(std::string("Warning! Pre-cache limit reached: disabling ")
+           + (hd ? "non-HD" : "HD")
+           + " models. Toggling this setting before returning to the hub will crash "
+             "the game.");
+}
+
+void TracePlayerModels() {
+    for (int i = 1; i <= gpGlobals->maxClients; ++i) {
+        edict_t* e = INDEXENT(i);
+        if (!e || e->free || !e->pvPrivateData) {
+            continue;
+        }
+        for (const auto field : {e->v.viewmodel, e->v.weaponmodel}) {
+            if (FStringNull(field)) {
+                continue;
+            }
+            const char* name = STRING(field);
+            const bool known = g_model_names.count(Lower(name)) > 0;
+            Trace((std::string("  player model ") + name
+                   + (known ? "" : " NOT PRECACHED on this map")).c_str());
+            if (!known) {
+                ALERT(at_console, "[AP] %s is held but was not precached on this map\n",
+                      name);
+            }
+        }
+    }
 }
 
 const std::string& CurrentCampaign() {

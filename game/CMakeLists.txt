@@ -198,6 +198,8 @@ if(HLAP_CLIENT AND MSVC)
     endforeach()
     # The lobby whiteboard; see src/client/ap_whiteboard.h.
     list(APPEND CL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/client/ap_whiteboard.cpp")
+    # The HD option lock; see src/client/ap_hdlock.h.
+    list(APPEND CL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/client/ap_hdlock.cpp")
     file(GLOB CL_SHARED CONFIGURE_DEPENDS "${HLSDK_DIR}/game_shared/vgui_*.cpp")
     list(APPEND CL_SOURCES ${CL_SHARED} "${HLSDK_DIR}/game_shared/voice_banmgr.cpp")
 

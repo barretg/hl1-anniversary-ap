@@ -52,6 +52,21 @@ They use two more verbs, standing in for the client's connection:
     !connect / !disconnect    what the snapshot says about the client
 and the harness shows every COMPLETE and GOAL the game sends.
 
+`--pctest` runs only the precache scenarios (see `precache_scenarios`): each
+map nearest the engine's 511 model slots, loaded holding every item, with a
+walk-in changelevel beside you to carry the inventory into the next map.
+
+`--sweep` is the pre-release precache check, and runs itself: every map of
+every installed campaign is loaded in turn, holding every item, and read back
+from `ap_boot.txt`. A map fails if it crashes the game; it warns if it is
+within `SWEEP_MARGIN` slots of either table, or drops HD texture files.
+Verdicts go to `aptest_results.txt` under the `sweep` group and a
+summary to `build/precache_sweep.txt`. A crash stops it until the game is
+relaunched; it then carries on from the next map. `--clear` with it starts over.
+
+`--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
+pctest or sweep.
+
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
     !clear             asks; !clear yes drops this group's results
@@ -68,7 +83,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --pctest | --sweep | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -233,6 +248,8 @@ class Scenario:
     air_acceleration: tuple[int, int] | None = None
     # The seed's `melee_throw`: whether Melee Throw is in the pool at all.
     melee_throw: bool = True
+    # Placed crouched, for a spot in a vent.
+    crouch: bool = False
 
 
 def cache_key(data: CheckData) -> str:
@@ -1182,6 +1199,28 @@ def playtest_fix_scenarios(data: CheckData) -> list[Scenario]:
     return scenarios
 
 
+def hd_lock_scenarios(data: CheckData) -> list[Scenario]:
+    """The HD option locked on a map at the precache limit. Pit Worm's Nest part
+    1 has the most brush models of any map, so the most likely to run out."""
+    if "of4a4" not in {m for c in data.chapters for m in c.maps}:
+        return []
+    return [
+        Scenario(
+            title="0.4.0: HD option locked at the precache limit",
+            map="of4a4", steps="\n".join([
+                "If the map loads: the console shows '[AP] slots on of4a4'. If the",
+                "chat shows 'Warning! Pre-cache limit reached: disabling ...",
+                "models', open Options > Video and switch Enable HD models: it is",
+                "refused with 'HD models cannot be switched on this map' and the",
+                "game carries on. Typing _sethdmodels in the console is refused",
+                "the same way. Walk into a changelevel (noclip if need be): on the",
+                "next map the switch works again.",
+                "No warning: !note with the 'texture models' line of ap_boot.txt.",
+                "!pass, or !fail <what was different, or the crash text>.",
+            ])),
+    ]
+
+
 def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     """What changed in 0.4.0. Appended to, never reordered."""
     return (completion_scenarios(data, mission_exits(data, game_root))
@@ -1193,7 +1232,295 @@ def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             + new_trap_scenarios(data)
             + reissue_scenarios(data)
             + microwave_scenarios(data)
-            + playtest_fix_scenarios(data))
+            + playtest_fix_scenarios(data)
+            + hd_lock_scenarios(data))
+
+
+# A map with at least this many brush models is a precache suspect: each one
+# takes a model slot before anything in the map is spawned, and the engine has
+# 511 in all. Pit Worm's Nest part 1 has 331 and is reported unplayable.
+PRECACHE_SUSPECT_BRUSHES = 240
+# Half-Life maps checked as well, for crashes reported holding Opposing Force's
+# weapons outside it: the most brush models, and c2a1, the most slots measured.
+PRECACHE_HALF_LIFE_MAPS = 3
+PRECACHE_HALF_LIFE_MEASURED = ["c2a1"]
+
+
+def changelevel_spot(bsp: Path, entities: list[dict[str, str]],
+                     wanted: list[str]) -> tuple[str, str, bool] | None:
+    """`(target map, "x y z", crouched)`: a floor spot beside a walk-in
+    changelevel, not inside it, on the side with the most room (the map's side,
+    not the stub beyond it). Changelevels to `wanted` maps are tried in that
+    order; a standing spot first, then a crouched one, for the vents some
+    transitions are in."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import (CONTENTS_EMPTY, CONTENTS_SOLID, HULL_CROUCHING,
+                              HULL_STANDING, ClipHull, brush_model_bounds)
+
+    clip = ClipHull(bsp)
+    bounds = brush_model_bounds(bsp)
+    triggers = [(e.get("map", ""), bounds[e["model"]]) for e in entities
+                if e.get("classname") == "trigger_changelevel"
+                and not int(e.get("spawnflags", "0") or 0) & 2  # use only
+                and e.get("model") in bounds]
+
+    def inside_any(point) -> bool:
+        return any(all(lo[i] - 16 <= point[i] <= hi[i] + 16 for i in range(3))
+                   for _, (lo, hi) in triggers)
+
+    def fits(point, hull: int) -> bool:
+        if clip.contents(point, hull) != CONTENTS_EMPTY or inside_any(point):
+            return False
+        # A floor within a step or two below.
+        return any(clip.contents((point[0], point[1], point[2] - drop), hull)
+                   == CONTENTS_SOLID for drop in range(4, 72, 4))
+
+    for target in wanted:
+        for hull, height in ((HULL_STANDING, 36), (HULL_CROUCHING, 18)):
+            best: tuple[int, tuple[float, float, float]] | None = None
+            for _, (lo, hi) in (t for t in triggers if t[0] == target):
+                centre = [(lo[i] + hi[i]) / 2 for i in range(3)]
+                for axis in (0, 1):
+                    for sign in (-1, 1):
+                        face = hi[axis] if sign > 0 else lo[axis]
+                        for z in range(int(lo[2]) + height, int(hi[2]) + 1, 8):
+                            point = list(centre)
+                            point[axis] = face + sign * 40
+                            point[2] = z
+                            if not fits(tuple(point), hull):
+                                continue
+                            room = 0
+                            for step in range(1, 7):
+                                ahead = list(point)
+                                ahead[axis] += sign * 48 * step
+                                if clip.contents(tuple(ahead), hull) != CONTENTS_EMPTY:
+                                    break
+                                room += 1
+                            if best is None or room > best[0]:
+                                best = (room, tuple(point))
+                            break
+            if best is not None:
+                return (target, " ".join(f"{v:g}" for v in best[1]),
+                        hull == HULL_CROUCHING)
+    return None
+
+
+def precache_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """Loading the maps nearest the engine's precache limits holding every
+    item, so every weapon is precached and drawn, then walking through a
+    changelevel so the next map loads with the inventory carried across."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import brush_model_bounds, load_map
+    from campaigns import KNOWN_CAMPAIGNS
+
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+
+    def bsp_of(map_name: str) -> Path:
+        return game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
+
+    brushes: dict[str, int] = {}
+    for chapter in data.chapters:
+        for map_name in chapter.maps:
+            if bsp_of(map_name).is_file():
+                brushes[map_name] = len(brush_model_bounds(bsp_of(map_name)))
+
+    suspects = [m for m, n in sorted(brushes.items(), key=lambda kv: -kv[1])
+                if n >= PRECACHE_SUSPECT_BRUSHES]
+    # Every part of Pit Worm's Nest, the one mission reported unplayable.
+    pit_worm = next((c for c in data.chapters if c.name == "Pit Worm's Nest"), None)
+    if pit_worm is not None:
+        suspects += [m for m in pit_worm.maps if m in brushes and m not in suspects]
+    half_life = sorted((m for c in data.chapters if c.campaign == "half_life"
+                        for m in c.maps if m in brushes), key=lambda m: -brushes[m])
+    for map_name in half_life[:PRECACHE_HALF_LIFE_MAPS] + PRECACHE_HALF_LIFE_MEASURED:
+        if map_name in brushes and map_name not in suspects:
+            suspects.append(map_name)
+
+    out: list[Scenario] = []
+    for map_name in suspects:
+        chapter = data.chapter_of(map_name)
+        index = chapter.maps.index(map_name)
+        # The next part first, then an earlier one. Never out of the mission:
+        # leaving it returns to the hub rather than loading the next map.
+        wanted = chapter.maps[index + 1:] + chapter.maps[:index]
+        spot = changelevel_spot(bsp_of(map_name), load_map(bsp_of(map_name)), wanted)
+        report = ("On a crash: !fail with the error text and the last 'precache' "
+                  "lines of ap_boot.txt. Otherwise !pass with the console's "
+                  "'[AP] slots on' line from each map as the note.")
+        if spot is None:
+            out.append(Scenario(
+                title=f"Precache: {map_name} ({brushes[map_name]} brush models)",
+                map=map_name, steps="\n".join([
+                    f"{chapter.name}, part {index + 1}, holding every item. The map",
+                    "loaded. It has no walk-in changelevel to another part of the",
+                    "mission: play on to its scripted one, or !next if there is none.",
+                    "Draw each Opposing Force weapon once.",
+                    report,
+                ])))
+            continue
+        target, pos, crouched = spot
+        out.append(Scenario(
+            title=f"Precache: {map_name} ({brushes[map_name]} brush models) to {target}",
+            map=map_name, pos=pos, crouch=crouched, steps="\n".join([
+                f"{chapter.name}, part {index + 1}, holding every item. The map loaded.",
+                "Draw each Opposing Force weapon once.",
+                f"A changelevel to {target} is beside you"
+                + (", in a vent: you are put there crouched, so keep holding crouch"
+                   if crouched else "")
+                + ". Walk through it and let the next map load.",
+                report,
+            ])))
+    return out
+
+
+# A map within this many slots of either 511-slot table is a warning in the sweep:
+# the next model added to the game could be the one that does not fit.
+SWEEP_MARGIN = 20
+# Seconds a map has to load before the sweep calls it a crash.
+SWEEP_LOAD_TIMEOUT = 120
+# Seconds on each map after it loads: the loadout grants every weapon on the
+# first frames, and a weapon spawned without its models crashes then.
+SWEEP_SETTLE = 6
+
+
+def sweep_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """Every map of every installed campaign, in mission order."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from campaigns import KNOWN_CAMPAIGNS
+
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+    out: list[Scenario] = []
+    for chapter in data.chapters:
+        for map_name in chapter.maps:
+            bsp = game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
+            if bsp.is_file():
+                out.append(Scenario(title=f"Sweep: {map_name}", map=map_name,
+                                    steps="Automated: nothing to do."))
+    return out
+
+
+@dataclass
+class SweepResult:
+    map: str
+    verdict: str = "fail"
+    models: int = 0
+    sounds: int = 0
+    notes: list[str] = field(default_factory=list)
+
+
+def read_sweep(lines: list[str], map_name: str) -> SweepResult | None:
+    """What `ap_boot.txt` says about one load of `map_name`, from its
+    'precache begins' line on, or None if it has not finished loading."""
+    begin = next((i for i in range(len(lines) - 1, -1, -1)
+                  if lines[i].startswith(f"precache begins on {map_name} ")), None)
+    if begin is None:
+        return None
+    result = SweepResult(map_name)
+    done = False
+    for line in lines[begin:]:
+        if line.startswith(f"slots on {map_name}: "):
+            # "slots on c1a0: models 365 of 511, sounds 140 of 511"
+            words = line.replace(",", "").split()
+            result.models = int(words[words.index("models") + 1])
+            result.sounds = int(words[words.index("sounds") + 1])
+            done = True
+        elif line.startswith("precache texture models: ") and " 0 dropped" not in line:
+            result.notes.append(":".join(line[len("precache "):].split(":")[:2]))
+    if not done:
+        return None
+    tight = max(result.models, result.sounds) > 511 - SWEEP_MARGIN
+    result.verdict = "warn" if tight or result.notes else "pass"
+    return result
+
+
+def game_running() -> bool | None:
+    """Whether a Half-Life process (native, or hl.exe under Proton) exists;
+    None where there is no /proc to look in."""
+    proc = Path("/proc")
+    if not proc.is_dir():
+        return None
+    for entry in proc.iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            argv0 = (entry / "cmdline").read_bytes().split(b"\0", 1)[0].decode(errors="replace")
+        except OSError:
+            continue
+        if argv0.replace("\\", "/").rsplit("/", 1)[-1].lower() in ("hl.exe", "hl_linux"):
+            return True
+    return False
+
+
+def run_sweep(harness: "Harness", store: Path, start_at: int | None = None) -> int:
+    """Load every sweep scenario's map in turn and record what it cost: those
+    without a result yet, or with `start_at`, every one from that number on."""
+    boot = store / "ap_boot.txt"
+    report = REPO / "build" / "precache_sweep.txt"
+    done = harness.latest_verdicts()
+    todo = [i for i, s in enumerate(harness.scenarios)
+            if (i >= start_at if start_at is not None else s.title not in done)]
+    print(f"{len(todo)} of {len(harness.scenarios)} maps left to sweep.")
+    if todo:
+        input("Start Half-Life, load any map (the hub will do), then press Enter.")
+    # Only trusted if it sees the game now: otherwise the load timeout is all.
+    watch = game_running() is True
+    if todo and not watch:
+        print("Half-Life's process was not found, so a crash is only noticed when a "
+              f"map has not loaded after {SWEEP_LOAD_TIMEOUT} seconds.")
+
+    def lines() -> list[str]:
+        try:
+            return boot.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            return []
+
+    def gone() -> bool:
+        return watch and game_running() is False
+
+    for index in todo:
+        scenario = harness.scenarios[index]
+        start = len(lines())
+        harness.start(index)
+        deadline = time.time() + SWEEP_LOAD_TIMEOUT
+        result = None
+        while time.time() < deadline and result is None and not gone():
+            time.sleep(1)
+            now = lines()
+            # A relaunch starts the file over.
+            result = read_sweep(now[start:] if len(now) >= start else now, scenario.map)
+        if result is not None:
+            # A grant on the first frames crashes a map that loaded fine.
+            settle = time.time() + SWEEP_SETTLE
+            while time.time() < settle and not gone():
+                time.sleep(1)
+            note = (f"models {result.models}, sounds {result.sounds}"
+                    + ("; " + "; ".join(result.notes) if result.notes else ""))
+            if not gone():
+                harness.record_only(result.verdict, note)
+                print(f"  {result.verdict:4}  {scenario.map}: {note}")
+                continue
+            harness.record_only("fail", "crashed after loading; " + note)
+            print(f"  fail  {scenario.map}: crashed after loading ({note})")
+        else:
+            tail = "; ".join(l.strip() for l in lines() if "precache" in l)[-300:]
+            harness.record_only("fail", "crashed or never loaded; last: " + (tail or "nothing"))
+            print(f"  fail  {scenario.map}: crashed or never loaded")
+        print("        The last precache lines of ap_boot.txt and the console's error are")
+        print("        what to look at. Relaunch Half-Life, load any map, then press")
+        input("        Enter to carry on from the next map (Ctrl+C to stop).")
+        watch = game_running() is True
+
+    verdicts = harness.latest_verdicts()
+    notes = harness.latest_notes()
+    report.parent.mkdir(parents=True, exist_ok=True)
+    rows = [f"{verdicts.get(s.title, '-'):4}  {s.map:12} {notes.get(s.title, '')}"
+            for s in harness.scenarios]
+    report.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    counts = {v: sum(1 for s in harness.scenarios if verdicts.get(s.title) == v)
+              for v in ("pass", "warn", "fail")}
+    print(f"Sweep: {counts['pass']} pass, {counts['warn']} warn, {counts['fail']} fail. "
+          f"Summary in {report}.")
+    return 1 if counts["fail"] else 0
 
 
 def build_scenarios(data: CheckData,
@@ -1335,7 +1662,7 @@ class DllSwap:
 
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
-GROUPS = ("sources", "find", "trace", "parity", "0.4.0")
+GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "pctest", "sweep")
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
@@ -1351,6 +1678,10 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return find_scenarios(data)
     if group == "0.4.0":
         return release_0_4_0_scenarios(data, game_root)
+    if group == "pctest":
+        return precache_scenarios(data, game_root)
+    if group == "sweep":
+        return sweep_scenarios(data, game_root)
     only = None
     if unproven:
         only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
@@ -1482,6 +1813,8 @@ class Harness:
             # redo of the same scenario reloads it too.
             self.seq += 1
             go = [f"seq={self.seq}", f"map={s.map}"] + ([f"pos={s.pos}"] if s.pos else [])
+            if s.crouch:
+                go.append("crouch=1")
             self.go_path.write_text("\n".join(go) + "\n", encoding="utf-8")
             self.tell(f"[aptest] {index}/{len(self.scenarios) - 1}: {s.title}")
             if s.take:
@@ -1503,16 +1836,22 @@ class Harness:
         return next((i for i, s in enumerate(self.scenarios)
                      if i > after and s.title not in verdicts), None)
 
-    def record(self, verdict: str, note: str) -> None:
+    def record_only(self, verdict: str, note: str) -> bool:
+        """Write the verdict for the running scenario, and nothing else."""
         s = self.scenario()
         if s is None:
             self.tell("[aptest] No scenario running.")
-            return
+            return False
         sent = ",".join(str(i) for i in sorted(self.seen))
         line = "|".join([time.strftime("%Y-%m-%d %H:%M:%S"), str(self.current),
                          s.title, verdict, note.replace("|", "/"), sent, self.group])
         with self.results_path.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
+        return True
+
+    def record(self, verdict: str, note: str) -> None:
+        if not self.record_only(verdict, note):
+            return
         self.tell(f"[aptest] Recorded {verdict}.")
         following = self.first_untested(self.current)
         if following is None:
@@ -1529,6 +1868,15 @@ class Harness:
                 if len(parts) >= 4:
                     verdicts[parts[2]] = parts[3]
         return verdicts
+
+    def latest_notes(self) -> dict[str, str]:
+        notes: dict[str, str] = {}
+        if self.results_path.exists():
+            for line in self.results_path.read_text(encoding="utf-8").splitlines():
+                parts = line.split("|")
+                if len(parts) >= 5:
+                    notes[parts[2]] = parts[4]
+        return notes
 
     def status(self) -> None:
         verdicts = self.latest_verdicts()
@@ -1708,17 +2056,36 @@ def main(argv: list[str] | None = None) -> int:
                         action="store_true",
                         help="only the 0.4.0 scenarios: mission completion and the "
                              "Butterfingers toss (--completion is the old name)")
+    parser.add_argument("--pctest", action="store_true",
+                        help="only the precache scenarios: the maps nearest the "
+                             "engine's limits, holding every item")
+    parser.add_argument("--sweep", action="store_true",
+                        help="the pre-release precache check: load every map holding "
+                             "every item, unattended, and report each map's slots")
+    parser.add_argument("--from", dest="start_at", type=int, metavar="N",
+                        help="with --sweep: sweep again from scenario N (the number "
+                             "in aptest_results.txt), results or not")
+    parser.add_argument("--group", choices=GROUPS + tuple(FORMER_GROUPS),
+                        help="the group to run, by name; the same as its own flag")
     parser.add_argument("--clear", action="store_true",
                         help="drop the chosen group's results and exit; nothing is "
                              "launched or swapped")
     args = parser.parse_args(argv)
     if args.game_root is None:
         parser.error("--game-root is required")
-    flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0"}
+    flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0",
+             "pctest": "pctest", "sweep": "sweep"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
+    if args.group is not None:
+        named = FORMER_GROUPS.get(args.group, args.group)
+        if named not in chosen:
+            chosen.append(named)
     if len(chosen) > 1:
-        parser.error("pick one of --find, --trace, --parity, --0.4.0")
+        parser.error("pick one group: --group <name>, or one of --find, --trace, "
+                     "--parity, --0.4.0, --pctest, --sweep")
     args.group = chosen[0] if chosen else "sources"
+    if args.start_at is not None and args.group != "sweep":
+        parser.error("--from only goes with --sweep")
 
     bridge_module = load_bridge()
     store = bridge_module.find_store_dir(args.game_root)
@@ -1793,6 +2160,15 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
                       select_scenarios(args.group, data, store, args.game_root,
                                        args.unproven))
     harness.publish(force=True)
+    if args.group == "sweep":
+        threading.Thread(target=harness.poll, daemon=True).start()
+        try:
+            return run_sweep(harness, store, args.start_at)
+        except KeyboardInterrupt:
+            return 1
+        finally:
+            harness.running = False
+            harness.go_path.unlink(missing_ok=True)
     print(f"{len(harness.scenarios)} scenarios from {store / 'checkdata.txt'}.")
     print("Drive it from the game: !next to begin, !pass / !fail <note> / !note <text>.")
     harness.status()
