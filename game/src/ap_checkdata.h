@@ -121,6 +121,15 @@ struct CarriedMonster {
     int spawnflags = 0;
 };
 
+// A way off a mission map: a `trigger_changelevel` into another campaign map,
+// or a `trigger_endsection` (`to` empty). Where `!trace` points for a part's
+// Reached or a mission's Complete.
+struct Changelevel {
+    std::string map;
+    std::string to;
+    float at[3] = {0.0f, 0.0f, 0.0f};
+};
+
 // One game the seed may include (format 5's `N` record).
 struct Campaign {
     std::string key;
@@ -155,6 +164,9 @@ public:
     // the ordinary way brings the real monster with it, and a second would be
     // two bosses in one arena.
     std::vector<CarriedMonster> carried_monsters;
+
+    // Empty in a file older than the `T` record: no trace to a way on.
+    std::vector<Changelevel> changelevels;
 
     // Every game in the file, in mission order. Empty in a file older than
     // format 5, which is Half-Life alone; see `CampaignByKey`.

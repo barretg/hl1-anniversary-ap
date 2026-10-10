@@ -85,6 +85,9 @@ def render(campaign: dict) -> str:
         "#     a monster this map only ever gets by transition, placed on arrival",
         "#     when the map was warped into. <netname> is the path node it starts",
         "#     on, which is what puts the fight where the player would have left it.",
+        "#   T|<map>|<to map>|<x y z>      a changelevel's centre, for !trace to a",
+        "#     part's Reached or a mission's Complete. <to map> is empty for a",
+        "#     trigger_endsection.",
         "#   D|<data version>               must match the client's, or ids differ",
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
@@ -194,6 +197,11 @@ def render(campaign: dict) -> str:
                 flags=placement["spawnflags"],
             )
         )
+
+    for changelevel in campaign.get("changelevels", ()):
+        lines.append("T|{map}|{to}|{at}".format(
+            map=changelevel["map"], to=changelevel["to"],
+            at=" ".join(str(value) for value in changelevel["at"])))
 
     return "\n".join(lines) + "\n"
 

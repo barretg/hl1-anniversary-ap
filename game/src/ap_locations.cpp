@@ -753,6 +753,51 @@ const Location::Source* SourceHere(const Location& location) {
     return nullptr;
 }
 
+// Where on this map a part's Reached or a mission's Complete is had: the nearest
+// changelevel into that part, or out of the mission forwards (its endsection, or
+// its last map for a finale that completes on arrival). False for any other
+// check, or when no way from this map leads there.
+bool WayOnHere(const Location& location, const Vector& from, Vector& out) {
+    const Chapter* here = Data().ChapterOfMap(g_map);
+    const Chapter* chapter = Data().ChapterOfMap(location.map);
+    if (here == nullptr || chapter == nullptr || here->key != chapter->key) {
+        return false;
+    }
+    const bool reached = location.type == TriggerType::MapReached;
+    if (!reached && location.type != TriggerType::ChapterComplete) {
+        return false;
+    }
+    bool any = false;
+    float best = 0.0f;
+    for (const Changelevel& changelevel : Data().changelevels) {
+        if (changelevel.map != g_map) {
+            continue;
+        }
+        bool leads = false;
+        if (reached) {
+            leads = changelevel.to == location.map;
+        } else if (chapter->CompletesOnEndSection()) {
+            leads = changelevel.to.empty();
+        } else if (chapter->complete_on_arrival) {
+            leads = changelevel.to == chapter->maps.back();
+        } else {
+            const Chapter* to = Data().ChapterOfMap(changelevel.to);
+            leads = to != nullptr && to->index > chapter->index;  // as InterceptChangeLevel
+        }
+        if (!leads) {
+            continue;
+        }
+        const Vector at(changelevel.at[0], changelevel.at[1], changelevel.at[2]);
+        const float score = WalkScore(from, at);
+        if (!any || score < best) {
+            out = at;
+            best = score;
+            any = true;
+        }
+    }
+    return any;
+}
+
 // Every item named in a source's `needs` ("A or B and C") is held.
 bool NeedsMet(const std::string& needs) {
     size_t start = 0;
@@ -812,6 +857,24 @@ const Location::Source* EarliestSource(const Location& location, bool& available
     return available ? best_open : best_any;
 }
 
+// Which way a spot on this map is, and the trace's target when there is one.
+void PointAt(CBasePlayer* player, const Location& location, const Vector& at,
+             FindTarget* target) {
+    if (target != nullptr) {
+        target->found = true;
+        target->at = at;
+        target->location_id = location.id;
+        target->colour = LineColour(location);
+    }
+    char line[192];
+    std::snprintf(line, sizeof(line), "%s%s, about %d units away.",
+                  Bearing(player, at), HeightTo(player, at),
+                  static_cast<int>(WalkScore(player->pev->origin, at)));
+    Notify(line);
+    Notify(ClearLineTo(player, at) ? "You have a clear line to it."
+                                   : "Something solid is in the way.");
+}
+
 // Point the player at one location, wherever it is.
 //
 // Somewhere else in the campaign is a legitimate answer -- `ap_find crossbow`
@@ -862,6 +925,16 @@ void DescribeLocation(CBasePlayer* player, const Location& location,
                : missing_item ? "Any copy in this game sends it; the earliest needs the " +
                                     needs + ", which you do not have:"
                               : "Any copy in this game sends it; the earliest is in:");
+    }
+
+    // A part not reached yet, or the mission's end, from inside the mission:
+    // the way there is on this map.
+    Vector way;
+    if (!Collected(location) && WayOnHere(location, player->pev->origin, way)) {
+        Notify(location.type == TriggerType::MapReached ? "The way into it is here:"
+                                                        : "The way out is here:");
+        PointAt(player, location, way, target);
+        return;
     }
 
     if (map != g_map) {
@@ -919,20 +992,7 @@ void DescribeLocation(CBasePlayer* player, const Location& location,
         return;
     }
 
-    const Vector at(position[0], position[1], position[2]);
-    if (target != nullptr) {
-        target->found = true;
-        target->at = at;
-        target->location_id = location.id;
-        target->colour = LineColour(location);
-    }
-    char line[192];
-    std::snprintf(line, sizeof(line), "%s%s, about %d units away.",
-                  Bearing(player, at), HeightTo(player, at),
-                  static_cast<int>(WalkScore(player->pev->origin, at)));
-    Notify(line);
-    Notify(ClearLineTo(player, at) ? "You have a clear line to it."
-                                   : "Something solid is in the way.");
+    PointAt(player, location, Vector(position[0], position[1], position[2]), target);
 }
 
 // `Find`, also saying where it pointed when that is somewhere on this map.
@@ -964,16 +1024,15 @@ void FindInto(const std::string& text, FindTarget* target) {
             }
             // A weapon check's copy on this map counts as being on this map.
             const Location::Source* source = SourceHere(location);
-            const float* position = nullptr;
+            Vector at;
             if (source != nullptr && source->has_position) {
-                position = source->position;
+                at = Vector(source->position[0], source->position[1], source->position[2]);
             } else if (location.has_position && location.map == g_map) {
-                position = location.position;
-            } else {
+                at = Vector(location.position[0], location.position[1], location.position[2]);
+            } else if (!WayOnHere(location, player->pev->origin, at)) {
                 continue;
             }
 
-            const Vector at(position[0], position[1], position[2]);
             const float score = WalkScore(player->pev->origin, at);
             if (best == nullptr || score < best_score) {
                 best = &location;
@@ -1070,6 +1129,8 @@ const Location* TracedLocation() {
     return nullptr;
 }
 
+void StartTrace(const FindTarget& target);
+
 void PathTrace(const std::string& text) {
     // Off says nothing: the line going away is the answer.
     if (g_trace.on && Trim(text).empty()) {
@@ -1084,6 +1145,30 @@ void PathTrace(const std::string& text) {
         Notify("Nothing on this map to trace to.");
         return;
     }
+    StartTrace(target);
+}
+
+void TraceById(long id) {
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    for (const Location& location : Data().locations) {
+        if (location.id != id) {
+            continue;
+        }
+        // Where it is, as `!find` says it; a line too when that is on this map.
+        StopPathTrace();
+        FindTarget target;
+        DescribeLocation(player, location, &target);
+        if (target.found) {
+            StartTrace(target);
+        }
+        return;
+    }
+}
+
+void StartTrace(const FindTarget& target) {
     g_trace.on = true;
     g_trace.map = g_map;
     g_trace.target = target;

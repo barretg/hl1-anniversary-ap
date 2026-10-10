@@ -118,8 +118,12 @@ bool Collected(const Location& location);
 // game rather than to the map it is anchored on.
 bool IsWeaponCheck(const Location& location);
 
-// `Find`'s answer for one location, by id. What picking a check in `!menu` does.
+// `Find`'s answer for one location, by id.
 void FindById(long id);
+
+// `Find`'s answer for one location, and a trace line to it when it is on this
+// map. What picking a check in `!menu` does, as in the Half-Life 2 game.
+void TraceById(long id);
 
 void Tracker(const std::string& map_filter);
 

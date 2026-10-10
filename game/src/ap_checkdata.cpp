@@ -45,6 +45,7 @@ bool CheckData::Load(const std::string& path) {
     locations.clear();
     gated_classnames.clear();
     starting_weapons.clear();
+    changelevels.clear();
     format_version = 0;
     data_version.clear();
     goal_chapter.clear();
@@ -164,6 +165,13 @@ bool CheckData::Load(const std::string& path) {
             monster.angle = static_cast<float>(atof(f[6].c_str()));
             monster.spawnflags = static_cast<int>(ParseLong(f[7]));
             carried_monsters.push_back(monster);
+        } else if (record == "T" && f.size() >= 4) {
+            Changelevel changelevel;
+            changelevel.map = f[1];
+            changelevel.to = f[2];
+            if (ParseVector(f[3], changelevel.at)) {
+                changelevels.push_back(changelevel);
+            }
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.

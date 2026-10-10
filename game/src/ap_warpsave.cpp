@@ -95,6 +95,20 @@ bool CanSave(std::string& why) {
     return true;
 }
 
+// The map a save's name was made from. The name keeps only letters and digits,
+// so `ba_xen2` is stored as `baxen2`, which no mission lists: match it against
+// the campaign's maps the same way. Unchanged when none matches, the hub's.
+std::string RealMap(const std::string& clean) {
+    for (const Chapter& chapter : Data().chapters) {
+        for (const std::string& map : chapter.maps) {
+            if (Sanitise(map, 16) == clean) {
+                return map;
+            }
+        }
+    }
+    return clean;
+}
+
 }  // namespace
 
 std::string WarpKey() {
@@ -159,7 +173,7 @@ std::vector<WarpPoint> NamedWarps() {
         WarpPoint point;
         point.save = name;
         point.label = tail.substr(0, split);
-        point.map = tail.substr(split + 1);
+        point.map = RealMap(tail.substr(split + 1));
         found.push_back(point);
     } while (FindNextFileA(handle, &entry));
     FindClose(handle);

@@ -628,8 +628,12 @@ void Cmd_ApTrace() {
     Reply reply("ap_trace");
     PathTrace(text);
 }
-void Cmd_ApTracker() { Reply reply("ap_tracker"); Tracker(ArgumentTail(1)); }
-void Cmd_ApMenu() { OpenMenu("main"); }
+void Cmd_ApTracker() {
+    Reply reply("ap_tracker");
+    Tracker(ArgumentTail(1));
+    TrackMission(ArgumentTail(1));
+}
+void Cmd_ApMenu() { OpenMenu(); }
 
 // A testing switch, and console only: not in `!help`, and not a chat command,
 // because a player has no reason to want it. `ap_nowarps` toggles; `1` or `0`
@@ -672,7 +676,7 @@ bool Dispatch(const std::string& name, const std::string& rest) {
     }
     // The menu on screen is the answer, so no reply line under it.
     if (name == "menu" || name == "ap_menu") {
-        OpenMenu("main");
+        OpenMenu();
         return true;
     }
     // Named as the player said it, so the HUD line for a console-length reply
@@ -696,6 +700,7 @@ bool Dispatch(const std::string& name, const std::string& rest) {
         PathTrace(rest);
     } else if (name == "tracker" || name == "ap_tracker") {
         Tracker(rest);
+        TrackMission(rest);
     } else {
         return false;
     }

@@ -772,34 +772,115 @@ def parity_scenarios(data: CheckData) -> list[Scenario]:
             ])))
 
     out += [
+        *menu_scenarios("Parity O16", office, blast, reached(office.key)),
+    ]
+    return out
+
+
+def menu_scenarios(prefix: str, office: Chapter, blast: Chapter,
+                   reached: list[int]) -> list[Scenario]:
+    """`!menu` laid out as the Half-Life 2 game's: 1-7 entries, 8 back to the
+    page before, 9 more, 0 exit."""
+    verdict = "!pass, or !fail <what was different>."
+    return [
         Scenario(
-            title="Parity O16: !menu warp pages",
-            map=office.maps[0], checked=reached(office.key), closed=[blast.key],
+            title=f"{prefix}: !menu warp pages",
+            map=office.maps[0], checked=reached, closed=[blast.key],
             steps="\n".join([
-                "!menu: 'Archipelago' with Warp to a mission, Tracker, Nearest check",
-                "here, Trace a path to the nearest check, Return to the hub, and 0. Exit.",
-                "The number keys pick, not weapons.",
-                "1 (Warp), then Half-Life: its missions as '<n>. <name> [status]'.",
-                "9 shows the next 7, 8 comes back. Pick Office Complex: Start and",
-                "every part, each with its map; pick Part 3: you warp there.",
-                f"!menu, 1, Half-Life, then {blast.name} (locked): refused as !warp refuses it.",
+                "!menu: 'Archipelago' with 1. Warp to a mission, 2. Warp points,",
+                "3. Tracker, 4. Find the nearest check, 5. Trace to the nearest",
+                "check, 6. Go to the hub, 7. Set this part's warp point, and",
+                "0. Exit, with no 8. Back. The number keys pick, not weapons.",
+                "A number with nothing on it leaves the menu up.",
+                "1, then Half-Life: its open missions as '<n>. <name> [status]',",
+                f"without {blast.name} (locked). 9 shows the next 7 and 8 the",
+                "page before; 8 on the first page goes back to the games, and 8",
+                "again to the main page.",
+                "1, Half-Life, Office Complex: 'From the start', then each part",
+                "as 'Part N (f/t found)'. Pick Part 3: you warp there.",
                 verdict,
             ])),
         Scenario(
-            title="Parity O16: !menu tracker, nearest, warp points, hub, exit",
+            title=f"{prefix}: !menu tracker, nearest, warp points, hub, exit",
             map=office.maps[0], steps="\n".join([
-                "!setwarp here, then !menu: Warp points is listed; it warps to it.",
-                "!menu, 2 (Tracker), a game: Weapons f/t first, then missions with",
-                "counts. Pick Office Complex: unfound first, found greyed '[done]'.",
-                "Picking one gives the !find answer for it.",
-                "!menu, 3: the !find answer for the nearest check.",
-                "!menu, 4: a path is drawn to it; !menu shows 'Stop the path trace',",
-                "and picking that removes the path.",
-                "!menu, 0: it closes and number keys pick weapons again.",
-                "!menu, Return to the hub: you go to the hub.",
+                "!setwarp here, then !menu, 2: 'here (Office Complex)'. Pick it:",
+                "you warp to it.",
+                "!menu, 3: 'Tracker: Office Complex [status]', then 'Part N: f/t'",
+                "for each part, '(here)' on this one, then 'Weapons: f/t' and",
+                "'Track another mission'.",
+                "Pick this part: unfound first, found greyed '[done]'. Picking one",
+                "gives the !find answer for it and draws a line to it. 8: back to",
+                "the tracker.",
+                "Track another mission, then a game: its missions as '<name>: f/t'.",
+                "Pick one: the tracker follows it.",
+                "!menu, 4: the !find answer for the nearest check.",
+                "!menu, 5: a line is drawn to it. !menu shows 'Stop tracing', and",
+                "picking that removes the line.",
+                "!menu, then !menu again: it closes. !menu, 0: it closes, and the",
+                "number keys pick weapons again.",
+                "!menu, 7: the warp point for this part is set.",
+                "!menu, 6: you go to the hub.",
                 verdict,
             ])),
     ]
+
+
+def nav_parity_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """0.4.0's navigation brought in line with the Half-Life 2 game: the menu,
+    !trace to a part's way in and a mission's way out, and Blue Shift's warp
+    points naming their mission."""
+    by_key = {c.key: c for c in data.chapters}
+    office = by_key.get("c1a2")
+    blast = by_key.get("c1a4")
+    if office is None or blast is None:
+        return []
+    verdict = "!pass, or !fail <what was different>."
+    names = {l.name: l for l in data.locations.values()}
+    part2 = next((l for l in data.locations.values()
+                  if l.kind == "map_reached" and l.map == office.maps[1]), None)
+    reached = [l.id for l in data.locations.values()
+               if l.kind == "map_reached" and l.map in office.maps]
+    out = menu_scenarios("0.4.0", office, blast, reached)
+
+    # Everything on part 1 found, so the nearest thing left is the way on.
+    first = office.maps[0]
+    here = {l.id for l in data.locations.values() if l.map == first}
+    here |= {s.id for s in data.sources if s.map == first}
+    if part2 is not None:
+        out.append(Scenario(
+            title="0.4.0: !trace to a part's way in",
+            map=first, checked=sorted(here), expect=[part2.id],
+            steps="\n".join([
+                f"Everything on this map is found. !trace alone: 'The way into it",
+                f"is here:' for {part2.name}, and a white line to the changelevel",
+                f"into {office.maps[1]}.",
+                f"!trace off, then !trace {part2.name.lower()}: the same line.",
+                "Walk it: the check arrives on the far side, and the line is gone.",
+                verdict,
+            ])))
+    # Office Complex's way out is a changelevel only a trigger fires, on part 3.
+    complete = names.get(f"{office.name}: Complete")
+    if complete is not None and len(office.maps) > 2:
+        out.append(Scenario(
+            title="0.4.0: !trace to a mission's way out",
+            map=office.maps[2], expect=[complete.id],
+            expect_complete=[office.key],
+            steps="\n".join([
+                f"!trace {complete.name.lower()}: 'The way out is here:' and a white",
+                "line to the spot that sends you on to the next mission.",
+                f"Follow it: {office.name} completes and you return to the hub.",
+                verdict,
+            ])))
+    if "ba_xen2" in {m for c in data.chapters for m in c.maps}:
+        out.append(Scenario(
+            title="0.4.0: Blue Shift warp points name their mission",
+            map="ba_xen2", steps="\n".join([
+                "!setwarp chum, then !warps: '!warp chum    Focal Point (ba_xen2)',",
+                "not 'outside a mission'.",
+                "!menu, 2: 'chum (Focal Point)'. !hub, then !warp chum: you are",
+                "back where you set it.",
+                verdict,
+            ])))
     return out
 
 
@@ -1303,7 +1384,8 @@ def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             + playtest_fix_scenarios(data)
             + hd_lock_scenarios(data)
             + insecurity_guard_scenarios(data)
-            + chumtoad_cave_scenarios(data))
+            + chumtoad_cave_scenarios(data)
+            + nav_parity_scenarios(data, game_root))
 
 
 # A map with at least this many brush models is a precache suspect: each one

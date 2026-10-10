@@ -1015,7 +1015,52 @@ def build(
         "hub_map": HUB_MAP,
         "hub_buttons": build_hub_buttons(chapters, campaigns, lobby_path),
         "carried_monsters": carried_monsters(chapters, entities),
+        "changelevels": changelevels(chapters, entities, centres),
     }
+
+
+def changelevels(
+    chapters: list[dict],
+    entities: dict[str, list[dict[str, str]]],
+    centres: dict[str, dict[str, tuple[float, float, float]]],
+) -> list[dict]:
+    """Every way off a mission map into another campaign map, and every
+    `trigger_endsection` volume, for `!trace` to point at a part's "Reached" or
+    a mission's "Complete". `to` is empty for an endsection.
+
+    The game cannot read a changelevel's destination itself: the SDK keeps it in
+    a field of a class no header declares.
+    """
+    campaign_maps = {m for chapter in chapters for m in chapter["maps"]}
+    found: list[dict] = []
+    for chapter in chapters:
+        for map_name in chapter["maps"]:
+            for entity in entities[map_name]:
+                classname = entity.get("classname", "")
+                if classname == "trigger_changelevel":
+                    to = entity.get("map", "").lower()
+                    if to not in campaign_maps or to == map_name:
+                        continue
+                elif classname == "trigger_endsection":
+                    to = ""
+                else:
+                    continue
+                # A named changelevel is use-only: the way on is whatever brush
+                # trigger fires it (Office Complex's lift top), when one does.
+                name = entity.get("targetname", "")
+                firing = [e for e in entities[map_name] if name
+                          and e.get("target") == name
+                          and e.get("classname", "").startswith("trigger_")
+                          and e.get("model", "") in centres[map_name]]
+                model = (firing[0] if firing else entity).get("model", "")
+                at = centres[map_name].get(model)
+                if at is None:
+                    continue  # a point entity fired by a script: nowhere to walk to
+                record = {"map": map_name, "to": to,
+                          "at": [int(round(v)) for v in at]}
+                if record not in found:
+                    found.append(record)
+    return found
 
 
 # How far apart two copies of the same charger may be and still be one unit.

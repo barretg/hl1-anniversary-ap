@@ -6,8 +6,10 @@
 // `menuselect <n>`. Singleplayer's rules ignore that command, so sdk.patch hands
 // it to `MenuSelect` first.
 //
-// Every choice that does something runs the matching chat command through
-// `RunCommand`, so a menu warp is refused exactly where a typed one would be.
+// Laid out as the Half-Life 2 game's `!menu`: 1-7 a page's entries, 8 back to
+// the page before, 9 more, 0 exit. Every choice that does something runs the
+// matching chat command through `RunCommand`, so a menu warp is refused exactly
+// where a typed one would be.
 
 #pragma once
 
@@ -17,8 +19,13 @@ class CBasePlayer;
 
 namespace ap {
 
-// Open a page by its action: `main`, or any `verb|arg` the pages use.
-void OpenMenu(const std::string& action);
+// `!menu`: the main page, or the menu closed if one is up (the bound key
+// toggles it).
+void OpenMenu();
+
+// `!tracker <mission>`: the mission the menu's tracker page follows from now on.
+// Text naming no mission leaves it be.
+void TrackMission(const std::string& text);
 
 // `menuselect <key>` from the client. True when a menu of ours was open and
 // took the key; false leaves the command to whoever else reads it.
