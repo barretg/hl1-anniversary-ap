@@ -600,30 +600,29 @@ void OnPlayerUse(CBasePlayer* player, CBaseEntity* target) {
         return;
     }
 
-    // A lobby panel, and *before* the `Live` guard below rather than after it.
-    //
-    // `Live` is false while the client is disconnected, which is precisely when
-    // a panel has the most to say: the refusal is the whole point, and behind
-    // that guard the press was swallowed and the panel looked broken. This is
-    // the `Live` versus `Gated` distinction in ap_main.h -- sending a check
+    // A lobby panel, with no `Live` guard: `Live` is false while the client is
+    // disconnected, which is precisely when a panel has the most to say. This
+    // is the `Live` versus `Gated` distinction in ap_main.h -- sending a check
     // waits on the client, but telling the player why they may not travel must
     // not. `PressHubButton` asks `Data().Loaded()` for itself, which is what
     // `Gated` means, so an ordinary Half-Life install still falls through.
-    if (PressHubButton(player, target)) {
+    PressHubButton(player, target);
+}
+
+void OnChargerUsed(CBaseEntity* user, CBaseEntity* charger) {
+    if (user == nullptr || charger == nullptr || !Live()) {
+        return;
+    }
+    // Map logic can use a charger too; only the player's use counts.
+    CBasePlayer* player = Player();
+    if (player == nullptr || user != player) {
         return;
     }
 
-    // Everything below sends a check, so it does wait on the client.
-    if (!Live()) {
-        return;
-    }
-
-    const std::string classname(STRING(target->pev->classname));
-    if (classname != "func_healthcharger" && classname != "func_recharge") {
-        return;
-    }
-
-    const Vector centre = CentreOf(target);
+    // Every frame use is held, so `SendCheck` dropping one already sent is what
+    // keeps this from becoming a stream of writes, as with the healing pools.
+    const std::string classname(STRING(charger->pev->classname));
+    const Vector centre = CentreOf(charger);
     const float at[3] = {centre.x, centre.y, centre.z};
     const Location* location = Data().ChargerAt(g_map, classname, at);
     if (location != nullptr) {

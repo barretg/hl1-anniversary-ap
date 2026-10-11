@@ -51,14 +51,20 @@ void AuthoriseMap();
 // when no check could be sent from here: not live, or the map not authorised.
 bool SendChapterComplete(const Chapter& chapter);
 
-// The player pressed +use on something. Matches it against the charger table by
-// classname and by where it stands.
+// The player pressed +use on something. Only the hub's panels answer here.
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target);
+
+// From the wall chargers' own `Use`, which runs every frame use is held on one,
+// not only on the press: walking up with use already held still reaches it.
+// Runs before the charger decides between charging and the deny noise, so full,
+// empty and suitless all count. Matched against the charger table by classname
+// and by where it stands.
+void OnChargerUsed(CBaseEntity* user, CBaseEntity* charger);
 
 // From `CBaseTrigger::HurtTouch`, on the branch where the damage is negative.
 // Xen's healing pools are `trigger_hurt` brushes that heal, and they are
 // chargersanity checks like the wall units -- they are just touched rather than
-// pressed, so they cannot come through `OnPlayerUse`.
+// pressed, so they cannot come through `OnChargerUsed`.
 void OnHealingTouch(CBaseEntity* toucher, CBaseEntity* pool);
 
 // A weapon entered the player's inventory.

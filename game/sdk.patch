@@ -2640,6 +2640,29 @@ index bbf954b..dc06c46 100644
  }
  
  //=========================================================
+diff --git a/dlls/h_battery.cpp b/dlls/h_battery.cpp
+index a464d03..66c6828 100644
+--- a/dlls/h_battery.cpp
++++ b/dlls/h_battery.cpp
+@@ -26,6 +26,7 @@
+ #include "saverestore.h"
+ #include "skill.h"
+ #include "gamerules.h"
++#include "ap_main.h"
+ 
+ class CRecharge : public CBaseToggle
+ {
+@@ -110,6 +111,10 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
+ 	if (!FClassnameIs(pActivator->pev, "player"))
+ 		return;
+ 
++	// Archipelago: any use that reaches the charger is the check, full, empty
++	// or suitless, held down or pressed.
++	ap::OnChargerUsed( pActivator, this );
++
+ 	// if there is no juice left, turn it off
+ 	if (m_iJuice <= 0)
+ 	{
 diff --git a/dlls/h_cine.cpp b/dlls/h_cine.cpp
 index d606bd8..ee4ad55 100644
 --- a/dlls/h_cine.cpp
@@ -2653,6 +2676,29 @@ index d606bd8..ee4ad55 100644
  	if (pev->spawnflags != 0 && m_fSequenceFinished)
  	{
  		Die();
+diff --git a/dlls/healthkit.cpp b/dlls/healthkit.cpp
+index 5a74889..caf0903 100644
+--- a/dlls/healthkit.cpp
++++ b/dlls/healthkit.cpp
+@@ -21,6 +21,7 @@
+ #include "player.h"
+ #include "items.h"
+ #include "gamerules.h"
++#include "ap_main.h"
+ 
+ extern int gmsgItemPickup;
+ 
+@@ -188,6 +189,10 @@ void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
+ 	if ( !pActivator->IsPlayer() )
+ 		return;
+ 
++	// Archipelago: any use that reaches the charger is the check, full, empty
++	// or suitless, held down or pressed.
++	ap::OnChargerUsed( pActivator, this );
++
+ 	// if there is no juice left, turn it off
+ 	if (m_iJuice <= 0)
+ 	{
 diff --git a/dlls/monsters.cpp b/dlls/monsters.cpp
 index 19e0e23..706d9a5 100644
 --- a/dlls/monsters.cpp
@@ -3254,7 +3300,7 @@ index eacfd2c..465ec32 100644
  //
  // Track Train
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..2d2e861 100644
+index 85b67c4..4e2d672 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -3354,7 +3400,7 @@ index 85b67c4..2d2e861 100644
  		if ( m_afButtonPressed & IN_USE )
  			EMIT_SOUND( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM);
  
-+		// Archipelago: pressing use on a charger is the check, empty or not.
++		// Archipelago: a hub panel answers the press.
 +		if ( m_afButtonPressed & IN_USE )
 +			ap::OnPlayerUse( this, pObject );
 +

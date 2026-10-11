@@ -156,7 +156,7 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_checkdata.*` | parsing `checkdata.txt` | read once per map load |
 | `src/ap_state.*` | what the client last said: unlocks, items, excluded missions | fed by `ap_bridge` |
 | `src/ap_text.*` | splitting, trimming, parsing | nothing |
-| `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon, healing pool, map event (the microwave) | `ServerActivate`, `CBasePlayer::PlayerUse`, `CBaseTrigger::HurtTouch`, `FireTargets` |
+| `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon, healing pool, map event (the microwave) | `ServerActivate`, `CWallHealth::Use`, `CRecharge::Use`, `CBaseTrigger::HurtTouch`, `FireTargets` |
 | `src/ap_items.*` | the loadout, weapon refusal, armour (per game: HEV Suit, PCV, Security Armor) | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
 | `src/ap_hub.*` | console commands, the lobby's panels and triggers, warps, the mission-boundary choke point, Blue Shift's end-of-game trigger | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CBaseTrigger::MultiTouch`, `CChangeLevel::ChangeLevelNow`, `CTriggerEndSection` |
 | `src/ap_content.*` | Opposing Force and Blue Shift content: per-game model and sound redirects, titles and sentences | engine function table, `DispatchKeyValue`, spawn |
@@ -215,6 +215,12 @@ charger of the same classname in the same map wins, within 32 units. Two
 chargers of the same classname are never closer than 204 units anywhere in the
 campaign, and any two chargers are never closer than 48, so the match cannot be
 ambiguous -- and a future recompile that shifts a brush slightly cannot break it.
+
+**A charger's check comes from its own `Use`, not from the use press.** Chargers
+are continuous-use, so `PlayerUse` calls them every frame use is held, and
+walking up to one with use already down charges without a press. Hooking
+`CWallHealth::Use` and `CRecharge::Use` ahead of their juice and suit tests
+catches that, and the full, empty and suitless cases with it.
 
 **The hub is `ap_lobby_alpha`,** an authored map: an entrance per Half-Life
 mission, and a pit. Most entrances are trigger volumes walked into; a few are

@@ -52,6 +52,10 @@ They use two more verbs, standing in for the client's connection:
     !connect / !disconnect    what the snapshot says about the client
 and the harness shows every COMPLETE and GOAL the game sends.
 
+`--0.4.0-2` runs only the scenarios for what changed after 0.4.0's first
+round (see `release_0_4_0_2_scenarios`): a charger's check when walked into
+with use held, on full health, and without the suit.
+
 `--pctest` runs only the precache scenarios (see `precache_scenarios`): each
 map nearest the engine's 511 model slots, loaded holding every item, with a
 walk-in changelevel beside you to carry the inventory into the next map.
@@ -65,7 +69,7 @@ summary to `build/precache_sweep.txt`. A crash stops it until the game is
 relaunched; it then carries on from the next map. `--clear` with it starts over.
 
 `--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
-pctest or sweep.
+0.4.0-2, pctest or sweep.
 
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
@@ -83,7 +87,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --pctest | --sweep | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --pctest | --sweep | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -1388,6 +1392,80 @@ def release_0_4_0_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             + nav_parity_scenarios(data, game_root))
 
 
+def charger_use_scenarios(data: CheckData) -> list[Scenario]:
+    """A charger's check comes from the charger's own use, not the use press:
+    walking up with use already held sends it, and so do full, empty and
+    suitless."""
+    verdict = "!pass, or !fail <what was different>."
+    chargers = [l for l in data.locations.values()
+                if l.kind == "charger" and l.pos and not l.needs
+                and not l.arg.startswith("trigger_hurt")]
+
+    def first(classname: str, campaign: str, skip: int = 0) -> Location | None:
+        found = [l for l in chargers if l.arg.startswith(classname + "@")
+                 and (data.chapter_of(l.map) or Chapter("", "", [])).campaign == campaign]
+        return found[skip] if len(found) > skip else None
+
+    def held(location: Location, what: str) -> Scenario:
+        return Scenario(
+            title=f"0.4.0-2: Walk into {what} holding use ({location.name})",
+            map=location.map, pos=location.pos, expect=[location.id],
+            steps="\n".join([
+                f"You stand by {what}. Step back from it, hold use, and walk into",
+                "it without letting go: it starts on its own, and",
+                f"'{location.name}' arrives once, however long you hold it.",
+                verdict,
+            ]))
+
+    out: list[Scenario] = []
+    health = first("func_healthcharger", "half_life")
+    if health is not None:
+        out.append(held(health, "a health charger"))
+    hev = first("func_recharge", "half_life")
+    if hev is not None:
+        out.append(held(hev, "an HEV charger"))
+    full = first("func_healthcharger", "half_life", 1)
+    if full is not None:
+        out.append(Scenario(
+            title="0.4.0-2: Health charger on full health",
+            map=full.map, pos=full.pos, expect=[full.id],
+            steps="\n".join([
+                "You are on full health by a health charger. Tap use on it once:",
+                f"it makes its deny noise, and '{full.name}' arrives.",
+                verdict,
+            ])))
+    suitless = first("func_recharge", "half_life", 1)
+    if suitless is not None:
+        out.append(Scenario(
+            title="0.4.0-2: HEV charger without the suit",
+            map=suitless.map, pos=suitless.pos, take=["HEV Suit"],
+            expect=[suitless.id],
+            steps="\n".join([
+                "You have no HEV Suit, by an HEV charger. Hold use on it: it",
+                f"makes its deny noise, gives nothing, and '{suitless.name}'",
+                "arrives once.",
+                verdict,
+            ])))
+    for campaign in ("opposing_force", "blue_shift"):
+        other = first("func_healthcharger", campaign)
+        if other is not None:
+            out.append(held(other, "a health charger"))
+    out.append(Scenario(
+        title="0.4.0-2: Hub panels still answer use",
+        map="c1a0", steps="\n".join([
+            "!hub. In the hub, press use on a mission's panel: it answers as it did",
+            "before (warps, or says why not). Holding use while walking into one",
+            "does nothing until use is pressed.",
+            verdict,
+        ])))
+    return out
+
+
+def release_0_4_0_2_scenarios(data: CheckData) -> list[Scenario]:
+    """What changed after 0.4.0's first round. Appended to, never reordered."""
+    return charger_use_scenarios(data)
+
+
 # A map with at least this many brush models is a precache suspect: each one
 # takes a model slot before anything in the map is spawned, and the engine has
 # 511 in all. Pit Worm's Nest part 1 has 331 and is reported unplayable.
@@ -1814,7 +1892,7 @@ class DllSwap:
 
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
-GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "pctest", "sweep")
+GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2", "pctest", "sweep")
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
@@ -1830,6 +1908,8 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return find_scenarios(data)
     if group == "0.4.0":
         return release_0_4_0_scenarios(data, game_root)
+    if group == "0.4.0-2":
+        return release_0_4_0_2_scenarios(data)
     if group == "pctest":
         return precache_scenarios(data, game_root)
     if group == "sweep":
@@ -2208,6 +2288,8 @@ def main(argv: list[str] | None = None) -> int:
                         action="store_true",
                         help="only the 0.4.0 scenarios: mission completion and the "
                              "Butterfingers toss (--completion is the old name)")
+    parser.add_argument("--0.4.0-2", dest="v0_4_0_2", action="store_true",
+                        help="only the 0.4.0-2 scenarios: the charger use fix")
     parser.add_argument("--pctest", action="store_true",
                         help="only the precache scenarios: the maps nearest the "
                              "engine's limits, holding every item")
@@ -2226,7 +2308,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.game_root is None:
         parser.error("--game-root is required")
     flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0",
-             "pctest": "pctest", "sweep": "sweep"}
+             "0.4.0-2": "v0_4_0_2", "pctest": "pctest", "sweep": "sweep"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
@@ -2234,7 +2316,7 @@ def main(argv: list[str] | None = None) -> int:
             chosen.append(named)
     if len(chosen) > 1:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
-                     "--parity, --0.4.0, --pctest, --sweep")
+                     "--parity, --0.4.0, --0.4.0-2, --pctest, --sweep")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")

@@ -16,6 +16,8 @@
 //   dlls/player.cpp      CBasePlayer::TakeDamage      -> ap::OnPlayerDamaged
 //   dlls/player.cpp      CRevertSaved::Use            -> ap::OnRevertSaved
 //   dlls/player.cpp      CBasePlayer::PlayerUse       -> ap::OnPlayerUse
+//   dlls/healthkit.cpp   CWallHealth::Use             -> ap::OnChargerUsed
+//   dlls/h_battery.cpp   CRecharge::Use               -> ap::OnChargerUsed
 //   dlls/gamerules.cpp   CGameRules::CanHavePlayerItem-> ap::CanCollect
 //   dlls/singleplay_gamerules.cpp CHalfLifeRules::CanHaveItem -> ap::CanCollect
 //   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
@@ -59,6 +61,7 @@ bool CanCollect(CBasePlayer* player, CBaseEntity* pickup);  // ap_items
 bool FlashlightAllowed();                                   // ap_items
 void RefuseFlashlight();                                    // ap_items
 void OnPlayerUse(CBasePlayer* player, CBaseEntity* target); // ap_locations
+void OnChargerUsed(CBaseEntity* user, CBaseEntity* charger);// ap_locations
 void OnPlayerKilled(CBasePlayer* player, const std::string& cause);  // ap_deathlink
 void OnPlayerDamaged(CBasePlayer* player, entvars_t* inflictor,    // ap_deathlink
                      entvars_t* attacker, int damage_type);
