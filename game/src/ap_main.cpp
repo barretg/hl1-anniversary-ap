@@ -436,6 +436,9 @@ void Startup() {
 
     EnsureData();
     Trace(g_data.Loaded() ? "  checkdata read" : "  no checkdata");
+    // The map's own entities have all spawned; see `TagPickup`.
+    ClosePickupTags();
+    ResetLabels();
 
     g_bridge.Open(store);
     g_started = true;
@@ -519,6 +522,7 @@ void RunFrame() {
     RunDeferred();
     RunTestHarness();
     RunPathTrace();
+    RunLabels();
     EnforceSuit();
     ClampArmour();
     EnforceFlashlight();

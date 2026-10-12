@@ -110,10 +110,10 @@ public:
 	int Restore(CRestore & restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 
-	bool m_fGunDrawn;
+	BOOL m_fGunDrawn;
 	float m_painTime;
 	float m_checkAttackTime;
-	bool m_lastAttackCheck;
+	BOOL m_lastAttackCheck;
 
 	//These were originally used to store off the setting AND track state,
 	//but state is now tracked by calling GetBodygroup

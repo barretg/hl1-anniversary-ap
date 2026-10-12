@@ -34,6 +34,11 @@ from .data import (
     CHARGER_TRIGGER,
     HALF_LIFE,
     MICROWAVE_TRIGGER,
+    HEAL_PICKUP_TRIGGER,
+    AMMO_PICKUP_TRIGGER,
+    BARNEY_TRIGGER,
+    CRITICAL_NPC_TRIGGER,
+    SCIENTIST_TRIGGER,
     ITEMS,
     ABILITY_ITEM_NAMES,
     AIR_ACCELERATE_ITEM,
@@ -69,8 +74,13 @@ from .options import (
     AirAccelerationMaximum,
     AirAccelerationMinimum,
     AllyWeaponDrops,
+    Ammosanity,
+    Barneysanity,
+    IncludeCriticalNpcs,
+    Scientistsanity,
     BlueShiftMissionsRequired,
     HalfLifeOptions,
+    Healsanity,
     IncludeBlueShift,
     IncludeHalfLife,
     IncludeOpposingForce,
@@ -149,7 +159,8 @@ class HalfLifeWeb(WebWorld):
             "Experimental Features",
             [RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
              AllyWeaponDrops, ProgressiveAirAcceleration, AirAccelerationMinimum,
-             AirAccelerationMaximum],
+             AirAccelerationMaximum, Healsanity, Ammosanity, Scientistsanity,
+             Barneysanity, IncludeCriticalNpcs],
             start_collapsed=True,
         ),
     ]
@@ -252,6 +263,16 @@ class HalfLifeWorld(World):
             self.excluded_triggers.add(CHARGER_TRIGGER)
         if not self.options.include_microwave:
             self.excluded_triggers.add(MICROWAVE_TRIGGER)
+        if not self.options.healsanity:
+            self.excluded_triggers.add(HEAL_PICKUP_TRIGGER)
+        if not self.options.ammosanity:
+            self.excluded_triggers.add(AMMO_PICKUP_TRIGGER)
+        if not self.options.scientistsanity:
+            self.excluded_triggers.add(SCIENTIST_TRIGGER)
+        if not self.options.barneysanity:
+            self.excluded_triggers.add(BARNEY_TRIGGER)
+        if not self.options.include_critical_npcs:
+            self.excluded_triggers.add(CRITICAL_NPC_TRIGGER)
 
         # Both sets come straight from the seed under the tracker: it may be
         # working without the YAML, in which case its options are defaults and
@@ -264,6 +285,17 @@ class HalfLifeWorld(World):
             # A seed from before the microwave was a check has none.
             if not passthrough.get("include_microwave", False):
                 self.excluded_triggers.add(MICROWAVE_TRIGGER)
+            # Nor did one from before these were checks have any pickups.
+            if not passthrough.get("healsanity", False):
+                self.excluded_triggers.add(HEAL_PICKUP_TRIGGER)
+            if not passthrough.get("ammosanity", False):
+                self.excluded_triggers.add(AMMO_PICKUP_TRIGGER)
+            if not passthrough.get("scientistsanity", False):
+                self.excluded_triggers.add(SCIENTIST_TRIGGER)
+            if not passthrough.get("barneysanity", False):
+                self.excluded_triggers.add(BARNEY_TRIGGER)
+            if not passthrough.get("include_critical_npcs", False):
+                self.excluded_triggers.add(CRITICAL_NPC_TRIGGER)
 
         self.ally_weapon_drops = bool(self.options.ally_weapon_drops)
         if passthrough:
@@ -480,6 +512,12 @@ class HalfLifeWorld(World):
             # Also for the tracker: seeds from before this key had no microwave
             # check, though their `excluded_triggers` does not say so.
             "include_microwave": MICROWAVE_TRIGGER not in self.excluded_triggers,
+            # The same for the pickups.
+            "healsanity": HEAL_PICKUP_TRIGGER not in self.excluded_triggers,
+            "ammosanity": AMMO_PICKUP_TRIGGER not in self.excluded_triggers,
+            "scientistsanity": SCIENTIST_TRIGGER not in self.excluded_triggers,
+            "barneysanity": BARNEY_TRIGGER not in self.excluded_triggers,
+            "include_critical_npcs": CRITICAL_NPC_TRIGGER not in self.excluded_triggers,
             # What the run opens with, and what the game must therefore never
             # take away.
             "starting_weapons": [self.starting_weapon],

@@ -96,6 +96,7 @@ BLUE_SHIFT = Campaign(
     chapters=CHAPTERS,
     goal_chapter="ba_teleport2",
     intro_chapter="ba_tram1",
+    intro_trains={m: "barney_tram" for m in ("ba_tram1", "ba_tram2", "ba_tram3")},
     gates=CHAPTER_GATES,
     map_gates=MAP_GATES,
     weapon_source_gates=WEAPON_SOURCE_GATES,

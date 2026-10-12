@@ -172,9 +172,9 @@ public:
 	CBeam* m_pBeam;
 	CSprite* m_pSprite;
 
-	bool m_fAttacking;
-	bool m_fLockHeight;
-	bool m_fLockYaw;
+	BOOL m_fAttacking;
+	BOOL m_fLockHeight;
+	BOOL m_fLockYaw;
 
 	int m_iWasHit;
 	float m_flTakeHitTime;
@@ -184,8 +184,8 @@ public:
 	float m_flNextRangeTime;
 	float m_flDeathStartTime;
 
-	bool m_fFirstSighting;
-	bool m_fTopLevelLocked;
+	BOOL m_fFirstSighting;
+	BOOL m_fTopLevelLocked;
 
 	float m_flLastBlinkTime;
 	float m_flLastBlinkInterval;

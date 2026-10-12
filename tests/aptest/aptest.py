@@ -54,7 +54,13 @@ and the harness shows every COMPLETE and GOAL the game sends.
 
 `--0.4.0-2` runs only the scenarios for what changed after 0.4.0's first
 round (see `release_0_4_0_2_scenarios`): a charger's check when walked into
-with use held, on full health, and without the suit.
+with use held, on full health, and without the suit; Healsanity's and
+Ammosanity's pickups; and the NPC checks.
+
+`--npc_witness` runs only the per-map Scientistsanity / Barneysanity scenarios:
+witness every listed death, fail naming any that could not be witnessed or did
+not send. `--npc_excluded_check` runs the NPCs the build left out, one scenario
+per map: pass keeps them out, fail means they belong in `killable_npcs`.
 
 `--pctest` runs only the precache scenarios (see `precache_scenarios`): each
 map nearest the engine's 511 model slots, loaded holding every item, with a
@@ -69,7 +75,7 @@ summary to `build/precache_sweep.txt`. A crash stops it until the game is
 relaunched; it then carries on from the next map. `--clear` with it starts over.
 
 `--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
-0.4.0-2, pctest or sweep.
+0.4.0-2, npc_witness, npc_excluded_check, pctest or sweep.
 
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
@@ -87,7 +93,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --pctest | --sweep | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -95,6 +101,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
+import re
 import shutil
 import signal
 import sys
@@ -254,6 +261,9 @@ class Scenario:
     melee_throw: bool = True
     # Placed crouched, for a spot in a vent.
     crouch: bool = False
+    # Only `!tp` goes to `pos`; arriving starts at the map's spawn, for a spot
+    # that would kill a player placed on it.
+    manual_tp: bool = False
 
 
 def cache_key(data: CheckData) -> str:
@@ -1461,9 +1471,338 @@ def charger_use_scenarios(data: CheckData) -> list[Scenario]:
     return out
 
 
-def release_0_4_0_2_scenarios(data: CheckData) -> list[Scenario]:
+def pickup_scenarios(data: CheckData) -> list[Scenario]:
+    """Healsanity and Ammosanity: every pickup is its own check, sent on touch
+    whether or not it can be taken, and only the one touched."""
+    verdict = "!pass, or !fail <what was different>."
+    pickups = [l for l in data.locations.values()
+               if l.kind in ("heal_pickup", "ammo_pickup") and l.pos]
+    order = {m: i for i, m in enumerate(m for c in data.chapters for m in c.maps)}
+    pickups.sort(key=lambda l: (order.get(l.map, 1 << 20), l.id))
+
+    def first(test) -> Location | None:
+        return next((l for l in pickups if test(l)), None)
+
+    def classname(l: Location) -> str:
+        return l.arg.split("@")[0]
+
+    out: list[Scenario] = []
+    kit = first(lambda l: classname(l) == "item_healthkit")
+    if kit is not None:
+        out.append(Scenario(
+            title="0.4.0-2: Health kit on full health",
+            map=kit.map, pos=kit.pos, expect=[kit.id], steps="\n".join([
+                "You are on full health, by a health kit. Walk over it: it stays",
+                f"on the floor, and '{kit.name}' arrives once. Walk off and back",
+                "on: nothing more.",
+                verdict,
+            ])))
+    battery = first(lambda l: classname(l) == "item_battery")
+    if battery is not None:
+        out.append(Scenario(
+            title="0.4.0-2: Battery without the HEV Suit item",
+            map=battery.map, pos=battery.pos, take=["HEV Suit"], expect=[battery.id],
+            steps="\n".join([
+                "You hold no HEV Suit item, so armour stays at 0. Walk over the",
+                f"battery: '{battery.name}' arrives, and your armour stays 0.",
+                verdict,
+            ])))
+    # Two of a kind side by side: each sends its own check and no other.
+    for l in pickups:
+        twin = next((o for o in pickups if o.map == l.map and o.id != l.id
+                     and classname(o) == classname(l) and "#" not in o.arg
+                     and not classname(o).startswith("func_")
+                     and sum((float(a) - float(b)) ** 2 for a, b in
+                             zip(l.pos.split(), o.pos.split())) < 24 ** 2), None)
+        if twin is not None and not classname(l).startswith("func_"):
+            out.append(Scenario(
+                title="0.4.0-2: Two pickups side by side",
+                map=l.map, pos=l.pos, expect=[l.id, twin.id], steps="\n".join([
+                    f"Two of a kind lie a few units apart: '{l.name}' and",
+                    f"'{twin.name}'. Fill that ammo first if you can (sv_cheats 1,",
+                    "impulse 101). Edge onto one from the side away from the other:",
+                    "only its check arrives. Then step onto the other: only that",
+                    "one's arrives. No other check comes at any point.",
+                    verdict,
+                ])))
+            break
+    stacked = first(lambda l: "#" in l.arg)
+    if stacked is not None:
+        base = stacked.arg.split("#")[0]
+        under = next((l for l in pickups if l.map == stacked.map and l.arg == base), None)
+        if under is not None:
+            out.append(Scenario(
+                title="0.4.0-2: Two pickups on the same spot",
+                map=stacked.map, pos=stacked.pos, expect=[under.id, stacked.id],
+                steps="\n".join([
+                    "Two pickups were placed on exactly the same spot. Walk over",
+                    f"them: '{under.name}' and '{stacked.name}' both arrive, once each.",
+                    verdict,
+                ])))
+    for crate_class, what in (("func_breakable", "crate"), ("func_pushable", "pushable crate")):
+        crate = first(lambda l: classname(l) == crate_class)
+        if crate is None:
+            continue
+        out.append(Scenario(
+            title=f"0.4.0-2: A {what}'s drop",
+            map=crate.map, pos=crate.pos, expect=[crate.id], steps="\n".join([
+                f"A {what} that drops a pickup is in front of you. Break it with",
+                "the crowbar: nothing arrives yet. Touch what fell out:",
+                f"'{crate.name}' arrives once.",
+                "Quickload and break it with a gun from range, then walk over:",
+                "the same.",
+                verdict,
+            ])))
+    spore = first(lambda l: classname(l) == "ammo_spore")
+    if spore is not None:
+        out.append(Scenario(
+            title="0.4.0-2: Spore plant",
+            map=spore.map, pos=spore.pos, expect=[spore.id], steps="\n".join([
+                "A spore plant is near you. Shoot it so it fires its spore and",
+                f"empties, then touch it: '{spore.name}' arrives. Quickload, touch",
+                "it full: the same, once.",
+                verdict,
+            ])))
+    box = first(lambda l: classname(l) == "weaponbox")
+    if box is not None:
+        out.append(Scenario(
+            title="0.4.0-2: Weapon box",
+            map=box.map, pos=box.pos, expect=[box.id], steps="\n".join([
+                f"A weapon box lies near you. Walk over it: '{box.name}' arrives.",
+                verdict,
+            ])))
+    armour = [l for l in pickups if classname(l) in ("item_helmet", "item_armorvest")
+              and l.map == "ba_security2"]
+    if armour:
+        out.append(Scenario(
+            title="0.4.0-2: Blue Shift helmet and vest",
+            map="ba_security2", pos=armour[0].pos, expect=[l.id for l in armour],
+            steps="\n".join([
+                "The armour locker by the range. Take what is in it (open it if",
+                "it is shut): " + ", ".join(f"'{l.name}'" for l in armour),
+                "arrive. Then sv_cheats 1 and give item_battery to full armour,",
+                "quickload, and touch them again full: they arrive and stay.",
+                verdict,
+            ])))
+    saved = first(lambda l: classname(l) == "item_healthkit" and l.id != (kit.id if kit else 0))
+    if saved is not None:
+        out.append(Scenario(
+            title="0.4.0-2: A pickup's check survives a save",
+            map=saved.map, pos=saved.pos, expect=[saved.id], steps="\n".join([
+                "Quicksave without touching the health kit here, quit to the",
+                "menu, and load that save. Then walk over the kit:",
+                f"'{saved.name}' arrives.",
+                verdict,
+            ])))
+    return out
+
+
+def eagle_restore_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """The Desert Eagle restored with its laser on: a player crashed carrying
+    it from Unforeseen Consequences part 2 (c1a1) into part 3 (c1a1a). Its two
+    `bool`s are saved as `FIELD_BOOLEAN`, which the SDK writes as an `int`, so
+    restoring them overwrites the low bytes of the laser pointer after them."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import load_map
+
+    if data.chapter_of("c1a1") is None:
+        return []
+    report = ("!fail with the console's last lines if the game crashes, or "
+              "!pass if every step loads.")
+    out: list[Scenario] = []
+    bsp = game_root / "valve" / "maps" / "c1a1.bsp"
+    spot = changelevel_spot(bsp, load_map(bsp), ["c1a1a"]) if bsp.is_file() else None
+    if spot is not None:
+        _, pos, crouched = spot
+        out.append(Scenario(
+            title="0.4.0-2: Desert Eagle laser carried from c1a1 to c1a1a",
+            map="c1a1", pos=pos, crouch=crouched, steps="\n".join([
+                "Control first: draw the Desert Eagle with its laser off and walk",
+                "through the changelevel to c1a1a beside you. Then !redo, which",
+                "reloads c1a1. Draw the Eagle, right-click until the red dot shows,",
+                "and walk through again. A crash on the second load, right after",
+                "'Loading game from SAVE\\c1a1.HL1', confirms the bug.",
+                report,
+            ])))
+    out.append(Scenario(
+        title="0.4.0-2: Desert Eagle laser through save and load",
+        map="c1a1", steps="\n".join([
+            "Control first: draw the Desert Eagle, laser off. In the console:",
+            "save eagletest, then load eagletest. Then right-click until the red",
+            "dot shows and do the same again. A crash on the second load",
+            "confirms the bug without a level change.",
+            report,
+        ])))
+    return out
+
+
+NPC_KINDS = ("scientist", "barney")
+
+
+def npc_mechanics_scenarios(data: CheckData) -> list[Scenario]:
+    """Scientistsanity and Barneysanity's rules, on single NPCs: who may kill,
+    what counts as witnessed, and the tag surviving saves and transitions."""
+    verdict = "!pass, or !fail <what was different>."
+    npcs = [l for l in data.locations.values() if l.kind in NPC_KINDS and l.pos]
+    order = {m: i for i, m in enumerate(m for c in data.chapters for m in c.maps)}
+    npcs.sort(key=lambda l: (order.get(l.map, 1 << 20), l.id))
+    out: list[Scenario] = []
+    first = next((l for l in npcs if not l.needs), None)
+    if first is None:
+        return out
+    out.append(Scenario(
+        title="0.4.0-2: ap_tagged lists the map's NPCs",
+        map=first.map, steps="\n".join([
+            "In the console: developer 1, then ap_tagged. Every scientist and",
+            "guard check on this map is listed with its name, alive, and every",
+            "pickup check too. Note any NPC listed as 'no damage' or 'in a",
+            "script' in your verdict.",
+            verdict,
+        ])))
+    out.append(Scenario(
+        title="0.4.0-2: An NPC killed by the player",
+        map=first.map, pos=first.pos, expect=[first.id], steps="\n".join([
+            f"'{first.name}' starts near you. Kill it with any weapon: its",
+            "check arrives once, and the console (developer 1) says",
+            "'player caused it'. Quickload and kill it with a grenade from",
+            "out of sight round a corner: the same.",
+            verdict,
+        ])))
+    out.append(Scenario(
+        title="0.4.0-2: An NPC killed by something else",
+        map=first.map, pos=first.pos, expect=[first.id], steps="\n".join([
+            f"Get '{first.name}' killed by something other than you: lure a",
+            "monster to it, or sv_cheats 1 and give monster_headcrab beside",
+            "it. Watch it die: its check arrives, 'seen' in the console. Then",
+            "quickload, walk well away and out of sight (another room, a",
+            "door shut between you), and let it die there: nothing arrives,",
+            "and the console says 'unwitnessed'.",
+            verdict,
+        ])))
+    out.append(Scenario(
+        title="0.4.0-2: An NPC's check survives a save",
+        map=first.map, pos=first.pos, expect=[first.id], steps="\n".join([
+            "Quicksave without hurting anyone, quit to the menu, and load that",
+            f"save. Kill '{first.name}': its check arrives.",
+            verdict,
+        ])))
+    follower = next((l for l in npcs if l.kind == "barney" and not l.needs
+                     and l.map != first.map), None)
+    if follower is not None:
+        out.append(Scenario(
+            title="0.4.0-2: A guard carried through a level change",
+            map=follower.map, pos=follower.pos, expect=[follower.id],
+            steps="\n".join([
+                f"'{follower.name}' starts near you. Press use on him so he",
+                "follows, and lead him through the next level change. Kill him",
+                f"on the far side: '{follower.name}' arrives, the check of the",
+                "map he came from. If he cannot be led that far, !skip.",
+                verdict,
+            ])))
+    return out
+
+
+def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
+    """One per map with scientist or barney checks: witness every death."""
+    import json
+    campaign = json.loads((REPO / "apworld/half_life/data/campaign.json").read_text())
+    critical = {e["id"] for e in campaign["locations"] if e["trigger"].get("critical")}
+    by_map: dict[str, list[Location]] = {}
+    for l in data.locations.values():
+        if l.kind in NPC_KINDS:
+            by_map.setdefault(l.map, []).append(l)
+    out: list[Scenario] = []
+    for chapter in data.chapters:
+        for map_name in chapter.maps:
+            npcs = sorted(by_map.get(map_name, ()), key=lambda l: [
+                int(part) if part.isdigit() else part
+                for part in re.split(r"(\d+)", l.name)])
+            if not npcs:
+                continue
+            intro = any(l.needs for l in npcs)
+            lines = [
+                "Witness every one of these deaths: kill each yourself, or watch",
+                "something else kill it. developer 1 logs why each counted.",
+                *(f"  {l.name}: {l.arg.split('@')[0]}"
+                  + (f" at {l.pos}" if l.pos else "")
+                  + (" [fails the mission: quicksave, kill, quickload]"
+                     if l.id in critical else "") for l in npcs),
+            ]
+            if intro:
+                lines += [
+                    "This is the intro ride: shoot them from the train with a gun.",
+                    "One you cannot see or hit from the train is a fail too.",
+                ]
+            lines.append("!pass if every check arrived, else !fail naming the ones "
+                         "that could not be witnessed or did not send.")
+            out.append(Scenario(
+                title=f"0.4.0-2: Witness every NPC death in {map_name}",
+                map=map_name, expect=[l.id for l in npcs], steps="\n".join(lines)))
+    return out
+
+
+def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """One per map with scientists or barneys the build left out, to confirm
+    each belongs out. A fail goes into `killable_npcs`."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import load_map
+    from build_campaign_data import NPC_TRIGGERS, map_npcs, resolve_world_item
+    from campaigns import KNOWN_CAMPAIGNS
+
+    reasons = {
+        "fails": "hurting or killing it reloads the game",
+        "removed": "the map can delete it with a killtarget",
+        "unseen": "not in sight of the intro train's route",
+        "curated": "listed by hand as unkillable",
+    }
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+    unkillable = {(m, cls, at) for c in KNOWN_CAMPAIGNS
+                  for m, keys in c.unkillable_npcs.items() for cls, at in keys}
+    intro = {m for c in KNOWN_CAMPAIGNS for m in c.intro_trains}
+    kept = {(l.map, l.arg) for l in data.locations.values() if l.kind in NPC_KINDS}
+    out: list[Scenario] = []
+    for chapter in data.chapters:
+        for map_name in chapter.maps:
+            bsp = game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
+            if not bsp.is_file():
+                continue
+            ents = [resolve_world_item(e) for e in load_map(bsp)]
+            left = []
+            for kind in NPC_TRIGGERS:
+                for n in map_npcs(kind, ents):
+                    arg = (f"{n['classname']}@{' '.join(str(v) for v in n['at'])}"
+                           + (f"#{n['ordinal']}" if n["ordinal"] > 1 else ""))
+                    if (map_name, arg) in kept:
+                        continue
+                    why = n["out"] or ("curated" if (map_name, n["classname"], n["at"])
+                                       in unkillable else "unseen" if map_name in intro
+                                       else "?")
+                    left.append(f"  {n['classname']}"
+                                + (f" \"{n['targetname']}\"" if n["targetname"] else "")
+                                + f" at {' '.join(str(v) for v in n['at'])}: {reasons.get(why, why)}")
+            if not left:
+                continue
+            out.append(Scenario(
+                title=f"0.4.0-2: npc_excluded_check: {map_name}",
+                map=map_name, steps="\n".join([
+                    "These were left out of Scientistsanity / Barneysanity:",
+                    *left,
+                    "Play the map and judge each: is its death something a player",
+                    "can fairly cause or witness without failing the mission?",
+                    "!pass if all should stay out, else !fail naming the ones that",
+                    "should be checks.",
+                ])))
+    return out
+
+
+def release_0_4_0_2_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     """What changed after 0.4.0's first round. Appended to, never reordered."""
-    return charger_use_scenarios(data)
+    return (charger_use_scenarios(data)
+            + pickup_scenarios(data)
+            + eagle_restore_scenarios(data, game_root)
+            + npc_mechanics_scenarios(data)
+            + npc_witness_scenarios(data)
+            + npc_excluded_scenarios(data, game_root))
 
 
 # A map with at least this many brush models is a precache suspect: each one
@@ -1892,10 +2231,14 @@ class DllSwap:
 
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
-GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2", "pctest", "sweep")
+GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2",
+          "npc_witness", "npc_excluded_check", "pctest", "sweep")
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
+# A subgroup runs a slice of its parent on its own. Its scenarios are also the
+# parent's, and clearing the parent clears it too.
+SUBGROUPS = {"npc_witness": "0.4.0-2", "npc_excluded_check": "0.4.0-2"}
 
 
 def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
@@ -1909,7 +2252,11 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
     if group == "0.4.0":
         return release_0_4_0_scenarios(data, game_root)
     if group == "0.4.0-2":
-        return release_0_4_0_2_scenarios(data)
+        return release_0_4_0_2_scenarios(data, game_root)
+    if group == "npc_witness":
+        return npc_witness_scenarios(data)
+    if group == "npc_excluded_check":
+        return npc_excluded_scenarios(data, game_root)
     if group == "pctest":
         return precache_scenarios(data, game_root)
     if group == "sweep":
@@ -1935,7 +2282,12 @@ def clear_results(results: Path, group: str, titles: set[str]) -> int:
         parts = line.split("|")
         named = parts[6] if len(parts) > 6 else ""
         named = FORMER_GROUPS.get(named, named)
-        ours = named == group or (not named and len(parts) > 2 and parts[2] in titles)
+        title = parts[2] if len(parts) > 2 else ""
+        if group in SUBGROUPS:
+            ours = named == group or (named in ("", SUBGROUPS[group]) and title in titles)
+        else:
+            ours = (named == group or SUBGROUPS.get(named) == group
+                    or (not named and title in titles))
         (dropped if ours else kept).append(line)
     if dropped:
         backup = results.with_name("aptest_results_cleared.txt")
@@ -2047,6 +2399,8 @@ class Harness:
             go = [f"seq={self.seq}", f"map={s.map}"] + ([f"pos={s.pos}"] if s.pos else [])
             if s.crouch:
                 go.append("crouch=1")
+            if s.manual_tp:
+                go.append("manual=1")
             self.go_path.write_text("\n".join(go) + "\n", encoding="utf-8")
             self.tell(f"[aptest] {index}/{len(self.scenarios) - 1}: {s.title}")
             if s.take:
@@ -2289,7 +2643,14 @@ def main(argv: list[str] | None = None) -> int:
                         help="only the 0.4.0 scenarios: mission completion and the "
                              "Butterfingers toss (--completion is the old name)")
     parser.add_argument("--0.4.0-2", dest="v0_4_0_2", action="store_true",
-                        help="only the 0.4.0-2 scenarios: the charger use fix")
+                        help="only the 0.4.0-2 scenarios: the charger use fix, "
+                             "the pickup checks and the NPC checks")
+    parser.add_argument("--npc_witness", action="store_true",
+                        help="only the per-map scenarios witnessing every "
+                             "scientist and barney death")
+    parser.add_argument("--npc_excluded_check", action="store_true",
+                        help="only the NPCs left out of Scientistsanity and "
+                             "Barneysanity: pass keeps them out, fail puts them back")
     parser.add_argument("--pctest", action="store_true",
                         help="only the precache scenarios: the maps nearest the "
                              "engine's limits, holding every item")
@@ -2308,7 +2669,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.game_root is None:
         parser.error("--game-root is required")
     flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0",
-             "0.4.0-2": "v0_4_0_2", "pctest": "pctest", "sweep": "sweep"}
+             "0.4.0-2": "v0_4_0_2",
+             "npc_witness": "npc_witness", "npc_excluded_check": "npc_excluded_check",
+             "pctest": "pctest", "sweep": "sweep"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
@@ -2316,7 +2679,8 @@ def main(argv: list[str] | None = None) -> int:
             chosen.append(named)
     if len(chosen) > 1:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
-                     "--parity, --0.4.0, --0.4.0-2, --pctest, --sweep")
+                     "--parity, --0.4.0, --0.4.0-2, --npc_witness, "
+                     "--npc_excluded_check, --pctest, --sweep")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")

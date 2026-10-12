@@ -156,7 +156,7 @@ useful second opinion if MSVC ever misbehaves -- and these are what it costs:
 | `src/ap_checkdata.*` | parsing `checkdata.txt` | read once per map load |
 | `src/ap_state.*` | what the client last said: unlocks, items, excluded missions | fed by `ap_bridge` |
 | `src/ap_text.*` | splitting, trimming, parsing | nothing |
-| `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon, healing pool, map event (the microwave) | `ServerActivate`, `CWallHealth::Use`, `CRecharge::Use`, `CBaseTrigger::HurtTouch`, `FireTargets` |
+| `src/ap_locations.*` | firing checks: map reached, mission complete, charger, weapon, healing pool, map event (the microwave), health / armour / ammo pickup, witnessed scientist or barney death | `ServerActivate`, `CWallHealth::Use`, `CRecharge::Use`, `CBaseTrigger::HurtTouch`, `FireTargets`, `DispatchSpawn`, `CBreakable::Die`, `CItem::ItemTouch`, `CBasePlayerAmmo::DefaultTouch`, `CBasePlayerItem::DefaultTouch`, `CWeaponBox::Touch`, `CSporeAmmo::SporeTouch`, `CBaseMonster::Killed` |
 | `src/ap_items.*` | the loadout, weapon refusal, armour (per game: HEV Suit, PCV, Security Armor) | `CBasePlayer::Spawn`, `CGameRules::CanHavePlayerItem`, `CHalfLifeRules::CanHaveItem` |
 | `src/ap_hub.*` | console commands, the lobby's panels and triggers, warps, the mission-boundary choke point, Blue Shift's end-of-game trigger | `GameDLLInit`, `CBasePlayer::PlayerUse`, `CBaseTrigger::MultiTouch`, `CChangeLevel::ChangeLevelNow`, `CTriggerEndSection` |
 | `src/ap_content.*` | Opposing Force and Blue Shift content: per-game model and sound redirects, titles and sentences | engine function table, `DispatchKeyValue`, spawn |
@@ -215,6 +215,20 @@ charger of the same classname in the same map wins, within 32 units. Two
 chargers of the same classname are never closer than 204 units anywhere in the
 campaign, and any two chargers are never closer than 48, so the match cannot be
 ambiguous -- and a future recompile that shifts a brush slightly cannot break it.
+
+**A pickup's check is tagged on it at spawn.** Healsanity and Ammosanity make
+every health, armour and ammo pickup a check, and many lie a few units apart, so
+nothing is matched by distance at touch time. While the map's own entities
+spawn (from `CWorld::Precache` to `ServerActivate`), `DispatchSpawn` looks each
+pickup up by classname and its `origin` keyvalue to the unit, plus how many of
+that classname already spawned on that unit, and stores the location id in
+`CBaseEntity::m_apLocation`, which is saved with the entity. A crate is looked
+up by its brush centre after `Spawn` and hands its id to what it drops.
+Touching sends the toucher's id before the pickup decides whether it can be
+taken, so a full player still sends it and the item stays. The throwables
+(grenade, satchel, tripmine, snark nest) are their own ammo, so a placed one is
+tagged too and sends from `CBasePlayerItem::DefaultTouch`, alongside its
+weapon's "First ..." check.
 
 **A charger's check comes from its own `Use`, not from the use press.** Chargers
 are continuous-use, so `PlayerUse` calls them every frame use is held, and

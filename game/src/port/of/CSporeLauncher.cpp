@@ -24,6 +24,9 @@
 
 #include "CSporeLauncher.h"
 #include "port_compat.h"
+#ifndef CLIENT_DLL
+#include "ap_main.h"
+#endif
 
 #ifndef CLIENT_DLL
 TYPEDESCRIPTION CSporeLauncher::m_SaveData[] =
@@ -489,7 +492,13 @@ public:
 
 	void EXPORT SporeTouch(CBaseEntity* pOther)
 	{
-		if (!pOther->IsPlayer() || pev->body == SPOREAMMOBODY_EMPTY)
+		if (!pOther->IsPlayer())
+			return;
+
+		// Archipelago: touching the plant is the check, full or picked.
+		ap::OnPickupTouched(pOther, this);
+
+		if (pev->body == SPOREAMMOBODY_EMPTY)
 			return;
 
 		if (AddAmmo(pOther))

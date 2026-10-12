@@ -66,7 +66,7 @@ public:
 	void DoLightning();
 
 public:
-	bool m_bIsActive;
+	BOOL m_bIsActive;
 
 	int m_iTipSparkFrequency;
 	int m_iBodySparkFrequency;

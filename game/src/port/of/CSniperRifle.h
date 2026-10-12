@@ -78,6 +78,6 @@ public:
 private:
 	unsigned short m_usSniper;
 
-	bool m_bReloading;
+	BOOL m_bReloading;
 	float m_flReloadStart;
 };

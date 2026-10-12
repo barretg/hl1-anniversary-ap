@@ -156,6 +156,72 @@ class IncludeMicrowave(Toggle):
     display_name = "Include Microwave"
 
 
+class Healsanity(Toggle):
+    """Experimental. Every health kit, battery and Blue Shift armour vest or
+    helmet is a check, sent the moment you touch it, even at full health or
+    armour (it stays where it is). So is every crate that drops one: break it,
+    then touch what falls out.
+
+    567 of them: 311 in Half-Life, 173 in Opposing Force and 83 in Blue Shift.
+    Expect a much longer run with far more filler.
+    """
+
+    display_name = "Healsanity"
+
+
+class Ammosanity(Toggle):
+    """Experimental. Every ammo pickup is a check, sent the moment you touch
+    it, even with that ammo full (it stays where it is): clips and boxes on the
+    floor, the weapon boxes some maps leave lying about, Opposing Force's spore
+    plants, and every crate that drops ammo when broken.
+
+    858 of them: 506 in Half-Life, 242 in Opposing Force and 110 in Blue Shift.
+    Expect a much longer run with far more filler.
+    """
+
+    display_name = "Ammosanity"
+
+
+class Scientistsanity(Toggle):
+    """Experimental. Every scientist is a check, sent when one dies and you saw
+    it happen: you killed it, or it died in plain sight or close by. A death
+    you did not witness sends nothing, and that check waits until the mission
+    is replayed from the hub. Scientists whose death fails the mission, or who
+    can never be reached, are left out. On the intro tram ride, only the ones
+    in sight of the tram count, and they need a gun.
+
+    105 of them: 81 in Half-Life (8 on the intro ride), 14 in Opposing Force
+    and 10 in Blue Shift (5 on the intro ride).
+    """
+
+    display_name = "Scientistsanity"
+
+
+class Barneysanity(Toggle):
+    """Experimental. Every security guard, Otis included, is a check, sent the
+    same way as Scientistsanity's: when one dies and you witnessed it.
+
+    48 of them: 32 in Half-Life (3 on the intro ride), 9 in Opposing Force and
+    7 in Blue Shift (2 on the intro ride).
+    """
+
+    display_name = "Barneysanity"
+
+
+class IncludeCriticalNpcs(Toggle):
+    """Experimental. With Scientistsanity or Barneysanity, also count the
+    scientists and guards whose death fails the mission (Rosenberg, the Insecurity
+    guards and the like). The check is sent the moment one dies, before the
+    reload, so quicksave first and quickload after. Some fail the mission as soon
+    as they are hurt, leaving only the reload's fade to finish them.
+
+    12 scientists (6 in Half-Life, 1 in Opposing Force, 5 in Blue Shift) and 6
+    guards (1 in Half-Life, 5 in Blue Shift).
+    """
+
+    display_name = "Include Mission-Critical NPCs"
+
+
 class ExcludeIntroMissions(DefaultOnToggle):
     """Leave each included game's opening ride out of the seed.
 
@@ -349,6 +415,11 @@ class HalfLifeOptions(PerGameCommonOptions):
     exclude_intro_missions: ExcludeIntroMissions
     chargesanity: Chargesanity
     include_microwave: IncludeMicrowave
+    healsanity: Healsanity
+    ammosanity: Ammosanity
+    scientistsanity: Scientistsanity
+    barneysanity: Barneysanity
+    include_critical_npcs: IncludeCriticalNpcs
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump
     shuffle_flashlight: ShuffleFlashlight

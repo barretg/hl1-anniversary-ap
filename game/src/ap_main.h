@@ -25,6 +25,15 @@
 //   dlls/triggers.cpp    CTriggerHurt::HurtTouch      -> ap::OnHealingTouch
 //   dlls/triggers.cpp    CBaseTrigger::MultiTouch     -> ap::TouchHubTrigger
 //   dlls/subs.cpp        FireTargets                  -> ap::OnTargetFired
+//   dlls/cbase.cpp       DispatchSpawn                -> ap::TagPickup
+//   dlls/func_break.cpp  CBreakable::Die              -> ap::OnCrateDrop
+//   dlls/items.cpp       CItem::ItemTouch             -> ap::OnPickupTouched
+//   dlls/weapons.cpp     CBasePlayerAmmo::DefaultTouch-> ap::OnPickupTouched
+//   dlls/weapons.cpp     CBasePlayerItem::DefaultTouch-> ap::OnPickupTouched
+//   dlls/weapons.cpp     CWeaponBox::Touch            -> ap::OnPickupTouched
+//   port/of              CSporeAmmo::SporeTouch       -> ap::OnPickupTouched
+//   dlls/combat.cpp      CBaseMonster::Killed         -> ap::OnNpcKilled
+//   dlls/monsters.cpp    SCRIPT_EVENT_DEAD            -> ap::OnNpcScriptDeath
 
 #pragma once
 
@@ -68,6 +77,11 @@ void OnPlayerDamaged(CBasePlayer* player, entvars_t* inflictor,    // ap_deathli
 void OnRevertSaved();                                       // ap_deathlink
 void OnHealingTouch(CBaseEntity* player, CBaseEntity* pool);// ap_locations
 void OnTargetFired(const char* targetname);                 // ap_locations
+void TagPickup(CBaseEntity* entity, bool spawned);           // ap_locations
+void OnCrateDrop(CBaseEntity* crate, CBaseEntity* drop);     // ap_locations
+void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup); // ap_locations
+void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker); // ap_locations
+void OnNpcScriptDeath(CBaseEntity* monster);                 // ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool MenuSelect(CBasePlayer* player, int key);                       // ap_menu
 bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub

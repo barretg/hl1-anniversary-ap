@@ -29,6 +29,7 @@ from bsp_entities import (
     CONTENTS_SOLID,
     HULL_CROUCHING,
     ClipHull,
+    PointHull,
     brush_model_bounds,
     brush_model_centres,
     load_map,
@@ -44,7 +45,13 @@ from campaigns import (
     CHARGER_POSITION_GRID,
     HEALING_POOL_CLASSNAMES,
     CLASSNAME_TO_ITEM,
+    AMMO_PICKUP_CLASSNAMES,
+    BARNEY_CLASSNAMES,
+    SCIENTIST_CLASSNAMES,
+    CRATE_CLASSNAMES,
+    CRATE_SPAWN_OBJECTS,
     ENABLED_LOCATION_TYPES,
+    HEAL_PICKUP_CLASSNAMES,
     HUB_ENTRANCE_CLASSNAMES,
     HUB_MAP,
     IGNORED_MONSTERS,
@@ -224,6 +231,300 @@ def charger_unit(entity: dict[str, str]) -> tuple[str, str] | None:
     return None
 
 
+# Healsanity's and Ammosanity's trigger types, `{type: placed classnames}`.
+PICKUP_TRIGGERS: dict[str, dict[str, str]] = {
+    "heal_pickup": HEAL_PICKUP_CLASSNAMES,
+    "ammo_pickup": AMMO_PICKUP_CLASSNAMES,
+}
+
+# How far apart two crates of one classname must be. The game matches a crate by
+# the nearest within half of this, so two closer than it could swap ids.
+CRATE_MIN_SEPARATION = 16.0
+
+
+def point_at(raw: str) -> tuple[int, int, int]:
+    """A point entity's `origin` keyvalue, rounded half up to the unit.
+
+    Half up rather than Python's half-to-even, because the game rounds the same
+    value with `floor(v + 0.5)` and the two have to agree on every origin.
+    """
+    return tuple(math.floor(value + 0.5) for value in entity_origin(raw))
+
+
+def pickup_arg(trigger: dict) -> str:
+    """`<classname>@<x y z>[#n]`: the key part, and the game's `<arg>`."""
+    ordinal = trigger.get("ordinal", 1)
+    return (f"{trigger['classname']}@{trigger['at']}"
+            + (f"#{ordinal}" if ordinal > 1 else ""))
+
+
+def crate_drop(entity: dict[str, str]) -> str | None:
+    """The pickup classname a crate drops when broken, or None.
+
+    None for a crate that drops a weapon or nothing, for unbreakable glass,
+    and for a pushable that is not breakable.
+    """
+    classname = entity.get("classname", "")
+    if classname not in CRATE_CLASSNAMES:
+        return None
+    try:
+        drop = CRATE_SPAWN_OBJECTS.get(int(entity.get("spawnobject", "0") or 0))
+        flags = int(entity.get("spawnflags", "0") or 0)
+        material = int(entity.get("material", "0") or 0)
+    except ValueError:
+        return None
+    if drop is None or material == 7:  # matUnbreakableGlass
+        return None
+    if classname == "func_pushable" and not flags & 128:  # SF_PUSH_BREAKABLE
+        return None
+    return drop
+
+
+def breaks_by_trigger_only(entity: dict[str, str], ents: list[dict[str, str]]) -> bool:
+    """A crate with `SF_BREAK_TRIGGER_ONLY` that nothing in the map triggers.
+
+    Only `func_breakable` has the flag; a pushable's bit 1 is something else.
+    Something that names it as a `target`, or a `multi_manager` keyed on it,
+    counts as triggering it.
+    """
+    if entity.get("classname") != "func_breakable":
+        return False
+    try:
+        if not int(entity.get("spawnflags", "0") or 0) & 1:
+            return False
+    except ValueError:
+        return False
+    name = entity.get("targetname", "")
+    if not name:
+        return True
+    return not any(
+        e.get("target") == name
+        or (e.get("classname") == "multi_manager" and name in e)
+        for e in ents
+    )
+
+
+def map_pickups(
+    kind: str, ents: list[dict[str, str]], centres: dict[str, tuple[float, float, float]]
+) -> list[dict]:
+    """Every pickup of this trigger type in a map, before any exclusion.
+
+    Each is `{"classname", "display", "at", "ordinal", "source", "position",
+    "drops"}`: `at` is the key position, `position` where it really is, and
+    `drops` the classname a crate gives. Ordinals count every entity with the
+    same classname and `at` in lump order, as the game does while spawning.
+    """
+    table = PICKUP_TRIGGERS[kind]
+    found: list[dict] = []
+    seen: collections.Counter = collections.Counter()
+    for entity in ents:
+        classname = entity.get("classname", "")
+        if classname in table and entity.get("origin"):
+            at = point_at(entity["origin"])
+            seen[(classname, at)] += 1
+            found.append({
+                "classname": classname, "display": table[classname], "at": at,
+                "ordinal": seen[(classname, at)], "source": "placed",
+                "position": entity_origin(entity["origin"]),
+            })
+            continue
+        drop = crate_drop(entity)
+        if drop is None or drop not in table or breaks_by_trigger_only(entity, ents):
+            continue
+        position = charger_position(entity, centres)
+        if position is None:
+            raise SystemExit(f"{classname} dropping {drop} with no brush model")
+        found.append({
+            "classname": classname, "display": f"Crate {table[drop]}",
+            "at": charger_key_position(position), "ordinal": 1, "source": "crate",
+            "position": position, "drops": drop,
+        })
+
+    crates = [p for p in found if p["source"] == "crate"]
+    for i, a in enumerate(crates):
+        for b in crates[i + 1:]:
+            if (a["classname"] == b["classname"]
+                    and math.dist(a["position"], b["position"]) < CRATE_MIN_SEPARATION):
+                raise SystemExit(f"two {a['classname']} crates within "
+                                 f"{CRATE_MIN_SEPARATION:g} units at "
+                                 f"{format_position(a['position'])}")
+    return found
+
+
+# Scientistsanity's and Barneysanity's trigger types, `{type: classnames}`.
+NPC_TRIGGERS: dict[str, dict[str, str]] = {
+    "scientist": SCIENTIST_CLASSNAMES,
+    "barney": BARNEY_CLASSNAMES,
+}
+
+# `CBaseMonster::m_iTriggerCondition` values that fire a monster's
+# `TriggerTarget` on being hurt or killed: AITRIGGER_TAKEDAMAGE, HALFHEALTH,
+# DEATH. Any of them leading to a reload means its death fails the mission.
+NPC_HARM_CONDITIONS = {"2", "3", "4"}
+# What ends a run when fired.
+FAILURE_CLASSNAMES = {"player_loadsaved", "game_end"}
+# Keyvalues every entity can have, which a multi_manager's targets are not.
+MULTI_MANAGER_KEYS = {"classname", "targetname", "origin", "spawnflags", "wait",
+                      "angles", "angle", "master"}
+# How many hops of relays and managers a harm trigger is followed through.
+FAILURE_CHAIN_DEPTH = 8
+
+
+def fired_by(entity: dict[str, str]) -> list[str]:
+    """The targetnames an entity fires when it is used."""
+    names = [entity[k] for k in ("target", "TriggerTarget", "m_iszEntity")
+             if entity.get(k)]
+    if entity.get("classname") == "multi_manager":
+        names += [k.split("#")[0] for k in entity if k not in MULTI_MANAGER_KEYS]
+    return names
+
+
+def leads_to_failure(start: str, by_name: dict[str, list[dict[str, str]]]) -> bool:
+    """Whether firing `start` reaches a reload or game end within the depth."""
+    seen = {start}
+    frontier = [start]
+    for _ in range(FAILURE_CHAIN_DEPTH):
+        following: list[str] = []
+        for name in frontier:
+            for entity in by_name.get(name, ()):
+                if entity.get("classname") in FAILURE_CLASSNAMES:
+                    return True
+                for nxt in fired_by(entity):
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        following.append(nxt)
+        frontier = following
+    return False
+
+
+# The display name of a listed `monster_generic` stand-in, by kind.
+GENERIC_NPC_DISPLAY = {"scientist": "Scientist", "barney": "Security Guard"}
+
+
+def map_npcs(kind: str, ents: list[dict[str, str]],
+             generics: frozenset[tuple[int, int, int]] = frozenset()) -> list[dict]:
+    """Every scientist or barney placed in a map, with why it is out, if it is.
+
+    Each is `{"classname", "display", "at", "ordinal", "position",
+    "targetname", "out"}`. `out` is "" for a fair check, "fails" when hurting
+    or killing it reloads the game, "removed" when the map can delete it with
+    a `killtarget`. Ordinals count like pickups'.
+    """
+    table = NPC_TRIGGERS[kind]
+    by_name: dict[str, list[dict[str, str]]] = {}
+    for entity in ents:
+        if entity.get("targetname"):
+            by_name.setdefault(entity["targetname"], []).append(entity)
+    killed = {e["killtarget"] for e in ents if e.get("killtarget")}
+    found: list[dict] = []
+    seen: collections.Counter = collections.Counter()
+    for entity in ents:
+        classname = entity.get("classname", "")
+        if not entity.get("origin"):
+            continue
+        if classname == "monster_generic":
+            # Counted for ordinals whether listed or not, as the game counts them.
+            at = point_at(entity["origin"])
+            seen[(classname, at)] += 1
+            if at not in generics:
+                continue
+            display = GENERIC_NPC_DISPLAY[kind]
+        elif classname in table:
+            at = point_at(entity["origin"])
+            seen[(classname, at)] += 1
+            display = table[classname]
+        else:
+            continue
+        name = entity.get("targetname", "")
+        out = ""
+        if (entity.get("TriggerCondition") in NPC_HARM_CONDITIONS
+                and entity.get("TriggerTarget")
+                and leads_to_failure(entity["TriggerTarget"], by_name)):
+            out = "fails"
+        elif name and name in killed:
+            out = "removed"
+        found.append({
+            "classname": classname, "display": display, "at": at,
+            "ordinal": seen[(classname, at)], "position": entity_origin(entity["origin"]),
+            "targetname": name, "out": out,
+        })
+    return found
+
+
+# Eye height above a train's centre, and how far along its route between
+# samples. The centre is a rough floor; the test only proposes candidates.
+TRAIN_EYE_RISE = 40.0
+TRAIN_SAMPLE_STEP = 64.0
+# Where on an NPC a line may land: feet, chest, head above its origin.
+NPC_AIM_RISES = (8.0, 36.0, 64.0)
+
+
+def train_route(ents: list[dict[str, str]], train_name: str,
+                centres: dict[str, tuple[float, float, float]]) -> list[tuple[float, float, float]]:
+    """Eye positions along the route a map's player train follows.
+
+    A `func_tracktrain` puts its origin on each `path_track` in turn, raised
+    by its `height`; the player stands in the car, about its brush centre.
+    """
+    train = next((e for e in ents if e.get("targetname") == train_name
+                  and e.get("classname") == "func_tracktrain"), None)
+    if train is None:
+        raise SystemExit(f"no func_tracktrain named {train_name}")
+    # An origin-brush model is compiled relative to its origin, so its centre
+    # is already the offset from the path to the middle of the car.
+    offset = centres.get(train.get("model", ""), (0.0, 0.0, 0.0))
+    by_name = {e["targetname"]: e for e in ents
+               if e.get("classname") in ("path_track", "path_corner") and e.get("targetname")}
+    # The whole track the train can run on: every path linked to its first,
+    # either way round, since a map's arrival track can end at the start node
+    # or branch off it through `altpath`.
+    links: dict[str, set[str]] = {n: set() for n in by_name}
+    for name, path in by_name.items():
+        for key in ("target", "altpath"):
+            other = path.get(key, "")
+            if other in by_name:
+                links[name].add(other)
+                links[other].add(name)
+    start = train.get("target", "")
+    component, frontier = {start}, [start]
+    while frontier:
+        name = frontier.pop()
+        for other in links.get(name, ()):
+            if other not in component:
+                component.add(other)
+                frontier.append(other)
+    segments = [(entity_origin(by_name[n]["origin"]),
+                 entity_origin(by_name[o]["origin"]))
+                for n in component if n in by_name
+                for o in (by_name[n].get("target", ""), by_name[n].get("altpath", ""))
+                if o in component]
+    if not segments and start in by_name:
+        point = entity_origin(by_name[start]["origin"])
+        segments = [(point, point)]
+    try:
+        height = float(train.get("height", "0") or 0)
+    except ValueError:
+        height = 0.0
+    route: list[tuple[float, float, float]] = []
+    for a, b in segments:
+        steps = max(1, int(math.dist(a, b) / TRAIN_SAMPLE_STEP))
+        for i in range(steps + 1):
+            t = i / steps
+            p = tuple(x + (y - x) * t for x, y in zip(a, b))
+            route.append((p[0] + offset[0], p[1] + offset[1],
+                          p[2] + offset[2] + height + TRAIN_EYE_RISE))
+    return route
+
+
+def seen_from_route(hull: PointHull, route: list[tuple[float, float, float]],
+                    position: tuple[float, float, float]) -> bool:
+    for rise in NPC_AIM_RISES:
+        target = (position[0], position[1], position[2] + rise)
+        if any(hull.clear_line(eye, target) for eye in route):
+            return True
+    return False
+
+
 def weapon_display(classname: str) -> str:
     """Human name for a pickup classname, falling back to a tidied classname."""
     item = CLASSNAME_TO_ITEM.get(classname)
@@ -293,6 +594,8 @@ def location_key(chapter_key: str, map_name: str, trigger: dict,
         arg = trigger["chapter"]
     elif kind == "charger":
         arg = f"{trigger['classname']}@{trigger['at']}"
+    elif kind in PICKUP_TRIGGERS or kind in NPC_TRIGGERS:
+        arg = pickup_arg(trigger)
     elif "fires" in trigger:
         arg = trigger["fires"]
     elif kind == "weapon_pickup":
@@ -625,6 +928,10 @@ def build(
     enabled = ENABLED_LOCATION_TYPES
     gated_units: set[tuple[str, str]] = set()
 
+    # No automatic exclusion for pickups: playtesting found nearly every one
+    # a sealed-room fill or a trigger_hurt test dropped reachable, through a
+    # door, locker, vent or glass, or once a hazard is off. Curated only.
+
     for chapter in chapters:
         campaign = by_key[chapter["campaign"]]
         chapter_maps = chapter["maps"]
@@ -741,6 +1048,110 @@ def build(
                             builder.locations[-1]["gates"] = gate
                             gated_units.add((map_name,
                                              f"{classname}:{entity.get('model', '')}"))
+
+            # Healsanity and Ammosanity: every pickup its own check, numbered
+            # per kind by distance from where players arrive, like chargers.
+            for kind in PICKUP_TRIGGERS:
+                if kind not in enabled:
+                    continue
+                spawn = spawn_point(ents)
+                skip = campaign.unreachable_pickups.get(map_name, set())
+                pickups = [
+                    p for p in map_pickups(kind, ents, centres[map_name])
+                    if (p["classname"], p["at"]) not in skip
+                ]
+                by_display: dict[str, list[dict]] = {}
+                for pickup in pickups:
+                    by_display.setdefault(pickup["display"], []).append(pickup)
+                for display in sorted(by_display):
+                    group = sorted(
+                        by_display[display],
+                        key=lambda p: (walk_score(spawn, p["position"]) if spawn else 0.0,
+                                       p["at"], p["ordinal"]),
+                    )
+                    for number, pickup in enumerate(group, start=1):
+                        count = f" {number}" if len(group) > 1 else ""
+                        trigger = {
+                            "type": kind, "map": map_name,
+                            "classname": pickup["classname"],
+                            "at": format_position(pickup["at"]),
+                            "source": pickup["source"],
+                        }
+                        if pickup["ordinal"] > 1:
+                            trigger["ordinal"] = pickup["ordinal"]
+                        if "drops" in pickup:
+                            trigger["drops"] = pickup["drops"]
+                        builder.add(chapter, map_name, f"{display}{count}{suffix}",
+                                    trigger, position=pickup["position"])
+
+            # Scientistsanity and Barneysanity: every placed NPC whose death is
+            # fair game, numbered per kind like pickups. In an intro map the
+            # player never leaves the train, so only an NPC in sight of its
+            # route counts, and only with a gun to reach it.
+            train = campaign.intro_trains.get(map_name)
+            route = hull = None
+            for kind in NPC_TRIGGERS:
+                if kind not in enabled:
+                    continue
+                spawn = spawn_point(ents)
+                out_here = campaign.unkillable_npcs.get(map_name, set())
+                in_here = campaign.killable_npcs.get(map_name, set())
+                npcs: list[dict] = []
+                generics = frozenset(at for k, at in campaign.generic_npcs.get(map_name, ())
+                                     if k == kind)
+                for npc in map_npcs(kind, ents, generics):
+                    key = (npc["classname"], npc["at"])
+                    reason = npc["out"]
+                    # A death that fails the mission still sends first, so a
+                    # quicksave makes it a fair check: in, behind its own option.
+                    npc["critical"] = reason == "fails"
+                    if npc["critical"]:
+                        reason = ""
+                    if key in out_here:
+                        reason = "curated"
+                    elif not reason and train:
+                        if route is None:
+                            hull = PointHull(bsp_paths[map_name])
+                            route = train_route(ents, train, centres[map_name])
+                        if not seen_from_route(hull, route, npc["position"]):
+                            reason = "unseen"
+                    if reason and key in in_here:
+                        reason = ""
+                    tag = (f"{map_name} {npc['classname']}@{format_position(npc['at'])}"
+                           + (f" ({npc['targetname']})" if npc["targetname"] else ""))
+                    if reason:
+                        print(f"  {kind} left out ({reason}): {tag}")
+                        continue
+                    if train:
+                        print(f"  {kind} seen from the train: {tag}")
+                    if npc["critical"]:
+                        print(f"  {kind} mission-critical: {tag}")
+                    npcs.append(npc)
+                by_display = {}
+                for npc in npcs:
+                    by_display.setdefault(npc["display"], []).append(npc)
+                for display in sorted(by_display):
+                    group = sorted(
+                        by_display[display],
+                        key=lambda p: (walk_score(spawn, p["position"]) if spawn else 0.0,
+                                       p["at"], p["ordinal"]),
+                    )
+                    for number, npc in enumerate(group, start=1):
+                        count = f" {number}" if len(group) > 1 else ""
+                        trigger = {"type": kind, "map": map_name,
+                                   "classname": npc["classname"],
+                                   "at": format_position(npc["at"])}
+                        if npc["ordinal"] > 1:
+                            trigger["ordinal"] = npc["ordinal"]
+                        if npc["targetname"]:
+                            trigger["targetname"] = npc["targetname"]
+                        if npc["critical"]:
+                            trigger["critical"] = True
+                        location = builder.add(chapter, map_name,
+                                               f"{display}{count}{suffix}", trigger,
+                                               position=npc["position"])
+                        if train:
+                            location["gates"] = {"always": ["ranged"]}
 
             # One-off map events, sent when the map fires their targetname.
             # Placed where the entity firing it stands, for `ap_find`.

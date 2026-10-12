@@ -89,7 +89,7 @@ private:
 	int m_iSmoke;
 	int m_iFire;
 
-	bool m_bReloading;
+	BOOL m_bReloading;
 	float m_flReloadStartTime;
 	float m_flReloadStart;
 };

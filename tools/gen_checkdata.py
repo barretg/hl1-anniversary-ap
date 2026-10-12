@@ -51,7 +51,13 @@ OUT_PATH = (
 # 6 adds `F`, every way to a weapon check (each mission's first copy), and an
 # eighth `L` field naming what a check always needs. Additive: a format 5
 # reader skips `F` and stops reading `L` at the position.
-FORMAT_VERSION = 6
+#
+# 7 adds the `heal_pickup` and `ammo_pickup` location types. Additive: a format
+# 6 reader keeps them as locations of a type it does not know and never sends.
+#
+# 8 adds the `scientist` and `barney` location types, keyed like a placed
+# pickup. Additive in the same way as 7.
+FORMAT_VERSION = 8
 
 
 def location_needs(location: dict, groups: dict[str, list[str]]) -> str:
@@ -93,6 +99,10 @@ def render(campaign: dict) -> str:
         "# of the unit. Brush model indices are deliberately not used: the game's",
         "# maps are recompiled by Valve from time to time and that renumbers them.",
         "# A fired check's <arg> is the targetname whose firing sends it.",
+        "# A heal_pickup's or ammo_pickup's <arg> is <classname>@<x y z>[#<n>]: a",
+        "# placed pickup's origin keyvalue to the unit, and which of several there",
+        "# in spawn order; or a crate's classname and rounded centre. A",
+        "# scientist's or barney's <arg> is the same as a placed pickup's.",
         f"V|{FORMAT_VERSION}",
         f"D|{campaign['data_version']}",
         f"G|{campaign['goal_chapter']}",
@@ -139,6 +149,12 @@ def render(campaign: dict) -> str:
             # its classname and where it stands, rounded the same way on both
             # sides. See `charger_key_position` in build_campaign_data.py.
             arg = f"{trigger['classname']}@{trigger['at']}"
+        elif kind in ("heal_pickup", "ammo_pickup", "scientist", "barney"):
+            # The entity the game tags at spawn: a placed pickup's origin to
+            # the unit and which of several there, or a crate's centre.
+            ordinal = trigger.get("ordinal", 1)
+            arg = (f"{trigger['classname']}@{trigger['at']}"
+                   + (f"#{ordinal}" if ordinal > 1 else ""))
         elif "fires" in trigger:
             # A map event, whatever the YAML calls its category: the game
             # matches the targetname the map fired.

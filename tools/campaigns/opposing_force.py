@@ -206,6 +206,12 @@ UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     "of4a2": {("func_healthcharger", (544, -1320, 1148))},
 }
 
+# Pickups no player can reach, as `{map: {(classname, (x, y, z))}}`.
+UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Welcome To Black Mesa part 2: inside a lethal trigger_hurt, confirmed in play.
+    "of1a2": {("ammo_357", (320, -2608, -1808))},
+}
+
 
 OPPOSING_FORCE = Campaign(
     key="opposing_force",
@@ -227,6 +233,7 @@ OPPOSING_FORCE = Campaign(
     unreachable_copies=UNREACHABLE_COPIES,
     confirmed_copies=CONFIRMED_COPIES,
     unreachable=UNREACHABLE_CHARGERS,
+    unreachable_pickups=UNREACHABLE_PICKUPS,
     weapon_source_gates=WEAPON_SOURCE_GATES,
     location_gates=LOCATION_GATES,
     # Boot camp: the training course, left out like Half-Life's hazard course.

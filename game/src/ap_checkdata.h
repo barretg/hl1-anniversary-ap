@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -30,6 +31,10 @@ enum class TriggerType {
     Charger,
     WeaponPickup,
     Fired,
+    HealPickup,  // format 7: Healsanity
+    AmmoPickup,  // format 7: Ammosanity
+    Scientist,   // format 8: Scientistsanity
+    Barney,      // format 8: Barneysanity
 };
 
 struct Location {
@@ -49,6 +54,15 @@ struct Location {
 
     // fired: the targetname whose firing sends it.
     std::string fires;
+
+    // heal_pickup / ammo_pickup, and scientist / barney, which are keyed like a
+    // placed pickup: the entity's classname and `at`, with
+    // `ordinal` telling apart two of one classname on the same unit. A placed
+    // pickup's `at` is its spawn origin to the unit; a crate's (a
+    // `func_breakable` or `func_pushable` that drops one) its rounded centre.
+    std::string pickup_classname;
+    int ordinal = 1;
+    bool crate = false;
 
     // Where in the world this check is, for ap_find. Not every kind has one:
     // reaching a map is not somewhere a player can be pointed.
@@ -182,6 +196,9 @@ public:
     const Campaign& CampaignOfMap(const std::string& map) const;
 
     bool Load(const std::string& path);
+
+    // `map|classname|x y z|ordinal` -> a placed pickup, built by `Load`.
+    std::unordered_map<std::string, const Location*> pickup_index;
     bool Loaded() const { return !locations.empty(); }
 
     // Which mission this lobby panel enters, or null for any other entity the
@@ -203,6 +220,16 @@ public:
     const Chapter* ChapterByName(const std::string& text) const;
 
     const Location* LocationById(long id) const;
+
+    // The pickup placed with this classname at this spawn origin, rounded to
+    // the unit, and the `ordinal`th of them there in spawn order. Exact: two
+    // pickups a few units apart are two checks, so nothing near is close enough.
+    const Location* PickupAt(const std::string& map, const std::string& classname,
+                             const int at[3], int ordinal) const;
+    // The crate of this classname nearest `centre` in this map, within
+    // kCrateMatchRadius.
+    const Location* CrateAt(const std::string& map, const std::string& classname,
+                            const float centre[3]) const;
 
     // The charger of this classname nearest `at` in this map, within
     // kChargerMatchRadius. Null when the player pressed use on something else.
@@ -237,5 +264,13 @@ public:
 // generous enough to absorb any recompile or rounding drift and far too tight to
 // confuse two of them.
 constexpr float kChargerMatchRadius = 32.0f;
+
+// The same for crates. The generator refuses two crates of one classname closer
+// than twice this, and a crate's own grid rounding is at most 3.5 units off.
+constexpr float kCrateMatchRadius = 8.0f;
+
+// The key `pickup_index` is built on.
+std::string PickupKey(const std::string& map, const std::string& classname,
+                      const int at[3], int ordinal);
 
 }  // namespace ap

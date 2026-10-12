@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import Region
 
-from .data import LOCATIONS, VICTORY, campaign_of, mission_complete_event
+from .data import LOCATIONS, VICTORY, campaign_of, mission_complete_event, trigger_excluded
 from .locations import HalfLifeLocation, locations_by_map, weapon_sources
 from .rules import chapter_entry_rule, location_rule, map_entry_rule, weapon_rule
 
@@ -48,7 +48,7 @@ def create_regions(world: "HalfLifeWorld") -> None:
             for entry in locations_by_map.get(map_name, []):
                 # A check category the YAML turned off is left out of the seed
                 # rather than placed and made unreachable.
-                if entry["trigger"]["type"] in world.excluded_triggers:
+                if trigger_excluded(entry, world.excluded_triggers):
                     continue
                 # Hung on the Hub below, reachable through any of its sources.
                 if "sources" in entry:
@@ -89,7 +89,7 @@ def add_weapon_checks(world: "HalfLifeWorld", hub: Region) -> None:
     longer takes it away.
     """
     for entry in LOCATIONS:
-        if "sources" not in entry or entry["trigger"]["type"] in world.excluded_triggers:
+        if "sources" not in entry or trigger_excluded(entry, world.excluded_triggers):
             continue
         sources = weapon_sources(entry, world.excluded_chapters, world.ally_weapon_drops)
         if not sources:

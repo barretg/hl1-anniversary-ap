@@ -57,13 +57,13 @@ public:
 	float m_lastTime;
 	float m_maxFrame;
 
-	bool m_bLaunched;
+	BOOL m_bLaunched;
 
 	float m_fadeScale;
 	float m_fadeRender;
 	float m_damageTimer;
 
-	bool m_fSinking;
+	BOOL m_fSinking;
 };
 
 TYPEDESCRIPTION COFGeneWormCloud::m_SaveData[] =
@@ -255,9 +255,9 @@ public:
 	float m_flBirthTime;
 	float m_flWarpTime;
 
-	bool m_bLaunched;
-	bool m_bWarping;
-	bool m_bTrooperDropped;
+	BOOL m_bLaunched;
+	BOOL m_bWarping;
+	BOOL m_bTrooperDropped;
 
 	CBeam* m_pBeam[GENEWORM_SPAWN_BEAM_COUNT];
 
@@ -626,15 +626,15 @@ public:
 	float m_flNextMeleeTime;
 	float m_flNextRangeTime;
 
-	bool m_fRightEyeHit;
-	bool m_fLeftEyeHit;
-	bool m_fGetMad;
+	BOOL m_fRightEyeHit;
+	BOOL m_fLeftEyeHit;
+	BOOL m_fGetMad;
 
-	bool m_fOrificeHit;
+	BOOL m_fOrificeHit;
 	float m_flOrificeOpenTime;
 	COFGeneWormSpawn* m_orificeGlow;
 
-	bool m_fSpawningTrooper;
+	BOOL m_fSpawningTrooper;
 	float m_flSpawnTrooperTime;
 
 	int m_iHitTimes;
@@ -648,12 +648,12 @@ public:
 	float m_flBeamExpireTime;
 	float m_flBeamDir;
 
-	bool m_fSpitting;
+	BOOL m_fSpitting;
 	float m_flSpitStartTime;
 
-	bool m_fActivated;
+	BOOL m_fActivated;
 	float m_flDeathStart;
-	bool m_fHasEntered;
+	BOOL m_fHasEntered;
 
 	float m_flMadDelayTime;
 };

@@ -172,6 +172,27 @@ CHARGER_TRIGGER = "charger"
 # `include_microwave`.
 MICROWAVE_TRIGGER = "microwave"
 
+# Trigger types of every health and armour pickup and every ammo pickup,
+# switched on by `healsanity` and `ammosanity`.
+HEAL_PICKUP_TRIGGER = "heal_pickup"
+AMMO_PICKUP_TRIGGER = "ammo_pickup"
+
+# Trigger types of every scientist and every barney, switched on by
+# `scientistsanity` and `barneysanity`.
+SCIENTIST_TRIGGER = "scientist"
+BARNEY_TRIGGER = "barney"
+# Not a trigger type: the scientists and barneys whose death fails the mission
+# (`"critical"` on their trigger), switched on by `include_critical_npcs`. Kept
+# in `excluded_triggers` beside the real types so the tracker reads it the same way.
+CRITICAL_NPC_TRIGGER = "npc_critical"
+
+
+def trigger_excluded(entry: dict[str, Any], excluded: set[str]) -> bool:
+    """Whether a YAML switch left this location out of the seed."""
+    trigger = entry["trigger"]
+    return (trigger["type"] in excluded
+            or (bool(trigger.get("critical")) and CRITICAL_NPC_TRIGGER in excluded))
+
 # --- Event items ----------------------------------------------------------
 #
 # Events carry no id and never reach the datapackage, so their names are free to

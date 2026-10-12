@@ -57,6 +57,18 @@ location_name_groups["Chargers"] = {
 location_name_groups["Microwave"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] == "microwave"
 }
+location_name_groups["Heal Pickups"] = {
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "heal_pickup"
+}
+location_name_groups["Ammo Pickups"] = {
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "ammo_pickup"
+}
+location_name_groups["Scientists"] = {
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "scientist"
+}
+location_name_groups["Barneys"] = {
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "barney"
+}
 
 # Older releases named locations `Mission - Thing`. Each old name is a group of
 # its one location, so a YAML written for them still generates. The old name is

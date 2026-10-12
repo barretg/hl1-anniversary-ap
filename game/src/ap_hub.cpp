@@ -443,6 +443,7 @@ void Help() {
     Say("!find <text>              find a check by name, anywhere in the seed");
     Say("!trace [text]             as !find, and draw a path to it; again to stop");
     Say("!menu                     the warp and tracker as a menu: pick with 1-9, 0");
+    Say("!labels [npcs|all|off]    names over scientists and guards; bare toggles");
     Say("Names ignore case and punctuation: 'gonarch', 'c4a2', 'Gonarch's Lair'.");
     Say("In the hub, each mission can be entered from the room itself, without typing.");
 }
@@ -618,6 +619,8 @@ void Cmd_ApHub() { Reply reply("ap_hub"); ToHub(); }
 void Cmd_ApSetWarp() { Reply reply("ap_setwarp"); SetWarp(ArgumentTail(1)); }
 void Cmd_ApWarps() { Reply reply("ap_warps"); ListWarps(); }
 void Cmd_ApFind() { Reply reply("ap_find"); Find(ArgumentTail(1)); }
+void Cmd_ApTagged() { Reply reply("ap_tagged"); ListTagged(); }
+void Cmd_ApLabels() { Reply reply("ap_labels"); SetLabels(ArgumentTail(1)); }
 void Cmd_ApTrace() {
     // Turning it off says nothing, so not even the empty reply's line.
     const std::string text = ArgumentTail(1);
@@ -698,6 +701,8 @@ bool Dispatch(const std::string& name, const std::string& rest) {
         Find(rest);
     } else if (name == "trace" || name == "ap_trace") {
         PathTrace(rest);
+    } else if (name == "labels" || name == "ap_labels") {
+        SetLabels(rest);
     } else if (name == "tracker" || name == "ap_tracker") {
         Tracker(rest);
         TrackMission(rest);
@@ -749,6 +754,8 @@ void RegisterCommands() {
     g_engfuncs.pfnAddServerCommand((char*)"ap_setwarp", Cmd_ApSetWarp);
     g_engfuncs.pfnAddServerCommand((char*)"ap_warps", Cmd_ApWarps);
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_tagged", Cmd_ApTagged);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_labels", Cmd_ApLabels);
     g_engfuncs.pfnAddServerCommand((char*)"ap_trace", Cmd_ApTrace);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
     g_engfuncs.pfnAddServerCommand((char*)"ap_menu", Cmd_ApMenu);

@@ -84,7 +84,7 @@ private:
 	CRopeSample* m_pSample;
 	string_t m_iszModelName;
 	float m_flDefaultMass;
-	bool m_bCauseDamage;
-	bool m_bCanBeGrabbed;
+	BOOL m_bCauseDamage;
+	BOOL m_bCanBeGrabbed;
 	float m_LastDamageTime{0};
 };

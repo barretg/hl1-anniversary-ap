@@ -172,7 +172,7 @@ public:
 
 	COFNuclearBombTimer* m_pTimer;
 	COFNuclearBombButton* m_pButton;
-	bool m_fOn;
+	BOOL m_fOn;
 	float m_flLastPush;
 	int m_iPushCount;
 };

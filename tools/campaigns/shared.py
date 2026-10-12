@@ -90,6 +90,98 @@ HEALING_POOL_CLASSNAMES: dict[str, str] = {
 # round together.
 CHARGER_POSITION_GRID = 4
 
+# --- Healsanity and Ammosanity --------------------------------------------
+#
+# Every health, armour and ammo pickup is its own check, sent when the player
+# touches it, full or not. Placed pickups are identified by their `origin`
+# keyvalue, rounded to the unit: a point origin is what the mapper typed, so a
+# recompile does not move it, and the game reads the same value before
+# `Spawn` drops the item to the floor. Two pickups of one classname on the same
+# unit are told apart by entity-lump order, which is the order the game spawns
+# them in.
+
+# `{classname: display}`. Aliases share a display name, and numbering runs per
+# display name, so `ammo_glockclip` and `ammo_9mmclip` count as one kind.
+HEAL_PICKUP_CLASSNAMES: dict[str, str] = {
+    "item_healthkit": "Health Kit",
+    "item_battery": "Battery",
+    "item_armorvest": "Armor Vest",
+    "item_helmet": "Helmet",
+}
+
+# Only classnames the dll spawns: `ammo_9mmARclip`, in one Half-Life map, is
+# linked to no class and never appears in game.
+AMMO_PICKUP_CLASSNAMES: dict[str, str] = {
+    "ammo_9mmclip": "9mm Clip",
+    "ammo_glockclip": "9mm Clip",
+    "ammo_9mmAR": "MP5 Clip",
+    "ammo_mp5clip": "MP5 Clip",
+    "ammo_9mmbox": "9mm Box",
+    "ammo_ARgrenades": "MP5 Grenades",
+    "ammo_mp5grenades": "MP5 Grenades",
+    "ammo_buckshot": "Shotgun Shells",
+    "ammo_357": ".357 Rounds",
+    "ammo_crossbow": "Crossbow Bolts",
+    "ammo_rpgclip": "Rockets",
+    "ammo_gaussclip": "Uranium",
+    "ammo_egonclip": "Uranium",
+    "ammo_556": "5.56 Rounds",
+    "ammo_762": "Sniper Rounds",
+    "ammo_eagleclip": "Desert Eagle Clip",
+    "ammo_spore": "Spore Plant",
+    "weaponbox": "Weapon Box",
+    # The throwables are their own ammo: each placed one is an ammo check as
+    # well as counting toward its weapon's "First ..." check. Must match
+    # `CountedPoint` in ap_locations.cpp.
+    "weapon_handgrenade": "Hand Grenade",
+    "weapon_satchel": "Satchel Charge",
+    "weapon_tripmine": "Tripmine",
+    "weapon_snark": "Snark Nest",
+}
+
+# `CBreakable::pSpawnObjects`, by `spawnobject` index: what a crate drops when
+# it breaks. Weapons are left out, a weapon being a "First ..." check,
+# except the throwables, which are their own ammo.
+CRATE_SPAWN_OBJECTS: dict[int, str] = {
+    1: "item_battery",
+    2: "item_healthkit",
+    4: "ammo_9mmclip",
+    6: "ammo_9mmAR",
+    7: "ammo_ARgrenades",
+    9: "ammo_buckshot",
+    11: "ammo_crossbow",
+    13: "ammo_357",
+    15: "ammo_rpgclip",
+    16: "ammo_gaussclip",
+    17: "weapon_handgrenade",
+    18: "weapon_tripmine",
+    19: "weapon_satchel",
+    20: "weapon_snark",
+}
+
+# Brush entities that can hold a `spawnobject`. A pushable drops it only when
+# it is breakable, `SF_PUSH_BREAKABLE`.
+CRATE_CLASSNAMES = ("func_breakable", "func_pushable")
+
+# --- Scientistsanity and Barneysanity -------------------------------------
+#
+# Every placed scientist and barney is its own check, sent when it dies and the
+# player witnessed the death. Identified like a placed pickup: classname and
+# `origin` keyvalue to the unit, which is where the game tags it before `Spawn`
+# lets it settle. Every variant here can die; one map instance that cannot (held
+# by a script) is curated out per campaign. The sitting scientists, plain and
+# cleansuit, are not here: their `Spawn` never calls `MonsterInit`, so
+# `takedamage` stays DAMAGE_NO and nothing can hurt them.
+SCIENTIST_CLASSNAMES: dict[str, str] = {
+    "monster_scientist": "Scientist",
+    "monster_cleansuit_scientist": "Scientist",
+    "monster_rosenberg": "Scientist",
+}
+BARNEY_CLASSNAMES: dict[str, str] = {
+    "monster_barney": "Security Guard",
+    "monster_otis": "Otis",
+}
+
 # --- Logic groups ---------------------------------------------------------
 
 # The RPG is left out: it counts as heavy and as an explosive, not as a
@@ -303,6 +395,12 @@ ENABLED_LOCATION_TYPES = {
     "charger",
     "weapon_pickup",
     "microwave",
+    # Experimental, off by default in the YAML: every pickup is a check.
+    "heal_pickup",
+    "ammo_pickup",
+    # Experimental, off by default: every witnessed scientist / barney death.
+    "scientist",
+    "barney",
     # "pickup",  # the per-map variant, superseded by weapon_pickup
     # "kill",
     # "kill_count",

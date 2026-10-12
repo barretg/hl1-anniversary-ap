@@ -205,7 +205,7 @@ public:
 	float m_painTime;
 	float m_checkAttackTime;
 
-	bool m_lastAttackCheck;
+	BOOL m_lastAttackCheck;
 	float m_flPlayerDamage;
 
 	// checking the feasibility of a grenade toss is kind of costly, so we do it every couple of seconds,
@@ -216,17 +216,17 @@ public:
 
 	Vector m_vecTossVelocity;
 
-	bool m_fThrowGrenade;
-	bool m_fStanding;
-	bool m_fFirstEncounter; // only put on the handsign show in the squad's first encounter.
+	BOOL m_fThrowGrenade;
+	BOOL m_fStanding;
+	BOOL m_fFirstEncounter; // only put on the handsign show in the squad's first encounter.
 	int m_cClipSize;
 
-	bool m_fUseTorch;
+	BOOL m_fUseTorch;
 	EHANDLE m_hNewTargetEnt;
 	int m_iBlackOrWhite;
-	bool m_fGunHolstered;
-	bool m_fTorchHolstered;
-	bool m_fTorchActive;
+	BOOL m_fGunHolstered;
+	BOOL m_fTorchHolstered;
+	BOOL m_fTorchActive;
 
 	CBeam* m_pTorchBeam;
 

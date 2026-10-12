@@ -178,9 +178,9 @@ public:
 
 	Vector m_vecTossVelocity;
 
-	bool m_fThrowGrenade;
-	bool m_fStanding;
-	bool m_fFirstEncounter; // only put on the handsign show in the squad's first encounter.
+	BOOL m_fThrowGrenade;
+	BOOL m_fStanding;
+	BOOL m_fFirstEncounter; // only put on the handsign show in the squad's first encounter.
 	int m_cClipSize;
 
 	float m_flLastShot;

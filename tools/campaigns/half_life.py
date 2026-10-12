@@ -238,6 +238,33 @@ OPTIONAL_ITEMS: dict[str, list[str]] = {
 # now found by `pocketed_chargers`.
 UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {}
 
+# Scientists and guards that do not count, as `{map: {(classname, (x, y, z))}}`.
+# `monster_generic` stand-ins that count, as `{map: {(kind, (x, y, z))}}`.
+GENERIC_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Black Mesa Inbound part 5: the scientist on the G-Man's train. Confirmed
+    # killable in play.
+    "c0a0d": {("scientist", (1680, 1024, -210))},
+}
+
+# NPCs the automatic exclusions drop that play shows count, same form as
+# `UNKILLABLE_NPCS`.
+KILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # The G-Man's train scientist: the line-of-sight test misses it from the
+    # ride, but it can be shot.
+    "c0a0d": {("monster_generic", (1680, 1024, -210))},
+}
+
+UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Black Mesa Inbound part 1: the group at the start of the ride, passed
+    # before a player can shoot. Confirmed in play.
+    "c0a0": {
+        ("monster_scientist", (2720, 3704, 567)),
+        ("monster_scientist", (2324, 3680, 567)),
+        ("monster_scientist", (1936, 3760, 567)),
+        ("monster_barney", (2276, 3680, 567)),
+    },
+}
+
 # The break room microwave. Five buttons share its panel, each mastered by the
 # multisource the one before fired, so only the fifth press reaches
 # `microwavepopmm1`: the multi_manager that bursts the casserole. The first
@@ -255,6 +282,7 @@ HALF_LIFE = Campaign(
     chapters=CHAPTERS,
     goal_chapter=GOAL_CHAPTER,
     intro_chapter=INTRO_CHAPTER,
+    intro_trains={m: "train" for m in ("c0a0", "c0a0a", "c0a0b", "c0a0c", "c0a0d", "c0a0e")},
     gates=CHAPTER_GATES,
     map_gates=MAP_GATES,
     unreachable_copies=UNREACHABLE_COPIES,
@@ -264,6 +292,9 @@ HALF_LIFE = Campaign(
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     melee=STARTING_WEAPONS,
     unreachable=UNREACHABLE_CHARGERS,
+    unkillable_npcs=UNKILLABLE_NPCS,
+    generic_npcs=GENERIC_NPCS,
+    killable_npcs=KILLABLE_NPCS,
     fired_checks=FIRED_CHECKS,
     # The hazard course: a training course rather than part of the campaign.
     # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and

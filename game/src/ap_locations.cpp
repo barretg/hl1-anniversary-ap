@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "ap_bridge.h"
@@ -22,6 +23,8 @@
 #include "ap_text.h"
 #include "ap_traps.h"
 #include "ap_warpsave.h"
+
+extern int gmsgAPLabel;  // player.cpp
 
 namespace ap {
 namespace {
@@ -131,6 +134,16 @@ Colour LineColour(const Location& location) {
         // Xen's healing pools heal, so they are red with the wall units.
         return location.charger_classname == "func_recharge" ? Colour{255, 130, 0}
                                                              : Colour{255, 30, 30};
+    }
+    if (location.type == TriggerType::HealPickup) {
+        // Health red and armour orange, as the chargers that give them.
+        const std::string& name = location.pickup_classname;
+        const bool health = name == "item_healthkit" ||
+                            (location.crate && location.name.find("Health") != std::string::npos);
+        return health ? Colour{255, 30, 30} : Colour{255, 130, 0};
+    }
+    if (location.type == TriggerType::AmmoPickup) {
+        return {255, 220, 40};
     }
     return {255, 255, 255};
 }
@@ -653,6 +666,395 @@ void OnHealingTouch(CBaseEntity* toucher, CBaseEntity* pool) {
     if (location != nullptr) {
         SendCheck(location->id);
     }
+}
+
+// Healsanity and Ammosanity. A pickup's check is its own: each counted entity
+// carries its location id from the moment it spawns, and touching it sends that
+// id and nothing else. See `TagPickup`.
+namespace {
+// Open from the world's precache to `ServerActivate`, which is exactly the
+// entity lump being spawned. Anything created after that -- a filler grant, a
+// trap, a monster's drop -- is never a map's placed pickup.
+bool g_tagging = false;
+// `classname|x y z` -> how many have spawned there, for the ordinal.
+std::unordered_map<std::string, int> g_tag_seen;
+
+// Scientistsanity's and Barneysanity's classnames. Must match
+// `SCIENTIST_CLASSNAMES` and `BARNEY_CLASSNAMES` in tools/campaigns/shared.py,
+// plus `monster_generic` for the stand-ins a campaign's `generic_npcs` lists
+// (any other generic matches no location and stays untagged).
+bool CountedNpc(const std::string& classname) {
+    return classname == "monster_scientist" || classname == "monster_cleansuit_scientist" ||
+           classname == "monster_rosenberg" || classname == "monster_barney" ||
+           classname == "monster_otis" || classname == "monster_generic";
+}
+
+bool CountedPoint(const std::string& classname) {
+    // The throwables are their own ammo, so a placed one is an ammo pickup too.
+    return StartsWith(classname, "item_") || StartsWith(classname, "ammo_") ||
+           classname == "weaponbox" || classname == "weapon_handgrenade" ||
+           classname == "weapon_satchel" || classname == "weapon_tripmine" ||
+           classname == "weapon_snark" || CountedNpc(classname);
+}
+}  // namespace
+
+void OpenPickupTags() {
+    g_tagging = true;
+    g_tag_seen.clear();
+}
+
+void ClosePickupTags() {
+    g_tagging = false;
+}
+
+void TagPickup(CBaseEntity* entity, bool spawned) {
+    if (!g_tagging || entity == nullptr) {
+        return;
+    }
+    const std::string classname(STRING(entity->pev->classname));
+    const bool crate = classname == "func_breakable" || classname == "func_pushable";
+    // A point is keyed on its origin before `Spawn` drops it to the floor; a
+    // crate on its brush, which only exists once `Spawn` has set the model.
+    if (spawned ? !crate : !CountedPoint(classname)) {
+        return;
+    }
+    // The first map of a session spawns before `Startup` reads the file.
+    EnsureData();
+    if (!Data().Loaded()) {
+        return;
+    }
+    const std::string map = CurrentMap();
+    const Location* location = nullptr;
+    if (crate) {
+        const Vector centre = CentreOf(entity);
+        const float at[3] = {centre.x, centre.y, centre.z};
+        location = Data().CrateAt(map, classname, at);
+    } else {
+        const Vector& origin = entity->pev->origin;
+        const int at[3] = {static_cast<int>(std::floor(origin.x + 0.5f)),
+                           static_cast<int>(std::floor(origin.y + 0.5f)),
+                           static_cast<int>(std::floor(origin.z + 0.5f))};
+        // Every one counts toward the ordinal, matched or not, since the
+        // generator numbered them all.
+        char where[48];
+        std::snprintf(where, sizeof(where), "|%d %d %d", at[0], at[1], at[2]);
+        const int ordinal = ++g_tag_seen[classname + where];
+        location = Data().PickupAt(map, classname, at, ordinal);
+    }
+    if (location != nullptr) {
+        entity->m_apLocation = static_cast<int>(location->id);
+    }
+}
+
+void OnCrateDrop(CBaseEntity* crate, CBaseEntity* drop) {
+    // The crate's check is the pickup it drops, touched like any other.
+    if (crate != nullptr && drop != nullptr) {
+        drop->m_apLocation = crate->m_apLocation;
+    }
+}
+
+void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup) {
+    // Ahead of the pickup's own test of whether it can be taken, so touching
+    // one at full health or ammo counts and leaves it where it is.
+    if (pickup == nullptr || pickup->m_apLocation == 0) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr || toucher != player) {
+        return;
+    }
+    // Every frame of contact. `SendCheck` drops one already sent.
+    SendCheck(pickup->m_apLocation);
+}
+
+// Scientistsanity and Barneysanity: a death counts only if the player witnessed
+// it. Tunables for playtesting.
+namespace {
+// A death in the player's PVS and this close counts unseen: round a corner, or
+// through a thin wall.
+constexpr float kWitnessHearRadius = 384.0f;
+// Where on the NPC a line from the player's eyes may land: feet, chest, head.
+constexpr float kWitnessAimRises[] = {8.0f, 36.0f, 64.0f};
+// How far an owner chain is followed. A grenade, hornet, satchel or tripmine
+// names its thrower as owner, so one hop is the usual case.
+constexpr int kWitnessOwnerHops = 4;
+
+// The player did it: the attacker is the player, or is owned by them.
+bool CausedBy(CBasePlayer* player, entvars_t* attacker) {
+    for (int hop = 0; attacker != nullptr && hop < kWitnessOwnerHops; ++hop) {
+        if (attacker == player->pev) {
+            return true;
+        }
+        if (FNullEnt(attacker->owner)) {
+            break;
+        }
+        attacker = VARS(attacker->owner);
+    }
+    return false;
+}
+
+// The map did it: no monster at the end of the attacker's owner chain. The
+// world, a trigger_hurt, an env_explosion, a door or train crushing.
+bool CausedByMap(entvars_t* attacker) {
+    for (int hop = 0; attacker != nullptr && hop < kWitnessOwnerHops; ++hop) {
+        CBaseEntity* entity = CBaseEntity::Instance(attacker);
+        if (entity != nullptr && entity->MyMonsterPointer() != nullptr) {
+            return false;
+        }
+        if (FNullEnt(attacker->owner)) {
+            break;
+        }
+        attacker = VARS(attacker->owner);
+    }
+    return true;
+}
+
+// Why a tagged death counts, or nullptr when it does not.
+const char* Witnessed(CBasePlayer* player, CBaseEntity* monster, entvars_t* attacker) {
+    if (CausedBy(player, attacker)) {
+        return "player caused it";
+    }
+    if (CausedByMap(attacker)) {
+        return "map caused it";
+    }
+    // The engine's own "could this client see here at all" test. No view cone:
+    // behind you in plain sight still counts.
+    if (FIND_CLIENT_IN_PVS(monster->edict()) != player->edict()) {
+        return nullptr;
+    }
+    const Vector eye = player->pev->origin + player->pev->view_ofs;
+    for (float rise : kWitnessAimRises) {
+        TraceResult tr;
+        UTIL_TraceLine(eye, monster->pev->origin + Vector(0, 0, rise), dont_ignore_monsters,
+                       player->edict(), &tr);
+        if (tr.flFraction >= 1.0f || tr.pHit == monster->edict()) {
+            return "seen";
+        }
+    }
+    if ((monster->pev->origin - player->pev->origin).Length() <= kWitnessHearRadius) {
+        return "close by";
+    }
+    return nullptr;
+}
+}  // namespace
+
+void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker) {
+    // Once per death: `Killed` returns early on a second call before this.
+    if (monster == nullptr || monster->m_apLocation == 0 || !Live()) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    const char* why = Witnessed(player, monster, attacker);
+    ALERT(at_console, "AP: %s died, %s\n", STRING(monster->pev->classname),
+          why != nullptr ? why : "unwitnessed, nothing sent");
+    if (why != nullptr) {
+        SendCheck(monster->m_apLocation);
+    }
+}
+
+void OnNpcScriptDeath(CBaseEntity* monster) {
+    // A scripted sequence playing a death: the map's own event, always counted.
+    if (monster == nullptr || monster->m_apLocation == 0 || !Live()) {
+        return;
+    }
+    ALERT(at_console, "AP: %s died, scripted death\n", STRING(monster->pev->classname));
+    SendCheck(monster->m_apLocation);
+}
+
+void ListTagged() {
+    int count = 0;
+    for (int index = 1; index < gpGlobals->maxEntities; ++index) {
+        edict_t* edict = INDEXENT(index);
+        if (edict == nullptr || edict->free) {
+            continue;
+        }
+        CBaseEntity* entity = CBaseEntity::Instance(edict);
+        if (entity == nullptr || entity->m_apLocation == 0) {
+            continue;
+        }
+        ++count;
+        const Location* location = Data().LocationById(entity->m_apLocation);
+        std::string line = location != nullptr ? location->name : "?";
+        line += " | " + std::string(STRING(entity->pev->classname));
+        if (!FStringNull(entity->pev->targetname)) {
+            line += " \"" + std::string(STRING(entity->pev->targetname)) + "\"";
+        }
+        if (location != nullptr && Collected(*location)) {
+            line += " | sent";
+        }
+        CBaseMonster* monster = entity->MyMonsterPointer();
+        if (monster != nullptr) {
+            line += monster->IsAlive() ? " | alive" : " | dead";
+            line += entity->pev->takedamage == DAMAGE_NO ? " | no damage" : "";
+            line += monster->m_pCine != nullptr ? " | in a script" : "";
+        }
+        Say(line);
+    }
+    Say(std::to_string(count) + " tagged in " + CurrentMap() + ".");
+}
+
+namespace {
+enum class LabelMode { kOff, kNpcs, kAll };
+// What `ap_labels` / `!labels` asked for. Until the player says, labels follow
+// the seed: on NPCs when Scientistsanity or Barneysanity put any in it.
+LabelMode g_label_mode = LabelMode::kOff;
+bool g_label_chosen = false;
+// The mode the client's list was built for.
+LabelMode g_label_shown = LabelMode::kOff;
+// What the client was last told, by entity index.
+std::unordered_map<int, std::string> g_label_sent;
+bool g_label_clear = false;
+float g_label_next = 0.0f;
+float g_label_alive_since = -1.0f;
+// How often the entities are looked over, and how many changes go per frame:
+// the reliable channel overflows (and drops the client) if a map's worth of
+// pickups goes out at once.
+constexpr float kLabelInterval = 0.25f;
+constexpr int kLabelsPerFrame = 8;
+
+void SendLabel(CBasePlayer* player, int index, const std::string& text) {
+    MESSAGE_BEGIN(MSG_ONE, gmsgAPLabel, nullptr, player->pev);
+    WRITE_SHORT(index);
+    WRITE_STRING(text.c_str());
+    MESSAGE_END();
+}
+
+// Whether the seed has any scientist or barney check in it.
+bool NpcChecksInSeed() {
+    if (!Live()) {
+        return false;  // no seed yet, and `InSeed` would say yes to everything
+    }
+    for (const Location& location : Data().locations) {
+        if ((location.type == TriggerType::Scientist || location.type == TriggerType::Barney) &&
+            State().InSeed(location.id)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+LabelMode EffectiveLabelMode() {
+    if (g_label_chosen) {
+        return g_label_mode;
+    }
+    return NpcChecksInSeed() ? LabelMode::kNpcs : LabelMode::kOff;
+}
+
+// The label an entity should carry now, or "" for none.
+std::string LabelFor(CBaseEntity* entity, LabelMode mode) {
+    if (entity == nullptr || entity->m_apLocation == 0) {
+        return "";
+    }
+    CBaseMonster* monster = entity->MyMonsterPointer();
+    if (mode == LabelMode::kNpcs && monster == nullptr) {
+        return "";
+    }
+    const Location* location = Data().LocationById(entity->m_apLocation);
+    if (location == nullptr) {
+        return "";
+    }
+    // The mission is the map the player is standing in; the rest tells them apart.
+    std::string text = location->name;
+    const size_t colon = text.find(": ");
+    if (colon != std::string::npos) {
+        text = text.substr(colon + 2);
+    }
+    if (Collected(*location)) {
+        text += " [sent]";
+    } else if (monster != nullptr && !monster->IsAlive()) {
+        text += " [dead]";
+    }
+    return text;
+}
+}  // namespace
+
+void SetLabels(const std::string& mode) {
+    const std::string m = Lower(Trim(mode));
+    if (m == "all") {
+        g_label_mode = LabelMode::kAll;
+    } else if (m == "npcs" || m == "npc") {
+        g_label_mode = LabelMode::kNpcs;
+    } else if (m == "off") {
+        g_label_mode = LabelMode::kOff;
+    } else if (m.empty()) {
+        g_label_mode = EffectiveLabelMode() == LabelMode::kOff ? LabelMode::kNpcs
+                                                               : LabelMode::kOff;
+    } else {
+        Say("!labels [npcs|all|off]");
+        return;
+    }
+    g_label_chosen = true;
+    Say(g_label_mode == LabelMode::kOff  ? "Labels off."
+        : g_label_mode == LabelMode::kAll ? "Labels on every tagged check."
+                                          : "Labels on scientists and guards.");
+}
+
+void ResetLabels() {
+    // The client cleared its own list on connect.
+    g_label_sent.clear();
+    g_label_clear = false;
+    g_label_alive_since = -1.0f;
+    g_label_next = 0.0f;
+}
+
+void RunLabels() {
+    const LabelMode mode = EffectiveLabelMode();
+    if (mode != g_label_shown) {
+        g_label_shown = mode;
+        g_label_sent.clear();
+        g_label_clear = true;
+    }
+    if (mode == LabelMode::kOff && !g_label_clear) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr || !player->IsAlive()) {
+        g_label_alive_since = -1.0f;
+        return;
+    }
+    // Messages before the client is in the level are lost: wait a second.
+    if (g_label_alive_since < 0.0f || gpGlobals->time < g_label_alive_since) {
+        g_label_alive_since = gpGlobals->time;
+        return;
+    }
+    if (gpGlobals->time - g_label_alive_since < 1.0f) {
+        return;
+    }
+    if (g_label_clear) {
+        SendLabel(player, 0, "");
+        g_label_clear = false;
+        g_label_next = 0.0f;
+    }
+    if (mode == LabelMode::kOff) {
+        return;
+    }
+    if (gpGlobals->time < g_label_next && gpGlobals->time + 1.0f >= g_label_next) {
+        return;
+    }
+    int budget = kLabelsPerFrame;
+    for (int index = 1; index < gpGlobals->maxEntities; ++index) {
+        edict_t* edict = INDEXENT(index);
+        CBaseEntity* entity =
+            edict == nullptr || edict->free ? nullptr : CBaseEntity::Instance(edict);
+        const std::string text = LabelFor(entity, mode);
+        const auto sent = g_label_sent.find(index);
+        if (sent == g_label_sent.end() ? text.empty() : sent->second == text) {
+            continue;
+        }
+        if (budget-- == 0) {
+            return;  // the rest next frame, without waiting out the interval
+        }
+        SendLabel(player, index, text);
+        if (text.empty()) {
+            g_label_sent.erase(index);
+        } else {
+            g_label_sent[index] = text;
+        }
+    }
+    g_label_next = gpGlobals->time + kLabelInterval;
 }
 
 void OnTargetFired(const char* targetname) {

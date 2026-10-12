@@ -42,7 +42,7 @@ public:
 	int m_iTrail;
 	float m_flIgniteTime;
 	int m_velocity;
-	bool m_iSoundedOff;
+	BOOL m_iSoundedOff;
 };
 
 TYPEDESCRIPTION CMortarShell::m_SaveData[] =
@@ -275,7 +275,7 @@ public:
 	int d_x;
 	int d_y;
 	float m_lastupdate;
-	bool m_playsound;
+	BOOL m_playsound;
 	int m_updated;
 	int m_direction;
 	Vector m_start;
@@ -289,7 +289,7 @@ public:
 	int m_iEnemyType;
 	float m_fireDelay;
 	float m_trackDelay;
-	bool m_tracking;
+	BOOL m_tracking;
 	float m_zeroYaw;
 	Vector m_vGunAngle;
 	Vector m_vIdealGunVector;

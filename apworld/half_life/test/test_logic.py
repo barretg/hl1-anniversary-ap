@@ -14,6 +14,7 @@ from . import HalfLifeTestBase
 from ..data import (
     AIR_ACCELERATE_CAP,
     AIR_ACCELERATE_LADDER,
+    CAMPAIGNS,
     CHAPTERS,
     CHAPTERS_BY_KEY,
     LOCATIONS,
@@ -322,6 +323,116 @@ class TestMicrowaveIncluded(HalfLifeTestBase):
         self.assertIn(MICROWAVE, names)
         self.assertTrue(self.world.fill_slot_data()["include_microwave"])
         self.assertNotIn("microwave", self.world.fill_slot_data()["excluded_triggers"])
+
+
+PICKUP_TRIGGERS = ("heal_pickup", "ammo_pickup", "scientist", "barney")
+SANITY_KEYS = ("healsanity", "ammosanity", "scientistsanity", "barneysanity")
+
+
+class TestPickupsDefault(HalfLifeTestBase):
+    options = {}
+
+    def test_off_by_default(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        kinds = {e["trigger"]["type"] for e in LOCATIONS if e["name"] in names}
+        self.assertFalse(kinds & set(PICKUP_TRIGGERS))
+        slot_data = self.world.fill_slot_data()
+        for key in SANITY_KEYS:
+            self.assertFalse(slot_data[key])
+
+
+class TestPickupsIncluded(HalfLifeTestBase):
+    """Every game in, every pickup a check, and the seed still generates."""
+
+    options = {"healsanity": True, "ammosanity": True,
+               "scientistsanity": True, "barneysanity": True,
+               "include_opposing_force": True, "include_blue_shift": True}
+
+    def test_pickups_are_checks(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        for kind in PICKUP_TRIGGERS:
+            wanted = {e["name"] for e in LOCATIONS if e["trigger"]["type"] == kind
+                      and not e["trigger"].get("critical")
+                      and e["chapter"] not in self.world.excluded_chapters}
+            self.assertTrue(wanted)
+            self.assertLessEqual(wanted, names)
+        slot_data = self.world.fill_slot_data()
+        for key in SANITY_KEYS:
+            self.assertTrue(slot_data[key])
+
+
+class TestNpcsWithIntros(HalfLifeTestBase):
+    """The intro rides' NPCs are in, and each waits on a gun."""
+
+    options = {"scientistsanity": True, "barneysanity": True,
+               "exclude_intro_missions": False,
+               "include_opposing_force": True, "include_blue_shift": True}
+
+    def test_intro_npcs_need_a_ranged_weapon(self) -> None:
+        intro = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney")
+                 and e.get("gates")]
+        self.assertTrue(intro)
+        state = self.multiworld.state.copy()
+        for entry in intro:
+            location = self.multiworld.get_location(entry["name"], self.player)
+            self.assertFalse(location.access_rule(state), entry["name"])
+
+
+class TestNpcsIntrosExcluded(HalfLifeTestBase):
+    """With the intros out, none of their NPCs are checks; the rest still are."""
+
+    options = {"scientistsanity": True, "barneysanity": True,
+               "exclude_intro_missions": True,
+               "include_opposing_force": True, "include_blue_shift": True}
+
+    def test_no_intro_npcs(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        intros = {c["intro_chapter"] for c in CAMPAIGNS}
+        npcs = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney")]
+        in_intro = {e["name"] for e in npcs if e["chapter"] in intros}
+        elsewhere = {e["name"] for e in npcs if e["chapter"] not in intros
+                     and not e["trigger"].get("critical")}
+        self.assertTrue(in_intro)
+        self.assertFalse(in_intro & names)
+        self.assertLessEqual(elsewhere, names)
+
+
+class TestCriticalNpcsDefault(HalfLifeTestBase):
+    """Mission-critical NPCs stay out unless asked for."""
+
+    options = {"scientistsanity": True, "barneysanity": True,
+               "include_opposing_force": True, "include_blue_shift": True}
+
+    def test_left_out(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        critical = {e["name"] for e in LOCATIONS if e["trigger"].get("critical")}
+        self.assertTrue(critical)
+        self.assertFalse(critical & names)
+        self.assertFalse(self.world.fill_slot_data()["include_critical_npcs"])
+
+
+class TestCriticalNpcsIncluded(HalfLifeTestBase):
+    options = {"scientistsanity": True, "barneysanity": True,
+               "include_critical_npcs": True,
+               "include_opposing_force": True, "include_blue_shift": True}
+
+    def test_put_in(self) -> None:
+        names = {
+            location.name for location in self.multiworld.get_locations(self.player)
+        }
+        critical = {e["name"] for e in LOCATIONS if e["trigger"].get("critical")
+                    and e["chapter"] not in self.world.excluded_chapters}
+        self.assertTrue(critical)
+        self.assertLessEqual(critical, names)
+        self.assertTrue(self.world.fill_slot_data()["include_critical_npcs"])
 
 
 class TestItemGroups(HalfLifeTestBase):

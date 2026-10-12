@@ -154,6 +154,7 @@ CLIPNODE_STRUCT_SIZE = 8
 
 CONTENTS_EMPTY = -1
 CONTENTS_SOLID = -2
+CONTENTS_SKY = -6
 
 # Hulls 1 and 2 are the standing and crouching player. Hull 0 is a point, which
 # is not what a player is: a point can sit in a gap no body fits through.
@@ -219,6 +220,67 @@ class ClipHull:
             )
             node = front if side >= 0 else back
         return node
+
+
+LUMP_NODES = 5
+LUMP_LEAFS = 10
+NODE_STRUCT_SIZE = 24
+LEAF_STRUCT_SIZE = 28
+
+
+class PointHull:
+    """The world's render tree, which is what a bullet's line trace walks.
+
+    Hull 0 is not a clip hull: its headnode indexes the node lump, and a
+    negative child `-(leaf + 1)` names a leaf holding the contents. Brush
+    entities are not in it, so a train's own windows never block a line.
+    """
+
+    def __init__(self, bsp_path: Path) -> None:
+        with bsp_path.open("rb") as handle:
+            table = lump_table(handle, bsp_path)
+
+            def lump(index: int) -> bytes:
+                handle.seek(table[index][0])
+                return handle.read(table[index][1])
+
+            planes_raw = lump(LUMP_PLANES)
+            nodes_raw = lump(LUMP_NODES)
+            leafs_raw = lump(LUMP_LEAFS)
+            models_raw = lump(LUMP_MODELS)
+        self.planes = [
+            (struct.unpack_from("<3f", planes_raw, i * PLANE_STRUCT_SIZE),
+             struct.unpack_from("<f", planes_raw, i * PLANE_STRUCT_SIZE + 12)[0])
+            for i in range(len(planes_raw) // PLANE_STRUCT_SIZE)
+        ]
+        self.nodes = [struct.unpack_from("<ihh", nodes_raw, i * NODE_STRUCT_SIZE)
+                      for i in range(len(nodes_raw) // NODE_STRUCT_SIZE)]
+        self.leaf_contents = [struct.unpack_from("<i", leafs_raw, i * LEAF_STRUCT_SIZE)[0]
+                              for i in range(len(leafs_raw) // LEAF_STRUCT_SIZE)]
+        self.headnode = struct.unpack_from("<i", models_raw, 36)[0]
+
+    def contents(self, point: tuple[float, float, float]) -> int:
+        node = self.headnode
+        while node >= 0:
+            plane_number, front, back = self.nodes[node]
+            normal, distance = self.planes[plane_number]
+            side = (normal[0] * point[0] + normal[1] * point[1]
+                    + normal[2] * point[2] - distance)
+            node = front if side >= 0 else back
+        return self.leaf_contents[-node - 1]
+
+    def clear_line(self, a: tuple[float, float, float],
+                   b: tuple[float, float, float], step: float = 8.0) -> bool:
+        """No solid world or sky between the two points, sampled every `step`
+        units. Water does not stop a bullet."""
+        length = sum((q - p) ** 2 for p, q in zip(a, b)) ** 0.5
+        count = max(1, int(length / step))
+        for i in range(1, count):
+            t = i / count
+            if self.contents(tuple(p + (q - p) * t for p, q in zip(a, b))) in (
+                    CONTENTS_SOLID, CONTENTS_SKY):
+                return False
+        return True
 
 
 def origin_of(entity: dict[str, str]) -> tuple[float, float, float] | None:

@@ -229,32 +229,43 @@ index 7c4a6ea..f0f48ba 100644
 +	return best;
  }
 diff --git a/cl_dll/cdll_int.cpp b/cl_dll/cdll_int.cpp
-index e1e4724..ba8d273 100644
+index e1e4724..d49b61e 100644
 --- a/cl_dll/cdll_int.cpp
 +++ b/cl_dll/cdll_int.cpp
-@@ -34,6 +34,8 @@ extern "C"
+@@ -34,6 +34,9 @@ extern "C"
  #include "hud_servers.h"
  #include "vgui_int.h"
  #include "interface.h"
 +#include "ap_whiteboard.h"	// AP
 +#include "ap_hdlock.h"	// AP
++#include "ap_labels.h"	// AP
  
  #ifdef _WIN32
  #include "winsani_in.h"
-@@ -175,6 +177,8 @@ int CL_DLLEXPORT HUD_VidInit( void )
+@@ -175,6 +178,9 @@ int CL_DLLEXPORT HUD_VidInit( void )
  {
  //	RecClHudVidInit();
  	gHUD.VidInit();
 +	APWhiteboard_VidInit();	// AP
 +	APHDLock_VidInit();	// AP
++	APLabels_VidInit();	// AP
  
  	VGui_Startup();
  
-@@ -214,6 +218,7 @@ int CL_DLLEXPORT HUD_Redraw( float time, int intermission )
+@@ -196,6 +202,7 @@ void CL_DLLEXPORT HUD_Init( void )
+ //	RecClHudInit();
+ 	InitInput();
+ 	gHUD.Init();
++	APLabels_Init();	// AP
+ 	Scheme_Init();
+ }
+ 
+@@ -214,6 +221,8 @@ int CL_DLLEXPORT HUD_Redraw( float time, int intermission )
  //	RecClHudRedraw(time, intermission);
  
  	gHUD.Redraw( time, intermission );
 +	APWhiteboard_Frame();	// AP
++	APLabels_Frame();	// AP
  
  	return 1;
  }
@@ -1775,7 +1786,7 @@ index 638d9fb..b0c9d46 100644
  
  
 diff --git a/dlls/cbase.cpp b/dlls/cbase.cpp
-index a77605d..04e0c37 100644
+index a77605d..d5984bb 100644
 --- a/dlls/cbase.cpp
 +++ b/dlls/cbase.cpp
 @@ -20,6 +20,7 @@
@@ -1786,7 +1797,7 @@ index a77605d..04e0c37 100644
  
  void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
  
-@@ -132,6 +133,8 @@ int DispatchSpawn( edict_t *pent )
+@@ -132,10 +133,15 @@ int DispatchSpawn( edict_t *pent )
  
  	if (pEntity)
  	{
@@ -1795,8 +1806,34 @@ index a77605d..04e0c37 100644
  		// Initialize these or entities who don't link to the world won't have anything in here
  		pEntity->pev->absmin = pEntity->pev->origin - Vector(1,1,1);
  		pEntity->pev->absmax = pEntity->pev->origin + Vector(1,1,1);
+ 
++		// Archipelago: a placed pickup, keyed on its origin before Spawn moves it.
++		ap::TagPickup( pEntity, false );
++
+ 		pEntity->Spawn();
+ 
+ 		// Try to get the pointer again, in case the spawn function deleted the entity.
+@@ -143,6 +149,10 @@ int DispatchSpawn( edict_t *pent )
+ 		// that would touch too much code for me to do that right now.
+ 		pEntity = (CBaseEntity *)GET_PRIVATE(pent);
+ 
++		// Archipelago: a crate, keyed on its brush, which Spawn has just set.
++		if ( pEntity )
++			ap::TagPickup( pEntity, true );
++
+ 		if ( pEntity )
+ 		{
+ 			if ( g_pGameRules && !g_pGameRules->IsAllowedToSpawn( pEntity ) )
+@@ -589,6 +599,7 @@ TYPEDESCRIPTION	CBaseEntity::m_SaveData[] =
+ 	DEFINE_FIELD( CBaseEntity, m_pfnTouch, FIELD_FUNCTION ),
+ 	DEFINE_FIELD( CBaseEntity, m_pfnUse, FIELD_FUNCTION ),
+ 	DEFINE_FIELD( CBaseEntity, m_pfnBlocked, FIELD_FUNCTION ),
++	DEFINE_FIELD( CBaseEntity, m_apLocation, FIELD_INTEGER ), // Archipelago
+ };
+ 
+ 
 diff --git a/dlls/cbase.h b/dlls/cbase.h
-index 4b7ad65..a2fbf98 100644
+index 4b7ad65..9ea1789 100644
 --- a/dlls/cbase.h
 +++ b/dlls/cbase.h
 @@ -111,11 +111,17 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
@@ -1830,7 +1867,7 @@ index 4b7ad65..a2fbf98 100644
  };
  
  
-@@ -185,6 +197,11 @@ public:
+@@ -185,6 +197,15 @@ public:
  	virtual CBaseToggle* MyTogglePointer(void) { return NULL; }
  	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
  	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
@@ -1839,10 +1876,14 @@ index 4b7ad65..a2fbf98 100644
 +	// Archipelago: from halflife-updated; entity_state_t::eflags this entity
 +	// always sends. Not saved.
 +	byte m_EFlags = 0;
++
++	// Archipelago: the location id a counted pickup or crate sends when touched,
++	// 0 for everything else. Saved, so a restored map keeps its checks.
++	int m_apLocation = 0;
  	virtual	int		GetToggleState( void ) { return TS_AT_TOP; }
  	virtual void	AddPoints( int score, BOOL bAllowNegativeScore ) {}
  	virtual void	AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
-@@ -275,6 +292,15 @@ public:
+@@ -275,6 +296,15 @@ public:
  	static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
  	static CBaseEntity *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
  
@@ -1858,7 +1899,7 @@ index 4b7ad65..a2fbf98 100644
  	CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
  	{ 
  		CBaseEntity *pEntity = Instance( pevMonster );
-@@ -360,6 +386,8 @@ public:
+@@ -360,6 +390,8 @@ public:
  	int ammo_uranium;
  	int ammo_hornets;
  	int ammo_argrens;
@@ -1966,18 +2007,19 @@ index e2f30b7..8819b93 100644
  
  			if ( pl->m_pActiveItem )
 diff --git a/dlls/combat.cpp b/dlls/combat.cpp
-index 5acd32b..5d8f9e4 100644
+index 5acd32b..8f4883d 100644
 --- a/dlls/combat.cpp
 +++ b/dlls/combat.cpp
-@@ -29,6 +29,7 @@
+@@ -29,6 +29,8 @@
  #include "animation.h"
  #include "weapons.h"
  #include "func_break.h"
++#include "ap_main.h"
 +#include <vector>
  
  extern DLL_GLOBAL Vector		g_vecAttackDir;
  extern DLL_GLOBAL int			g_iSkillLevel;
-@@ -252,6 +253,82 @@ void CGib :: SpawnRandomGibs( entvars_t *pevVictim, int cGibs, int human )
+@@ -252,6 +254,82 @@ void CGib :: SpawnRandomGibs( entvars_t *pevVictim, int cGibs, int human )
  	}
  }
  
@@ -2060,7 +2102,7 @@ index 5acd32b..5d8f9e4 100644
  
  BOOL CBaseMonster :: HasHumanGibs( void )
  {
-@@ -260,7 +337,8 @@ BOOL CBaseMonster :: HasHumanGibs( void )
+@@ -260,7 +338,8 @@ BOOL CBaseMonster :: HasHumanGibs( void )
  	if ( myClass == CLASS_HUMAN_MILITARY ||
  		 myClass == CLASS_PLAYER_ALLY	||
  		 myClass == CLASS_HUMAN_PASSIVE  ||
@@ -2070,7 +2112,7 @@ index 5acd32b..5d8f9e4 100644
  
  		 return TRUE;
  
-@@ -277,7 +355,8 @@ BOOL CBaseMonster :: HasAlienGibs( void )
+@@ -277,7 +356,8 @@ BOOL CBaseMonster :: HasAlienGibs( void )
  		 myClass == CLASS_ALIEN_PASSIVE  ||
  		 myClass == CLASS_INSECT  ||
  		 myClass == CLASS_ALIEN_PREDATOR  ||
@@ -2080,7 +2122,17 @@ index 5acd32b..5d8f9e4 100644
  
  		 return TRUE;
  
-@@ -635,6 +714,8 @@ void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib )
+@@ -602,6 +682,9 @@ void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib )
+ 
+ 	Remember( bits_MEMORY_KILLED );
+ 
++	// Archipelago: Scientistsanity and Barneysanity, once per death.
++	ap::OnNpcKilled( this, pevAttacker );
++
+ 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
+ 	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
+ 	m_IdealMonsterState = MONSTERSTATE_DEAD;
+@@ -635,6 +718,8 @@ void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib )
  	//pev->enemy = ENT( pevAttacker );//why? (sjb)
  	
  	m_IdealMonsterState = MONSTERSTATE_DEAD;
@@ -2089,7 +2141,17 @@ index 5acd32b..5d8f9e4 100644
  }
  
  //
-@@ -1474,6 +1555,32 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
+@@ -902,6 +987,9 @@ int CBaseMonster :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
+ 	// HACKHACK Don't kill monsters in a script.  Let them break their scripts first
+ 	if ( m_MonsterState == MONSTERSTATE_SCRIPT )
+ 	{
++		// Archipelago: a lethal hit here dies through CineCleanup, never Killed().
++		if ( pev->health <= 0 )
++			ap::OnNpcKilled( this, pevAttacker );
+ 		SetConditions( bits_COND_LIGHT_DAMAGE );
+ 		return 0;
+ 	}
+@@ -1474,6 +1562,32 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
  					DecalGunshot( &tr, iBulletType );
  				}
  				break;
@@ -2122,7 +2184,7 @@ index 5acd32b..5d8f9e4 100644
  			
  			case BULLET_NONE: // FIX 
  				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
-@@ -1564,6 +1671,54 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
+@@ -1564,6 +1678,54 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
  			case BULLET_PLAYER_357:		
  				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET); 
  				break;
@@ -2468,6 +2530,31 @@ index 44e3f3b..586f8d1 100644
 +		m_flLastTime = gpGlobals->time;
 +	}
 +}
+diff --git a/dlls/func_break.cpp b/dlls/func_break.cpp
+index 0e39a2e..a4708fc 100644
+--- a/dlls/func_break.cpp
++++ b/dlls/func_break.cpp
+@@ -26,6 +26,7 @@
+ #include "func_break.h"
+ #include "decals.h"
+ #include "explode.h"
++#include "ap_main.h"
+ 
+ extern DLL_GLOBAL Vector		g_vecAttackDir;
+ 
+@@ -746,7 +747,11 @@ void CBreakable::Die( void )
+ 	SetThink( &CBreakable::SUB_Remove );
+ 	pev->nextthink = pev->ltime + 0.1;
+ 	if ( m_iszSpawnObject )
+-		CBaseEntity::Create( (char *)STRING(m_iszSpawnObject), VecBModelOrigin(pev), pev->angles, edict() );
++	{
++		CBaseEntity *pDrop = CBaseEntity::Create( (char *)STRING(m_iszSpawnObject), VecBModelOrigin(pev), pev->angles, edict() );
++		// Archipelago: the crate's check goes with what it drops.
++		ap::OnCrateDrop( this, pDrop );
++	}
+ 
+ 
+ 	if ( Explodable() )
 diff --git a/dlls/game.cpp b/dlls/game.cpp
 index 6f2db09..d129c62 100644
 --- a/dlls/game.cpp
@@ -2699,11 +2786,41 @@ index 5a74889..caf0903 100644
  	// if there is no juice left, turn it off
  	if (m_iJuice <= 0)
  	{
+diff --git a/dlls/items.cpp b/dlls/items.cpp
+index 988d3cb..fb3a384 100644
+--- a/dlls/items.cpp
++++ b/dlls/items.cpp
+@@ -28,6 +28,7 @@
+ #include "skill.h"
+ #include "items.h"
+ #include "gamerules.h"
++#include "ap_main.h"
+ 
+ extern int gmsgItemPickup;
+ 
+@@ -113,6 +114,9 @@ void CItem::ItemTouch( CBaseEntity *pOther )
+ 		return;
+ 	}
+ 
++	// Archipelago: touching it is the check, whether or not it can be taken.
++	ap::OnPickupTouched( pOther, this );
++
+ 	CBasePlayer *pPlayer = (CBasePlayer *)pOther;
+ 
+ 	// ok, a player is touching this item, but can he have it?
 diff --git a/dlls/monsters.cpp b/dlls/monsters.cpp
-index 19e0e23..706d9a5 100644
+index 19e0e23..9dfff14 100644
 --- a/dlls/monsters.cpp
 +++ b/dlls/monsters.cpp
-@@ -525,6 +525,8 @@ void CBaseMonster :: MonsterThink ( void )
+@@ -33,6 +33,7 @@
+ #include "decals.h"
+ #include "soundent.h"
+ #include "gamerules.h"
++#include "ap_main.h"
+ 
+ #define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
+ 
+@@ -525,6 +526,8 @@ void CBaseMonster :: MonsterThink ( void )
  
  	RunAI();
  
@@ -2712,7 +2829,7 @@ index 19e0e23..706d9a5 100644
  	float flInterval = StudioFrameAdvance( ); // animate
  // start or end a fidget
  // This needs a better home -- switching animations over time should be encapsulated on a per-activity basis
-@@ -2198,22 +2200,29 @@ int CBaseMonster::TaskIsRunning( void )
+@@ -2198,22 +2201,29 @@ int CBaseMonster::TaskIsRunning( void )
  //=========================================================
  int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
  {
@@ -2758,7 +2875,16 @@ index 19e0e23..706d9a5 100644
  	};
  
  	return iEnemy[ Classify() ][ pTarget->Classify() ];
-@@ -2663,6 +2672,19 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+@@ -2635,6 +2645,8 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+ 		if ( m_MonsterState == MONSTERSTATE_SCRIPT )
+ 		{
+ 			pev->deadflag = DEAD_DYING;
++			// Archipelago: this death never reaches Killed().
++			ap::OnNpcScriptDeath( this );
+ 			// Kill me now! (and fade out when CineCleanup() is called)
+ #if _DEBUG
+ 			ALERT( at_aiconsole, "Death event: %s\n", STRING(pev->classname) );
+@@ -2663,6 +2675,19 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
  		EMIT_SOUND( edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE );
  		break;
  
@@ -2778,7 +2904,7 @@ index 19e0e23..706d9a5 100644
  	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
  		if (RANDOM_LONG(0,2) == 0)
  			break;
-@@ -3434,3 +3456,59 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
+@@ -3434,3 +3459,59 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
  
  	return FALSE;
  }
@@ -2881,7 +3007,7 @@ index 591ea52..3dc2880 100644
  
  	int		m_bloodColor;
 diff --git a/dlls/plats.cpp b/dlls/plats.cpp
-index eacfd2c..465ec32 100644
+index eacfd2c..f079b83 100644
 --- a/dlls/plats.cpp
 +++ b/dlls/plats.cpp
 @@ -929,6 +929,414 @@ void CFuncTrain::OverrideReset( void )
@@ -2919,12 +3045,12 @@ index eacfd2c..465ec32 100644
 +
 +	entvars_t* m_pevCurrentTarget;
 +	int m_sounds;
-+	bool m_activated;
++	BOOL m_activated;
 +
 +	float m_maxFrame;
 +	float m_lastTime;
-+	bool m_waiting;
-+	bool m_nexting;
++	BOOL m_waiting;
++	BOOL m_nexting;
 +	float m_nextTime;
 +	float m_waitTime;
 +	bool m_stopSprite;
@@ -3300,7 +3426,7 @@ index eacfd2c..465ec32 100644
  //
  // Track Train
 diff --git a/dlls/player.cpp b/dlls/player.cpp
-index 85b67c4..4e2d672 100644
+index 85b67c4..4dff7d5 100644
 --- a/dlls/player.cpp
 +++ b/dlls/player.cpp
 @@ -24,6 +24,7 @@
@@ -3323,15 +3449,16 @@ index 85b67c4..4e2d672 100644
  	
  };	
  
-@@ -159,6 +165,7 @@ int gmsgFlashBattery = 0;
+@@ -159,6 +165,8 @@ int gmsgFlashBattery = 0;
  int gmsgResetHUD = 0;
  int gmsgInitHUD = 0;
  int gmsgShowGameTitle = 0;
 +int gmsgAPCampaign = 0;
++int gmsgAPLabel = 0;
  int gmsgCurWeapon = 0;
  int gmsgHealth = 0;
  int gmsgDamage = 0;
-@@ -203,7 +210,7 @@ void LinkUserMessages( void )
+@@ -203,7 +211,7 @@ void LinkUserMessages( void )
  	gmsgSelAmmo = REG_USER_MSG("SelAmmo", sizeof(SelAmmo));
  	gmsgCurWeapon = REG_USER_MSG("CurWeapon", 3);
  	gmsgGeigerRange = REG_USER_MSG("Geiger", 1);
@@ -3340,15 +3467,16 @@ index 85b67c4..4e2d672 100644
  	gmsgFlashBattery = REG_USER_MSG("FlashBat", 1);
  	gmsgHealth = REG_USER_MSG( "Health", 1 );
  	gmsgDamage = REG_USER_MSG( "Damage", 12 );
-@@ -217,6 +224,7 @@ void LinkUserMessages( void )
+@@ -217,6 +225,8 @@ void LinkUserMessages( void )
  	gmsgResetHUD = REG_USER_MSG("ResetHUD", 1);		// called every respawn
  	gmsgInitHUD = REG_USER_MSG("InitHUD", 0 );		// called every time a new player joins the server
  	gmsgShowGameTitle = REG_USER_MSG("GameTitle", 1);
 +	gmsgAPCampaign = REG_USER_MSG("APCampaign", 1);
++	gmsgAPLabel = REG_USER_MSG("APLabel", -1);
  	gmsgDeathMsg = REG_USER_MSG( "DeathMsg", -1 );
  	gmsgScoreInfo = REG_USER_MSG( "ScoreInfo", 9 );
  	gmsgTeamInfo = REG_USER_MSG( "TeamInfo", -1 );  // sets the name of a player's team
-@@ -458,6 +466,9 @@ int CBasePlayer :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
+@@ -458,6 +468,9 @@ int CBasePlayer :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
  	flBonus = ARMOR_BONUS;
  	flRatio = ARMOR_RATIO;
  
@@ -3358,7 +3486,7 @@ index 85b67c4..4e2d672 100644
  	if ( ( bitsDamageType & DMG_BLAST ) && g_pGameRules->IsMultiplayer() )
  	{
  		// blasts damage armor more.
-@@ -928,6 +939,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
+@@ -928,6 +941,9 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
  {
  	CSound *pSound;
  
@@ -3368,7 +3496,7 @@ index 85b67c4..4e2d672 100644
  	// Holster weapon immediately, to allow it to cleanup
  	if ( m_pActiveItem )
  		m_pActiveItem->Holster( );
-@@ -1075,6 +1089,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
+@@ -1075,6 +1091,18 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
  			m_IdealActivity = ACT_WALK;
  		}
  		break;
@@ -3387,7 +3515,7 @@ index 85b67c4..4e2d672 100644
  	}
  
  	switch (m_IdealActivity)
-@@ -1204,6 +1230,8 @@ void CBasePlayer::TabulateAmmo()
+@@ -1204,6 +1232,8 @@ void CBasePlayer::TabulateAmmo()
  	ammo_rockets = AmmoInventory( GetAmmoIndex( "rockets" ) );
  	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
  	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
@@ -3396,7 +3524,7 @@ index 85b67c4..4e2d672 100644
  }
  
  
-@@ -1666,6 +1694,10 @@ void CBasePlayer::PlayerUse ( void )
+@@ -1666,6 +1696,10 @@ void CBasePlayer::PlayerUse ( void )
  		if ( m_afButtonPressed & IN_USE )
  			EMIT_SOUND( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM);
  
@@ -3407,7 +3535,7 @@ index 85b67c4..4e2d672 100644
  		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
  			 ( (m_afButtonPressed & IN_USE) && (caps & (FCAP_IMPULSE_USE|FCAP_ONOFF_USE)) ) )
  		{
-@@ -2001,6 +2033,9 @@ void CBasePlayer::PreThink(void)
+@@ -2001,6 +2035,9 @@ void CBasePlayer::PreThink(void)
  	else 
  		pev->flags &= ~FL_ONTRAIN;
  
@@ -3417,7 +3545,7 @@ index 85b67c4..4e2d672 100644
  	// Train speed control
  	if ( m_afPhysicsFlags & PFLAG_ONTRAIN )
  	{
-@@ -3085,6 +3120,12 @@ void CBasePlayer::Spawn( void )
+@@ -3085,6 +3122,12 @@ void CBasePlayer::Spawn( void )
  	m_flNextChatTime = gpGlobals->time;
  
  	g_pGameRules->PlayerSpawn( this );
@@ -3430,7 +3558,7 @@ index 85b67c4..4e2d672 100644
  }
  
  
-@@ -3507,7 +3548,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
+@@ -3507,7 +3550,7 @@ CBaseEntity *FindEntityForward( CBaseEntity *pMe )
  
  BOOL CBasePlayer :: FlashlightIsOn( void )
  {
@@ -3439,7 +3567,7 @@ index 85b67c4..4e2d672 100644
  }
  
  
-@@ -3518,13 +3559,22 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3518,13 +3561,22 @@ void CBasePlayer :: FlashlightTurnOn( void )
  		return;
  	}
  
@@ -3463,7 +3591,7 @@ index 85b67c4..4e2d672 100644
  		MESSAGE_END();
  
  		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-@@ -3536,10 +3586,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
+@@ -3536,10 +3588,11 @@ void CBasePlayer :: FlashlightTurnOn( void )
  void CBasePlayer :: FlashlightTurnOff( void )
  {
  	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
@@ -3476,7 +3604,7 @@ index 85b67c4..4e2d672 100644
  	MESSAGE_END();
  
  	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
-@@ -4105,6 +4156,11 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4105,6 +4158,11 @@ void CBasePlayer :: UpdateClientData( void )
  			WRITE_BYTE( 0 );
  		MESSAGE_END();
  
@@ -3488,7 +3616,7 @@ index 85b67c4..4e2d672 100644
  		if ( !m_fGameHUDInitialized )
  		{
  			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
-@@ -4129,6 +4185,7 @@ void CBasePlayer :: UpdateClientData( void )
+@@ -4129,6 +4187,7 @@ void CBasePlayer :: UpdateClientData( void )
  		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
  			WRITE_BYTE( FlashlightIsOn() ? 1 : 0 );
  			WRITE_BYTE( m_iFlashBattery );
@@ -3496,7 +3624,7 @@ index 85b67c4..4e2d672 100644
  		MESSAGE_END();
  	}
  
-@@ -4425,6 +4482,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
+@@ -4425,6 +4484,12 @@ void CBasePlayer :: EnableControl(BOOL fControl)
  // set crosshair position to point to enemey
  //=========================================================
  Vector CBasePlayer :: GetAutoaimVector( float flDelta )
@@ -3509,7 +3637,7 @@ index 85b67c4..4e2d672 100644
  {
  	if (g_iSkillLevel == SKILL_HARD)
  	{
-@@ -4432,7 +4495,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+@@ -4432,7 +4497,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
  		return gpGlobals->v_forward;
  	}
  
@@ -3518,7 +3646,7 @@ index 85b67c4..4e2d672 100644
  	float flDist = 8192;
  
  	// always use non-sticky autoaim
-@@ -5015,6 +5078,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+@@ -5015,6 +5080,10 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
  
  void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
  {
@@ -3530,7 +3658,7 @@ index 85b67c4..4e2d672 100644
  	pev->nextthink = gpGlobals->time + MessageTime();
  	SetThink( &CRevertSaved::MessageThink );
 diff --git a/dlls/player.h b/dlls/player.h
-index e7c7ced..3a722c3 100644
+index e7c7ced..d3cbcf3 100644
 --- a/dlls/player.h
 +++ b/dlls/player.h
 @@ -35,6 +35,7 @@
@@ -3571,7 +3699,7 @@ index e7c7ced..3a722c3 100644
 +	bool RopeThink( void ); // ap_port: true while on a rope (PreThink returns)
 +	class CRope *m_pRope = nullptr;
 +	float m_flLastClimbTime = 0;
-+	bool m_bIsClimbing = false;
++	BOOL m_bIsClimbing = FALSE;
 +	Vector m_DisplacerReturn;
 +	float m_DisplacerSndRoomtype;
  };
@@ -4089,7 +4217,7 @@ index 027d7fc..9c661d9 100644
  		CBaseMonster::KeyValue( pkvd );
  }
 diff --git a/dlls/talkmonster.h b/dlls/talkmonster.h
-index 3c1ff87..ed39cc8 100644
+index 3c1ff87..adda7ad 100644
 --- a/dlls/talkmonster.h
 +++ b/dlls/talkmonster.h
 @@ -170,6 +170,10 @@ public:
@@ -4098,7 +4226,7 @@ index 3c1ff87..ed39cc8 100644
  	EHANDLE		m_hTalkTarget;	// who to look at while talking
 +
 +	// Archipelago: from Opposing Force (the `suspicious` key).
-+	bool m_fStartSuspicious;
++	BOOL m_fStartSuspicious;
 +
  	CUSTOM_SCHEDULES;
  };
@@ -4390,18 +4518,19 @@ index 1f9ea5b..7233b68 100644
 +
 +
 diff --git a/dlls/weapons.cpp b/dlls/weapons.cpp
-index b9baa31..c37d394 100644
+index b9baa31..50e8ca8 100644
 --- a/dlls/weapons.cpp
 +++ b/dlls/weapons.cpp
-@@ -30,6 +30,7 @@
+@@ -30,6 +30,8 @@
  #include "soundent.h"
  #include "decals.h"
  #include "gamerules.h"
 +#include "ap_content.h"
++#include "ap_main.h"
  
  extern CGraph	WorldGraph;
  extern int gEvilImpulse101;
-@@ -384,6 +385,30 @@ void W_Precache(void)
+@@ -384,6 +386,30 @@ void W_Precache(void)
  #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
  	// hornetgun
  	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
@@ -4432,7 +4561,18 @@ index b9baa31..c37d394 100644
  #endif
  
  
-@@ -1008,8 +1033,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
+@@ -620,6 +646,10 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
+ 
+ 	CBasePlayer *pPlayer = (CBasePlayer *)pOther;
+ 
++	// Archipelago: a throwable placed as ammo is a check on touch, whether or
++	// not it can be taken. Only those carry a location; other weapons do not.
++	ap::OnPickupTouched( pOther, this );
++
+ 	// can I have this?
+ 	if ( !g_pGameRules->CanHavePlayerItem( pPlayer, this ) )
+ 	{
+@@ -1008,8 +1038,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
  		return FALSE;
  
  	m_pPlayer->TabulateAmmo();
@@ -4442,6 +4582,26 @@ index b9baa31..c37d394 100644
 +	m_pPlayer->pev->weaponmodel = MAKE_STRING(ap::ContentModel(szWeaponModel));
  	strcpy( m_pPlayer->m_szAnimExtention, szAnimExt );
  	SendWeaponAnim( iAnim, skiplocal, body );
+ 
+@@ -1122,6 +1152,9 @@ void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
+ 		return;
+ 	}
+ 
++	// Archipelago: touching it is the check, whether or not it can be taken.
++	ap::OnPickupTouched( pOther, this );
++
+ 	if ( IsPlayerBusting( pOther ) )
+ 		return;
+ 
+@@ -1344,6 +1377,9 @@ void CWeaponBox::Touch( CBaseEntity *pOther )
+ 		return;
+ 	}
+ 
++	// Archipelago: touching it is the check, whether or not it can be taken.
++	ap::OnPickupTouched( pOther, this );
++
+ 	CBasePlayer *pPlayer = (CBasePlayer *)pOther;
+ 	int i;
  
 diff --git a/dlls/weapons.h b/dlls/weapons.h
 index ab2d2e7..b2d6476 100644

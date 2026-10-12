@@ -3,6 +3,7 @@
 #include "cbase.h"
 
 #include "ap_content.h"
+#include "ap_locations.h"
 #include "ap_main.h"
 #include "ap_state.h"
 
@@ -389,6 +390,7 @@ bool ReadGordonHands() {
 
 void BeginMapContent() {
     Load();
+    OpenPickupTags();
     g_gordon_hands = ReadGordonHands();
     g_model_slots = 0;
     g_sound_slots = 0;

@@ -33,6 +33,9 @@ struct Destination {
     float position[3] = {0, 0, 0};
     // Placed crouched: the spot is in a vent a standing player does not fit.
     bool crouch = false;
+    // Only `tp` goes to the spot; arriving leaves the player at spawn, for a
+    // spot that would kill them.
+    bool manual = false;
 };
 
 Destination g_destination;
@@ -78,6 +81,8 @@ bool ReadDestination(Destination& out) {
             out.has_position = ParseVector(value, out.position);
         } else if (key == "crouch") {
             out.crouch = value == "1";
+        } else if (key == "manual") {
+            out.manual = value == "1";
         }
     }
     return !out.map.empty();
@@ -282,7 +287,9 @@ void RunTestHarness() {
         return;
     }
     g_arriving = false;
-    Teleport();
+    if (!g_destination.manual) {
+        Teleport();
+    }
     ShowSaid();
 #endif
 }

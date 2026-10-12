@@ -96,6 +96,34 @@ class Campaign:
     unreachable: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
         default_factory=dict
     )
+    # Pickups no player can reach that the automatic checks do not catch, as
+    # `{map: {(classname, (x, y, z))}}`: the origin keyvalue for a placed one,
+    # the crate's rounded centre for one a crate drops.
+    unreachable_pickups: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
+    # Scientists and barneys that cannot be killed, or whose death fails the
+    # mission, that the automatic exclusions miss: `{map: {(classname, (x, y,
+    # z))}}`, the origin keyvalue.
+    unkillable_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
+    # NPCs the automatic exclusions drop that play shows are fair checks: one a
+    # `killtarget` only removes after the player has passed, or an intro NPC
+    # the line-of-sight test missed. Same form.
+    killable_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
+    # `monster_generic` stand-ins wearing a scientist's or guard's model that
+    # can be killed, as `{map: {(kind, (x, y, z))}}` with kind "scientist" or
+    # "barney" and the origin keyvalue. Most generics are corpses, puppets in a
+    # sealed cutscene, or story characters, so only listed ones count.
+    generic_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
+    # The train the player rides in each intro map, by targetname. An intro
+    # map's NPCs count only if they can be seen from its route.
+    intro_trains: dict[str, str] = field(default_factory=dict)
     # False positives of the reachability analysis, in the same form.
     reachable: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
         default_factory=dict

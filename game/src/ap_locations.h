@@ -67,6 +67,38 @@ void OnChargerUsed(CBaseEntity* user, CBaseEntity* charger);
 // pressed, so they cannot come through `OnChargerUsed`.
 void OnHealingTouch(CBaseEntity* toucher, CBaseEntity* pool);
 
+// Healsanity and Ammosanity. `OpenPickupTags` and `ClosePickupTags` bracket the
+// map's entities spawning; `TagPickup` runs from `DispatchSpawn` for each, before
+// its `Spawn` (`spawned` false, for points) and after it (true, for crates), and
+// stores the location id of a counted pickup on it. `OnCrateDrop` hands a
+// crate's id to what it drops. `OnPickupTouched` sends a touched pickup's id.
+void OpenPickupTags();
+void ClosePickupTags();
+void TagPickup(CBaseEntity* entity, bool spawned);
+void OnCrateDrop(CBaseEntity* crate, CBaseEntity* drop);
+void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup);
+
+// Scientistsanity and Barneysanity. Scientists and barneys are tagged by
+// `TagPickup` like placed pickups; `OnNpcKilled`, from `CBaseMonster::Killed`,
+// sends a tagged one's id when the player witnessed the death (see
+// `Witnessed` in ap_locations.cpp). A death the map arranged always counts:
+// `OnNpcScriptDeath`, from a script's death event, which never reaches `Killed`.
+void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker);
+void OnNpcScriptDeath(CBaseEntity* monster);
+
+// `ap_tagged`: every entity in this map carrying a location id, for curating
+// which NPCs and pickups count.
+void ListTagged();
+
+// `!labels [npcs|all|off]`: each tagged check's name drawn over it by the
+// client (see src/client/ap_labels.h). On NPCs by default when the seed has
+// Scientistsanity or Barneysanity checks; bare toggles. `RunLabels`
+// keeps the client's list in step, every frame; `ResetLabels` at each map
+// start, since the client drops its list on every connect.
+void SetLabels(const std::string& mode);
+void RunLabels();
+void ResetLabels();
+
 // A weapon entered the player's inventory.
 void OnWeaponCollected(CBasePlayer* player, const std::string& classname);
 

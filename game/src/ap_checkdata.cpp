@@ -1,6 +1,7 @@
 #include "ap_checkdata.h"
 
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 
@@ -27,6 +28,10 @@ static TriggerType TriggerFromName(const std::string& name) {
     if (name == "charger") return TriggerType::Charger;
     if (name == "weapon_pickup") return TriggerType::WeaponPickup;
     if (name == "fired") return TriggerType::Fired;
+    if (name == "heal_pickup") return TriggerType::HealPickup;
+    if (name == "ammo_pickup") return TriggerType::AmmoPickup;
+    if (name == "scientist") return TriggerType::Scientist;
+    if (name == "barney") return TriggerType::Barney;
     return TriggerType::Unknown;
 }
 
@@ -40,9 +45,35 @@ static bool ParseChargerArg(const std::string& arg, Location& out) {
     return ParseVector(arg.substr(at + 1), out.at);
 }
 
+// A pickup's arg is `<classname>@<x y z>[#<ordinal>]`.
+static bool ParsePickupArg(const std::string& arg, Location& out) {
+    const size_t at = arg.find('@');
+    if (at == std::string::npos) {
+        return false;
+    }
+    out.pickup_classname = arg.substr(0, at);
+    out.crate = out.pickup_classname == "func_breakable" ||
+                out.pickup_classname == "func_pushable";
+    std::string where = arg.substr(at + 1);
+    const size_t hash = where.find('#');
+    if (hash != std::string::npos) {
+        out.ordinal = static_cast<int>(ParseLong(where.substr(hash + 1)));
+        where = where.substr(0, hash);
+    }
+    return ParseVector(where, out.at);
+}
+
+std::string PickupKey(const std::string& map, const std::string& classname,
+                      const int at[3], int ordinal) {
+    char where[64];
+    std::snprintf(where, sizeof(where), "|%d %d %d|%d", at[0], at[1], at[2], ordinal);
+    return map + "|" + classname + where;
+}
+
 bool CheckData::Load(const std::string& path) {
     chapters.clear();
     locations.clear();
+    pickup_index.clear();
     gated_classnames.clear();
     starting_weapons.clear();
     changelevels.clear();
@@ -113,6 +144,14 @@ bool CheckData::Load(const std::string& path) {
                 case TriggerType::Fired:
                     location.fires = f[4];
                     break;
+                case TriggerType::HealPickup:
+                case TriggerType::AmmoPickup:
+                case TriggerType::Scientist:
+                case TriggerType::Barney:
+                    if (!ParsePickupArg(f[4], location)) {
+                        continue;
+                    }
+                    break;
                 case TriggerType::Charger:
                     if (!ParseChargerArg(f[4], location)) {
                         // A charger we cannot place can never be matched, and
@@ -175,6 +214,20 @@ bool CheckData::Load(const std::string& path) {
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.
+    }
+
+    // After the last push_back, so the pointers stay good.
+    for (const Location& location : locations) {
+        if ((location.type == TriggerType::HealPickup ||
+             location.type == TriggerType::AmmoPickup ||
+             location.type == TriggerType::Scientist ||
+             location.type == TriggerType::Barney) && !location.crate) {
+            const int at[3] = {static_cast<int>(std::floor(location.at[0] + 0.5f)),
+                               static_cast<int>(std::floor(location.at[1] + 0.5f)),
+                               static_cast<int>(std::floor(location.at[2] + 0.5f))};
+            pickup_index[PickupKey(location.map, location.pickup_classname, at,
+                                   location.ordinal)] = &location;
+        }
     }
 
     return Loaded();
@@ -335,6 +388,35 @@ const Location* CheckData::ChargerAt(const std::string& map,
         }
     }
 
+    return best;
+}
+
+const Location* CheckData::PickupAt(const std::string& map,
+                                    const std::string& classname,
+                                    const int at[3], int ordinal) const {
+    const auto found = pickup_index.find(PickupKey(map, classname, at, ordinal));
+    return found == pickup_index.end() ? nullptr : found->second;
+}
+
+const Location* CheckData::CrateAt(const std::string& map,
+                                   const std::string& classname,
+                                   const float centre[3]) const {
+    const Location* best = nullptr;
+    float best_distance = kCrateMatchRadius;
+    for (const Location& location : locations) {
+        if (!location.crate || location.map != map ||
+            location.pickup_classname != classname) {
+            continue;
+        }
+        const float dx = location.at[0] - centre[0];
+        const float dy = location.at[1] - centre[1];
+        const float dz = location.at[2] - centre[2];
+        const float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+        if (distance <= best_distance) {
+            best_distance = distance;
+            best = &location;
+        }
+    }
     return best;
 }
 
