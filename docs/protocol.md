@@ -130,7 +130,7 @@ connected=1
 goal_open=0
 death_link=1
 death_link_amnesty=4
-gordon_hands=0
+viewmodel_hands=
 chapters=c1a2,c1a4
 excluded=c0a0
 items=RPG;Shotgun
@@ -167,8 +167,10 @@ was more than one game said so. The slot is won when every included game's
 finale is finished; the game sends `GOAL` for each, and the client sends the win
 once it has all of them.
 
-`gordon_hands` is the seed's `viewmodel_style`: 1 keeps Half-Life's first-person
-models on every map instead of Shephard's and Barney's hands on theirs.
+`viewmodel_hands` is the seed's `viewmodel_style`: the campaign key
+(`half_life`, `opposing_force`, `blue_shift`) whose first-person models every
+map uses, or empty for each map's own. A weapon the named game has no model for
+keeps the map's.
 
 `ungated` is classnames, not item names, and it is the seed saying "this one is
 not mine". The game neither grants nor removes them and lets their pickups be

@@ -261,6 +261,9 @@ class Scenario:
     melee_throw: bool = True
     # Placed crouched, for a spot in a vent.
     crouch: bool = False
+    # The seed's `viewmodel_style` as the campaign key whose hands every map
+    # uses, or "" for each map's own.
+    viewmodel_hands: str = ""
     # Only `!tp` goes to `pos`; arriving starts at the map's spawn, for a spot
     # that would kill a player placed on it.
     manual_tp: bool = False
@@ -1597,6 +1600,39 @@ def pickup_scenarios(data: CheckData) -> list[Scenario]:
     return out
 
 
+def viewmodel_scenarios() -> list[Scenario]:
+    """`viewmodel_style`: each game's hands on another game's maps."""
+    look = ("Switch through every weapon you hold and look at the hands: "
+            "Gordon's are orange HEV gloves, Shephard's green with black fingerless "
+            "gloves, Barney's blue sleeves and bare hands.")
+    cases = [
+        ("always_shephard", "opposing_force", "c1a2", "Half-Life",
+         "Shephard's on every weapon."),
+        ("always_shephard", "opposing_force", "ba_security2", "Blue Shift",
+         "Shephard's on every weapon."),
+        ("always_barney", "blue_shift", "c1a2", "Half-Life",
+         "Barney's on every weapon."),
+        ("always_barney", "blue_shift", "of1a1", "Opposing Force",
+         "Barney's on Half-Life's weapons. Opposing Force's own (knife, pipe "
+         "wrench, Desert Eagle, M249, sniper rifle, grapple, shock roach, spore "
+         "launcher, displacer) have no Blue Shift model and keep Shephard's."),
+        ("always_gordon", "half_life", "of1a1", "Opposing Force",
+         "Gordon's on Half-Life's weapons, Shephard's on Opposing Force's own."),
+        ("per_campaign", "", "of1a1", "Opposing Force",
+         "Shephard's on every weapon, as the game shipped."),
+    ]
+    return [Scenario(
+        title=f"0.4.0-2: viewmodel_style {style} on {'an' if game[0] in 'AEIOU' else 'a'} "
+              f"{game} map",
+        map=map_name, viewmodel_hands=hands, steps="\n".join([
+            f"The seed has viewmodel_style: {style}, on {map_name}.",
+            look,
+            f"Expect {expect}",
+            "No missing model, purple checkerboard or crash on any switch.",
+            "!pass, or !fail naming the weapon and whose hands it showed.",
+        ])) for style, hands, map_name, game, expect in cases]
+
+
 def eagle_restore_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     """The Desert Eagle restored with its laser on: a player crashed carrying
     it from Unforeseen Consequences part 2 (c1a1) into part 3 (c1a1a). Its two
@@ -1815,7 +1851,8 @@ def release_0_4_0_2_scenarios(data: CheckData, game_root: Path) -> list[Scenario
             + pickup_scenarios(data)
             + eagle_restore_scenarios(data, game_root)
             + npc_mechanics_scenarios(data)
-            + npc_map_scenarios(data, game_root))
+            + npc_map_scenarios(data, game_root)
+            + viewmodel_scenarios())
 
 
 def npc_map_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
@@ -2391,6 +2428,7 @@ class Harness:
             butterfingers_reissue=s.butterfingers_reissue if s is not None else True,
             air_accelerate=self.air_accelerate(),
             melee_throw=s.melee_throw if s is not None else True,
+            viewmodel_hands=s.viewmodel_hands if s is not None else "",
             excluded=[],
             ungated=[],
             starting=["weapon_crowbar"],

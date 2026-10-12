@@ -191,7 +191,7 @@ server.
 | `opposing_force_missions_required` | all of them | how many Opposing Force missions open Worlds Collide |
 | `blue_shift_missions_required` | all of them | how many Blue Shift missions open Power Struggle |
 | `random_starting_weapon` | on | with Opposing Force in, start with the crowbar, knife or pipe wrench at random; the others become items |
-| `viewmodel_style` | per_campaign | `always_gordon` keeps Gordon's hands on every game's maps |
+| `viewmodel_style` | per_campaign | `always_gordon`, `always_shephard` or `always_barney` keeps that one's hands on every game's maps |
 | `death_link_amnesty` | 4 | deaths forgiven before one goes out to the multiworld |
 
 With more than one game in the seed, you win by finishing every included

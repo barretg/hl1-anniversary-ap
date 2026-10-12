@@ -214,7 +214,7 @@ class Bridge:
         checked: list[int] | None = None,
         missing: list[int] | None = None,
         death_link_amnesty: int = 0,
-        gordon_hands: bool = False,
+        viewmodel_hands: str = "",
         ally_weapon_drops: bool = False,
         butterfingers_reissue: bool = True,
         air_accelerate: int = -1,
@@ -250,7 +250,7 @@ class Bridge:
             f"death_link_amnesty={max(0, int(death_link_amnesty))}",
             # Half-Life's own viewmodels on every map, instead of Shephard's
             # and Barney's hands on theirs. Presentation only.
-            f"gordon_hands={1 if gordon_hands else 0}",
+            f"viewmodel_hands={viewmodel_hands}",
             # Whether an ally's drop counts as a weapon source in this seed.
             # `!find` only points at an ally's weapon when logic expects it.
             f"ally_weapon_drops={1 if ally_weapon_drops else 0}",

@@ -95,17 +95,21 @@ class RandomStartingWeapon(DefaultOnToggle):
 
 
 class ViewmodelStyle(Choice):
-    """EXPERIMENTAL. Whose hands hold the weapons in Opposing Force and Blue
-    Shift.
+    """EXPERIMENTAL. Whose hands hold the weapons.
 
     per_campaign: Shephard's on Opposing Force's maps, Barney's on Blue Shift's,
-    Gordon's on Half-Life's, as each game shipped. always_gordon: Gordon's
-    everywhere. Presentation only; nothing about the seed changes.
+    Gordon's on Half-Life's, as each game shipped. always_gordon,
+    always_shephard, always_barney: that one's hands on every map, for every
+    weapon his game has a model for (a weapon only another game has keeps that
+    game's hands). Needs the chosen game installed. Presentation only; nothing
+    about the seed changes.
     """
 
     display_name = "Viewmodel Style"
     option_per_campaign = 0
     option_always_gordon = 1
+    option_always_shephard = 2
+    option_always_barney = 3
     default = 0
 
 

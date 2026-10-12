@@ -6,6 +6,7 @@
 #include "ap_locations.h"
 #include "ap_main.h"
 #include "ap_state.h"
+#include "ap_text.h"
 
 #include <algorithm>
 #include <cctype>
@@ -51,10 +52,11 @@ Campaign* g_texts = nullptr;         // null unless it renamed any text
 
 const char* const kSilence = "common/null.wav";
 
-// `viewmodel_style: always_gordon`, fixed for the whole map when it loads. The
-// client's snapshot is first polled after the map has precached, so asking
-// State() mid-map could name a view model the precache never saw.
-bool g_gordon_hands = false;
+// `viewmodel_style`: the campaign whose view models every map uses, fixed for
+// the whole map when it loads, or empty for each map's own. The client's
+// snapshot is first polled after the map has precached, so asking State()
+// mid-map could name a view model the precache never saw.
+std::string g_hands;
 
 // The highest model slot handed out on this map. The engine numbers the world
 // and its brush models first, so this is every slot in use. Likewise sounds.
@@ -246,8 +248,39 @@ const char* RedirectSentence(const char* name) {
     return named->second.empty() ? kSilence : Intern("!" + named->second);
 }
 
+// `prefix/` inserted before the file name: `models/v_9mm.mdl` -> `models/ap_of/v_9mm.mdl`.
+const char* Relocate(const std::string& lead, const char* path, const std::string& prefix) {
+    std::string rel = Lower(path);
+    const size_t slash = rel.rfind('/');
+    rel.insert(slash == std::string::npos ? 0 : slash + 1, prefix + "/");
+    const std::string redirected = lead + rel;
+    auto it = g_interned.try_emplace(redirected, redirected).first;
+    return it->second.c_str();
+}
+
 const char* Redirect(const char* name, const char* base) {
-    if (!g_active || !name || !*name) {
+    if (!name || !*name) {
+        return name;
+    }
+    // `viewmodel_style`: one game's hands on every map. Only the first-person
+    // models, and only those that game has its own copy of; the rest fall
+    // through to this map's usual choice.
+    if (!g_hands.empty() && *base == '\0') {
+        const std::string key = Lower(name);
+        if (key.rfind("models/v_", 0) == 0) {
+            if (g_hands == kHalfLife) {
+                if (!g_active || g_active->relocated.count(key)) {
+                    return name;  // Half-Life's copy is the unprefixed one
+                }
+            } else {
+                const auto hands = g_campaigns.find(g_hands);
+                if (hands != g_campaigns.end() && hands->second.relocated.count(key)) {
+                    return Relocate("", name, hands->second.prefix);
+                }
+            }
+        }
+    }
+    if (!g_active) {
         return name;
     }
     // A sentence is a name, not a file; a leading `*` marks a streamed sound
@@ -264,17 +297,7 @@ const char* Redirect(const char* name, const char* base) {
     if (!g_active->relocated.count(key)) {
         return name;
     }
-    // `viewmodel_style: always_gordon`: Half-Life's hands on every map. Only
-    // the first-person models; the world is still the other game's.
-    if (g_gordon_hands && key.rfind("models/v_", 0) == 0) {
-        return name;
-    }
-    std::string rel = Lower(path);
-    const size_t slash = rel.rfind('/');
-    rel.insert(slash == std::string::npos ? 0 : slash + 1, g_active->prefix + "/");
-    const std::string redirected = lead + rel;
-    auto it = g_interned.try_emplace(redirected, redirected).first;
-    return it->second.c_str();
+    return Relocate(lead, path, g_active->prefix);
 }
 
 int PrecacheModel(char* s) {
@@ -375,23 +398,24 @@ void InstallContentHooks() {
     g_engfuncs.pfnEmitAmbientSound = EmitAmbientSound;
 }
 
-// The seed's `gordon_hands`, read straight from the client's snapshot: this runs
-// before the first poll after a game launch. State() once one has run.
-bool ReadGordonHands() {
+// The seed's `viewmodel_hands`, read straight from the client's snapshot: this
+// runs before the first poll after a game launch. State() once one has run.
+std::string ReadViewmodelHands() {
+    static const std::string kKey = "viewmodel_hands=";
     std::ifstream in(StoreDir() + "/ap_in.txt");
     std::string line;
     while (std::getline(in, line)) {
-        if (line.rfind("gordon_hands=", 0) == 0) {
-            return line.size() > 13 && line[13] == '1';
+        if (line.rfind(kKey, 0) == 0) {
+            return Trim(line.substr(kKey.size()));
         }
     }
-    return State().gordon_hands;
+    return State().viewmodel_hands;
 }
 
 void BeginMapContent() {
     Load();
     OpenPickupTags();
-    g_gordon_hands = ReadGordonHands();
+    g_hands = ReadViewmodelHands();
     g_model_slots = 0;
     g_sound_slots = 0;
     g_mark_models = 0;

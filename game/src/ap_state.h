@@ -36,8 +36,9 @@ struct Snapshot {
     bool goal_open = false;
     bool death_link = false;
 
-    // Half-Life's viewmodels everywhere, rather than each game's own hands.
-    bool gordon_hands = false;
+    // The campaign key whose viewmodels every map uses (`viewmodel_style`), or
+    // empty for each game's own hands.
+    std::string viewmodel_hands;
     // An ally's drop counts as a weapon source. Off in every seed that does not
     // ask for it, and in snapshots from clients older than the option.
     bool ally_weapon_drops = false;

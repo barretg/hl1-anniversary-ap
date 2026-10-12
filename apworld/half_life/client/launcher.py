@@ -48,6 +48,13 @@ GAME_NAME = "Half-Life"
 HALF_LIFE = "half_life"
 POLL_INTERVAL = 0.2
 
+# `viewmodel_style` -> the campaign whose first-person models every map uses.
+VIEWMODEL_HANDS = {
+    "always_gordon": HALF_LIFE,
+    "always_shephard": "opposing_force",
+    "always_barney": "blue_shift",
+}
+
 # The chosen install path is remembered in host.yaml (see client/settings.py), so
 # the folder picker only ever appears once.
 
@@ -315,7 +322,9 @@ class HalfLifeContext(SuperContext):
         self.death_link_amnesty = 4
         # Half-Life's viewmodels on every game's maps. Off in every seed that
         # does not ask for it.
-        self.gordon_hands = False
+        # Whose first-person models every map uses, by campaign key; "" for
+        # each map's own.
+        self.viewmodel_hands = ""
         # Whether an ally's drop is a weapon source. Off unless the seed says.
         self.ally_weapon_drops = False
         # Whether a Butterfingers victim's weapon comes back after half a
@@ -558,7 +567,8 @@ class HalfLifeContext(SuperContext):
         self.death_link_amnesty = int(
             slot_data.get("death_link_amnesty", self.death_link_amnesty)
         )
-        self.gordon_hands = slot_data.get("viewmodel_style", "per_campaign") == "always_gordon"
+        self.viewmodel_hands = VIEWMODEL_HANDS.get(
+            slot_data.get("viewmodel_style", "per_campaign"), "")
         self.ally_weapon_drops = bool(slot_data.get("ally_weapon_drops", False))
         self.butterfingers_reissue = bool(slot_data.get("butterfingers_reissue", True))
         self.air_acceleration = slot_data.get("air_acceleration")
@@ -1032,7 +1042,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         goal_open=ctx.goal_open,
         death_link=ctx.death_link_enabled,
         death_link_amnesty=ctx.death_link_amnesty,
-        gordon_hands=ctx.gordon_hands,
+        viewmodel_hands=ctx.viewmodel_hands,
         ally_weapon_drops=ctx.ally_weapon_drops,
         butterfingers_reissue=ctx.butterfingers_reissue,
         air_accelerate=ctx.air_accelerate,

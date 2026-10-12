@@ -78,7 +78,8 @@ Launcher, Barnacle Grapple (needed for everything past arriving in Vicarious Rea
 Shock Roach (its check is the first one a shock trooper drops). With Opposing Force in, `random_starting_weapon` picks the starting
 melee weapon from the crowbar, combat knife and pipe wrench; the others become
 items. Each game has its own `First <weapon>` checks, named with the game in
-front. `viewmodel_style: always_gordon` keeps Gordon's hands everywhere.
+front. `viewmodel_style` can keep Gordon's, Shephard's or Barney's hands everywhere
+(`always_gordon`, `always_shephard`, `always_barney`).
 
 In game, `ap` groups missions by game, and `ap_warp of 3` / `ap_warp bs 2` warp
 by a game's own mission number. A mission of a game this install does not have

@@ -29,7 +29,7 @@ def context() -> HalfLifeContext:
     ctx.missions_required_by_campaign = {HALF_LIFE: 17}
     ctx.starting_weapons = ["weapon_crowbar"]
     ctx.death_link_amnesty = 4
-    ctx.gordon_hands = False
+    ctx.viewmodel_hands = ""
     ctx.ally_weapon_drops = False
     ctx.completed_missions = set()
     ctx.unlocked_chapters = set()
@@ -142,7 +142,7 @@ class TestEveryGameSeed(unittest.TestCase):
                               "blue_shift": "ba_teleport2"},
             "missions_required_by_campaign": {HALF_LIFE: 1, "opposing_force": 1,
                                               "blue_shift": 1},
-            "viewmodel_style": "always_gordon",
+            "viewmodel_style": "always_barney",
             "ally_weapon_drops": True,
             "butterfingers_reissue": False,
         })
@@ -160,7 +160,7 @@ class TestEveryGameSeed(unittest.TestCase):
         self.assertTrue(self.ctx.run_complete)
 
     def test_presentation_option(self) -> None:
-        self.assertTrue(self.ctx.gordon_hands)
+        self.assertEqual(self.ctx.viewmodel_hands, "blue_shift")
 
     def test_ally_drops_reach_the_game(self) -> None:
         self.assertTrue(self.ctx.ally_weapon_drops)
