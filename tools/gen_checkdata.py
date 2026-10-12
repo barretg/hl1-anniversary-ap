@@ -55,8 +55,8 @@ OUT_PATH = (
 # 7 adds the `heal_pickup` and `ammo_pickup` location types. Additive: a format
 # 6 reader keeps them as locations of a type it does not know and never sends.
 #
-# 8 adds the `scientist` and `barney` location types, keyed like a placed
-# pickup. Additive in the same way as 7.
+# 8 adds the `scientist`, `barney` and `soldier` location types, keyed like a
+# placed pickup. Additive in the same way as 7.
 FORMAT_VERSION = 8
 
 
@@ -106,7 +106,7 @@ def render(campaign: dict) -> str:
         "# A heal_pickup's or ammo_pickup's <arg> is <classname>@<x y z>[#<n>]: a",
         "# placed pickup's origin keyvalue to the unit, and which of several there",
         "# in spawn order; or a crate's classname and rounded centre. A",
-        "# scientist's or barney's <arg> is the same as a placed pickup's.",
+        "# scientist's, barney's or soldier's <arg> is the same as a placed pickup's.",
         f"V|{FORMAT_VERSION}",
         f"D|{campaign['data_version']}",
         f"G|{campaign['goal_chapter']}",
@@ -153,7 +153,7 @@ def render(campaign: dict) -> str:
             # its classname and where it stands, rounded the same way on both
             # sides. See `charger_key_position` in build_campaign_data.py.
             arg = f"{trigger['classname']}@{trigger['at']}"
-        elif kind in ("heal_pickup", "ammo_pickup", "scientist", "barney"):
+        elif kind in ("heal_pickup", "ammo_pickup", "scientist", "barney", "soldier"):
             # The entity the game tags at spawn: a placed pickup's origin to
             # the unit and which of several there, or a crate's centre.
             ordinal = trigger.get("ordinal", 1)

@@ -16,6 +16,7 @@ from .shared import (  # re-exported: the facts every campaign shares
     CHARGER_POSITION_GRID,
     AMMO_PICKUP_CLASSNAMES,
     BARNEY_CLASSNAMES,
+    SOLDIER_CLASSNAMES,
     SCIENTIST_CLASSNAMES,
     CRATE_CLASSNAMES,
     CRATE_SPAWN_OBJECTS,

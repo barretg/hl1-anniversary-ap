@@ -194,7 +194,7 @@ class Scientistsanity(Toggle):
     can never be reached, are left out. On the intro tram ride, only the ones
     in sight of the tram count, and they need a gun.
 
-    107 of them: 82 in Half-Life (8 on the intro ride), 15 in Opposing Force
+    108 of them: 82 in Half-Life (8 on the intro ride), 16 in Opposing Force
     and 10 in Blue Shift (5 on the intro ride).
     """
 
@@ -212,16 +212,29 @@ class Barneysanity(Toggle):
     display_name = "Barneysanity"
 
 
-class IncludeCriticalNpcs(Toggle):
-    """Experimental. With Scientistsanity or Barneysanity, also count the
-    scientists and guards whose death fails the mission or strands you
-    (Rosenberg, the Insecurity guards, the guard who opens the intro train's
-    door, and the like). The check is sent the moment one dies, before the
-    reload, so quicksave first and quickload after. Some fail the mission as soon
-    as they are hurt, leaving only the reload's fade to finish them.
+class Soldiersanity(Toggle):
+    """Experimental. Opposing Force only. Every friendly marine (grunts,
+    medics and engineers) is a check, sent the same way as Scientistsanity's:
+    when one dies and you witnessed it.
 
-    14 scientists (8 in Half-Life, 1 in Opposing Force, 5 in Blue Shift) and 7
-    guards (2 in Half-Life, one of them on the intro ride, 5 in Blue Shift).
+    17 of them, all in Opposing Force.
+    """
+
+    display_name = "Soldiersanity"
+
+
+class IncludeCriticalNpcs(Toggle):
+    """Experimental. With Scientistsanity, Barneysanity or Soldiersanity, also
+    count the scientists, guards and soldiers whose death fails the mission or
+    strands you (Rosenberg, the Insecurity guards, the guard who opens the
+    intro train's door, and the like). The check is sent the moment one dies,
+    before the reload, so quicksave first and quickload after. Some fail the
+    mission as soon as they are hurt, leaving only the reload's fade to finish
+    them.
+
+    14 scientists (8 in Half-Life, 1 in Opposing Force, 5 in Blue Shift), 7
+    guards (2 in Half-Life, one of them on the intro ride, 5 in Blue Shift) and,
+    with Soldiersanity, 3 of Opposing Force's soldiers.
     """
 
     display_name = "Include Mission-Critical NPCs"
@@ -424,6 +437,7 @@ class HalfLifeOptions(PerGameCommonOptions):
     ammosanity: Ammosanity
     scientistsanity: Scientistsanity
     barneysanity: Barneysanity
+    soldiersanity: Soldiersanity
     include_critical_npcs: IncludeCriticalNpcs
     shuffle_hev_suit: ShuffleHevSuit
     shuffle_longjump: ShuffleLongJump

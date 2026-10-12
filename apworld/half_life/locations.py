@@ -69,6 +69,9 @@ location_name_groups["Scientists"] = {
 location_name_groups["Barneys"] = {
     e["name"] for e in LOCATIONS if e["trigger"]["type"] == "barney"
 }
+location_name_groups["Soldiers"] = {
+    e["name"] for e in LOCATIONS if e["trigger"]["type"] == "soldier"
+}
 
 # Older releases named locations `Mission - Thing`. Each old name is a group of
 # its one location, so a YAML written for them still generates. The old name is

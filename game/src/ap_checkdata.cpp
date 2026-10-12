@@ -33,6 +33,7 @@ static TriggerType TriggerFromName(const std::string& name) {
     if (name == "ammo_pickup") return TriggerType::AmmoPickup;
     if (name == "scientist") return TriggerType::Scientist;
     if (name == "barney") return TriggerType::Barney;
+    if (name == "soldier") return TriggerType::Soldier;
     return TriggerType::Unknown;
 }
 
@@ -160,6 +161,7 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
                 case TriggerType::AmmoPickup:
                 case TriggerType::Scientist:
                 case TriggerType::Barney:
+                case TriggerType::Soldier:
                     if (!ParsePickupArg(f[4], location)) {
                         continue;
                     }
@@ -255,7 +257,8 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
         if ((location.type == TriggerType::HealPickup ||
              location.type == TriggerType::AmmoPickup ||
              location.type == TriggerType::Scientist ||
-             location.type == TriggerType::Barney) && !location.crate) {
+             location.type == TriggerType::Barney ||
+             location.type == TriggerType::Soldier) && !location.crate) {
             const int at[3] = {static_cast<int>(std::floor(location.at[0] + 0.5f)),
                                static_cast<int>(std::floor(location.at[1] + 0.5f)),
                                static_cast<int>(std::floor(location.at[2] + 0.5f))};

@@ -57,7 +57,7 @@ round (see `release_0_4_0_2_scenarios`): a charger's check when walked into
 with use held, on full health, and without the suit; Healsanity's and
 Ammosanity's pickups; and the NPC checks.
 
-`--npc_witness` runs only the per-map Scientistsanity / Barneysanity scenarios:
+`--npc_witness` runs only the per-map Scientistsanity / Barneysanity / Soldiersanity scenarios:
 witness every listed death, fail naming any that could not be witnessed or did
 not send. `--npc_excluded_check` runs the NPCs the build left out, one scenario
 per map: pass keeps them out, fail means they belong in `killable_npcs`.
@@ -1685,7 +1685,7 @@ def eagle_restore_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     return out
 
 
-NPC_KINDS = ("scientist", "barney")
+NPC_KINDS = ("scientist", "barney", "soldier")
 
 
 def npc_mechanics_scenarios(data: CheckData) -> list[Scenario]:
@@ -1763,7 +1763,7 @@ def where_in_mission(data: CheckData, map_name: str) -> str:
 
 
 def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
-    """One per map with scientist or barney checks: witness every death."""
+    """One per map with scientist, barney or soldier checks: witness every death."""
     import json
     campaign = json.loads((REPO / "apworld/half_life/data/campaign.json").read_text())
     critical = {e["id"] for e in campaign["locations"] if e["trigger"].get("critical")}
@@ -1808,7 +1808,7 @@ PROBE_ID_BASE = 9_900_000
 
 
 def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
-    """One per map with scientists or barneys the build left out, to confirm
+    """One per map with scientists, barneys or soldiers the build left out, to confirm
     each belongs out. A fail goes into `killable_npcs`."""
     sys.path.insert(0, str(REPO / "tools"))
     from bsp_entities import load_map
@@ -1861,7 +1861,7 @@ def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
                 title=f"0.4.0-2: npc_excluded_check: {map_name}",
                 map=map_name, probes=probes, steps="\n".join([
                     where_in_mission(data, map_name),
-                    "These were left out of Scientistsanity / Barneysanity:",
+                    "These were left out of Scientistsanity / Barneysanity / Soldiersanity:",
                     *left,
                     "For this scenario only they are tagged: labelled, in ap_tagged,",
                     "and !find excluded / !trace excluded point at them. A death",

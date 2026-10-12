@@ -39,6 +39,7 @@ from .data import (
     BARNEY_TRIGGER,
     CRITICAL_NPC_TRIGGER,
     SCIENTIST_TRIGGER,
+    SOLDIER_TRIGGER,
     ITEMS,
     ABILITY_ITEM_NAMES,
     AIR_ACCELERATE_ITEM,
@@ -78,6 +79,7 @@ from .options import (
     Barneysanity,
     IncludeCriticalNpcs,
     Scientistsanity,
+    Soldiersanity,
     BlueShiftMissionsRequired,
     HalfLifeOptions,
     Healsanity,
@@ -160,7 +162,7 @@ class HalfLifeWeb(WebWorld):
             [RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
              AllyWeaponDrops, ProgressiveAirAcceleration, AirAccelerationMinimum,
              AirAccelerationMaximum, Healsanity, Ammosanity, Scientistsanity,
-             Barneysanity, IncludeCriticalNpcs],
+             Barneysanity, Soldiersanity, IncludeCriticalNpcs],
             start_collapsed=True,
         ),
     ]
@@ -271,6 +273,8 @@ class HalfLifeWorld(World):
             self.excluded_triggers.add(SCIENTIST_TRIGGER)
         if not self.options.barneysanity:
             self.excluded_triggers.add(BARNEY_TRIGGER)
+        if not self.options.soldiersanity:
+            self.excluded_triggers.add(SOLDIER_TRIGGER)
         if not self.options.include_critical_npcs:
             self.excluded_triggers.add(CRITICAL_NPC_TRIGGER)
 
@@ -294,6 +298,8 @@ class HalfLifeWorld(World):
                 self.excluded_triggers.add(SCIENTIST_TRIGGER)
             if not passthrough.get("barneysanity", False):
                 self.excluded_triggers.add(BARNEY_TRIGGER)
+            if not passthrough.get("soldiersanity", False):
+                self.excluded_triggers.add(SOLDIER_TRIGGER)
             if not passthrough.get("include_critical_npcs", False):
                 self.excluded_triggers.add(CRITICAL_NPC_TRIGGER)
 
@@ -517,6 +523,7 @@ class HalfLifeWorld(World):
             "ammosanity": AMMO_PICKUP_TRIGGER not in self.excluded_triggers,
             "scientistsanity": SCIENTIST_TRIGGER not in self.excluded_triggers,
             "barneysanity": BARNEY_TRIGGER not in self.excluded_triggers,
+            "soldiersanity": SOLDIER_TRIGGER not in self.excluded_triggers,
             "include_critical_npcs": CRITICAL_NPC_TRIGGER not in self.excluded_triggers,
             # What the run opens with, and what the game must therefore never
             # take away.

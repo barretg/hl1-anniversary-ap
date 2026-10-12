@@ -30,9 +30,9 @@
 # A heal_pickup's or ammo_pickup's <arg> is <classname>@<x y z>[#<n>]: a
 # placed pickup's origin keyvalue to the unit, and which of several there
 # in spawn order; or a crate's classname and rounded centre. A
-# scientist's or barney's <arg> is the same as a placed pickup's.
+# scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|2d4f8d87fc2e
+D|56fdd266ba53
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -1248,6 +1248,7 @@ L|7761916|of1a1|scientist|monster_scientist@360 2288 56|Welcome To Black Mesa: S
 L|7762035|of1a1|barney|monster_otis@-1328 -136 -128|Welcome To Black Mesa: Otis (Part 1)|-1328 -136 -128
 A|7762035|monster_otis@-2584 -1048 -128
 H|7762035|Taking the PCV swaps him for a copy (otis1 for otis2) in the same spot; either one sends this.
+L|7762037|of1a1|soldier|monster_human_grunt_ally@-576 3048 0|Welcome To Black Mesa: Fgrunt1 (Part 1)|-576 3048 0
 L|7760259|of1a2|map_reached||Welcome To Black Mesa: Part 2 Reached
 L|7761066|of1a2|heal_pickup|item_battery@336 -592 -176|Welcome To Black Mesa: Battery 1 (Part 2)|336 -592 -176
 L|7761067|of1a2|heal_pickup|item_battery@2200 220 -104|Welcome To Black Mesa: Battery 2 (Part 2)|2200 220 -104
@@ -1289,8 +1290,11 @@ L|7761092|of1a5b|ammo_pickup|ammo_9mmAR@-1424 -2000 1696|We Are Pulling Out: MP5
 L|7761093|of1a5b|ammo_pickup|ammo_ARgrenades@-1464 -2080 1698|We Are Pulling Out: MP5 Grenades (Part 2)|-1464 -2080 1698
 L|7761094|of1a5b|ammo_pickup|ammo_buckshot@-1488 -3120 2252|We Are Pulling Out: Shotgun Shells (Part 2)|-1488 -3120 2252
 L|7761921|of1a5b|scientist|monster_scientist@-1104 -2272 1696|We Are Pulling Out: Bundy (Part 2)|-1104 -2272 1696
+L|7762057|of1a5b|scientist|monster_scientist@-424 -1584 1704|We Are Pulling Out: Scihist (Part 2)|-424 -1584 1704
+R|7762057
 L|7761923|of1a5b|barney|monster_barney@-564 -1576 1704|We Are Pulling Out: Barnhist (Part 2)|-564 -1576 1704
 L|7761922|of1a5b|barney|monster_otis@112 -2096 1344|We Are Pulling Out: Gleason (Part 2)|112 -2096 1344
+L|7762038|of1a5b|soldier|monster_human_grunt_ally@-1408 -2992 2204|We Are Pulling Out: Barnboy (Part 2)|-1408 -2992 2204
 L|7760267|of1a6|map_reached||We Are Pulling Out: Part 3 Reached
 L|7760268|of1a6|charger|func_healthcharger@636 -1584 8|We Are Pulling Out: Health Charger (Part 3)|636 -1584 8
 L|7761095|of1a6|heal_pickup|item_battery@732 -116 52|We Are Pulling Out: Battery 1 (Part 3)|732 -116 52
@@ -1299,6 +1303,8 @@ L|7761097|of1a6|ammo_pickup|ammo_357@364 -608 8|We Are Pulling Out: .357 Rounds 
 L|7761098|of1a6|ammo_pickup|ammo_9mmclip@363 -644 8|We Are Pulling Out: 9mm Clip (Part 3)|363 -644 8
 L|7761732|of1a6|ammo_pickup|weapon_handgrenade@232 -1220 8|We Are Pulling Out: Hand Grenade (Part 3)|232 -1220 8
 L|7761733|of1a6|ammo_pickup|weapon_satchel@232 -1284 8|We Are Pulling Out: Satchel Charge (Part 3)|232 -1284 8
+L|7762039|of1a6|soldier|monster_human_grunt_ally@632 -292 -24|We Are Pulling Out: Jail Fgrunt1 (Part 3)|632 -292 -24
+L|7762040|of1a6|soldier|monster_human_grunt_ally@578 -1318 -24|We Are Pulling Out: Radio Fgrunt1 (Part 3)|578 -1318 -24
 L|7760269|of2a1|map_reached||Missing In Action: Part 1 Reached
 L|7760270|of2a1|charger|func_healthcharger@500 8 -92|Missing In Action: Health Charger (Part 1)|500 8 -93
 L|7761099|of2a1|heal_pickup|item_battery@528 336 -100|Missing In Action: Battery (Part 1)|528 336 -100
@@ -1341,6 +1347,8 @@ L|7761127|of2a3|ammo_pickup|ammo_9mmclip@660 -754 -20|Missing In Action: 9mm Cli
 L|7761738|of2a3|ammo_pickup|weapon_handgrenade@162 -384 34|Missing In Action: Hand Grenade (Part 4)|162 -384 34
 L|7761739|of2a3|ammo_pickup|weapon_satchel@-906 160 0|Missing In Action: Satchel Charge (Part 4)|-906 160 0
 L|7761925|of2a3|scientist|monster_scientist@-312 480 -192|Missing In Action: Funkdafied (Part 4)|-312 480 -192
+L|7762041|of2a3|soldier|monster_human_grunt_ally@-848 1104 2|Missing In Action: Darkmoctermann (Part 4)|-848 1104 2
+L|7762042|of2a3|soldier|monster_human_torch_ally@-976 1104 2|Missing In Action: Dimjose (Part 4)|-976 1104 2
 L|7760274|of2a4|map_reached||Friendly Fire: Part 1 Reached
 L|7761128|of2a4|heal_pickup|item_battery@118 644 14|Friendly Fire: Battery 1 (Part 1)|118 644 14
 L|7761129|of2a4|heal_pickup|item_battery@-1016 176 288|Friendly Fire: Battery 2 (Part 1)|-1016 176 288
@@ -1368,6 +1376,8 @@ L|7761145|of2a5|ammo_pickup|ammo_ARgrenades@2260 404 664|Friendly Fire: MP5 Gren
 L|7761742|of2a5|ammo_pickup|weapon_satchel@200 -320 1184|Friendly Fire: Satchel Charge (Part 2)|200 -320 1184
 L|7761146|of2a5|ammo_pickup|ammo_buckshot@2120 -1196 852|Friendly Fire: Shotgun Shells (Part 2)|2120 -1196 852
 L|7761743|of2a5|ammo_pickup|weapon_tripmine@1724 -1068 808|Friendly Fire: Tripmine (Part 2)|1724 -1068 808
+L|7762043|of2a5|soldier|monster_human_medic_ally@800 -464 1176|Friendly Fire: Guido (Part 2)|800 -464 1176
+L|7762044|of2a5|soldier|monster_human_torch_ally@-762 -1028 1176|Friendly Fire: Johnson (Part 2)|-762 -1028 1176
 L|7760276|of2a6|map_reached||Friendly Fire: Part 3 Reached
 L|7760277|of2a6|charger|func_recharge@-1232 2204 -556|Friendly Fire: HEV Charger (Part 3)|-1230 2205 -556
 L|7761147|of2a6|heal_pickup|item_battery@-2873 2953 -576|Friendly Fire: Battery (Part 3)|-2873 2953 -576
@@ -1392,6 +1402,8 @@ L|7761162|of2a6|ammo_pickup|func_breakable@-2140 2512 -568|Friendly Fire: Crate 
 L|7761163|of2a6|ammo_pickup|func_pushable@-2508 2492 -552|Friendly Fire: Crate Shotgun Shells 2 (Part 3)|-2508 2492 -552
 L|7761745|of2a6|ammo_pickup|weapon_handgrenade@2956 3484 -584|Friendly Fire: Hand Grenade (Part 3)|2956 3484 -584
 L|7761164|of2a6|ammo_pickup|ammo_buckshot@-2296 1904 -576|Friendly Fire: Shotgun Shells (Part 3)|-2296 1904 -576
+L|7762045|of2a6|soldier|monster_human_grunt_ally@-352 432 -440|Friendly Fire: Dave (Part 3)|-352 432 -440
+L|7762046|of2a6|soldier|monster_human_grunt_ally@-288 480 -440|Friendly Fire: Mike (Part 3)|-288 480 -440
 L|7760278|of3a1|map_reached||We Are Not Alone: Part 1 Reached
 L|7760279|of3a1|charger|func_healthcharger@592 1184 -204|We Are Not Alone: Health Charger (Part 1)|592 1186 -204
 L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone: HEV Charger (Part 1)|544 1186 -204
@@ -1570,6 +1582,8 @@ L|7761295|of5a1|ammo_pickup|ammo_spore@-1288 2432 -232|Foxtrot Uniform: Spore Pl
 L|7761296|of5a1|ammo_pickup|ammo_spore@-1163 2468 -208|Foxtrot Uniform: Spore Plant 9 (Part 1)|-1163 2468 -208
 L|7761297|of5a1|ammo_pickup|ammo_gaussclip@-496 -944 120|Foxtrot Uniform: Uranium 1 (Part 1)|-496 -944 120
 L|7761298|of5a1|ammo_pickup|ammo_gaussclip@-496 -1024 120|Foxtrot Uniform: Uranium 2 (Part 1)|-496 -1024 120
+L|7762047|of5a1|soldier|monster_human_grunt_ally@-928 40 112|Foxtrot Uniform: Fgrunt1 (Part 1)|-928 40 112
+L|7762048|of5a1|soldier|monster_human_grunt_ally@-1072 8 112|Foxtrot Uniform: Fgrunt2 (Part 1)|-1072 8 112
 L|7760305|of5a2|map_reached||Foxtrot Uniform: Part 2 Reached
 L|7760306|of5a2|charger|trigger_hurt@2504 -3160 1816|Foxtrot Uniform: Healing Pool (Part 2)|2504 -3160 1816|Displacer Cannon
 L|7761299|of5a2|heal_pickup|func_breakable@1568 1016 280|Foxtrot Uniform: Crate Health Kit 1 (Part 2)|1568 1016 280
@@ -1608,6 +1622,9 @@ L|7761760|of5a3|ammo_pickup|weapon_satchel@-1024 -1928 128|Foxtrot Uniform: Satc
 L|7761324|of5a3|ammo_pickup|ammo_spore@-832 -1240 -256|Foxtrot Uniform: Spore Plant 1 (Part 3)|-832 -1240 -256
 L|7761325|of5a3|ammo_pickup|ammo_spore@-760 -1232 -256|Foxtrot Uniform: Spore Plant 2 (Part 3)|-760 -1232 -256
 L|7761326|of5a3|ammo_pickup|weaponbox@2170 2954 140|Foxtrot Uniform: Weapon Box (Part 3)|2170 2954 140
+L|7762049|of5a3|soldier|monster_human_torch_ally@-712 -960 80|Foxtrot Uniform: Engineer1 (Part 3)|-712 -960 80
+L|7762050|of5a3|soldier|monster_human_medic_ally@-632 -944 80|Foxtrot Uniform: Medic1 (Part 3)|-632 -944 80
+L|7762051|of5a3|soldier|monster_human_grunt_ally@-816 -784 80|Foxtrot Uniform: Soldier (Part 3)|-816 -784 80
 L|7760308|of5a4|map_reached||Foxtrot Uniform: Part 4 Reached
 L|7760309|of5a4|charger|func_healthcharger@-2624 124 -8|Foxtrot Uniform: Health Charger (Part 4)|-2624 124 -8
 L|7760310|of5a4|charger|func_recharge@-2576 124 -8|Foxtrot Uniform: HEV Charger (Part 4)|-2576 124 -8
@@ -1621,12 +1638,17 @@ L|7761333|of5a4|ammo_pickup|ammo_spore@-217 -816 144|Foxtrot Uniform: Spore Plan
 L|7761334|of5a4|ammo_pickup|ammo_spore@-152 140 188|Foxtrot Uniform: Spore Plant 3 (Part 4)|-152 140 188
 L|7761335|of5a4|ammo_pickup|ammo_spore@-111 111 192|Foxtrot Uniform: Spore Plant 4 (Part 4)|-111 111 192
 L|7761993|of5a4|ammo_pickup|weaponbox@1844 1616 -3172|Foxtrot Uniform: Weapon Box (Part 4)|1844 1616 -3172
+L|7762052|of5a4|soldier|monster_human_grunt_ally@-1408 32 -64|Foxtrot Uniform: Soldier 1 (Part 4)|-1408 32 -64
+L|7762053|of5a4|soldier|monster_human_grunt_ally@-48 -112 -64|Foxtrot Uniform: Soldier 2 (Part 4)|-48 -112 -64
+L|7762054|of5a4|soldier|monster_human_grunt_ally@144 -608 16|Foxtrot Uniform: Soldier 3 (Part 4)|144 -608 16
 L|7760311|of6a1|map_reached||The Package: Part 1 Reached
 L|7760312|of6a1|charger|trigger_hurt@-3244 -3352 -840|The Package: Healing Pool (Part 1)|-3244 -3352 -840|Displacer Cannon
 L|7761336|of6a1|heal_pickup|item_healthkit@1408 1024 144|The Package: Health Kit 1 (Part 1)|1408 1024 144
 L|7761337|of6a1|heal_pickup|item_healthkit@1456 1056 144|The Package: Health Kit 2 (Part 1)|1456 1056 144
 L|7761338|of6a1|ammo_pickup|ammo_buckshot@-3368 2784 272|The Package: Shotgun Shells (Part 1)|-3368 2784 272
 L|7761933|of6a1|scientist|monster_scientist@-3173 -2767 -799|The Package: Scientist Saved (Part 1)|-3173 -2767 -799
+L|7762055|of6a1|soldier|monster_human_grunt_ally@-920 2912 130|The Package: Friendly1 (Part 1)|-920 2912 130
+L|7762056|of6a1|soldier|monster_human_grunt_ally@-832 3024 130|The Package: Friendly2 (Part 1)|-832 3024 130
 L|7760313|of6a2|map_reached||The Package: Part 2 Reached
 L|7761339|of6a2|heal_pickup|item_battery@-16 -1088 -64|The Package: Battery 1 (Part 2)|-16 -1088 -64
 L|7761340|of6a2|heal_pickup|item_battery@48 -1120 -64|The Package: Battery 2 (Part 2)|48 -1120 -64

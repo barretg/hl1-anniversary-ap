@@ -766,7 +766,7 @@ def test_placeable_locations_carry_a_position(campaign: dict) -> None:
         if entry["name"] in anchored:
             assert "position" not in entry, entry["name"]
         elif (kind in ("charger", "weapon_pickup", "heal_pickup", "ammo_pickup",
-                       "scientist", "barney")
+                       "scientist", "barney", "soldier")
               or "fires" in entry["trigger"]):
             assert "position" in entry, entry["name"]
             assert len(entry["position"]) == 3, entry["name"]
@@ -933,7 +933,7 @@ def test_npc_checks_mark_mission_failures(campaign: dict) -> None:
     failures = {("c2a5f", "barney1"), ("c3a2", "scientist_c3a2"), ("c3a2d", "thesci"),
                 ("of3a4", "duketakemforever"), ("ba_yard5a", "dr_rosenberg"),
                 ("ba_security2", "barney_admin"), ("ba_maint", "bob")}
-    npcs = [l for l in campaign["locations"] if l["trigger"]["type"] in ("scientist", "barney")]
+    npcs = [l for l in campaign["locations"] if l["trigger"]["type"] in ("scientist", "barney", "soldier")]
     present = {(l["map"], l["trigger"].get("targetname")) for l in npcs}
     critical = {(l["map"], l["trigger"].get("targetname")) for l in npcs
                 if l["trigger"].get("critical")}
@@ -947,7 +947,7 @@ def test_npc_checks_have_unique_keys(campaign: dict) -> None:
     seen = set()
     for l in campaign["locations"]:
         t = l["trigger"]
-        if t["type"] in ("scientist", "barney"):
+        if t["type"] in ("scientist", "barney", "soldier"):
             key = (l["map"], t["classname"], t["at"], t.get("ordinal", 1))
             assert key not in seen, l["name"]
             seen.add(key)
@@ -956,5 +956,5 @@ def test_npc_checks_have_unique_keys(campaign: dict) -> None:
 def test_intro_npcs_need_a_gun(campaign: dict) -> None:
     intro = {"c0a0", "ba_tram1"}
     for l in campaign["locations"]:
-        if l["trigger"]["type"] in ("scientist", "barney") and l["chapter"] in intro:
+        if l["trigger"]["type"] in ("scientist", "barney", "soldier") and l["chapter"] in intro:
             assert l.get("gates") == {"always": ["ranged"]}, l["name"]

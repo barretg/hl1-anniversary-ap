@@ -325,8 +325,8 @@ class TestMicrowaveIncluded(HalfLifeTestBase):
         self.assertNotIn("microwave", self.world.fill_slot_data()["excluded_triggers"])
 
 
-PICKUP_TRIGGERS = ("heal_pickup", "ammo_pickup", "scientist", "barney")
-SANITY_KEYS = ("healsanity", "ammosanity", "scientistsanity", "barneysanity")
+PICKUP_TRIGGERS = ("heal_pickup", "ammo_pickup", "scientist", "barney", "soldier")
+SANITY_KEYS = ("healsanity", "ammosanity", "scientistsanity", "barneysanity", "soldiersanity")
 
 
 class TestPickupsDefault(HalfLifeTestBase):
@@ -347,7 +347,7 @@ class TestPickupsIncluded(HalfLifeTestBase):
     """Every game in, every pickup a check, and the seed still generates."""
 
     options = {"healsanity": True, "ammosanity": True,
-               "scientistsanity": True, "barneysanity": True,
+               "scientistsanity": True, "barneysanity": True, "soldiersanity": True,
                "include_opposing_force": True, "include_blue_shift": True}
 
     def test_pickups_are_checks(self) -> None:
@@ -368,12 +368,12 @@ class TestPickupsIncluded(HalfLifeTestBase):
 class TestNpcsWithIntros(HalfLifeTestBase):
     """The intro rides' NPCs are in, and each waits on a gun."""
 
-    options = {"scientistsanity": True, "barneysanity": True,
+    options = {"scientistsanity": True, "barneysanity": True, "soldiersanity": True,
                "exclude_intro_missions": False,
                "include_opposing_force": True, "include_blue_shift": True}
 
     def test_intro_npcs_need_a_ranged_weapon(self) -> None:
-        intro = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney")
+        intro = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney", "soldier")
                  and e.get("gates") and not e["trigger"].get("critical")]
         self.assertTrue(intro)
         state = self.multiworld.state.copy()
@@ -385,7 +385,7 @@ class TestNpcsWithIntros(HalfLifeTestBase):
 class TestNpcsIntrosExcluded(HalfLifeTestBase):
     """With the intros out, none of their NPCs are checks; the rest still are."""
 
-    options = {"scientistsanity": True, "barneysanity": True,
+    options = {"scientistsanity": True, "barneysanity": True, "soldiersanity": True,
                "exclude_intro_missions": True,
                "include_opposing_force": True, "include_blue_shift": True}
 
@@ -394,7 +394,7 @@ class TestNpcsIntrosExcluded(HalfLifeTestBase):
             location.name for location in self.multiworld.get_locations(self.player)
         }
         intros = {c["intro_chapter"] for c in CAMPAIGNS}
-        npcs = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney")]
+        npcs = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney", "soldier")]
         in_intro = {e["name"] for e in npcs if e["chapter"] in intros}
         elsewhere = {e["name"] for e in npcs if e["chapter"] not in intros
                      and not e["trigger"].get("critical")}
@@ -406,7 +406,7 @@ class TestNpcsIntrosExcluded(HalfLifeTestBase):
 class TestCriticalNpcsDefault(HalfLifeTestBase):
     """Mission-critical NPCs stay out unless asked for."""
 
-    options = {"scientistsanity": True, "barneysanity": True,
+    options = {"scientistsanity": True, "barneysanity": True, "soldiersanity": True,
                "include_opposing_force": True, "include_blue_shift": True}
 
     def test_left_out(self) -> None:
@@ -420,7 +420,7 @@ class TestCriticalNpcsDefault(HalfLifeTestBase):
 
 
 class TestCriticalNpcsIncluded(HalfLifeTestBase):
-    options = {"scientistsanity": True, "barneysanity": True,
+    options = {"scientistsanity": True, "barneysanity": True, "soldiersanity": True,
                "include_critical_npcs": True,
                "include_opposing_force": True, "include_blue_shift": True}
 

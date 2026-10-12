@@ -177,10 +177,11 @@ MICROWAVE_TRIGGER = "microwave"
 HEAL_PICKUP_TRIGGER = "heal_pickup"
 AMMO_PICKUP_TRIGGER = "ammo_pickup"
 
-# Trigger types of every scientist and every barney, switched on by
-# `scientistsanity` and `barneysanity`.
+# Trigger types of every scientist, barney and friendly soldier, switched on
+# by `scientistsanity`, `barneysanity` and `soldiersanity`.
 SCIENTIST_TRIGGER = "scientist"
 BARNEY_TRIGGER = "barney"
+SOLDIER_TRIGGER = "soldier"
 # Not a trigger type: the scientists and barneys whose death fails the mission
 # (`"critical"` on their trigger), switched on by `include_critical_npcs`. Kept
 # in `excluded_triggers` beside the real types so the tracker reads it the same way.

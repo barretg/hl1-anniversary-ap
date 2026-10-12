@@ -35,6 +35,7 @@ enum class TriggerType {
     AmmoPickup,  // format 7: Ammosanity
     Scientist,   // format 8: Scientistsanity
     Barney,      // format 8: Barneysanity
+    Soldier,     // format 8: Soldiersanity
 };
 
 struct Location {

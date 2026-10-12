@@ -213,12 +213,19 @@ UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 }
 
 
-# Scientists and barneys that cannot be killed, as `{map: {(classname, (x, y,
-# z))}}`.
+# Scientists, barneys and soldiers that cannot be killed, as `{map:
+# {(classname, (x, y, z))}}`.
 UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # Welcome To Black Mesa part 1: the guard shut in with the G-Man, confirmed
     # out of reach in play.
     "of1a1": {("monster_barney", (688, -1047, 0))},
+    # Incoming: the marines riding in the Osprey, out of reach in play.
+    "of0a0": {
+        ("monster_human_grunt_ally", (-2772, 1448, -192)),
+        ("monster_human_grunt_ally", (-1804, 1456, -192)),
+        ("monster_human_grunt_ally", (-2572, -2452, 320)),
+        ("monster_human_medic_ally", (-2284, -3512, 320)),
+    },
 }
 
 # NPCs the automatic exclusions drop that play shows count, same form.
@@ -238,6 +245,9 @@ GENERIC_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 # Its throw ends with a killtarget and a corpse in its place: that is its death.
 REMOVAL_DEATHS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     "of1a1": {("monster_generic", (-424, 1448, 36))},
+    # We Are Pulling Out part 2: `scihist`, deleted as the shock trooper
+    # teleports in on him. Confirmed witnessed in play.
+    "of1a5b": {("monster_scientist", (-424, -1584, 1704))},
 }
 
 # Welcome To Black Mesa part 1: taking the PCV deletes `otis1`, the Otis behind

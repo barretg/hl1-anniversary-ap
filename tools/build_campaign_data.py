@@ -49,6 +49,7 @@ from campaigns import (
     AMMO_PICKUP_CLASSNAMES,
     BARNEY_CLASSNAMES,
     SCIENTIST_CLASSNAMES,
+    SOLDIER_CLASSNAMES,
     CRATE_CLASSNAMES,
     CRATE_SPAWN_OBJECTS,
     ENABLED_LOCATION_TYPES,
@@ -356,6 +357,7 @@ def map_pickups(
 NPC_TRIGGERS: dict[str, dict[str, str]] = {
     "scientist": SCIENTIST_CLASSNAMES,
     "barney": BARNEY_CLASSNAMES,
+    "soldier": SOLDIER_CLASSNAMES,
 }
 
 # `CBaseMonster::m_iTriggerCondition` values that fire a monster's
@@ -414,7 +416,8 @@ def npc_name(npc: dict) -> str:
 
 
 # The display name of a listed `monster_generic` stand-in, by kind.
-GENERIC_NPC_DISPLAY = {"scientist": "Scientist", "barney": "Security Guard"}
+GENERIC_NPC_DISPLAY = {"scientist": "Scientist", "barney": "Security Guard",
+                       "soldier": "Soldier"}
 
 
 def map_npcs(kind: str, ents: list[dict[str, str]],

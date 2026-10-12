@@ -1,5 +1,5 @@
 {
- "data_version": "2d4f8d87fc2e",
+ "data_version": "56fdd266ba53",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -21939,6 +21939,24 @@
    ]
   },
   {
+   "id": 7762037,
+   "name": "Welcome To Black Mesa: Fgrunt1 (Part 1)",
+   "chapter": "of1a1",
+   "map": "of1a1",
+   "trigger": {
+    "type": "soldier",
+    "map": "of1a1",
+    "classname": "monster_human_grunt_ally",
+    "at": "-576 3048 0",
+    "targetname": "fgrunt1"
+   },
+   "position": [
+    -576,
+    3048,
+    0
+   ]
+  },
+  {
    "id": 7760259,
    "name": "Welcome To Black Mesa: Part 2 Reached",
    "chapter": "of1a1",
@@ -22641,6 +22659,25 @@
    ]
   },
   {
+   "id": 7762057,
+   "name": "We Are Pulling Out: Scihist (Part 2)",
+   "chapter": "of1a5",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "scientist",
+    "map": "of1a5b",
+    "classname": "monster_scientist",
+    "at": "-424 -1584 1704",
+    "targetname": "scihist",
+    "removal_death": true
+   },
+   "position": [
+    -424,
+    -1584,
+    1704
+   ]
+  },
+  {
    "id": 7761923,
    "name": "We Are Pulling Out: Barnhist (Part 2)",
    "chapter": "of1a5",
@@ -22674,6 +22711,24 @@
     112,
     -2096,
     1344
+   ]
+  },
+  {
+   "id": 7762038,
+   "name": "We Are Pulling Out: Barnboy (Part 2)",
+   "chapter": "of1a5",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "soldier",
+    "map": "of1a5b",
+    "classname": "monster_human_grunt_ally",
+    "at": "-1408 -2992 2204",
+    "targetname": "barnboy"
+   },
+   "position": [
+    -1408,
+    -2992,
+    2204
    ]
   },
   {
@@ -22809,6 +22864,42 @@
     232,
     -1284,
     8
+   ]
+  },
+  {
+   "id": 7762039,
+   "name": "We Are Pulling Out: Jail Fgrunt1 (Part 3)",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "soldier",
+    "map": "of1a6",
+    "classname": "monster_human_grunt_ally",
+    "at": "632 -292 -24",
+    "targetname": "jail_fgrunt1"
+   },
+   "position": [
+    632,
+    -292,
+    -24
+   ]
+  },
+  {
+   "id": 7762040,
+   "name": "We Are Pulling Out: Radio Fgrunt1 (Part 3)",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "soldier",
+    "map": "of1a6",
+    "classname": "monster_human_grunt_ally",
+    "at": "578 -1318 -24",
+    "targetname": "radio_fgrunt1"
+   },
+   "position": [
+    578,
+    -1318,
+    -24
    ]
   },
   {
@@ -23550,6 +23641,43 @@
    ]
   },
   {
+   "id": 7762041,
+   "name": "Missing In Action: Darkmoctermann (Part 4)",
+   "chapter": "of2a1",
+   "map": "of2a3",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a3",
+    "classname": "monster_human_grunt_ally",
+    "at": "-848 1104 2",
+    "targetname": "darkmoctermann"
+   },
+   "position": [
+    -848,
+    1104,
+    2
+   ]
+  },
+  {
+   "id": 7762042,
+   "name": "Missing In Action: Dimjose (Part 4)",
+   "chapter": "of2a1",
+   "map": "of2a3",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a3",
+    "classname": "monster_human_torch_ally",
+    "at": "-976 1104 2",
+    "targetname": "dimjose",
+    "critical": true
+   },
+   "position": [
+    -976,
+    1104,
+    2
+   ]
+  },
+  {
    "id": 7760274,
    "name": "Friendly Fire: Part 1 Reached",
    "chapter": "of2a4",
@@ -24028,6 +24156,44 @@
    ]
   },
   {
+   "id": 7762043,
+   "name": "Friendly Fire: Guido (Part 2)",
+   "chapter": "of2a4",
+   "map": "of2a5",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a5",
+    "classname": "monster_human_medic_ally",
+    "at": "800 -464 1176",
+    "targetname": "guido",
+    "critical": true
+   },
+   "position": [
+    800,
+    -464,
+    1176
+   ]
+  },
+  {
+   "id": 7762044,
+   "name": "Friendly Fire: Johnson (Part 2)",
+   "chapter": "of2a4",
+   "map": "of2a5",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a5",
+    "classname": "monster_human_torch_ally",
+    "at": "-762 -1028 1176",
+    "targetname": "johnson",
+    "critical": true
+   },
+   "position": [
+    -762,
+    -1028,
+    1176
+   ]
+  },
+  {
    "id": 7760276,
    "name": "Friendly Fire: Part 3 Reached",
    "chapter": "of2a4",
@@ -24465,6 +24631,42 @@
     -2296,
     1904,
     -576
+   ]
+  },
+  {
+   "id": 7762045,
+   "name": "Friendly Fire: Dave (Part 3)",
+   "chapter": "of2a4",
+   "map": "of2a6",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a6",
+    "classname": "monster_human_grunt_ally",
+    "at": "-352 432 -440",
+    "targetname": "dave"
+   },
+   "position": [
+    -352,
+    432,
+    -440
+   ]
+  },
+  {
+   "id": 7762046,
+   "name": "Friendly Fire: Mike (Part 3)",
+   "chapter": "of2a4",
+   "map": "of2a6",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a6",
+    "classname": "monster_human_grunt_ally",
+    "at": "-288 480 -440",
+    "targetname": "mike"
+   },
+   "position": [
+    -288,
+    480,
+    -440
    ]
   },
   {
@@ -27717,6 +27919,42 @@
    ]
   },
   {
+   "id": 7762047,
+   "name": "Foxtrot Uniform: Fgrunt1 (Part 1)",
+   "chapter": "of5a1",
+   "map": "of5a1",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a1",
+    "classname": "monster_human_grunt_ally",
+    "at": "-928 40 112",
+    "targetname": "fgrunt1"
+   },
+   "position": [
+    -928,
+    40,
+    112
+   ]
+  },
+  {
+   "id": 7762048,
+   "name": "Foxtrot Uniform: Fgrunt2 (Part 1)",
+   "chapter": "of5a1",
+   "map": "of5a1",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a1",
+    "classname": "monster_human_grunt_ally",
+    "at": "-1072 8 112",
+    "targetname": "fgrunt2"
+   },
+   "position": [
+    -1072,
+    8,
+    112
+   ]
+  },
+  {
    "id": 7760305,
    "name": "Foxtrot Uniform: Part 2 Reached",
    "chapter": "of5a1",
@@ -28402,6 +28640,59 @@
    ]
   },
   {
+   "id": 7762049,
+   "name": "Foxtrot Uniform: Engineer1 (Part 3)",
+   "chapter": "of5a1",
+   "map": "of5a3",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a3",
+    "classname": "monster_human_torch_ally",
+    "at": "-712 -960 80",
+    "targetname": "engineer1"
+   },
+   "position": [
+    -712,
+    -960,
+    80
+   ]
+  },
+  {
+   "id": 7762050,
+   "name": "Foxtrot Uniform: Medic1 (Part 3)",
+   "chapter": "of5a1",
+   "map": "of5a3",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a3",
+    "classname": "monster_human_medic_ally",
+    "at": "-632 -944 80",
+    "targetname": "medic1"
+   },
+   "position": [
+    -632,
+    -944,
+    80
+   ]
+  },
+  {
+   "id": 7762051,
+   "name": "Foxtrot Uniform: Soldier (Part 3)",
+   "chapter": "of5a1",
+   "map": "of5a3",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a3",
+    "classname": "monster_human_grunt_ally",
+    "at": "-816 -784 80"
+   },
+   "position": [
+    -816,
+    -784,
+    80
+   ]
+  },
+  {
    "id": 7760308,
    "name": "Foxtrot Uniform: Part 4 Reached",
    "chapter": "of5a1",
@@ -28626,6 +28917,57 @@
    ]
   },
   {
+   "id": 7762052,
+   "name": "Foxtrot Uniform: Soldier 1 (Part 4)",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a4",
+    "classname": "monster_human_grunt_ally",
+    "at": "-1408 32 -64"
+   },
+   "position": [
+    -1408,
+    32,
+    -64
+   ]
+  },
+  {
+   "id": 7762053,
+   "name": "Foxtrot Uniform: Soldier 2 (Part 4)",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a4",
+    "classname": "monster_human_grunt_ally",
+    "at": "-48 -112 -64"
+   },
+   "position": [
+    -48,
+    -112,
+    -64
+   ]
+  },
+  {
+   "id": 7762054,
+   "name": "Foxtrot Uniform: Soldier 3 (Part 4)",
+   "chapter": "of5a1",
+   "map": "of5a4",
+   "trigger": {
+    "type": "soldier",
+    "map": "of5a4",
+    "classname": "monster_human_grunt_ally",
+    "at": "144 -608 16"
+   },
+   "position": [
+    144,
+    -608,
+    16
+   ]
+  },
+  {
    "id": 7760311,
    "name": "The Package: Part 1 Reached",
    "chapter": "of6a1",
@@ -28727,6 +29069,42 @@
     -3173,
     -2767,
     -799
+   ]
+  },
+  {
+   "id": 7762055,
+   "name": "The Package: Friendly1 (Part 1)",
+   "chapter": "of6a1",
+   "map": "of6a1",
+   "trigger": {
+    "type": "soldier",
+    "map": "of6a1",
+    "classname": "monster_human_grunt_ally",
+    "at": "-920 2912 130",
+    "targetname": "friendly1"
+   },
+   "position": [
+    -920,
+    2912,
+    130
+   ]
+  },
+  {
+   "id": 7762056,
+   "name": "The Package: Friendly2 (Part 1)",
+   "chapter": "of6a1",
+   "map": "of6a1",
+   "trigger": {
+    "type": "soldier",
+    "map": "of6a1",
+    "classname": "monster_human_grunt_ally",
+    "at": "-832 3024 130",
+    "targetname": "friendly2"
+   },
+   "position": [
+    -832,
+    3024,
+    130
    ]
   },
   {

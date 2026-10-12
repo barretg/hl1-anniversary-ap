@@ -181,6 +181,12 @@ BARNEY_CLASSNAMES: dict[str, str] = {
     "monster_barney": "Security Guard",
     "monster_otis": "Otis",
 }
+# Soldiersanity: Opposing Force's friendly marines.
+SOLDIER_CLASSNAMES: dict[str, str] = {
+    "monster_human_grunt_ally": "Soldier",
+    "monster_human_medic_ally": "Medic",
+    "monster_human_torch_ally": "Engineer",
+}
 
 # --- Logic groups ---------------------------------------------------------
 
@@ -398,9 +404,11 @@ ENABLED_LOCATION_TYPES = {
     # Experimental, off by default in the YAML: every pickup is a check.
     "heal_pickup",
     "ammo_pickup",
-    # Experimental, off by default: every witnessed scientist / barney death.
+    # Experimental, off by default: every witnessed scientist / barney /
+    # friendly soldier death.
     "scientist",
     "barney",
+    "soldier",
     # "pickup",  # the per-map variant, superseded by weapon_pickup
     # "kill",
     # "kill_count",

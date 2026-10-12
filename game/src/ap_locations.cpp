@@ -679,14 +679,17 @@ bool g_tagging = false;
 // `classname|x y z` -> how many have spawned there, for the ordinal.
 std::unordered_map<std::string, int> g_tag_seen;
 
-// Scientistsanity's and Barneysanity's classnames. Must match
-// `SCIENTIST_CLASSNAMES` and `BARNEY_CLASSNAMES` in tools/campaigns/shared.py,
+// Scientistsanity's, Barneysanity's and Soldiersanity's classnames. Must match
+// `SCIENTIST_CLASSNAMES`, `BARNEY_CLASSNAMES` and `SOLDIER_CLASSNAMES` in
+// tools/campaigns/shared.py,
 // plus `monster_generic` for the stand-ins a campaign's `generic_npcs` lists
 // (any other generic matches no location and stays untagged).
 bool CountedNpc(const std::string& classname) {
     return classname == "monster_scientist" || classname == "monster_cleansuit_scientist" ||
            classname == "monster_rosenberg" || classname == "monster_barney" ||
-           classname == "monster_otis" || classname == "monster_generic";
+           classname == "monster_otis" || classname == "monster_human_grunt_ally" ||
+           classname == "monster_human_medic_ally" ||
+           classname == "monster_human_torch_ally" || classname == "monster_generic";
 }
 
 bool CountedPoint(const std::string& classname) {
@@ -935,13 +938,14 @@ void SendLabel(CBasePlayer* player, int index, const std::string& text) {
     MESSAGE_END();
 }
 
-// Whether the seed has any scientist or barney check in it.
+// Whether the seed has any scientist, barney or soldier check in it.
 bool NpcChecksInSeed() {
     if (!Live()) {
         return false;  // no seed yet, and `InSeed` would say yes to everything
     }
     for (const Location& location : Data().locations) {
-        if ((location.type == TriggerType::Scientist || location.type == TriggerType::Barney) &&
+        if ((location.type == TriggerType::Scientist || location.type == TriggerType::Barney ||
+             location.type == TriggerType::Soldier) &&
             State().InSeed(location.id)) {
             return true;
         }
