@@ -1147,8 +1147,12 @@ def build(
                 # Named by targetname when the map gives one, numbered otherwise;
                 # NPCs sharing a name (or none) are numbered among themselves.
                 by_display = {}
+                parts = campaign.npc_parts.get(map_name, {})
                 for npc in npcs:
-                    by_display.setdefault(npc_name(npc), []).append(npc)
+                    part = parts.get((npc["classname"], npc["at"]))
+                    npc["suffix"] = (f" ({part_label(chapter_maps, part)})" if part
+                                     else suffix)
+                    by_display.setdefault((npc_name(npc), npc["suffix"]), []).append(npc)
                 for display in sorted(by_display):
                     group = sorted(
                         by_display[display],
@@ -1167,8 +1171,8 @@ def build(
                         if npc["critical"]:
                             trigger["critical"] = True
                         location = builder.add(chapter, map_name,
-                                               f"{display}{count}{suffix}", trigger,
-                                               position=npc["position"])
+                                               f"{display[0]}{count}{npc['suffix']}",
+                                               trigger, position=npc["position"])
                         if train:
                             location["gates"] = {"always": ["ranged"]}
 

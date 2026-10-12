@@ -127,6 +127,11 @@ class Campaign:
     critical_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
         default_factory=dict
     )
+    # NPCs whose check names a later part than their map, because the player
+    # reaches them from there: `{map: {(classname, (x, y, z)): part map}}`.
+    npc_parts: dict[str, dict[tuple[str, tuple[int, int, int]], str]] = field(
+        default_factory=dict
+    )
     # The train the player rides in each intro map, by targetname. An intro
     # map's NPCs count only if they can be seen from its route.
     intro_trains: dict[str, str] = field(default_factory=dict)

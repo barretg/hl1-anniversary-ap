@@ -252,13 +252,12 @@ KILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # The G-Man's train scientist: the line-of-sight test misses it from the
     # ride, but it can be shot.
     "c0a0d": {("monster_generic", (1680, 1024, -210))},
-    # Anomalous Materials part 5: the two at the retinal scanners. A killtarget
-    # deletes them, but only once the chamber door closes behind the player;
-    # after their scans open it, they can be killed freely.
-    "c1a0e": {
-        ("monster_scientist", (1692, -32, -320)),
-        ("monster_scientist", (1640, -32, -320)),
-    },
+    # Unforeseen Consequences part 5: the scientist pulled into the vent. A
+    # killtarget removes him after the scene, which the player watches.
+    "c1a1b": {("monster_scientist", (-508, -592, -182))},
+    # Apprehension part 2: the scientist the ichthyosaur takes. A killtarget
+    # removes him after the scene, which the player watches.
+    "c2a3a": {("monster_scientist", (1384, 928, 848))},
 }
 
 # NPCs whose death softlocks the run, same form.
@@ -284,6 +283,16 @@ UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
         ("monster_scientist", (1936, 3760, 567)),
         ("monster_barney", (2276, 3680, 567)),
     },
+    # Office Complex part 2: a vortigaunt kills him before a player can reach
+    # him. Confirmed in play.
+    "c1a2a": {("monster_scientist", (28, -1024, -232))},
+}
+
+# NPCs named for a later part than the map they stand in, because the player
+# only reaches them from there: `{map: {(classname, (x, y, z)): part map}}`.
+NPC_PARTS: dict[str, dict[tuple[str, tuple[int, int, int]], str]] = {
+    # Surface Tension: placed in part 6's map, reached coming back from part 7.
+    "c2a5c": {("monster_scientist", (-64, -768, -336)): "c2a5d"},
 }
 
 # The break room microwave. Five buttons share its panel, each mastered by the
@@ -317,6 +326,7 @@ HALF_LIFE = Campaign(
     generic_npcs=GENERIC_NPCS,
     killable_npcs=KILLABLE_NPCS,
     critical_npcs=CRITICAL_NPCS,
+    npc_parts=NPC_PARTS,
     fired_checks=FIRED_CHECKS,
     # The hazard course: a training course rather than part of the campaign.
     # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and

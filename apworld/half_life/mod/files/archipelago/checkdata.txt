@@ -28,7 +28,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's or barney's <arg> is the same as a placed pickup's.
 V|8
-D|dbd857501ff7
+D|dae126c1a7ce
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -169,6 +169,7 @@ L|7761602|c1a1b|ammo_pickup|weapon_handgrenade@-120 -804 -19|Unforeseen Conseque
 L|7761853|c1a1b|scientist|monster_scientist@-304 -696 -216|Unforeseen Consequences: Scientist 1 (Part 5)|-304 -696 -216
 L|7761855|c1a1b|scientist|monster_scientist@1284 -1024 -268|Unforeseen Consequences: Scientist 2 (Part 5)|1284 -1024 -268
 L|7761854|c1a1b|scientist|monster_scientist@609 -1185 -72|Unforeseen Consequences: Sitting Scientist (Part 5)|609 -1185 -72
+L|7762032|c1a1b|scientist|monster_scientist@-508 -592 -182|Unforeseen Consequences: Vent Pull Sci (Part 5)|-508 -592 -182
 L|7760027|c1a1c|map_reached||Unforeseen Consequences: Part 6 Reached
 L|7760028|c1a1c|charger|func_healthcharger@224 -1500 -2464|Unforeseen Consequences: Health Charger 1 (Part 6)|222 -1500 -2463
 L|7760029|c1a1c|charger|func_healthcharger@748 -772 -2680|Unforeseen Consequences: Health Charger 2 (Part 6)|748 -772 -2678
@@ -213,7 +214,6 @@ L|7760448|c1a2a|ammo_pickup|ammo_buckshot@1649 -736 237|Office Complex: Shotgun 
 L|7761862|c1a2a|scientist|monster_scientist@-102 -855 -255|Office Complex: Lightsoutguy (Part 2)|-102 -855 -255
 L|7761861|c1a2a|scientist|monster_scientist@355 -254 -257|Office Complex: Pulled (Part 2)|355 -254 -257
 L|7761863|c1a2a|scientist|monster_scientist@408 -149 -257|Office Complex: Puller (Part 2)|408 -149 -257
-L|7761864|c1a2a|scientist|monster_scientist@28 -1024 -232|Office Complex: Scientist (Part 2)|28 -1024 -232
 L|7761865|c1a2a|scientist|monster_scientist@1940 -524 -256|Office Complex: Talker Sci (Part 2)|1940 -524 -256
 L|7761866|c1a2a|barney|monster_barney@-716 -60 -256|Office Complex: Security Guard (Part 2)|-716 -60 -256
 L|7760039|c1a2b|map_reached||Office Complex: Part 3 Reached
@@ -584,6 +584,7 @@ L|7760644|c2a3a|ammo_pickup|ammo_mp5grenades@624 -372 580|Apprehension: MP5 Gren
 L|7760645|c2a3a|ammo_pickup|ammo_mp5grenades@626 -424 580|Apprehension: MP5 Grenades 2 (Part 2)|626 -424 580
 L|7760646|c2a3a|ammo_pickup|ammo_mp5grenades@564 -374 580|Apprehension: MP5 Grenades 3 (Part 2)|564 -374 580
 L|7760647|c2a3a|ammo_pickup|ammo_mp5grenades@564 -424 580|Apprehension: MP5 Grenades 4 (Part 2)|564 -424 580
+L|7762033|c2a3a|scientist|monster_scientist@1384 928 848|Apprehension: Ickyjumpsci (Part 2)|1384 928 848
 L|7761895|c2a3a|scientist|monster_scientist@768 720 1200|Apprehension: Talker (Part 2)|768 720 1200
 L|7760119|c2a3b|map_reached||Apprehension: Part 3 Reached
 L|7760120|c2a3b|charger|func_healthcharger@-952 2608 1092|Apprehension: Health Charger (Part 3)|-952 2608 1092
@@ -783,7 +784,7 @@ L|7760775|c2a5b|ammo_pickup|ammo_rpgclip@224 -688 0|Surface Tension: Rockets 3 (
 L|7760776|c2a5b|ammo_pickup|ammo_rpgclip@256 -688 0|Surface Tension: Rockets 4 (Part 5)|256 -688 0
 L|7760160|c2a5c|map_reached||Surface Tension: Part 6 Reached
 L|7760777|c2a5c|heal_pickup|func_breakable@-184 -752 -288|Surface Tension: Crate Health Kit (Part 6)|-183 -751 -288
-L|7761900|c2a5c|scientist|monster_scientist@-64 -768 -336|Surface Tension: Scientist (Part 6)|-64 -768 -336
+L|7761900|c2a5c|scientist|monster_scientist@-64 -768 -336|Surface Tension: Scientist (Part 7)|-64 -768 -336
 L|7761901|c2a5c|barney|monster_barney@-688 400 -272|Surface Tension: Security Guard (Part 6)|-688 400 -272
 L|7760161|c2a5d|map_reached||Surface Tension: Part 7 Reached
 L|7760778|c2a5d|heal_pickup|func_breakable@-184 -752 -288|Surface Tension: Crate Health Kit 1 (Part 7)|-183 -751 -288
