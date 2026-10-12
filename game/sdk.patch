@@ -293,6 +293,29 @@ index 54c283a..510778b 100644
 +// AP: SPR_Load, or 0 when the file is not there. Opposing Force's and Blue
 +// Shift's sprites exist only when /install linked them in.
 +HSPRITE APSPR_Load(const char *pszName);
+diff --git a/cl_dll/death.cpp b/cl_dll/death.cpp
+index 44f4f19..fe5ec6f 100644
+--- a/cl_dll/death.cpp
++++ b/cl_dll/death.cpp
+@@ -59,7 +59,17 @@ float *GetClientColor( int clientIndex )
+ 	case 2: return g_ColorRed;
+ 	case 3: return g_ColorYellow;
+ 	case 4: return g_ColorGreen;
+-	case 0: return g_ColorYellow;
++	case 0:
++		// AP: teamless names take the current game's HUD colour, as chat does
++		if ( g_ulAPHudColor )
++		{
++			static float s_flAPColor[3];
++			s_flAPColor[0] = ( ( g_ulAPHudColor >> 16 ) & 0xFF ) / 255.0f;
++			s_flAPColor[1] = ( ( g_ulAPHudColor >> 8 ) & 0xFF ) / 255.0f;
++			s_flAPColor[2] = ( g_ulAPHudColor & 0xFF ) / 255.0f;
++			return s_flAPColor;
++		}
++		return g_ColorYellow;
+ 
+ 		default	: return g_ColorGrey;
+ 	}
 diff --git a/cl_dll/ev_hldm.cpp b/cl_dll/ev_hldm.cpp
 index 91aed0c..b6318ce 100644
 --- a/cl_dll/ev_hldm.cpp
