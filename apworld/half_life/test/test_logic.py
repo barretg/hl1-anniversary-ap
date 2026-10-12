@@ -374,7 +374,7 @@ class TestNpcsWithIntros(HalfLifeTestBase):
 
     def test_intro_npcs_need_a_ranged_weapon(self) -> None:
         intro = [e for e in LOCATIONS if e["trigger"]["type"] in ("scientist", "barney")
-                 and e.get("gates")]
+                 and e.get("gates") and not e["trigger"].get("critical")]
         self.assertTrue(intro)
         state = self.multiworld.state.copy()
         for entry in intro:

@@ -121,6 +121,12 @@ class Campaign:
     generic_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
         default_factory=dict
     )
+    # NPCs whose death breaks the run in a way the reload test cannot see (a
+    # softlock), as `{map: {(classname, (x, y, z))}}`: checks behind
+    # `include_critical_npcs`, kept whatever the automatic exclusions say.
+    critical_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
     # The train the player rides in each intro map, by targetname. An intro
     # map's NPCs count only if they can be seen from its route.
     intro_trains: dict[str, str] = field(default_factory=dict)

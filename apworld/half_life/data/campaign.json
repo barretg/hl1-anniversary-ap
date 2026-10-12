@@ -1,5 +1,5 @@
 {
- "data_version": "104205297e50",
+ "data_version": "dbd857501ff7",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -1495,7 +1495,7 @@
   },
   {
    "id": 7761792,
-   "name": "Black Mesa Inbound: Scientist 1 (Part 1)",
+   "name": "Black Mesa Inbound: Ponderguy (Part 1)",
    "chapter": "c0a0",
    "map": "c0a0",
    "trigger": {
@@ -1517,31 +1517,8 @@
    }
   },
   {
-   "id": 7761794,
-   "name": "Black Mesa Inbound: Scientist 2 (Part 1)",
-   "chapter": "c0a0",
-   "map": "c0a0",
-   "trigger": {
-    "type": "scientist",
-    "map": "c0a0",
-    "classname": "monster_scientist",
-    "at": "-2798 882 531",
-    "targetname": "trainwalk"
-   },
-   "position": [
-    -2798,
-    882,
-    531
-   ],
-   "gates": {
-    "always": [
-     "ranged"
-    ]
-   }
-  },
-  {
    "id": 7761795,
-   "name": "Black Mesa Inbound: Scientist 3 (Part 1)",
+   "name": "Black Mesa Inbound: Room2 Walker1 (Part 1)",
    "chapter": "c0a0",
    "map": "c0a0",
    "trigger": {
@@ -1563,31 +1540,8 @@
    }
   },
   {
-   "id": 7761797,
-   "name": "Black Mesa Inbound: Scientist 4 (Part 1)",
-   "chapter": "c0a0",
-   "map": "c0a0",
-   "trigger": {
-    "type": "scientist",
-    "map": "c0a0",
-    "classname": "monster_scientist",
-    "at": "-1716 1134 -501",
-    "targetname": "runnerguy2"
-   },
-   "position": [
-    -1716,
-    1134,
-    -501
-   ],
-   "gates": {
-    "always": [
-     "ranged"
-    ]
-   }
-  },
-  {
    "id": 7761798,
-   "name": "Black Mesa Inbound: Scientist 5 (Part 1)",
+   "name": "Black Mesa Inbound: Runnerguy (Part 1)",
    "chapter": "c0a0",
    "map": "c0a0",
    "trigger": {
@@ -1609,8 +1563,54 @@
    }
   },
   {
+   "id": 7761797,
+   "name": "Black Mesa Inbound: Runnerguy2 (Part 1)",
+   "chapter": "c0a0",
+   "map": "c0a0",
+   "trigger": {
+    "type": "scientist",
+    "map": "c0a0",
+    "classname": "monster_scientist",
+    "at": "-1716 1134 -501",
+    "targetname": "runnerguy2"
+   },
+   "position": [
+    -1716,
+    1134,
+    -501
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "id": 7761794,
+   "name": "Black Mesa Inbound: Trainwalk (Part 1)",
+   "chapter": "c0a0",
+   "map": "c0a0",
+   "trigger": {
+    "type": "scientist",
+    "map": "c0a0",
+    "classname": "monster_scientist",
+    "at": "-2798 882 531",
+    "targetname": "trainwalk"
+   },
+   "position": [
+    -2798,
+    882,
+    531
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
    "id": 7761800,
-   "name": "Black Mesa Inbound: Security Guard 1 (Part 1)",
+   "name": "Black Mesa Inbound: Flashlight (Part 1)",
    "chapter": "c0a0",
    "map": "c0a0",
    "trigger": {
@@ -1633,7 +1633,7 @@
   },
   {
    "id": 7761801,
-   "name": "Black Mesa Inbound: Security Guard 2 (Part 1)",
+   "name": "Black Mesa Inbound: Runnerguy3 (Part 1)",
    "chapter": "c0a0",
    "map": "c0a0",
    "trigger": {
@@ -1676,7 +1676,7 @@
   },
   {
    "id": 7761802,
-   "name": "Black Mesa Inbound: Scientist (Part 3)",
+   "name": "Black Mesa Inbound: Helisci1 (Part 3)",
    "chapter": "c0a0",
    "map": "c0a0b",
    "trigger": {
@@ -1699,7 +1699,7 @@
   },
   {
    "id": 7761803,
-   "name": "Black Mesa Inbound: Security Guard (Part 3)",
+   "name": "Black Mesa Inbound: Helibarn1 (Part 3)",
    "chapter": "c0a0",
    "map": "c0a0b",
    "trigger": {
@@ -1732,7 +1732,7 @@
   },
   {
    "id": 7761804,
-   "name": "Black Mesa Inbound: Scientist (Part 4)",
+   "name": "Black Mesa Inbound: Walker2 (Part 4)",
    "chapter": "c0a0",
    "map": "c0a0c",
    "trigger": {
@@ -1778,6 +1778,30 @@
     1680,
     1024,
     -210
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "id": 7762029,
+   "name": "Black Mesa Inbound: Security Guard (Part 5)",
+   "chapter": "c0a0",
+   "map": "c0a0d",
+   "trigger": {
+    "type": "barney",
+    "map": "c0a0d",
+    "classname": "monster_barney",
+    "at": "-2017 -458 -221",
+    "targetname": "barney1",
+    "critical": true
+   },
+   "position": [
+    -2017,
+    -458,
+    -221
    ],
    "gates": {
     "always": [
@@ -1840,62 +1864,8 @@
    ]
   },
   {
-   "id": 7761805,
-   "name": "Anomalous Materials: Scientist 1 (Part 1)",
-   "chapter": "c1a0",
-   "map": "c1a0",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0",
-    "classname": "monster_scientist",
-    "at": "148 184 -223",
-    "targetname": "introwalkerguy1"
-   },
-   "position": [
-    148,
-    184,
-    -223
-   ]
-  },
-  {
-   "id": 7761806,
-   "name": "Anomalous Materials: Scientist 2 (Part 1)",
-   "chapter": "c1a0",
-   "map": "c1a0",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0",
-    "classname": "monster_scientist",
-    "at": "-166 240 -223",
-    "targetname": "introroomleaner"
-   },
-   "position": [
-    -166,
-    240,
-    -223
-   ]
-  },
-  {
-   "id": 7761807,
-   "name": "Anomalous Materials: Scientist 3 (Part 1)",
-   "chapter": "c1a0",
-   "map": "c1a0",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0",
-    "classname": "monster_scientist",
-    "at": "-208 500 -223",
-    "targetname": "introroomgizmosci"
-   },
-   "position": [
-    -208,
-    500,
-    -223
-   ]
-  },
-  {
    "id": 7761809,
-   "name": "Anomalous Materials: Scientist 4 (Part 1)",
+   "name": "Anomalous Materials: Arguments (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
@@ -1912,26 +1882,80 @@
    ]
   },
   {
-   "id": 7761811,
-   "name": "Anomalous Materials: Scientist 5 (Part 1)",
+   "id": 7761815,
+   "name": "Anomalous Materials: Bucky (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
     "type": "scientist",
     "map": "c1a0",
     "classname": "monster_scientist",
-    "at": "-712 104 -216",
-    "targetname": "study"
+    "at": "-1008 -536 -216",
+    "targetname": "bucky"
    },
    "position": [
-    -712,
-    104,
+    -1008,
+    -536,
     -216
    ]
   },
   {
+   "id": 7761807,
+   "name": "Anomalous Materials: Introroomgizmosci (Part 1)",
+   "chapter": "c1a0",
+   "map": "c1a0",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0",
+    "classname": "monster_scientist",
+    "at": "-208 500 -223",
+    "targetname": "introroomgizmosci"
+   },
+   "position": [
+    -208,
+    500,
+    -223
+   ]
+  },
+  {
+   "id": 7761806,
+   "name": "Anomalous Materials: Introroomleaner (Part 1)",
+   "chapter": "c1a0",
+   "map": "c1a0",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0",
+    "classname": "monster_scientist",
+    "at": "-166 240 -223",
+    "targetname": "introroomleaner"
+   },
+   "position": [
+    -166,
+    240,
+    -223
+   ]
+  },
+  {
+   "id": 7761805,
+   "name": "Anomalous Materials: Introwalkerguy1 (Part 1)",
+   "chapter": "c1a0",
+   "map": "c1a0",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0",
+    "classname": "monster_scientist",
+    "at": "148 184 -223",
+    "targetname": "introwalkerguy1"
+   },
+   "position": [
+    148,
+    184,
+    -223
+   ]
+  },
+  {
    "id": 7761813,
-   "name": "Anomalous Materials: Scientist 6 (Part 1)",
+   "name": "Anomalous Materials: Introwalkerguy1b (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
@@ -1949,7 +1973,7 @@
   },
   {
    "id": 7761814,
-   "name": "Anomalous Materials: Scientist 7 (Part 1)",
+   "name": "Anomalous Materials: Introwalkerguy2 (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
@@ -1966,26 +1990,8 @@
    ]
   },
   {
-   "id": 7761815,
-   "name": "Anomalous Materials: Scientist 8 (Part 1)",
-   "chapter": "c1a0",
-   "map": "c1a0",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0",
-    "classname": "monster_scientist",
-    "at": "-1008 -536 -216",
-    "targetname": "bucky"
-   },
-   "position": [
-    -1008,
-    -536,
-    -216
-   ]
-  },
-  {
    "id": 7761817,
-   "name": "Anomalous Materials: Scientist 9 (Part 1)",
+   "name": "Anomalous Materials: Mad (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
@@ -2002,8 +2008,26 @@
    ]
   },
   {
+   "id": 7761811,
+   "name": "Anomalous Materials: Study (Part 1)",
+   "chapter": "c1a0",
+   "map": "c1a0",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0",
+    "classname": "monster_scientist",
+    "at": "-712 104 -216",
+    "targetname": "study"
+   },
+   "position": [
+    -712,
+    104,
+    -216
+   ]
+  },
+  {
    "id": 7761818,
-   "name": "Anomalous Materials: Security Guard 1 (Part 1)",
+   "name": "Anomalous Materials: Barneyatdesk (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
@@ -2021,7 +2045,7 @@
   },
   {
    "id": 7761819,
-   "name": "Anomalous Materials: Security Guard 2 (Part 1)",
+   "name": "Anomalous Materials: Leaningbarney (Part 1)",
    "chapter": "c1a0",
    "map": "c1a0",
    "trigger": {
@@ -2083,26 +2107,26 @@
    ]
   },
   {
-   "id": 7761820,
-   "name": "Anomalous Materials: Scientist 1 (Part 2)",
+   "id": 7761824,
+   "name": "Anomalous Materials: Airlockwalkersci (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
     "type": "scientist",
     "map": "c1a0d",
     "classname": "monster_scientist",
-    "at": "-1840 528 -256",
-    "targetname": "scientist1"
+    "at": "-2624 -708 -272",
+    "targetname": "airlockwalkersci"
    },
    "position": [
-    -1840,
-    528,
-    -256
+    -2624,
+    -708,
+    -272
    ]
   },
   {
    "id": 7761821,
-   "name": "Anomalous Materials: Scientist 2 (Part 2)",
+   "name": "Anomalous Materials: Cartguy (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
@@ -2120,7 +2144,7 @@
   },
   {
    "id": 7761822,
-   "name": "Anomalous Materials: Scientist 3 (Part 2)",
+   "name": "Anomalous Materials: Coffee (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
@@ -2137,8 +2161,26 @@
    ]
   },
   {
+   "id": 7761820,
+   "name": "Anomalous Materials: Scientist (Part 2)",
+   "chapter": "c1a0",
+   "map": "c1a0d",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0d",
+    "classname": "monster_scientist",
+    "at": "-1840 528 -256",
+    "targetname": "scientist1"
+   },
+   "position": [
+    -1840,
+    528,
+    -256
+   ]
+  },
+  {
    "id": 7761823,
-   "name": "Anomalous Materials: Scientist 4 (Part 2)",
+   "name": "Anomalous Materials: Soda (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
@@ -2155,26 +2197,8 @@
    ]
   },
   {
-   "id": 7761824,
-   "name": "Anomalous Materials: Scientist 5 (Part 2)",
-   "chapter": "c1a0",
-   "map": "c1a0d",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0d",
-    "classname": "monster_scientist",
-    "at": "-2624 -708 -272",
-    "targetname": "airlockwalkersci"
-   },
-   "position": [
-    -2624,
-    -708,
-    -272
-   ]
-  },
-  {
    "id": 7761825,
-   "name": "Anomalous Materials: Scientist 6 (Part 2)",
+   "name": "Anomalous Materials: Tim (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
@@ -2192,7 +2216,7 @@
   },
   {
    "id": 7761828,
-   "name": "Anomalous Materials: Security Guard (Part 2)",
+   "name": "Anomalous Materials: Airlockbarney (Part 2)",
    "chapter": "c1a0",
    "map": "c1a0d",
    "trigger": {
@@ -2235,26 +2259,8 @@
    }
   },
   {
-   "id": 7761829,
-   "name": "Anomalous Materials: Scientist 1 (Part 3)",
-   "chapter": "c1a0",
-   "map": "c1a0a",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0a",
-    "classname": "monster_scientist",
-    "at": "864 1552 -120",
-    "targetname": "sci5"
-   },
-   "position": [
-    864,
-    1552,
-    -120
-   ]
-  },
-  {
    "id": 7761830,
-   "name": "Anomalous Materials: Scientist 2 (Part 3)",
+   "name": "Anomalous Materials: Sci4 (Part 3)",
    "chapter": "c1a0",
    "map": "c1a0a",
    "trigger": {
@@ -2271,8 +2277,26 @@
    ]
   },
   {
+   "id": 7761829,
+   "name": "Anomalous Materials: Sci5 (Part 3)",
+   "chapter": "c1a0",
+   "map": "c1a0a",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0a",
+    "classname": "monster_scientist",
+    "at": "864 1552 -120",
+    "targetname": "sci5"
+   },
+   "position": [
+    864,
+    1552,
+    -120
+   ]
+  },
+  {
    "id": 7761831,
-   "name": "Anomalous Materials: Scientist 3 (Part 3)",
+   "name": "Anomalous Materials: Scientist 1 (Part 3)",
    "chapter": "c1a0",
    "map": "c1a0a",
    "trigger": {
@@ -2289,7 +2313,7 @@
   },
   {
    "id": 7761832,
-   "name": "Anomalous Materials: Scientist 4 (Part 3)",
+   "name": "Anomalous Materials: Scientist 2 (Part 3)",
    "chapter": "c1a0",
    "map": "c1a0a",
    "trigger": {
@@ -2332,26 +2356,8 @@
    }
   },
   {
-   "id": 7761834,
-   "name": "Anomalous Materials: Scientist 1 (Part 4)",
-   "chapter": "c1a0",
-   "map": "c1a0b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0b",
-    "classname": "monster_scientist",
-    "at": "910 648 -144",
-    "targetname": "ctrlsci2"
-   },
-   "position": [
-    910,
-    648,
-    -144
-   ]
-  },
-  {
    "id": 7761835,
-   "name": "Anomalous Materials: Scientist 2 (Part 4)",
+   "name": "Anomalous Materials: Ctrlsci1 (Part 4)",
    "chapter": "c1a0",
    "map": "c1a0b",
    "trigger": {
@@ -2368,8 +2374,26 @@
    ]
   },
   {
+   "id": 7761834,
+   "name": "Anomalous Materials: Ctrlsci2 (Part 4)",
+   "chapter": "c1a0",
+   "map": "c1a0b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0b",
+    "classname": "monster_scientist",
+    "at": "910 648 -144",
+    "targetname": "ctrlsci2"
+   },
+   "position": [
+    910,
+    648,
+    -144
+   ]
+  },
+  {
    "id": 7761837,
-   "name": "Anomalous Materials: Scientist 3 (Part 4)",
+   "name": "Anomalous Materials: Ctrlsci3 (Part 4)",
    "chapter": "c1a0",
    "map": "c1a0b",
    "trigger": {
@@ -2386,62 +2410,8 @@
    ]
   },
   {
-   "id": 7761838,
-   "name": "Anomalous Materials: Scientist 4 (Part 4)",
-   "chapter": "c1a0",
-   "map": "c1a0b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0b",
-    "classname": "monster_scientist",
-    "at": "168 376 -144",
-    "targetname": "panic2sci"
-   },
-   "position": [
-    168,
-    376,
-    -144
-   ]
-  },
-  {
-   "id": 7761839,
-   "name": "Anomalous Materials: Scientist 5 (Part 4)",
-   "chapter": "c1a0",
-   "map": "c1a0b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0b",
-    "classname": "monster_scientist",
-    "at": "128 328 -144",
-    "targetname": "panic1sci"
-   },
-   "position": [
-    128,
-    328,
-    -144
-   ]
-  },
-  {
-   "id": 7761840,
-   "name": "Anomalous Materials: Scientist 6 (Part 4)",
-   "chapter": "c1a0",
-   "map": "c1a0b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0b",
-    "classname": "monster_scientist",
-    "at": "992 984 -360",
-    "targetname": "inspect2"
-   },
-   "position": [
-    992,
-    984,
-    -360
-   ]
-  },
-  {
    "id": 7761841,
-   "name": "Anomalous Materials: Scientist 7 (Part 4)",
+   "name": "Anomalous Materials: Inspect1 (Part 4)",
    "chapter": "c1a0",
    "map": "c1a0b",
    "trigger": {
@@ -2458,6 +2428,60 @@
    ]
   },
   {
+   "id": 7761840,
+   "name": "Anomalous Materials: Inspect2 (Part 4)",
+   "chapter": "c1a0",
+   "map": "c1a0b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0b",
+    "classname": "monster_scientist",
+    "at": "992 984 -360",
+    "targetname": "inspect2"
+   },
+   "position": [
+    992,
+    984,
+    -360
+   ]
+  },
+  {
+   "id": 7761839,
+   "name": "Anomalous Materials: Panic1sci (Part 4)",
+   "chapter": "c1a0",
+   "map": "c1a0b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0b",
+    "classname": "monster_scientist",
+    "at": "128 328 -144",
+    "targetname": "panic1sci"
+   },
+   "position": [
+    128,
+    328,
+    -144
+   ]
+  },
+  {
+   "id": 7761838,
+   "name": "Anomalous Materials: Panic2sci (Part 4)",
+   "chapter": "c1a0",
+   "map": "c1a0b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0b",
+    "classname": "monster_scientist",
+    "at": "168 376 -144",
+    "targetname": "panic2sci"
+   },
+   "position": [
+    168,
+    376,
+    -144
+   ]
+  },
+  {
    "id": 7760014,
    "name": "Anomalous Materials: Part 5 Reached",
    "chapter": "c1a0",
@@ -2466,6 +2490,44 @@
     "type": "map_reached",
     "map": "c1a0e"
    }
+  },
+  {
+   "id": 7762031,
+   "name": "Anomalous Materials: Test Airlock Sci1 (Part 5)",
+   "chapter": "c1a0",
+   "map": "c1a0e",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0e",
+    "classname": "monster_scientist",
+    "at": "1692 -32 -320",
+    "targetname": "test_airlock_sci1",
+    "critical": true
+   },
+   "position": [
+    1692,
+    -32,
+    -320
+   ]
+  },
+  {
+   "id": 7762030,
+   "name": "Anomalous Materials: Test Airlock Sci2 (Part 5)",
+   "chapter": "c1a0",
+   "map": "c1a0e",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0e",
+    "classname": "monster_scientist",
+    "at": "1640 -32 -320",
+    "targetname": "test_airlock_sci2",
+    "critical": true
+   },
+   "position": [
+    1640,
+    -32,
+    -320
+   ]
   },
   {
    "id": 7760015,
@@ -2497,7 +2559,7 @@
   },
   {
    "id": 7761842,
-   "name": "Unforeseen Consequences: Scientist 1 (Part 1)",
+   "name": "Unforeseen Consequences: Console Guy (Part 1)",
    "chapter": "c1a0c",
    "map": "c1a0c",
    "trigger": {
@@ -2514,26 +2576,8 @@
    ]
   },
   {
-   "id": 7761843,
-   "name": "Unforeseen Consequences: Scientist 2 (Part 1)",
-   "chapter": "c1a0c",
-   "map": "c1a0c",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a0c",
-    "classname": "monster_scientist",
-    "at": "200 40 -140",
-    "targetname": "freak"
-   },
-   "position": [
-    200,
-    40,
-    -140
-   ]
-  },
-  {
    "id": 7761844,
-   "name": "Unforeseen Consequences: Scientist 3 (Part 1)",
+   "name": "Unforeseen Consequences: Cprguy (Part 1)",
    "chapter": "c1a0c",
    "map": "c1a0c",
    "trigger": {
@@ -2550,8 +2594,26 @@
    ]
   },
   {
+   "id": 7761843,
+   "name": "Unforeseen Consequences: Freak (Part 1)",
+   "chapter": "c1a0c",
+   "map": "c1a0c",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a0c",
+    "classname": "monster_scientist",
+    "at": "200 40 -140",
+    "targetname": "freak"
+   },
+   "position": [
+    200,
+    40,
+    -140
+   ]
+  },
+  {
    "id": 7761845,
-   "name": "Unforeseen Consequences: Security Guard (Part 1)",
+   "name": "Unforeseen Consequences: Cpree (Part 1)",
    "chapter": "c1a0c",
    "map": "c1a0c",
    "trigger": {
@@ -2648,7 +2710,7 @@
   },
   {
    "id": 7761849,
-   "name": "Unforeseen Consequences: Security Guard (Part 2)",
+   "name": "Unforeseen Consequences: Fighting Barney (Part 2)",
    "chapter": "c1a0c",
    "map": "c1a1",
    "trigger": {
@@ -2828,7 +2890,7 @@
   },
   {
    "id": 7761850,
-   "name": "Unforeseen Consequences: Scientist 1 (Part 4)",
+   "name": "Unforeseen Consequences: Headcrab Sci (Part 4)",
    "chapter": "c1a0c",
    "map": "c1a1f",
    "trigger": {
@@ -2846,7 +2908,7 @@
   },
   {
    "id": 7761851,
-   "name": "Unforeseen Consequences: Scientist 2 (Part 4)",
+   "name": "Unforeseen Consequences: Sciguy (Part 4)",
    "chapter": "c1a0c",
    "map": "c1a1f",
    "trigger": {
@@ -2864,7 +2926,7 @@
   },
   {
    "id": 7761852,
-   "name": "Unforeseen Consequences: Security Guard (Part 4)",
+   "name": "Unforeseen Consequences: Crawl Barney (Part 4)",
    "chapter": "c1a0c",
    "map": "c1a1f",
    "trigger": {
@@ -3102,8 +3164,25 @@
    ]
   },
   {
-   "id": 7761854,
+   "id": 7761855,
    "name": "Unforeseen Consequences: Scientist 2 (Part 5)",
+   "chapter": "c1a0c",
+   "map": "c1a1b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a1b",
+    "classname": "monster_scientist",
+    "at": "1284 -1024 -268"
+   },
+   "position": [
+    1284,
+    -1024,
+    -268
+   ]
+  },
+  {
+   "id": 7761854,
+   "name": "Unforeseen Consequences: Sitting Scientist (Part 5)",
    "chapter": "c1a0c",
    "map": "c1a1b",
    "trigger": {
@@ -3117,23 +3196,6 @@
     609,
     -1185,
     -72
-   ]
-  },
-  {
-   "id": 7761855,
-   "name": "Unforeseen Consequences: Scientist 3 (Part 5)",
-   "chapter": "c1a0c",
-   "map": "c1a1b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a1b",
-    "classname": "monster_scientist",
-    "at": "1284 -1024 -268"
-   },
-   "position": [
-    1284,
-    -1024,
-    -268
    ]
   },
   {
@@ -3580,7 +3642,7 @@
   },
   {
    "id": 7761856,
-   "name": "Office Complex: Scientist 1 (Part 1)",
+   "name": "Office Complex: Elesci (Part 1)",
    "chapter": "c1a2",
    "map": "c1a2",
    "trigger": {
@@ -3597,26 +3659,8 @@
    ]
   },
   {
-   "id": 7761857,
-   "name": "Office Complex: Scientist 2 (Part 1)",
-   "chapter": "c1a2",
-   "map": "c1a2",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a2",
-    "classname": "monster_scientist",
-    "at": "2601 -671 -576",
-    "targetname": "runguy"
-   },
-   "position": [
-    2601,
-    -671,
-    -576
-   ]
-  },
-  {
    "id": 7761858,
-   "name": "Office Complex: Scientist 3 (Part 1)",
+   "name": "Office Complex: Foodguy (Part 1)",
    "chapter": "c1a2",
    "map": "c1a2",
    "trigger": {
@@ -3633,8 +3677,26 @@
    ]
   },
   {
+   "id": 7761857,
+   "name": "Office Complex: Runguy (Part 1)",
+   "chapter": "c1a2",
+   "map": "c1a2",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a2",
+    "classname": "monster_scientist",
+    "at": "2601 -671 -576",
+    "targetname": "runguy"
+   },
+   "position": [
+    2601,
+    -671,
+    -576
+   ]
+  },
+  {
    "id": 7761859,
-   "name": "Office Complex: Scientist 4 (Part 1)",
+   "name": "Office Complex: Sci (Part 1)",
    "chapter": "c1a2",
    "map": "c1a2",
    "trigger": {
@@ -3652,7 +3714,7 @@
   },
   {
    "id": 7761860,
-   "name": "Office Complex: Scientist 5 (Part 1)",
+   "name": "Office Complex: Turretguy (Part 1)",
    "chapter": "c1a2",
    "map": "c1a2",
    "trigger": {
@@ -3841,26 +3903,8 @@
    ]
   },
   {
-   "id": 7761861,
-   "name": "Office Complex: Scientist 1 (Part 2)",
-   "chapter": "c1a2",
-   "map": "c1a2a",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a2a",
-    "classname": "monster_scientist",
-    "at": "355 -254 -257",
-    "targetname": "pulled"
-   },
-   "position": [
-    355,
-    -254,
-    -257
-   ]
-  },
-  {
    "id": 7761862,
-   "name": "Office Complex: Scientist 2 (Part 2)",
+   "name": "Office Complex: Lightsoutguy (Part 2)",
    "chapter": "c1a2",
    "map": "c1a2a",
    "trigger": {
@@ -3877,8 +3921,26 @@
    ]
   },
   {
+   "id": 7761861,
+   "name": "Office Complex: Pulled (Part 2)",
+   "chapter": "c1a2",
+   "map": "c1a2a",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a2a",
+    "classname": "monster_scientist",
+    "at": "355 -254 -257",
+    "targetname": "pulled"
+   },
+   "position": [
+    355,
+    -254,
+    -257
+   ]
+  },
+  {
    "id": 7761863,
-   "name": "Office Complex: Scientist 3 (Part 2)",
+   "name": "Office Complex: Puller (Part 2)",
    "chapter": "c1a2",
    "map": "c1a2a",
    "trigger": {
@@ -3896,7 +3958,7 @@
   },
   {
    "id": 7761864,
-   "name": "Office Complex: Scientist 4 (Part 2)",
+   "name": "Office Complex: Scientist (Part 2)",
    "chapter": "c1a2",
    "map": "c1a2a",
    "trigger": {
@@ -3913,7 +3975,7 @@
   },
   {
    "id": 7761865,
-   "name": "Office Complex: Scientist 5 (Part 2)",
+   "name": "Office Complex: Talker Sci (Part 2)",
    "chapter": "c1a2",
    "map": "c1a2a",
    "trigger": {
@@ -4316,44 +4378,8 @@
    ]
   },
   {
-   "id": 7761867,
-   "name": "Office Complex: Scientist 1 (Part 3)",
-   "chapter": "c1a2",
-   "map": "c1a2b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a2b",
-    "classname": "monster_scientist",
-    "at": "1414 -1819 224",
-    "targetname": "doorgetterguy"
-   },
-   "position": [
-    1414,
-    -1819,
-    224
-   ]
-  },
-  {
-   "id": 7761868,
-   "name": "Office Complex: Scientist 2 (Part 3)",
-   "chapter": "c1a2",
-   "map": "c1a2b",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a2b",
-    "classname": "monster_scientist",
-    "at": "470 -1842 412",
-    "targetname": "divingbob"
-   },
-   "position": [
-    470,
-    -1842,
-    412
-   ]
-  },
-  {
    "id": 7761869,
-   "name": "Office Complex: Scientist 3 (Part 3)",
+   "name": "Office Complex: Cliff (Part 3)",
    "chapter": "c1a2",
    "map": "c1a2b",
    "trigger": {
@@ -4370,8 +4396,44 @@
    ]
   },
   {
+   "id": 7761868,
+   "name": "Office Complex: Divingbob (Part 3)",
+   "chapter": "c1a2",
+   "map": "c1a2b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a2b",
+    "classname": "monster_scientist",
+    "at": "470 -1842 412",
+    "targetname": "divingbob"
+   },
+   "position": [
+    470,
+    -1842,
+    412
+   ]
+  },
+  {
+   "id": 7761867,
+   "name": "Office Complex: Doorgetterguy (Part 3)",
+   "chapter": "c1a2",
+   "map": "c1a2b",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a2b",
+    "classname": "monster_scientist",
+    "at": "1414 -1819 224",
+    "targetname": "doorgetterguy"
+   },
+   "position": [
+    1414,
+    -1819,
+    224
+   ]
+  },
+  {
    "id": 7761870,
-   "name": "Office Complex: Security Guard 1 (Part 3)",
+   "name": "Office Complex: Barney Speak (Part 3)",
    "chapter": "c1a2",
    "map": "c1a2b",
    "trigger": {
@@ -4389,7 +4451,7 @@
   },
   {
    "id": 7761871,
-   "name": "Office Complex: Security Guard 2 (Part 3)",
+   "name": "Office Complex: Dying (Part 3)",
    "chapter": "c1a2",
    "map": "c1a2b",
    "trigger": {
@@ -4407,7 +4469,7 @@
   },
   {
    "id": 7761872,
-   "name": "Office Complex: Security Guard 3 (Part 3)",
+   "name": "Office Complex: Friend (Part 3)",
    "chapter": "c1a2",
    "map": "c1a2b",
    "trigger": {
@@ -4671,7 +4733,7 @@
   },
   {
    "id": 7761873,
-   "name": "Office Complex: Scientist (Part 4)",
+   "name": "Office Complex: Freezer Sci (Part 4)",
    "chapter": "c1a2",
    "map": "c1a2c",
    "trigger": {
@@ -4881,7 +4943,7 @@
   },
   {
    "id": 7761874,
-   "name": "Office Complex: Security Guard (Part 5)",
+   "name": "Office Complex: Dueling Barney (Part 5)",
    "chapter": "c1a2",
    "map": "c1a2d",
    "trigger": {
@@ -5285,7 +5347,7 @@
   },
   {
    "id": 7761875,
-   "name": "We've Got Hostiles: Scientist 1 (Part 1)",
+   "name": "We've Got Hostiles: C1a3 Siloscientist (Part 1)",
    "chapter": "c1a3",
    "map": "c1a3",
    "trigger": {
@@ -5303,7 +5365,7 @@
   },
   {
    "id": 7761876,
-   "name": "We've Got Hostiles: Scientist 2 (Part 1)",
+   "name": "We've Got Hostiles: Glassman (Part 1)",
    "chapter": "c1a3",
    "map": "c1a3",
    "trigger": {
@@ -5321,7 +5383,7 @@
   },
   {
    "id": 7761877,
-   "name": "We've Got Hostiles: Security Guard (Part 1)",
+   "name": "We've Got Hostiles: Scrapper (Part 1)",
    "chapter": "c1a3",
    "map": "c1a3",
    "trigger": {
@@ -5586,6 +5648,24 @@
    ]
   },
   {
+   "id": 7761880,
+   "name": "We've Got Hostiles: C1a3lucky (Part 2)",
+   "chapter": "c1a3",
+   "map": "c1a3d",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a3d",
+    "classname": "monster_scientist",
+    "at": "1608 -968 816",
+    "targetname": "c1a3lucky"
+   },
+   "position": [
+    1608,
+    -968,
+    816
+   ]
+  },
+  {
    "id": 7761878,
    "name": "We've Got Hostiles: Scientist 1 (Part 2)",
    "chapter": "c1a3",
@@ -5617,24 +5697,6 @@
     1096,
     -232,
     648
-   ]
-  },
-  {
-   "id": 7761880,
-   "name": "We've Got Hostiles: Scientist 3 (Part 2)",
-   "chapter": "c1a3",
-   "map": "c1a3d",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a3d",
-    "classname": "monster_scientist",
-    "at": "1608 -968 816",
-    "targetname": "c1a3lucky"
-   },
-   "position": [
-    1608,
-    -968,
-    816
    ]
   },
   {
@@ -6043,7 +6105,7 @@
   },
   {
    "id": 7761881,
-   "name": "We've Got Hostiles: Scientist 1 (Part 3)",
+   "name": "We've Got Hostiles: Lucky (Part 3)",
    "chapter": "c1a3",
    "map": "c1a3a",
    "trigger": {
@@ -6060,26 +6122,8 @@
    ]
   },
   {
-   "id": 7761882,
-   "name": "We've Got Hostiles: Scientist 2 (Part 3)",
-   "chapter": "c1a3",
-   "map": "c1a3a",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a3a",
-    "classname": "monster_scientist",
-    "at": "-1144 -3488 -88",
-    "targetname": "lucky3"
-   },
-   "position": [
-    -1144,
-    -3488,
-    -88
-   ]
-  },
-  {
    "id": 7761883,
-   "name": "We've Got Hostiles: Scientist 3 (Part 3)",
+   "name": "We've Got Hostiles: Lucky2 (Part 3)",
    "chapter": "c1a3",
    "map": "c1a3a",
    "trigger": {
@@ -6092,6 +6136,24 @@
    "position": [
     -1240,
     -3416,
+    -88
+   ]
+  },
+  {
+   "id": 7761882,
+   "name": "We've Got Hostiles: Lucky3 (Part 3)",
+   "chapter": "c1a3",
+   "map": "c1a3a",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a3a",
+    "classname": "monster_scientist",
+    "at": "-1144 -3488 -88",
+    "targetname": "lucky3"
+   },
+   "position": [
+    -1144,
+    -3488,
     -88
    ]
   },
@@ -6679,26 +6741,8 @@
    ]
   },
   {
-   "id": 7761884,
-   "name": "Blast Pit: Scientist 1 (Part 6)",
-   "chapter": "c1a4",
-   "map": "c1a4f",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a4f",
-    "classname": "monster_scientist",
-    "at": "-917 964 -172",
-    "targetname": "rocketcrawl_sci"
-   },
-   "position": [
-    -917,
-    964,
-    -172
-   ]
-  },
-  {
    "id": 7761885,
-   "name": "Blast Pit: Scientist 2 (Part 6)",
+   "name": "Blast Pit: Gear Scientist (Part 6)",
    "chapter": "c1a4",
    "map": "c1a4f",
    "trigger": {
@@ -6712,6 +6756,24 @@
     694,
     321,
     -928
+   ]
+  },
+  {
+   "id": 7761884,
+   "name": "Blast Pit: Rocketcrawl Sci (Part 6)",
+   "chapter": "c1a4",
+   "map": "c1a4f",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a4f",
+    "classname": "monster_scientist",
+    "at": "-917 964 -172",
+    "targetname": "rocketcrawl_sci"
+   },
+   "position": [
+    -917,
+    964,
+    -172
    ]
   },
   {
@@ -6813,26 +6875,8 @@
    ]
   },
   {
-   "id": 7761886,
-   "name": "Blast Pit: Scientist 1 (Part 7)",
-   "chapter": "c1a4",
-   "map": "c1a4i",
-   "trigger": {
-    "type": "scientist",
-    "map": "c1a4i",
-    "classname": "monster_scientist",
-    "at": "-620 -1663 -1016",
-    "targetname": "runme"
-   },
-   "position": [
-    -620,
-    -1663,
-    -1016
-   ]
-  },
-  {
    "id": 7761887,
-   "name": "Blast Pit: Scientist 2 (Part 7)",
+   "name": "Blast Pit: C1a4i Scientist (Part 7)",
    "chapter": "c1a4",
    "map": "c1a4i",
    "trigger": {
@@ -6850,7 +6894,7 @@
   },
   {
    "id": 7761888,
-   "name": "Blast Pit: Scientist 3 (Part 7)",
+   "name": "Blast Pit: Haulscientist (Part 7)",
    "chapter": "c1a4",
    "map": "c1a4i",
    "trigger": {
@@ -6867,26 +6911,44 @@
    ]
   },
   {
-   "id": 7761889,
-   "name": "Blast Pit: Security Guard 1 (Part 7)",
+   "id": 7761886,
+   "name": "Blast Pit: Runme (Part 7)",
+   "chapter": "c1a4",
+   "map": "c1a4i",
+   "trigger": {
+    "type": "scientist",
+    "map": "c1a4i",
+    "classname": "monster_scientist",
+    "at": "-620 -1663 -1016",
+    "targetname": "runme"
+   },
+   "position": [
+    -620,
+    -1663,
+    -1016
+   ]
+  },
+  {
+   "id": 7761891,
+   "name": "Blast Pit: Haulbarney (Part 7)",
    "chapter": "c1a4",
    "map": "c1a4i",
    "trigger": {
     "type": "barney",
     "map": "c1a4i",
     "classname": "monster_barney",
-    "at": "-539 -745 -744",
-    "targetname": "tent_barney2"
+    "at": "-872 -788 -1412",
+    "targetname": "haulbarney"
    },
    "position": [
-    -539,
-    -745,
-    -744
+    -872,
+    -788,
+    -1412
    ]
   },
   {
    "id": 7761890,
-   "name": "Blast Pit: Security Guard 2 (Part 7)",
+   "name": "Blast Pit: Tent Barney1 (Part 7)",
    "chapter": "c1a4",
    "map": "c1a4i",
    "trigger": {
@@ -6903,21 +6965,21 @@
    ]
   },
   {
-   "id": 7761891,
-   "name": "Blast Pit: Security Guard 3 (Part 7)",
+   "id": 7761889,
+   "name": "Blast Pit: Tent Barney2 (Part 7)",
    "chapter": "c1a4",
    "map": "c1a4i",
    "trigger": {
     "type": "barney",
     "map": "c1a4i",
     "classname": "monster_barney",
-    "at": "-872 -788 -1412",
-    "targetname": "haulbarney"
+    "at": "-539 -745 -744",
+    "targetname": "tent_barney2"
    },
    "position": [
-    -872,
-    -788,
-    -1412
+    -539,
+    -745,
+    -744
    ]
   },
   {
@@ -7409,7 +7471,7 @@
   },
   {
    "id": 7761892,
-   "name": "Power Up: Security Guard (Part 1)",
+   "name": "Power Up: Barney Dying (Part 1)",
    "chapter": "c2a1",
    "map": "c2a1",
    "trigger": {
@@ -9260,7 +9322,7 @@
   },
   {
    "id": 7761894,
-   "name": "On A Rail: Security Guard (Part 6)",
+   "name": "On A Rail: Trappedbarney (Part 6)",
    "chapter": "c2a2",
    "map": "c2a2d",
    "trigger": {
@@ -10353,7 +10415,7 @@
   },
   {
    "id": 7761895,
-   "name": "Apprehension: Scientist (Part 2)",
+   "name": "Apprehension: Talker (Part 2)",
    "chapter": "c2a3",
    "map": "c2a3a",
    "trigger": {
@@ -10681,7 +10743,7 @@
   },
   {
    "id": 7761896,
-   "name": "Apprehension: Scientist (Part 4)",
+   "name": "Apprehension: Frank (Part 4)",
    "chapter": "c2a3",
    "map": "c2a3c",
    "trigger": {
@@ -11174,7 +11236,7 @@
   },
   {
    "id": 7761897,
-   "name": "Apprehension: Security Guard (Part 5)",
+   "name": "Apprehension: Victim (Part 5)",
    "chapter": "c2a3",
    "map": "c2a3d",
    "trigger": {
@@ -11291,7 +11353,7 @@
   },
   {
    "id": 7761898,
-   "name": "Residue Processing: Security Guard (Part 2)",
+   "name": "Residue Processing: Barn Run Barn (Part 2)",
    "chapter": "c2a4",
    "map": "c2a4a",
    "trigger": {
@@ -11607,7 +11669,7 @@
   },
   {
    "id": 7761899,
-   "name": "Questionable Ethics: Security Guard (Part 1)",
+   "name": "Questionable Ethics: Barney Say (Part 1)",
    "chapter": "c2a4d",
    "map": "c2a4d",
    "trigger": {
@@ -11864,8 +11926,27 @@
    ]
   },
   {
+   "id": 7762012,
+   "name": "Questionable Ethics: Pyscho Sci1 (Part 2)",
+   "chapter": "c2a4d",
+   "map": "c2a4e",
+   "trigger": {
+    "type": "scientist",
+    "map": "c2a4e",
+    "classname": "monster_scientist",
+    "at": "-1624 1800 16",
+    "targetname": "pyscho_sci1",
+    "critical": true
+   },
+   "position": [
+    -1624,
+    1800,
+    16
+   ]
+  },
+  {
    "id": 7762010,
-   "name": "Questionable Ethics: Scientist 1 (Part 2)",
+   "name": "Questionable Ethics: Pyscho Sci2 (Part 2)",
    "chapter": "c2a4d",
    "map": "c2a4e",
    "trigger": {
@@ -11884,7 +11965,7 @@
   },
   {
    "id": 7762011,
-   "name": "Questionable Ethics: Scientist 2 (Part 2)",
+   "name": "Questionable Ethics: Pyscho Sci3 (Part 2)",
    "chapter": "c2a4d",
    "map": "c2a4e",
    "trigger": {
@@ -11898,25 +11979,6 @@
    "position": [
     -1632,
     1696,
-    16
-   ]
-  },
-  {
-   "id": 7762012,
-   "name": "Questionable Ethics: Scientist 3 (Part 2)",
-   "chapter": "c2a4d",
-   "map": "c2a4e",
-   "trigger": {
-    "type": "scientist",
-    "map": "c2a4e",
-    "classname": "monster_scientist",
-    "at": "-1624 1800 16",
-    "targetname": "pyscho_sci1",
-    "critical": true
-   },
-   "position": [
-    -1624,
-    1800,
     16
    ]
   },
@@ -14072,7 +14134,7 @@
   },
   {
    "id": 7761902,
-   "name": "Surface Tension: Security Guard (Part 7)",
+   "name": "Surface Tension: Chase Barney (Part 7)",
    "chapter": "c2a5",
    "map": "c2a5d",
    "trigger": {
@@ -17093,8 +17155,26 @@
    ]
   },
   {
+   "id": 7761905,
+   "name": "Lambda Core: C3a2 Gluonguy (Part 2)",
+   "chapter": "c3a2e",
+   "map": "c3a2",
+   "trigger": {
+    "type": "scientist",
+    "map": "c3a2",
+    "classname": "monster_scientist",
+    "at": "-624 1960 256",
+    "targetname": "c3a2_gluonguy"
+   },
+   "position": [
+    -624,
+    1960,
+    256
+   ]
+  },
+  {
    "id": 7762014,
-   "name": "Lambda Core: Scientist 1 (Part 2)",
+   "name": "Lambda Core: Scientist C3a2 (Part 2)",
    "chapter": "c3a2e",
    "map": "c3a2",
    "trigger": {
@@ -17109,24 +17189,6 @@
     -244,
     1390,
     128
-   ]
-  },
-  {
-   "id": 7761905,
-   "name": "Lambda Core: Scientist 2 (Part 2)",
-   "chapter": "c3a2e",
-   "map": "c3a2",
-   "trigger": {
-    "type": "scientist",
-    "map": "c3a2",
-    "classname": "monster_scientist",
-    "at": "-624 1960 256",
-    "targetname": "c3a2_gluonguy"
-   },
-   "position": [
-    -624,
-    1960,
-    256
    ]
   },
   {
@@ -17409,7 +17471,7 @@
   },
   {
    "id": 7761906,
-   "name": "Lambda Core: Scientist (Part 3)",
+   "name": "Lambda Core: C3a2a Scitalk (Part 3)",
    "chapter": "c3a2e",
    "map": "c3a2a",
    "trigger": {
@@ -18934,7 +18996,7 @@
   },
   {
    "id": 7762015,
-   "name": "Lambda Core: Scientist 1 (Part 7)",
+   "name": "Lambda Core: C3a2 Portsci (Part 7)",
    "chapter": "c3a2e",
    "map": "c3a2d",
    "trigger": {
@@ -18953,7 +19015,7 @@
   },
   {
    "id": 7762016,
-   "name": "Lambda Core: Scientist 2 (Part 7)",
+   "name": "Lambda Core: Thesci (Part 7)",
    "chapter": "c3a2e",
    "map": "c3a2d",
    "trigger": {
@@ -18972,7 +19034,7 @@
   },
   {
    "id": 7761912,
-   "name": "Lambda Core: Security Guard (Part 7)",
+   "name": "Lambda Core: Theb (Part 7)",
    "chapter": "c3a2e",
    "map": "c3a2d",
    "trigger": {
@@ -21624,7 +21686,7 @@
   },
   {
    "id": 7761913,
-   "name": "Nihilanth: Scientist (Part 1)",
+   "name": "Nihilanth: Sitting Scientist (Part 1)",
    "chapter": "c4a3",
    "map": "c4a3",
    "trigger": {
@@ -21818,7 +21880,7 @@
   },
   {
    "id": 7761917,
-   "name": "Welcome To Black Mesa: Otis (Part 1)",
+   "name": "Welcome To Black Mesa: Otis2 (Part 1)",
    "chapter": "of1a1",
    "map": "of1a1",
    "trigger": {
@@ -22067,7 +22129,7 @@
   },
   {
    "id": 7761919,
-   "name": "Welcome To Black Mesa: Otis (Part 2)",
+   "name": "Welcome To Black Mesa: Otis1 (Part 2)",
    "chapter": "of1a1",
    "map": "of1a2",
    "trigger": {
@@ -22345,7 +22407,7 @@
   },
   {
    "id": 7761920,
-   "name": "We Are Pulling Out: Scientist (Part 1)",
+   "name": "We Are Pulling Out: Runningman (Part 1)",
    "chapter": "of1a5",
    "map": "of1a5",
    "trigger": {
@@ -22519,7 +22581,7 @@
   },
   {
    "id": 7761921,
-   "name": "We Are Pulling Out: Scientist (Part 2)",
+   "name": "We Are Pulling Out: Bundy (Part 2)",
    "chapter": "of1a5",
    "map": "of1a5b",
    "trigger": {
@@ -22536,26 +22598,8 @@
    ]
   },
   {
-   "id": 7761922,
-   "name": "We Are Pulling Out: Otis (Part 2)",
-   "chapter": "of1a5",
-   "map": "of1a5b",
-   "trigger": {
-    "type": "barney",
-    "map": "of1a5b",
-    "classname": "monster_otis",
-    "at": "112 -2096 1344",
-    "targetname": "gleason"
-   },
-   "position": [
-    112,
-    -2096,
-    1344
-   ]
-  },
-  {
    "id": 7761923,
-   "name": "We Are Pulling Out: Security Guard (Part 2)",
+   "name": "We Are Pulling Out: Barnhist (Part 2)",
    "chapter": "of1a5",
    "map": "of1a5b",
    "trigger": {
@@ -22569,6 +22613,24 @@
     -564,
     -1576,
     1704
+   ]
+  },
+  {
+   "id": 7761922,
+   "name": "We Are Pulling Out: Gleason (Part 2)",
+   "chapter": "of1a5",
+   "map": "of1a5b",
+   "trigger": {
+    "type": "barney",
+    "map": "of1a5b",
+    "classname": "monster_otis",
+    "at": "112 -2096 1344",
+    "targetname": "gleason"
+   },
+   "position": [
+    112,
+    -2096,
+    1344
    ]
   },
   {
@@ -23219,7 +23281,7 @@
   },
   {
    "id": 7761924,
-   "name": "Missing In Action: Scientist (Part 3)",
+   "name": "Missing In Action: Scared Scientist (Part 3)",
    "chapter": "of2a1",
    "map": "of2a2",
    "trigger": {
@@ -23428,7 +23490,7 @@
   },
   {
    "id": 7761925,
-   "name": "Missing In Action: Scientist (Part 4)",
+   "name": "Missing In Action: Funkdafied (Part 4)",
    "chapter": "of2a1",
    "map": "of2a3",
    "trigger": {
@@ -23546,7 +23608,7 @@
   },
   {
    "id": 7761926,
-   "name": "Friendly Fire: Scientist (Part 1)",
+   "name": "Friendly Fire: Windowdiver (Part 1)",
    "chapter": "of2a4",
    "map": "of2a4",
    "trigger": {
@@ -24522,7 +24584,7 @@
   },
   {
    "id": 7761927,
-   "name": "We Are Not Alone: Scientist (Part 3)",
+   "name": "We Are Not Alone: Dildo (Part 3)",
    "chapter": "of3a1",
    "map": "of3a2",
    "trigger": {
@@ -24714,7 +24776,7 @@
   },
   {
    "id": 7761928,
-   "name": "Crush Depth: Scientist 1 (Part 1)",
+   "name": "Crush Depth: Duke (Part 1)",
    "chapter": "of3a4",
    "map": "of3a4",
    "trigger": {
@@ -24732,7 +24794,7 @@
   },
   {
    "id": 7762017,
-   "name": "Crush Depth: Scientist 2 (Part 1)",
+   "name": "Crush Depth: Duketakemforever (Part 1)",
    "chapter": "of3a4",
    "map": "of3a4",
    "trigger": {
@@ -24849,7 +24911,7 @@
   },
   {
    "id": 7761930,
-   "name": "Crush Depth: Scientist (Part 2)",
+   "name": "Crush Depth: Hanging Sci 1 (Part 2)",
    "chapter": "of3a4",
    "map": "of3a5",
    "trigger": {
@@ -25075,7 +25137,7 @@
   },
   {
    "id": 7761931,
-   "name": "Crush Depth: Scientist (Part 3)",
+   "name": "Crush Depth: Sci Floater (Part 3)",
    "chapter": "of3a4",
    "map": "of3a6",
    "trigger": {
@@ -26848,7 +26910,7 @@
   },
   {
    "id": 7761932,
-   "name": "Pit Worm's Nest: Scientist (Part 2)",
+   "name": "Pit Worm's Nest: Hanging Sci 1 (Part 2)",
    "chapter": "of4a4",
    "map": "of4a5",
    "trigger": {
@@ -28608,7 +28670,7 @@
   },
   {
    "id": 7761933,
-   "name": "The Package: Scientist (Part 1)",
+   "name": "The Package: Scientist Saved (Part 1)",
    "chapter": "of6a1",
    "map": "of6a1",
    "trigger": {
@@ -29545,7 +29607,7 @@
   },
   {
    "id": 7761934,
-   "name": "The Package: Otis (Part 3)",
+   "name": "The Package: Otis10 (Part 3)",
    "chapter": "of6a1",
    "map": "of6a3",
    "trigger": {
@@ -30714,31 +30776,8 @@
    }
   },
   {
-   "id": 7761937,
-   "name": "Living Quarters Outbound: Scientist 1 (Part 1)",
-   "chapter": "ba_tram1",
-   "map": "ba_tram1",
-   "trigger": {
-    "type": "scientist",
-    "map": "ba_tram1",
-    "classname": "monster_scientist",
-    "at": "-1264 2976 1328",
-    "targetname": "railchatter2"
-   },
-   "position": [
-    -1264,
-    2976,
-    1328
-   ],
-   "gates": {
-    "always": [
-     "ranged"
-    ]
-   }
-  },
-  {
    "id": 7761938,
-   "name": "Living Quarters Outbound: Scientist 2 (Part 1)",
+   "name": "Living Quarters Outbound: Railchatter1 (Part 1)",
    "chapter": "ba_tram1",
    "map": "ba_tram1",
    "trigger": {
@@ -30760,8 +30799,31 @@
    }
   },
   {
+   "id": 7761937,
+   "name": "Living Quarters Outbound: Railchatter2 (Part 1)",
+   "chapter": "ba_tram1",
+   "map": "ba_tram1",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_tram1",
+    "classname": "monster_scientist",
+    "at": "-1264 2976 1328",
+    "targetname": "railchatter2"
+   },
+   "position": [
+    -1264,
+    2976,
+    1328
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
    "id": 7761939,
-   "name": "Living Quarters Outbound: Security Guard (Part 1)",
+   "name": "Living Quarters Outbound: Barn Playgame (Part 1)",
    "chapter": "ba_tram1",
    "map": "ba_tram1",
    "trigger": {
@@ -30794,7 +30856,7 @@
   },
   {
    "id": 7761940,
-   "name": "Living Quarters Outbound: Scientist 1 (Part 2)",
+   "name": "Living Quarters Outbound: Rosenburg (Part 2)",
    "chapter": "ba_tram1",
    "map": "ba_tram2",
    "trigger": {
@@ -30816,31 +30878,8 @@
    }
   },
   {
-   "id": 7761941,
-   "name": "Living Quarters Outbound: Scientist 2 (Part 2)",
-   "chapter": "ba_tram1",
-   "map": "ba_tram2",
-   "trigger": {
-    "type": "scientist",
-    "map": "ba_tram2",
-    "classname": "monster_scientist",
-    "at": "304 -944 2496",
-    "targetname": "topwalker"
-   },
-   "position": [
-    304,
-    -944,
-    2496
-   ],
-   "gates": {
-    "always": [
-     "ranged"
-    ]
-   }
-  },
-  {
    "id": 7761942,
-   "name": "Living Quarters Outbound: Scientist 3 (Part 2)",
+   "name": "Living Quarters Outbound: Topsitter (Part 2)",
    "chapter": "ba_tram1",
    "map": "ba_tram2",
    "trigger": {
@@ -30862,8 +30901,31 @@
    }
   },
   {
+   "id": 7761941,
+   "name": "Living Quarters Outbound: Topwalker (Part 2)",
+   "chapter": "ba_tram1",
+   "map": "ba_tram2",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_tram2",
+    "classname": "monster_scientist",
+    "at": "304 -944 2496",
+    "targetname": "topwalker"
+   },
+   "position": [
+    304,
+    -944,
+    2496
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
    "id": 7761943,
-   "name": "Living Quarters Outbound: Security Guard (Part 2)",
+   "name": "Living Quarters Outbound: Barney Redding (Part 2)",
    "chapter": "ba_tram1",
    "map": "ba_tram2",
    "trigger": {
@@ -30906,7 +30968,7 @@
   },
   {
    "id": 7761944,
-   "name": "Insecurity: Security Guard (Part 1)",
+   "name": "Insecurity: Sean Reardon (Part 1)",
    "chapter": "ba_security1",
    "map": "ba_security1",
    "trigger": {
@@ -31040,27 +31102,8 @@
    ]
   },
   {
-   "id": 7762018,
-   "name": "Insecurity: Scientist 1 (Part 2)",
-   "chapter": "ba_security1",
-   "map": "ba_security2",
-   "trigger": {
-    "type": "scientist",
-    "map": "ba_security2",
-    "classname": "monster_scientist",
-    "at": "-749 1645 192",
-    "targetname": "complainer",
-    "critical": true
-   },
-   "position": [
-    -749,
-    1645,
-    192
-   ]
-  },
-  {
    "id": 7761945,
-   "name": "Insecurity: Scientist 2 (Part 2)",
+   "name": "Insecurity: Cam1 Walker (Part 2)",
    "chapter": "ba_security1",
    "map": "ba_security2",
    "trigger": {
@@ -31078,7 +31121,7 @@
   },
   {
    "id": 7761946,
-   "name": "Insecurity: Scientist 3 (Part 2)",
+   "name": "Insecurity: Cam1 Walker2 (Part 2)",
    "chapter": "ba_security1",
    "map": "ba_security2",
    "trigger": {
@@ -31096,7 +31139,7 @@
   },
   {
    "id": 7761947,
-   "name": "Insecurity: Scientist 4 (Part 2)",
+   "name": "Insecurity: Cam1 Walker3 (Part 2)",
    "chapter": "ba_security1",
    "map": "ba_security2",
    "trigger": {
@@ -31113,27 +31156,27 @@
    ]
   },
   {
-   "id": 7762019,
-   "name": "Insecurity: Security Guard 1 (Part 2)",
+   "id": 7762018,
+   "name": "Insecurity: Complainer (Part 2)",
    "chapter": "ba_security1",
    "map": "ba_security2",
    "trigger": {
-    "type": "barney",
+    "type": "scientist",
     "map": "ba_security2",
-    "classname": "monster_barney",
-    "at": "-1356 1892 480",
-    "targetname": "black_knight",
+    "classname": "monster_scientist",
+    "at": "-749 1645 192",
+    "targetname": "complainer",
     "critical": true
    },
    "position": [
-    -1356,
-    1892,
-    480
+    -749,
+    1645,
+    192
    ]
   },
   {
    "id": 7762020,
-   "name": "Insecurity: Security Guard 2 (Part 2)",
+   "name": "Insecurity: Barney Admin (Part 2)",
    "chapter": "ba_security1",
    "map": "ba_security2",
    "trigger": {
@@ -31151,27 +31194,8 @@
    ]
   },
   {
-   "id": 7762021,
-   "name": "Insecurity: Security Guard 3 (Part 2)",
-   "chapter": "ba_security1",
-   "map": "ba_security2",
-   "trigger": {
-    "type": "barney",
-    "map": "ba_security2",
-    "classname": "monster_barney",
-    "at": "636 1308 456",
-    "targetname": "shooter_mcgavin",
-    "critical": true
-   },
-   "position": [
-    636,
-    1308,
-    456
-   ]
-  },
-  {
    "id": 7762022,
-   "name": "Insecurity: Security Guard 4 (Part 2)",
+   "name": "Insecurity: Bathroom Barney (Part 2)",
    "chapter": "ba_security1",
    "map": "ba_security2",
    "trigger": {
@@ -31189,6 +31213,44 @@
    ]
   },
   {
+   "id": 7762019,
+   "name": "Insecurity: Black Knight (Part 2)",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_security2",
+    "classname": "monster_barney",
+    "at": "-1356 1892 480",
+    "targetname": "black_knight",
+    "critical": true
+   },
+   "position": [
+    -1356,
+    1892,
+    480
+   ]
+  },
+  {
+   "id": 7762021,
+   "name": "Insecurity: Shooter Mcgavin (Part 2)",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_security2",
+    "classname": "monster_barney",
+    "at": "636 1308 456",
+    "targetname": "shooter_mcgavin",
+    "critical": true
+   },
+   "position": [
+    636,
+    1308,
+    456
+   ]
+  },
+  {
    "id": 7760330,
    "name": "Insecurity: Part 3 Reached",
    "chapter": "ba_security1",
@@ -31199,27 +31261,27 @@
    }
   },
   {
-   "id": 7762023,
-   "name": "Insecurity: Scientist 1 (Part 3)",
+   "id": 7762025,
+   "name": "Insecurity: Bob (Part 3)",
    "chapter": "ba_security1",
    "map": "ba_maint",
    "trigger": {
     "type": "scientist",
     "map": "ba_maint",
     "classname": "monster_scientist",
-    "at": "-1840 1424 640",
-    "targetname": "joe",
+    "at": "-2102 1408 624",
+    "targetname": "bob",
     "critical": true
    },
    "position": [
-    -1840,
-    1424,
-    640
+    -2102,
+    1408,
+    624
    ]
   },
   {
    "id": 7762024,
-   "name": "Insecurity: Scientist 2 (Part 3)",
+   "name": "Insecurity: Crunchie (Part 3)",
    "chapter": "ba_security1",
    "map": "ba_maint",
    "trigger": {
@@ -31237,22 +31299,22 @@
    ]
   },
   {
-   "id": 7762025,
-   "name": "Insecurity: Scientist 3 (Part 3)",
+   "id": 7762023,
+   "name": "Insecurity: Joe (Part 3)",
    "chapter": "ba_security1",
    "map": "ba_maint",
    "trigger": {
     "type": "scientist",
     "map": "ba_maint",
     "classname": "monster_scientist",
-    "at": "-2102 1408 624",
-    "targetname": "bob",
+    "at": "-1840 1424 640",
+    "targetname": "joe",
     "critical": true
    },
    "position": [
-    -2102,
-    1408,
-    624
+    -1840,
+    1424,
+    640
    ]
   },
   {
@@ -31285,26 +31347,8 @@
    }
   },
   {
-   "id": 7761948,
-   "name": "Insecurity: Security Guard 1 (Part 4)",
-   "chapter": "ba_security1",
-   "map": "ba_elevator",
-   "trigger": {
-    "type": "barney",
-    "map": "ba_elevator",
-    "classname": "monster_barney",
-    "at": "716 1992 1604",
-    "targetname": "ba_sluggo"
-   },
-   "position": [
-    716,
-    1992,
-    1604
-   ]
-  },
-  {
    "id": 7761949,
-   "name": "Insecurity: Security Guard 2 (Part 4)",
+   "name": "Insecurity: Ba Cochese (Part 4)",
    "chapter": "ba_security1",
    "map": "ba_elevator",
    "trigger": {
@@ -31318,6 +31362,24 @@
     80,
     2392,
     1556
+   ]
+  },
+  {
+   "id": 7761948,
+   "name": "Insecurity: Ba Sluggo (Part 4)",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_elevator",
+    "classname": "monster_barney",
+    "at": "716 1992 1604",
+    "targetname": "ba_sluggo"
+   },
+   "position": [
+    716,
+    1992,
+    1604
    ]
   },
   {
@@ -32864,7 +32926,7 @@
   },
   {
    "id": 7761952,
-   "name": "Captive Freight: Scientist (Part 7)",
+   "name": "Captive Freight: Captive Scientist 1 (Part 7)",
    "chapter": "ba_yard1",
    "map": "ba_yard4a",
    "trigger": {
@@ -33680,7 +33742,7 @@
   },
   {
    "id": 7761953,
-   "name": "Captive Freight: Scientist (Part 8)",
+   "name": "Captive Freight: Captive 1 Scientist 1 (Part 8)",
    "chapter": "ba_yard1",
    "map": "ba_yard5",
    "trigger": {
@@ -33915,7 +33977,7 @@
   },
   {
    "id": 7762027,
-   "name": "Captive Freight: Scientist (Part 9)",
+   "name": "Captive Freight: Dr Rosenberg (Part 9)",
    "chapter": "ba_yard1",
    "map": "ba_yard5a",
    "trigger": {

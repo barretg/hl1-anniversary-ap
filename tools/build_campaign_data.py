@@ -21,6 +21,7 @@ import collections
 import hashlib
 import json
 import math
+import re
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -395,6 +396,21 @@ def leads_to_failure(start: str, by_name: dict[str, list[dict[str, str]]]) -> bo
                         following.append(nxt)
         frontier = following
     return False
+
+
+# Targetnames that only say what the NPC is ("scientist1", "barney"), which
+# would read like a number of our own: numbered like an unnamed one.
+GENERIC_NPC_NAME = re.compile(r"(scientist|barney)_?\d*", re.IGNORECASE)
+
+
+def npc_name(npc: dict) -> str:
+    """An NPC's check name: its targetname as words ("fighting_barney" ->
+    "Fighting Barney"), or its kind ("Scientist") when it has none or only a
+    generic one."""
+    words = [w for w in re.split(r"[_\s]+", npc["targetname"]) if w]
+    if not words or GENERIC_NPC_NAME.fullmatch(npc["targetname"]):
+        return npc["display"]
+    return " ".join(w[:1].upper() + w[1:] for w in words)
 
 
 # The display name of a listed `monster_generic` stand-in, by kind.
@@ -1096,6 +1112,7 @@ def build(
                 spawn = spawn_point(ents)
                 out_here = campaign.unkillable_npcs.get(map_name, set())
                 in_here = campaign.killable_npcs.get(map_name, set())
+                critical_here = campaign.critical_npcs.get(map_name, set())
                 npcs: list[dict] = []
                 generics = frozenset(at for k, at in campaign.generic_npcs.get(map_name, ())
                                      if k == kind)
@@ -1104,7 +1121,7 @@ def build(
                     reason = npc["out"]
                     # A death that fails the mission still sends first, so a
                     # quicksave makes it a fair check: in, behind its own option.
-                    npc["critical"] = reason == "fails"
+                    npc["critical"] = reason == "fails" or key in critical_here
                     if npc["critical"]:
                         reason = ""
                     if key in out_here:
@@ -1115,7 +1132,7 @@ def build(
                             route = train_route(ents, train, centres[map_name])
                         if not seen_from_route(hull, route, npc["position"]):
                             reason = "unseen"
-                    if reason and key in in_here:
+                    if reason and (key in in_here or key in critical_here):
                         reason = ""
                     tag = (f"{map_name} {npc['classname']}@{format_position(npc['at'])}"
                            + (f" ({npc['targetname']})" if npc["targetname"] else ""))
@@ -1127,9 +1144,11 @@ def build(
                     if npc["critical"]:
                         print(f"  {kind} mission-critical: {tag}")
                     npcs.append(npc)
+                # Named by targetname when the map gives one, numbered otherwise;
+                # NPCs sharing a name (or none) are numbered among themselves.
                 by_display = {}
                 for npc in npcs:
-                    by_display.setdefault(npc["display"], []).append(npc)
+                    by_display.setdefault(npc_name(npc), []).append(npc)
                 for display in sorted(by_display):
                     group = sorted(
                         by_display[display],

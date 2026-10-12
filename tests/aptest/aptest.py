@@ -1702,6 +1702,17 @@ def npc_mechanics_scenarios(data: CheckData) -> list[Scenario]:
     return out
 
 
+def where_in_mission(data: CheckData, map_name: str) -> str:
+    """"Anomalous Materials, part 2 of 5", for a scenario's first line."""
+    chapter = data.chapter_of(map_name)
+    if chapter is None:
+        return map_name
+    if len(chapter.maps) == 1:
+        return f"{chapter.name} ({map_name})"
+    return (f"{chapter.name}, part {chapter.maps.index(map_name) + 1} of "
+            f"{len(chapter.maps)} ({map_name})")
+
+
 def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
     """One per map with scientist or barney checks: witness every death."""
     import json
@@ -1721,6 +1732,7 @@ def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
                 continue
             intro = any(l.needs for l in npcs)
             lines = [
+                where_in_mission(data, map_name),
                 "Witness every one of these deaths: kill each yourself, or watch",
                 "something else kill it. developer 1 logs why each counted.",
                 *(f"  {l.name}: {l.arg.split('@')[0]}"
@@ -1785,6 +1797,7 @@ def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             out.append(Scenario(
                 title=f"0.4.0-2: npc_excluded_check: {map_name}",
                 map=map_name, steps="\n".join([
+                    where_in_mission(data, map_name),
                     "These were left out of Scientistsanity / Barneysanity:",
                     *left,
                     "Play the map and judge each: is its death something a player",
@@ -1796,13 +1809,23 @@ def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
 
 
 def release_0_4_0_2_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
-    """What changed after 0.4.0's first round. Appended to, never reordered."""
+    """What changed after 0.4.0's first round. Verdicts match by title, so
+    reordering keeps them."""
     return (charger_use_scenarios(data)
             + pickup_scenarios(data)
             + eagle_restore_scenarios(data, game_root)
             + npc_mechanics_scenarios(data)
-            + npc_witness_scenarios(data)
-            + npc_excluded_scenarios(data, game_root))
+            + npc_map_scenarios(data, game_root))
+
+
+def npc_map_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """The witness and excluded-NPC scenarios together, map by map in mission
+    and part order: each map's witness pass, then its excluded check."""
+    order = {m: i for i, m in enumerate(m for c in data.chapters for m in c.maps)}
+    tagged = ([(order.get(s.map, len(order)), 0, s) for s in npc_witness_scenarios(data)]
+              + [(order.get(s.map, len(order)), 1, s)
+                 for s in npc_excluded_scenarios(data, game_root)])
+    return [s for _, _, s in sorted(tagged, key=lambda t: (t[0], t[1]))]
 
 
 # A map with at least this many brush models is a precache suspect: each one
@@ -2350,6 +2373,10 @@ class Harness:
             return -1
         return DATA.air_accelerate_value(*s.air_acceleration, self.air_received)
 
+    def server_checked(self) -> set[int]:
+        s = self.scenario()
+        return set(s.checked if s is not None else ()) | self.seen
+
     def publish(self, force: bool = False) -> None:
         s = self.scenario()
         self.bridge.write_snapshot(
@@ -2367,8 +2394,11 @@ class Harness:
             excluded=[],
             ungated=[],
             starting=["weapon_crowbar"],
-            checked=sorted(s.checked) if s is not None else [],
-            missing=sorted(set(self.data.locations) - set(s.checked if s else [])),
+            # What the server would hold: the scenario's own, plus every check
+            # the game has sent since the scenario started, so a load keeps
+            # them collected as a real seed does.
+            checked=sorted(self.server_checked()),
+            missing=sorted(set(self.data.locations) - self.server_checked()),
             data_version=self.data.data_version,
             slot="aptest:1",
             force=force,

@@ -252,6 +252,27 @@ KILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # The G-Man's train scientist: the line-of-sight test misses it from the
     # ride, but it can be shot.
     "c0a0d": {("monster_generic", (1680, 1024, -210))},
+    # Anomalous Materials part 5: the two at the retinal scanners. A killtarget
+    # deletes them, but only once the chamber door closes behind the player;
+    # after their scans open it, they can be killed freely.
+    "c1a0e": {
+        ("monster_scientist", (1692, -32, -320)),
+        ("monster_scientist", (1640, -32, -320)),
+    },
+}
+
+# NPCs whose death softlocks the run, same form.
+CRITICAL_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Black Mesa Inbound: the guard placed in part 5 rides on into part 6, where
+    # his scripts open the train door. Dead, he leaves the player on the train.
+    "c0a0d": {("monster_barney", (-2017, -458, -221))},
+    # Anomalous Materials part 5: the two at the retinal scanners, whose scans
+    # open the test chamber. A killtarget deletes them once its door closes
+    # behind the player.
+    "c1a0e": {
+        ("monster_scientist", (1692, -32, -320)),
+        ("monster_scientist", (1640, -32, -320)),
+    },
 }
 
 UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
@@ -295,6 +316,7 @@ HALF_LIFE = Campaign(
     unkillable_npcs=UNKILLABLE_NPCS,
     generic_npcs=GENERIC_NPCS,
     killable_npcs=KILLABLE_NPCS,
+    critical_npcs=CRITICAL_NPCS,
     fired_checks=FIRED_CHECKS,
     # The hazard course: a training course rather than part of the campaign.
     # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and

@@ -210,13 +210,14 @@ class Barneysanity(Toggle):
 
 class IncludeCriticalNpcs(Toggle):
     """Experimental. With Scientistsanity or Barneysanity, also count the
-    scientists and guards whose death fails the mission (Rosenberg, the Insecurity
-    guards and the like). The check is sent the moment one dies, before the
+    scientists and guards whose death fails the mission or strands you
+    (Rosenberg, the Insecurity guards, the guard who opens the intro train's
+    door, and the like). The check is sent the moment one dies, before the
     reload, so quicksave first and quickload after. Some fail the mission as soon
     as they are hurt, leaving only the reload's fade to finish them.
 
-    12 scientists (6 in Half-Life, 1 in Opposing Force, 5 in Blue Shift) and 6
-    guards (1 in Half-Life, 5 in Blue Shift).
+    14 scientists (8 in Half-Life, 1 in Opposing Force, 5 in Blue Shift) and 7
+    guards (2 in Half-Life, one of them on the intro ride, 5 in Blue Shift).
     """
 
     display_name = "Include Mission-Critical NPCs"
