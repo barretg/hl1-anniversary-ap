@@ -1781,6 +1781,26 @@ index c765eb5..8afc4de 100644
  void __inline set_fpu_cw(void)
  {
  _asm	
+diff --git a/dlls/AI_BaseNPC_Schedule.cpp b/dlls/AI_BaseNPC_Schedule.cpp
+index 1f83d07..766b351 100644
+--- a/dlls/AI_BaseNPC_Schedule.cpp
++++ b/dlls/AI_BaseNPC_Schedule.cpp
+@@ -25,6 +25,7 @@
+ #include "nodes.h"
+ #include "defaultai.h"
+ #include "soundent.h"
++#include "ap_main.h"
+ 
+ extern CGraph WorldGraph;
+ 
+@@ -1268,6 +1269,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
+ 			pev->movetype = MOVETYPE_FLY;
+ 			ClearBits(pev->flags, FL_ONGROUND);
+ 			m_scriptState = SCRIPT_PLAYING;
++			ap::OnNpcScriptPlay( this );
+ 			break;
+ 		}
+ 	case TASK_ENABLE_SCRIPT:
 diff --git a/dlls/basemonster.h b/dlls/basemonster.h
 index 638d9fb..b0c9d46 100644
 --- a/dlls/basemonster.h
@@ -2030,7 +2050,7 @@ index e2f30b7..8819b93 100644
  
  			if ( pl->m_pActiveItem )
 diff --git a/dlls/combat.cpp b/dlls/combat.cpp
-index 5acd32b..8f4883d 100644
+index 5acd32b..8697cce 100644
 --- a/dlls/combat.cpp
 +++ b/dlls/combat.cpp
 @@ -29,6 +29,8 @@
@@ -2164,7 +2184,13 @@ index 5acd32b..8f4883d 100644
  }
  
  //
-@@ -902,6 +987,9 @@ int CBaseMonster :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
+@@ -897,11 +982,15 @@ int CBaseMonster :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
+ 
+ 	// do the damage
+ 	pev->health -= flTake;
++	ap::OnNpcHurt( this, pevAttacker );
+ 
+ 	
  	// HACKHACK Don't kill monsters in a script.  Let them break their scripts first
  	if ( m_MonsterState == MONSTERSTATE_SCRIPT )
  	{
@@ -2174,7 +2200,7 @@ index 5acd32b..8f4883d 100644
  		SetConditions( bits_COND_LIGHT_DAMAGE );
  		return 0;
  	}
-@@ -1474,6 +1562,32 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
+@@ -1474,6 +1563,32 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
  					DecalGunshot( &tr, iBulletType );
  				}
  				break;
@@ -2207,7 +2233,7 @@ index 5acd32b..8f4883d 100644
  			
  			case BULLET_NONE: // FIX 
  				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
-@@ -1564,6 +1678,54 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
+@@ -1564,6 +1679,54 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
  			case BULLET_PLAYER_357:		
  				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET); 
  				break;
@@ -2832,7 +2858,7 @@ index 988d3cb..fb3a384 100644
  
  	// ok, a player is touching this item, but can he have it?
 diff --git a/dlls/monsters.cpp b/dlls/monsters.cpp
-index 19e0e23..9dfff14 100644
+index 19e0e23..2723b49 100644
 --- a/dlls/monsters.cpp
 +++ b/dlls/monsters.cpp
 @@ -33,6 +33,7 @@
@@ -2898,16 +2924,18 @@ index 19e0e23..9dfff14 100644
  	};
  
  	return iEnemy[ Classify() ][ pTarget->Classify() ];
-@@ -2635,6 +2645,8 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+@@ -2635,6 +2645,10 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
  		if ( m_MonsterState == MONSTERSTATE_SCRIPT )
  		{
  			pev->deadflag = DEAD_DYING;
-+			// Archipelago: this death never reaches Killed().
-+			ap::OnNpcScriptDeath( this );
++			// Archipelago: this death never reaches Killed(). While the script
++			// still waits it is held until the script plays: a corpse pose's
++			// idle carries the event too, before anyone has seen it happen.
++			ap::OnNpcScriptDeath( this, m_scriptState == SCRIPT_WAIT );
  			// Kill me now! (and fade out when CineCleanup() is called)
  #if _DEBUG
  			ALERT( at_aiconsole, "Death event: %s\n", STRING(pev->classname) );
-@@ -2663,6 +2675,19 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+@@ -2663,6 +2677,19 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
  		EMIT_SOUND( edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE );
  		break;
  
@@ -2927,7 +2955,7 @@ index 19e0e23..9dfff14 100644
  	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
  		if (RANDOM_LONG(0,2) == 0)
  			break;
-@@ -3434,3 +3459,59 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
+@@ -3434,3 +3461,59 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
  
  	return FALSE;
  }
@@ -3768,7 +3796,7 @@ index 10f7b6b..0e5cc6c 100644
  		LoadVModel ( "models/v_satchel.mdl", m_pPlayer );
  #endif
 diff --git a/dlls/schedule.cpp b/dlls/schedule.cpp
-index 488a770..922b3fe 100644
+index 488a770..2ed9aef 100644
 --- a/dlls/schedule.cpp
 +++ b/dlls/schedule.cpp
 @@ -25,6 +25,7 @@
@@ -3844,7 +3872,15 @@ index 488a770..922b3fe 100644
  	case TASK_EAT:
  		{
  			Eat( pTask->flData );
-@@ -1512,3 +1557,22 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
+@@ -1268,6 +1313,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
+ 			pev->movetype = MOVETYPE_FLY;
+ 			ClearBits(pev->flags, FL_ONGROUND);
+ 			m_scriptState = SCRIPT_PLAYING;
++			ap::OnNpcScriptPlay( this );
+ 			break;
+ 		}
+ 	case TASK_ENABLE_SCRIPT:
+@@ -1512,3 +1558,22 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
  
  	return &slError[ 0 ];
  }

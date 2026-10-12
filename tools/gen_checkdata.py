@@ -88,6 +88,8 @@ def render(campaign: dict) -> str:
         "#     for that NPC, tagged as the same check",
         "#   H|<location id>|<text>        what ap_find says about that check",
         "#   R|<location id>                that NPC's removal by the map is its death",
+        "#   X|<location id>                hurting that NPC sends it (the hurt fails the",
+        "#     mission, so it never lives to die)",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
         "#   P|<button targetname>|<chapter key>   a lobby panel and where it goes",
@@ -192,6 +194,8 @@ def render(campaign: dict) -> str:
             lines.append(f"H|{location['id']}|{trigger['note']}")
         if trigger.get("removal_death"):
             lines.append(f"R|{location['id']}")
+        if trigger.get("harm_sends"):
+            lines.append(f"X|{location['id']}")
         for source in location.get("sources", ()):
             lines.append("F|{id}|{map}|{pos}|{needs}|{drop}".format(
                 id=location["id"],

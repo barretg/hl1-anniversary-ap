@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "ap_bridge.h"
@@ -678,6 +679,9 @@ namespace {
 bool g_tagging = false;
 // `classname|x y z` -> how many have spawned there, for the ordinal.
 std::unordered_map<std::string, int> g_tag_seen;
+// Monsters whose script death came while the script still waited, sent when
+// it plays (see `OnNpcScriptDeath`). By entity index; cleared each map.
+std::unordered_set<int> g_held_script_deaths;
 
 // Scientistsanity's, Barneysanity's and Soldiersanity's classnames. Must match
 // `SCIENTIST_CLASSNAMES`, `BARNEY_CLASSNAMES` and `SOLDIER_CLASSNAMES` in
@@ -704,6 +708,7 @@ bool CountedPoint(const std::string& classname) {
 void OpenPickupTags() {
     g_tagging = true;
     g_tag_seen.clear();
+    g_held_script_deaths.clear();
 }
 
 void ClosePickupTags() {
@@ -858,13 +863,25 @@ void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker) {
     }
 }
 
-void OnNpcScriptDeath(CBaseEntity* monster) {
+void OnNpcScriptDeath(CBaseEntity* monster, bool waiting) {
     // A scripted sequence playing a death: the map's own event, always counted.
     if (monster == nullptr || monster->m_apLocation == 0 || !Live()) {
         return;
     }
+    if (waiting) {
+        g_held_script_deaths.insert(monster->entindex());
+        return;
+    }
+    g_held_script_deaths.erase(monster->entindex());
     ALERT(at_console, "AP: %s died, scripted death\n", STRING(monster->pev->classname));
     SendCheck(monster->m_apLocation);
+}
+
+void OnNpcScriptPlay(CBaseEntity* monster) {
+    if (monster == nullptr || g_held_script_deaths.erase(monster->entindex()) == 0) {
+        return;
+    }
+    OnNpcScriptDeath(monster, false);
 }
 
 void OnKillTarget(CBaseEntity* entity) {
@@ -878,6 +895,26 @@ void OnKillTarget(CBaseEntity* entity) {
     ALERT(at_console, "AP: %s removed as its scripted death\n",
           STRING(entity->pev->classname));
     SendCheck(entity->m_apLocation);
+}
+
+void OnNpcHurt(CBaseEntity* monster, entvars_t* attacker) {
+    if (monster == nullptr || monster->m_apLocation == 0 || !Live()) {
+        return;
+    }
+    const Location* location = Data().LocationById(monster->m_apLocation);
+    if (location == nullptr || !location->harm_sends || Collected(*location)) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr) {
+        return;
+    }
+    const char* why = Witnessed(player, monster, attacker);
+    ALERT(at_console, "AP: %s hurt (that fails the mission), %s\n",
+          STRING(monster->pev->classname), why != nullptr ? why : "unwitnessed, nothing sent");
+    if (why != nullptr) {
+        SendCheck(monster->m_apLocation);
+    }
 }
 
 void ListTagged() {

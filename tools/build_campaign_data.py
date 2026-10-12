@@ -456,7 +456,8 @@ def map_npcs(kind: str, ents: list[dict[str, str]],
             continue
         name = entity.get("targetname", "")
         out = ""
-        if (entity.get("TriggerCondition") in NPC_HARM_CONDITIONS
+        condition = entity.get("TriggerCondition", "")
+        if (condition in NPC_HARM_CONDITIONS
                 and entity.get("TriggerTarget")
                 and leads_to_failure(entity["TriggerTarget"], by_name)):
             out = "fails"
@@ -466,6 +467,8 @@ def map_npcs(kind: str, ents: list[dict[str, str]],
             "classname": classname, "display": display, "at": at,
             "ordinal": seen[(classname, at)], "position": entity_origin(entity["origin"]),
             "targetname": name, "out": out,
+            # Failing on the first hurt: the hurt is the death worth sending.
+            "harm": out == "fails" and condition == "2",
         })
     return found
 
@@ -1117,7 +1120,7 @@ def build(
                 in_here = campaign.killable_npcs.get(map_name, set())
                 critical_here = campaign.critical_npcs.get(map_name, set())
                 swaps = campaign.swapped_npcs.get(map_name, {})
-                stand_ins = {standin for standin, _, _ in swaps.values()}
+                stand_ins = {swap[0] for swap in swaps.values()}
                 removals = campaign.removal_deaths.get(map_name, set())
                 npcs: list[dict] = []
                 generics = frozenset(at for k, at in campaign.generic_npcs.get(map_name, ())
@@ -1133,9 +1136,19 @@ def build(
                         reason = ""
                     npc["swap"] = swaps.get(key)
                     npc["removal_death"] = key in removals
+                    npc["gates"] = campaign.npc_gates.get(map_name, {}).get(key)
+                    moved = campaign.npc_positions.get(map_name, {}).get(key)
+                    if moved:
+                        npc["position"] = moved
                     # A death that fails the mission still sends first, so a
                     # quicksave makes it a fair check: in, behind its own option.
-                    npc["critical"] = reason == "fails" or key in critical_here
+                    # A swap whose stand-in can be killed safely instead is a
+                    # fair check without `include_critical_npcs`.
+                    safe = key in swaps and len(swaps[key]) > 3 and swaps[key][3]
+                    npc["critical"] = (reason == "fails" and not safe
+                                       or key in critical_here)
+                    if reason == "fails" and safe:
+                        reason = ""
                     if npc["critical"]:
                         reason = ""
                     if key in out_here:
@@ -1186,16 +1199,21 @@ def build(
                         if npc["critical"]:
                             trigger["critical"] = True
                         if npc["swap"]:
-                            (cls, at), _, note = npc["swap"]
+                            (cls, at), _, note = npc["swap"][:3]
                             trigger["aliases"] = [f"{cls}@{format_position(at)}"]
                             trigger["note"] = note
                         if npc["removal_death"]:
                             trigger["removal_death"] = True
+                        if npc["harm"] and npc["critical"]:
+                            trigger["harm_sends"] = True
                         location = builder.add(chapter, map_name,
                                                f"{display[0]}{count}{npc['suffix']}",
                                                trigger, position=npc["position"])
-                        if train:
-                            location["gates"] = {"always": ["ranged"]}
+                        gates = {"always": ["ranged"]} if train else {}
+                        for group in (npc["gates"] or {}).get("always", ()):
+                            gates.setdefault("always", []).append(group)
+                        if gates:
+                            location["gates"] = gates
 
             # One-off map events, sent when the map fires their targetname.
             # Placed where the entity firing it stands, for `ap_find`.

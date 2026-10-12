@@ -84,10 +84,17 @@ void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup);
 // `Witnessed` in ap_locations.cpp). A death the map arranged always counts:
 // `OnNpcScriptDeath`, from a script's death event, which never reaches `Killed`.
 void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker);
-void OnNpcScriptDeath(CBaseEntity* monster);
+// `waiting` while its script still idles for a trigger: the death is held
+// until `OnNpcScriptPlay`, when the script plays, so a corpse pose sends only
+// once the scene it belongs to happens.
+void OnNpcScriptDeath(CBaseEntity* monster, bool waiting);
+void OnNpcScriptPlay(CBaseEntity* monster);
 // A `killtarget` about to delete `entity`: the death of an NPC whose check is
 // marked as dying that way (thrown, then swapped for a corpse).
 void OnKillTarget(CBaseEntity* entity);
+// Any damage to a monster: sends an NPC whose first hurt fails the mission
+// (it never lives to die), when the hurt is witnessed like a death.
+void OnNpcHurt(CBaseEntity* monster, entvars_t* attacker);
 
 // `ap_tagged`: every entity in this map carrying a location id, for curating
 // which NPCs and pickups count.

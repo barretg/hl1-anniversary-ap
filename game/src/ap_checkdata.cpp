@@ -198,7 +198,8 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
                 }
                 locations.back().sources.push_back(source);
             }
-        } else if ((record == "A" || record == "H" || record == "R") && f.size() >= 2) {
+        } else if ((record == "A" || record == "H" || record == "R" || record == "X") &&
+                   f.size() >= 2) {
             // Right after their `L`, like `F`.
             if (locations.empty() || locations.back().id != ParseLong(f[1])) {
                 continue;
@@ -219,6 +220,8 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
                 owner.note = f[2];
             } else if (record == "R") {
                 owner.removal_death = true;
+            } else if (record == "X") {
+                owner.harm_sends = true;
             }
         } else if (record == "K" && f.size() >= 3) {
             gated_classnames.push_back(std::make_pair(f[1], f[2]));

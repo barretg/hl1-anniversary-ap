@@ -1,5 +1,5 @@
 {
- "data_version": "56fdd266ba53",
+ "data_version": "8f9e109d553f",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -17202,7 +17202,8 @@
     "classname": "monster_scientist",
     "at": "-244 1390 128",
     "targetname": "scientist_c3a2",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -244,
@@ -19043,7 +19044,8 @@
     "classname": "monster_scientist",
     "at": "1200 -592 -256",
     "targetname": "thesci",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     1200,
@@ -22867,6 +22869,24 @@
    ]
   },
   {
+   "id": 7762058,
+   "name": "We Are Pulling Out: Jail Scientist1 (Part 3)",
+   "chapter": "of1a5",
+   "map": "of1a6",
+   "trigger": {
+    "type": "scientist",
+    "map": "of1a6",
+    "classname": "monster_scientist",
+    "at": "668 -256 -32",
+    "targetname": "jail_scientist1"
+   },
+   "position": [
+    668,
+    -256,
+    -32
+   ]
+  },
+  {
    "id": 7762039,
    "name": "We Are Pulling Out: Jail Fgrunt1 (Part 3)",
    "chapter": "of1a5",
@@ -23429,6 +23449,28 @@
     2368,
     2632,
     -64
+   ]
+  },
+  {
+   "id": 7762059,
+   "name": "Missing In Action: Wounded Soldier (Part 3)",
+   "chapter": "of2a1",
+   "map": "of2a2",
+   "trigger": {
+    "type": "soldier",
+    "map": "of2a2",
+    "classname": "monster_generic",
+    "at": "1656 -1280 40",
+    "targetname": "fgrunt1",
+    "aliases": [
+     "monster_generic@1656 -1328 40"
+    ],
+    "note": "He crawls out by the truck and dies in a scripted scene (fgrunt1, then fgrunt2); watching it sends this."
+   },
+   "position": [
+    1320,
+    -1376,
+    0
    ]
   },
   {
@@ -24714,6 +24756,29 @@
    ]
   },
   {
+   "id": 7762060,
+   "name": "We Are Not Alone: Sean Reardon (Part 1)",
+   "chapter": "of3a1",
+   "map": "of3a1",
+   "trigger": {
+    "type": "scientist",
+    "map": "of3a1",
+    "classname": "monster_scientist",
+    "at": "0 -364 66",
+    "targetname": "sean_reardon"
+   },
+   "position": [
+    0,
+    -364,
+    66
+   ],
+   "gates": {
+    "always": [
+     "longjump"
+    ]
+   }
+  },
+  {
    "id": 7760281,
    "name": "We Are Not Alone: Part 2 Reached",
    "chapter": "of3a1",
@@ -25020,26 +25085,8 @@
    ]
   },
   {
-   "id": 7761928,
-   "name": "Crush Depth: Duke (Part 1)",
-   "chapter": "of3a4",
-   "map": "of3a4",
-   "trigger": {
-    "type": "scientist",
-    "map": "of3a4",
-    "classname": "monster_cleansuit_scientist",
-    "at": "-1140 1324 -54",
-    "targetname": "duke"
-   },
-   "position": [
-    -1140,
-    1324,
-    -54
-   ]
-  },
-  {
    "id": 7762017,
-   "name": "Crush Depth: Duketakemforever (Part 1)",
+   "name": "Crush Depth: Duke (Part 1)",
    "chapter": "of3a4",
    "map": "of3a4",
    "trigger": {
@@ -25048,7 +25095,10 @@
     "classname": "monster_cleansuit_scientist",
     "at": "-1184 1856 110",
     "targetname": "duketakemforever",
-    "critical": true
+    "aliases": [
+     "monster_cleansuit_scientist@-1140 1324 -54"
+    ],
+    "note": "Two copies trade places (duketakemforever and duke); either sends this. Killing the one at the lab door fails the mission."
    },
    "position": [
     -1184,
@@ -25170,7 +25220,12 @@
     1415,
     282,
     232
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760291,
@@ -25381,24 +25436,6 @@
    ]
   },
   {
-   "id": 7761931,
-   "name": "Crush Depth: Sci Floater (Part 3)",
-   "chapter": "of3a4",
-   "map": "of3a6",
-   "trigger": {
-    "type": "scientist",
-    "map": "of3a6",
-    "classname": "monster_scientist",
-    "at": "-1022 1104 -462",
-    "targetname": "sci_floater"
-   },
-   "position": [
-    -1022,
-    1104,
-    -462
-   ]
-  },
-  {
    "id": 7760292,
    "name": "Vicarious Reality: Part 1 Reached",
    "chapter": "of4a1",
@@ -25465,6 +25502,29 @@
     2112,
     385
    ]
+  },
+  {
+   "id": 7762061,
+   "name": "Vicarious Reality: Scientist Saved (Part 1)",
+   "chapter": "of4a1",
+   "map": "of4a1",
+   "trigger": {
+    "type": "scientist",
+    "map": "of4a1",
+    "classname": "monster_scientist",
+    "at": "-101 314 -799",
+    "targetname": "scientist_saved"
+   },
+   "position": [
+    -101,
+    314,
+    -799
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760294,
@@ -27169,7 +27229,12 @@
     -2025,
     -1222,
     256
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760303,
@@ -29069,7 +29134,12 @@
     -3173,
     -2767,
     -799
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7762055,
@@ -31243,29 +31313,6 @@
    }
   },
   {
-   "id": 7761939,
-   "name": "Living Quarters Outbound: Barn Playgame (Part 1)",
-   "chapter": "ba_tram1",
-   "map": "ba_tram1",
-   "trigger": {
-    "type": "barney",
-    "map": "ba_tram1",
-    "classname": "monster_barney",
-    "at": "-2844 916 64",
-    "targetname": "barn_playgame"
-   },
-   "position": [
-    -2844,
-    916,
-    64
-   ],
-   "gates": {
-    "always": [
-     "ranged"
-    ]
-   }
-  },
-  {
    "id": 7760325,
    "name": "Living Quarters Outbound: Part 2 Reached",
    "chapter": "ba_tram1",
@@ -31346,7 +31393,7 @@
   },
   {
    "id": 7761943,
-   "name": "Living Quarters Outbound: Barney Redding (Part 2)",
+   "name": "Living Quarters Outbound: Barney Redding (Part 3)",
    "chapter": "ba_tram1",
    "map": "ba_tram2",
    "trigger": {
@@ -31375,6 +31422,96 @@
    "trigger": {
     "type": "map_reached",
     "map": "ba_tram3"
+   }
+  },
+  {
+   "id": 7762062,
+   "name": "Living Quarters Outbound: Scientist (Part 3)",
+   "chapter": "ba_tram1",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_tram3",
+    "classname": "monster_scientist",
+    "at": "1684 3680 541"
+   },
+   "position": [
+    1684,
+    3680,
+    541
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "id": 7762063,
+   "name": "Living Quarters Outbound: Walker1 (Part 3)",
+   "chapter": "ba_tram1",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_tram3",
+    "classname": "monster_scientist",
+    "at": "2080 3704 541",
+    "targetname": "walker1"
+   },
+   "position": [
+    2080,
+    3704,
+    541
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "id": 7762064,
+   "name": "Living Quarters Outbound: Walker2 (Part 3)",
+   "chapter": "ba_tram1",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_tram3",
+    "classname": "monster_scientist",
+    "at": "1296 3760 541",
+    "targetname": "walker2"
+   },
+   "position": [
+    1296,
+    3760,
+    541
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
+  },
+  {
+   "id": 7762065,
+   "name": "Living Quarters Outbound: Security Guard (Part 3)",
+   "chapter": "ba_tram1",
+   "map": "ba_tram3",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_tram3",
+    "classname": "monster_barney",
+    "at": "1600 3680 541"
+   },
+   "position": [
+    1600,
+    3680,
+    541
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
    }
   },
   {
@@ -31587,7 +31724,8 @@
     "classname": "monster_scientist",
     "at": "-749 1645 192",
     "targetname": "complainer",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -749,
@@ -31606,7 +31744,8 @@
     "classname": "monster_barney",
     "at": "-800 1696 192",
     "targetname": "barney_admin",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -800,
@@ -31625,7 +31764,8 @@
     "classname": "monster_barney",
     "at": "322 1248 192",
     "targetname": "bathroom_barney",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     322,
@@ -31644,12 +31784,37 @@
     "classname": "monster_barney",
     "at": "-1356 1892 480",
     "targetname": "black_knight",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -1356,
     1892,
     480
+   ]
+  },
+  {
+   "id": 7762066,
+   "name": "Insecurity: Front Desk Guard (Part 2)",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_security2",
+    "classname": "monster_generic",
+    "at": "-656 1128 244",
+    "targetname": "inviso_barney",
+    "critical": true,
+    "aliases": [
+     "monster_generic@-656 1168 244"
+    ],
+    "note": "The seated guard at the front desk; an invisible stand-in takes his hits, and hurting him fails the mission.",
+    "harm_sends": true
+   },
+   "position": [
+    -656,
+    1128,
+    244
    ]
   },
   {
@@ -31663,12 +31828,33 @@
     "classname": "monster_barney",
     "at": "636 1308 456",
     "targetname": "shooter_mcgavin",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     636,
     1308,
     456
+   ]
+  },
+  {
+   "id": 7762067,
+   "name": "Insecurity: Wrangler (Part 2)",
+   "chapter": "ba_security1",
+   "map": "ba_security2",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_security2",
+    "classname": "monster_generic",
+    "at": "648 1684 484",
+    "targetname": "wrangler",
+    "critical": true,
+    "harm_sends": true
+   },
+   "position": [
+    648,
+    1684,
+    484
    ]
   },
   {
@@ -31692,7 +31878,8 @@
     "classname": "monster_scientist",
     "at": "-2102 1408 624",
     "targetname": "bob",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -2102,
@@ -31711,7 +31898,8 @@
     "classname": "monster_scientist",
     "at": "-1392 1168 480",
     "targetname": "crunchie",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -1392,
@@ -31730,7 +31918,8 @@
     "classname": "monster_scientist",
     "at": "-1840 1424 640",
     "targetname": "joe",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -1840,
@@ -31749,7 +31938,8 @@
     "classname": "monster_barney",
     "at": "-2000 1136 624",
     "targetname": "barney",
-    "critical": true
+    "critical": true,
+    "harm_sends": true
    },
    "position": [
     -2000,
@@ -31766,6 +31956,84 @@
     "type": "map_reached",
     "map": "ba_elevator"
    }
+  },
+  {
+   "id": 7762068,
+   "name": "Insecurity: Mr Cranky (Part 4)",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_elevator",
+    "classname": "monster_generic",
+    "at": "-344 1408 3204",
+    "targetname": "mr_cranky",
+    "critical": true,
+    "harm_sends": true
+   },
+   "position": [
+    -344,
+    1408,
+    3204
+   ]
+  },
+  {
+   "id": 7762069,
+   "name": "Insecurity: Sci Flee (Part 4)",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_elevator",
+    "classname": "monster_scientist",
+    "at": "32 2392 1556",
+    "targetname": "sci_flee",
+    "removal_death": true
+   },
+   "position": [
+    32,
+    2392,
+    1556
+   ]
+  },
+  {
+   "id": 7762070,
+   "name": "Insecurity: Sci Runaway (Part 4)",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_elevator",
+    "classname": "monster_scientist",
+    "at": "-612 1760 1664",
+    "targetname": "sci_runaway",
+    "removal_death": true
+   },
+   "position": [
+    -612,
+    1760,
+    1664
+   ]
+  },
+  {
+   "id": 7762071,
+   "name": "Insecurity: Silent Bob (Part 4)",
+   "chapter": "ba_security1",
+   "map": "ba_elevator",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_elevator",
+    "classname": "monster_generic",
+    "at": "-232 1348 3204",
+    "targetname": "silent_bob",
+    "critical": true,
+    "harm_sends": true
+   },
+   "position": [
+    -232,
+    1348,
+    3204
+   ]
   },
   {
    "id": 7761949,
@@ -31920,6 +32188,24 @@
     1024,
     1104,
     32
+   ]
+  },
+  {
+   "id": 7762072,
+   "name": "Duty Calls: Scientist (Part 1)",
+   "chapter": "ba_canal1",
+   "map": "ba_canal1",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_canal1",
+    "classname": "monster_generic",
+    "at": "744 -1404 180",
+    "targetname": "scientist1"
+   },
+   "position": [
+    744,
+    -1404,
+    180
    ]
   },
   {
@@ -35685,6 +35971,44 @@
     -832,
     -1908,
     -104
+   ]
+  },
+  {
+   "id": 7762073,
+   "name": "Power Struggle: Sci Porkins (Part 2)",
+   "chapter": "ba_teleport2",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "scientist",
+    "map": "ba_power1",
+    "classname": "monster_scientist",
+    "at": "-232 184 -252",
+    "targetname": "sci_porkins",
+    "removal_death": true
+   },
+   "position": [
+    -232,
+    184,
+    -252
+   ]
+  },
+  {
+   "id": 7762074,
+   "name": "Power Struggle: Barn Tyree (Part 2)",
+   "chapter": "ba_teleport2",
+   "map": "ba_power1",
+   "trigger": {
+    "type": "barney",
+    "map": "ba_power1",
+    "classname": "monster_barney",
+    "at": "-188 268 -252",
+    "targetname": "barn_tyree",
+    "removal_death": true
+   },
+   "position": [
+    -188,
+    268,
+    -252
    ]
   },
   {

@@ -180,6 +180,8 @@ class Location:
     # `!find` says about it.
     aliases: list[str] = field(default_factory=list)
     note: str = ""
+    # From an `X` record: hurting it fails the mission, and the hurt sends.
+    harm: bool = False
 
 
 @dataclass
@@ -230,6 +232,8 @@ def read_checkdata(path: Path) -> CheckData:
                                        f[5] if len(f) > 5 else ""))
         elif f[0] == "K" and len(f) >= 3:
             data.gated[f[1]] = f[2]
+        elif f[0] == "X" and len(f) >= 2 and int(f[1]) in data.locations:
+            data.locations[int(f[1])].harm = True
         elif f[0] in ("A", "H") and len(f) >= 3 and int(f[1]) in data.locations:
             owner = data.locations[int(f[1])]
             if f[0] == "A":
@@ -1779,14 +1783,17 @@ def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
                 for part in re.split(r"(\d+)", l.name)])
             if not npcs:
                 continue
-            intro = any(l.needs for l in npcs)
+            intro = chapter.key in INTRO_CHAPTERS
             lines = [
                 where_in_mission(data, map_name),
                 "Witness every one of these deaths: kill each yourself, or watch",
                 "something else kill it. developer 1 logs why each counted.",
                 *(f"  {l.name}: {l.arg.split('@')[0]}"
                   + (f" at {l.pos}" if l.pos else "")
-                  + (" [fails the mission: quicksave, kill, quickload]"
+                  + (f" (needs the {l.needs})" if l.needs else "")
+                  + (" [fails the mission when hurt: quicksave, hurt it, quickload;"
+                     " the hurt sends]" if l.harm else
+                     " [fails the mission: quicksave, kill, quickload]"
                      if l.id in critical else "")
                   + (f"\n    {l.note}" if l.note else "") for l in npcs),
             ]
@@ -1801,6 +1808,10 @@ def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
                 title=f"0.4.0-2: Witness every NPC death in {map_name}",
                 map=map_name, expect=[l.id for l in npcs], steps="\n".join(lines)))
     return out
+
+
+# Each game's opening ride, where NPCs are shot from the train.
+INTRO_CHAPTERS = {"c0a0", "of0a0", "ba_tram1"}
 
 
 # Ids for `Scenario.probes`, well clear of every real location.

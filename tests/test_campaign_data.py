@@ -929,9 +929,10 @@ def test_confirmed_copies_are_sources(campaign: dict) -> None:
 def test_npc_checks_mark_mission_failures(campaign: dict) -> None:
     # NPCs whose death reloads the game, found by following their harm
     # trigger. Each is marked critical, behind `include_critical_npcs`, and
-    # nothing else is.
+    # nothing else is. (of3a4's `duketakemforever` is one, but shares a check
+    # with a copy that dies safely, so that check is not.)
     failures = {("c2a5f", "barney1"), ("c3a2", "scientist_c3a2"), ("c3a2d", "thesci"),
-                ("of3a4", "duketakemforever"), ("ba_yard5a", "dr_rosenberg"),
+                ("ba_yard5a", "dr_rosenberg"),
                 ("ba_security2", "barney_admin"), ("ba_maint", "bob")}
     npcs = [l for l in campaign["locations"] if l["trigger"]["type"] in ("scientist", "barney", "soldier")]
     present = {(l["map"], l["trigger"].get("targetname")) for l in npcs}

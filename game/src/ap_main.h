@@ -34,7 +34,9 @@
 //   port/of              CSporeAmmo::SporeTouch       -> ap::OnPickupTouched
 //   dlls/combat.cpp      CBaseMonster::Killed         -> ap::OnNpcKilled
 //   dlls/monsters.cpp    SCRIPT_EVENT_DEAD            -> ap::OnNpcScriptDeath
+//   dlls/schedule.cpp    TASK_PLAY_SCRIPT             -> ap::OnNpcScriptPlay
 //   dlls/subs.cpp        SUB_UseTargets killtarget    -> ap::OnKillTarget
+//   dlls/combat.cpp      CBaseMonster::TakeDamage     -> ap::OnNpcHurt
 
 #pragma once
 
@@ -82,8 +84,10 @@ void TagPickup(CBaseEntity* entity, bool spawned);           // ap_locations
 void OnCrateDrop(CBaseEntity* crate, CBaseEntity* drop);     // ap_locations
 void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup); // ap_locations
 void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker); // ap_locations
-void OnNpcScriptDeath(CBaseEntity* monster);                 // ap_locations
+void OnNpcScriptDeath(CBaseEntity* monster, bool waiting);   // ap_locations
+void OnNpcScriptPlay(CBaseEntity* monster);                  // ap_locations
 void OnKillTarget(CBaseEntity* entity);                      // ap_locations
+void OnNpcHurt(CBaseEntity* monster, entvars_t* attacker);   // ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool MenuSelect(CBasePlayer* player, int key);                       // ap_menu
 bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub

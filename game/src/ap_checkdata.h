@@ -96,6 +96,8 @@ struct Location {
     std::vector<Alias> aliases;
     std::string note;
     bool removal_death = false;
+    // From an `X` record: hurting it fails the mission, so the hurt sends.
+    bool harm_sends = false;
 };
 
 struct Chapter {

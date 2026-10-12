@@ -219,6 +219,8 @@ UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # Welcome To Black Mesa part 1: the guard shut in with the G-Man, confirmed
     # out of reach in play.
     "of1a1": {("monster_barney", (688, -1047, 0))},
+    # Crush Depth part 3: the floating scientist, out of reach.
+    "of3a6": {("monster_scientist", (-1022, 1104, -462))},
     # Incoming: the marines riding in the Osprey, out of reach in play.
     "of0a0": {
         ("monster_human_grunt_ally", (-2772, 1448, -192)),
@@ -233,6 +235,12 @@ KILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # We Are Pulling Out part 1: Gleason's preview past the changelevel. The
     # killtarget only fires as the level ends; confirmed killable in play.
     "of1a5": {("monster_otis", (1560, -3424, 1339))},
+    # We Are Pulling Out part 3: the scientist in the jail cell.
+    "of1a6": {("monster_scientist", (668, -256, -32))},
+    # We Are Not Alone part 1: Sean Reardon, in time only with the Long Jump.
+    "of3a1": {("monster_scientist", (0, -364, 66))},
+    # Vicarious Reality part 1: the scientist saved, behind a Displacer trip.
+    "of4a1": {("monster_scientist", (-101, 314, -799))},
 }
 
 # Listed `monster_generic` stand-ins that count, as `{map: {(kind, (x, y, z))}}`.
@@ -240,10 +248,28 @@ GENERIC_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # Welcome To Black Mesa part 1: the cleansuit scientist thrown through the
     # CAT scan window. Confirmed witnessed in play.
     "of1a1": {("scientist", (-424, 1448, 36))},
+    # Missing In Action part 3: the wounded marine who crawls out by the truck.
+    "of2a2": {("soldier", (1656, -1280, 40))},
 }
 
-# Its throw ends with a killtarget and a corpse in its place: that is its death.
+# Logic for single NPCs, `{map: {(classname, (x, y, z)): gates}}`.
+NPC_GATES = {
+    "of3a1": {("monster_scientist", (0, -364, 66)): {"always": ["longjump"]}},
+    "of3a5": {("monster_scientist", (1415, 282, 232)): _DISPLACER},
+    "of4a1": {("monster_scientist", (-101, 314, -799)): _DISPLACER},
+    "of4a5": {("monster_scientist", (-2025, -1222, 256)): _DISPLACER},
+    "of6a1": {("monster_scientist", (-3173, -2767, -799)): _DISPLACER},
+}
+
+# Where `ap_find` points for an NPC met somewhere other than its placement.
+NPC_POSITIONS = {
+    # The wounded marine's crawl, not the closet he waits in.
+    "of2a2": {("monster_generic", (1656, -1280, 40)): (1320.0, -1376.0, 0.0)},
+}
+
+# NPCs whose deletion by the map is their death.
 REMOVAL_DEATHS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # The thrown CAT scan scientist: a killtarget and a corpse end his throw.
     "of1a1": {("monster_generic", (-424, 1448, 36))},
     # We Are Pulling Out part 2: `scihist`, deleted as the shock trooper
     # teleports in on him. Confirmed witnessed in play.
@@ -251,8 +277,25 @@ REMOVAL_DEATHS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 }
 
 # Welcome To Black Mesa part 1: taking the PCV deletes `otis1`, the Otis behind
-# the door, and teleports `otis2` from a closet into his place.
+# the door, and teleports `otis2` from a closet into his place. Missing In
+# Action part 3: `fgrunt1` crawls out, then is swapped for `fgrunt2`, whose death
+# speech ends in his death. Crush Depth part 1: `duke` and `duketakemforever`
+# trade places, and the one whose death fails the mission is the one met at
+# the lab door.
 SWAPPED_NPCS = {
+    "of2a2": {
+        ("monster_generic", (1656, -1280, 40)): (
+            ("monster_generic", (1656, -1328, 40)), "Wounded Soldier",
+            "He crawls out by the truck and dies in a scripted scene (fgrunt1, "
+            "then fgrunt2); watching it sends this."),
+    },
+    "of3a4": {
+        ("monster_cleansuit_scientist", (-1184, 1856, 110)): (
+            ("monster_cleansuit_scientist", (-1140, 1324, -54)), "Duke",
+            "Two copies trade places (duketakemforever and duke); either "
+            "sends this. Killing the one at the lab door fails the mission.",
+            True),
+    },
     "of1a1": {
         ("monster_otis", (-1328, -136, -128)): (
             ("monster_otis", (-2584, -1048, -128)), "Otis",
@@ -288,6 +331,8 @@ OPPOSING_FORCE = Campaign(
     generic_npcs=GENERIC_NPCS,
     removal_deaths=REMOVAL_DEATHS,
     swapped_npcs=SWAPPED_NPCS,
+    npc_gates=NPC_GATES,
+    npc_positions=NPC_POSITIONS,
     weapon_source_gates=WEAPON_SOURCE_GATES,
     location_gates=LOCATION_GATES,
     # Boot camp: the training course, left out like Half-Life's hazard course.

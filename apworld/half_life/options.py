@@ -194,8 +194,8 @@ class Scientistsanity(Toggle):
     can never be reached, are left out. On the intro tram ride, only the ones
     in sight of the tram count, and they need a gun.
 
-    108 of them: 82 in Half-Life (8 on the intro ride), 16 in Opposing Force
-    and 10 in Blue Shift (5 on the intro ride).
+    117 of them: 82 in Half-Life (8 on the intro ride), 18 in Opposing Force
+    and 17 in Blue Shift (8 on the intro ride).
     """
 
     display_name = "Scientistsanity"
@@ -205,8 +205,8 @@ class Barneysanity(Toggle):
     """Experimental. Every security guard, Otis included, is a check, sent the
     same way as Scientistsanity's: when one dies and you witnessed it.
 
-    48 of them: 32 in Half-Life (3 on the intro ride), 9 in Opposing Force and
-    7 in Blue Shift (2 on the intro ride).
+    49 of them: 32 in Half-Life (3 on the intro ride), 9 in Opposing Force and
+    8 in Blue Shift (2 on the intro ride).
     """
 
     display_name = "Barneysanity"
@@ -217,7 +217,7 @@ class Soldiersanity(Toggle):
     medics and engineers) is a check, sent the same way as Scientistsanity's:
     when one dies and you witnessed it.
 
-    17 of them, all in Opposing Force.
+    18 of them, all in Opposing Force.
     """
 
     display_name = "Soldiersanity"
@@ -228,13 +228,12 @@ class IncludeCriticalNpcs(Toggle):
     count the scientists, guards and soldiers whose death fails the mission or
     strands you (Rosenberg, the Insecurity guards, the guard who opens the
     intro train's door, and the like). The check is sent the moment one dies,
-    before the reload, so quicksave first and quickload after. Some fail the
-    mission as soon as they are hurt, leaving only the reload's fade to finish
-    them.
+    before the reload, so quicksave first and quickload after. Those that fail
+    the mission as soon as they are hurt send it on that first hurt instead.
 
-    14 scientists (8 in Half-Life, 1 in Opposing Force, 5 in Blue Shift), 7
-    guards (2 in Half-Life, one of them on the intro ride, 5 in Blue Shift) and,
-    with Soldiersanity, 3 of Opposing Force's soldiers.
+    15 scientists (8 in Half-Life, 7 in Blue Shift), 9 guards (2 in Half-Life,
+    one of them on the intro ride, 7 in Blue Shift) and, with Soldiersanity, 3
+    of Opposing Force's soldiers.
     """
 
     display_name = "Include Mission-Critical NPCs"

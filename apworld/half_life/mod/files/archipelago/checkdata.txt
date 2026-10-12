@@ -12,6 +12,8 @@
 #     for that NPC, tagged as the same check
 #   H|<location id>|<text>        what ap_find says about that check
 #   R|<location id>                that NPC's removal by the map is its death
+#   X|<location id>                hurting that NPC sends it (the hurt fails the
+#     mission, so it never lives to die)
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
 #   P|<button targetname>|<chapter key>   a lobby panel and where it goes
@@ -32,7 +34,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|56fdd266ba53
+D|8f9e109d553f
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -973,6 +975,7 @@ L|7760899|c3a2|ammo_pickup|ammo_gaussclip@-458 1636 260|Lambda Core: Uranium 1 (
 L|7760900|c3a2|ammo_pickup|ammo_gaussclip@-424 1636 300|Lambda Core: Uranium 2 (Part 2)|-424 1636 300
 L|7761905|c3a2|scientist|monster_scientist@-624 1960 256|Lambda Core: C3a2 Gluonguy (Part 2)|-624 1960 256
 L|7762014|c3a2|scientist|monster_scientist@-244 1390 128|Lambda Core: Scientist C3a2 (Part 2)|-244 1390 128
+X|7762014
 L|7760184|c3a2a|map_reached||Lambda Core: Part 3 Reached
 L|7760185|c3a2a|charger|func_healthcharger@-2292 240 -200|Lambda Core: Health Charger (Part 3)|-2292 240 -200
 L|7760186|c3a2a|charger|func_recharge@-2292 176 -200|Lambda Core: HEV Charger (Part 3)|-2292 176 -200
@@ -1078,6 +1081,7 @@ L|7760965|c3a2d|ammo_pickup|weaponbox@1584 -696 -248|Lambda Core: Weapon Box 1 (
 L|7760966|c3a2d|ammo_pickup|weaponbox@1584 -640 -248|Lambda Core: Weapon Box 2 (Part 7)|1584 -640 -248
 L|7762015|c3a2d|scientist|monster_scientist@2 -798 64|Lambda Core: C3a2 Portsci (Part 7)|2 -798 64
 L|7762016|c3a2d|scientist|monster_scientist@1200 -592 -256|Lambda Core: Thesci (Part 7)|1200 -592 -256
+X|7762016
 L|7761912|c3a2d|barney|monster_barney@1354 -394 -224|Lambda Core: Theb (Part 7)|1354 -394 -224
 L|7760195|c4a1|map_reached||Xen: Reached
 L|7760241|c4a1|charger|trigger_hurt@-632 -548 -124|Xen: Healing Pool|-632 -548 -125
@@ -1303,6 +1307,7 @@ L|7761097|of1a6|ammo_pickup|ammo_357@364 -608 8|We Are Pulling Out: .357 Rounds 
 L|7761098|of1a6|ammo_pickup|ammo_9mmclip@363 -644 8|We Are Pulling Out: 9mm Clip (Part 3)|363 -644 8
 L|7761732|of1a6|ammo_pickup|weapon_handgrenade@232 -1220 8|We Are Pulling Out: Hand Grenade (Part 3)|232 -1220 8
 L|7761733|of1a6|ammo_pickup|weapon_satchel@232 -1284 8|We Are Pulling Out: Satchel Charge (Part 3)|232 -1284 8
+L|7762058|of1a6|scientist|monster_scientist@668 -256 -32|We Are Pulling Out: Jail Scientist1 (Part 3)|668 -256 -32
 L|7762039|of1a6|soldier|monster_human_grunt_ally@632 -292 -24|We Are Pulling Out: Jail Fgrunt1 (Part 3)|632 -292 -24
 L|7762040|of1a6|soldier|monster_human_grunt_ally@578 -1318 -24|We Are Pulling Out: Radio Fgrunt1 (Part 3)|578 -1318 -24
 L|7760269|of2a1|map_reached||Missing In Action: Part 1 Reached
@@ -1335,6 +1340,9 @@ L|7761737|of2a2|ammo_pickup|func_breakable@1752 960 -116|Missing In Action: Crat
 L|7761118|of2a2|ammo_pickup|ammo_ARgrenades@128 -568 256|Missing In Action: MP5 Grenades (Part 3)|128 -568 256
 L|7761119|of2a2|ammo_pickup|ammo_buckshot@144 -512 256|Missing In Action: Shotgun Shells (Part 3)|144 -512 256
 L|7761924|of2a2|scientist|monster_scientist@2368 2632 -64|Missing In Action: Scared Scientist (Part 3)|2368 2632 -64
+L|7762059|of2a2|soldier|monster_generic@1656 -1280 40|Missing In Action: Wounded Soldier (Part 3)|1320 -1376 0
+A|7762059|monster_generic@1656 -1328 40
+H|7762059|He crawls out by the truck and dies in a scripted scene (fgrunt1, then fgrunt2); watching it sends this.
 L|7760273|of2a3|map_reached||Missing In Action: Part 4 Reached
 L|7761120|of2a3|heal_pickup|item_battery@-210 -804 75|Missing In Action: Battery 1 (Part 4)|-210 -804 75
 L|7761121|of2a3|heal_pickup|item_battery@-412 488 -192|Missing In Action: Battery 2 (Part 4)|-412 488 -192
@@ -1407,6 +1415,7 @@ L|7762046|of2a6|soldier|monster_human_grunt_ally@-288 480 -440|Friendly Fire: Mi
 L|7760278|of3a1|map_reached||We Are Not Alone: Part 1 Reached
 L|7760279|of3a1|charger|func_healthcharger@592 1184 -204|We Are Not Alone: Health Charger (Part 1)|592 1186 -204
 L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone: HEV Charger (Part 1)|544 1186 -204
+L|7762060|of3a1|scientist|monster_scientist@0 -364 66|We Are Not Alone: Sean Reardon (Part 1)|0 -364 66|Long Jump Module
 L|7760281|of3a1b|map_reached||We Are Not Alone: Part 2 Reached
 L|7761165|of3a1b|heal_pickup|item_battery@960 1664 1616|We Are Not Alone: Battery (Part 2)|960 1664 1616
 L|7761166|of3a1b|heal_pickup|item_healthkit@976 1632 1616|We Are Not Alone: Health Kit 1 (Part 2)|976 1632 1616
@@ -1425,15 +1434,16 @@ L|7761171|of3a4|heal_pickup|item_healthkit@-1248 -184 32|Crush Depth: Health Kit
 L|7761172|of3a4|ammo_pickup|ammo_gaussclip@-1072 88 -96|Crush Depth: Uranium 1 (Part 1)|-1072 88 -96
 L|7761173|of3a4|ammo_pickup|ammo_gaussclip@-1120 88 -96|Crush Depth: Uranium 2 (Part 1)|-1120 88 -96
 L|7761174|of3a4|ammo_pickup|ammo_gaussclip@-1168 88 -96|Crush Depth: Uranium 3 (Part 1)|-1168 88 -96
-L|7761928|of3a4|scientist|monster_cleansuit_scientist@-1140 1324 -54|Crush Depth: Duke (Part 1)|-1140 1324 -54
-L|7762017|of3a4|scientist|monster_cleansuit_scientist@-1184 1856 110|Crush Depth: Duketakemforever (Part 1)|-1184 1856 110
+L|7762017|of3a4|scientist|monster_cleansuit_scientist@-1184 1856 110|Crush Depth: Duke (Part 1)|-1184 1856 110
+A|7762017|monster_cleansuit_scientist@-1140 1324 -54
+H|7762017|Two copies trade places (duketakemforever and duke); either sends this. Killing the one at the lab door fails the mission.
 L|7761929|of3a4|barney|monster_otis@-944 8 112|Crush Depth: Otis (Part 1)|-944 8 112
 L|7760289|of3a5|map_reached||Crush Depth: Part 2 Reached
 L|7760290|of3a5|charger|func_recharge@-3228 2340 -56|Crush Depth: HEV Charger (Part 2)|-3228 2340 -56
 L|7761175|of3a5|heal_pickup|item_healthkit@-2768 2320 -112|Crush Depth: Health Kit (Part 2)|-2768 2320 -112
 L|7761176|of3a5|ammo_pickup|ammo_gaussclip@-2568 248 -128|Crush Depth: Uranium 1 (Part 2)|-2568 248 -128
 L|7761177|of3a5|ammo_pickup|ammo_gaussclip@-2544 168 -128|Crush Depth: Uranium 2 (Part 2)|-2544 168 -128
-L|7761930|of3a5|scientist|monster_scientist@1415 282 232|Crush Depth: Hanging Sci 1 (Part 2)|1415 282 232
+L|7761930|of3a5|scientist|monster_scientist@1415 282 232|Crush Depth: Hanging Sci 1 (Part 2)|1415 282 232|Displacer Cannon
 L|7760291|of3a6|map_reached||Crush Depth: Part 3 Reached
 L|7761178|of3a6|heal_pickup|item_battery@2464 -1972 2162|Crush Depth: Battery 1 (Part 3)|2464 -1972 2162
 L|7761179|of3a6|heal_pickup|item_battery@2990 -2044 2420|Crush Depth: Battery 2 (Part 3)|2990 -2044 2420
@@ -1446,11 +1456,11 @@ L|7761185|of3a6|ammo_pickup|ammo_gaussclip@-2372 1476 -304|Crush Depth: Uranium 
 L|7761186|of3a6|ammo_pickup|ammo_gaussclip@-834 1428 -286|Crush Depth: Uranium 3 (Part 3)|-834 1428 -286
 L|7761187|of3a6|ammo_pickup|ammo_gaussclip@-770 1440 -286|Crush Depth: Uranium 4 (Part 3)|-770 1440 -286
 L|7761188|of3a6|ammo_pickup|weaponbox@2378 -1934 2172|Crush Depth: Weapon Box (Part 3)|2378 -1934 2172
-L|7761931|of3a6|scientist|monster_scientist@-1022 1104 -462|Crush Depth: Sci Floater (Part 3)|-1022 1104 -462
 L|7760292|of4a1|map_reached||Vicarious Reality: Part 1 Reached
 L|7760293|of4a1|charger|trigger_hurt@-172 -272 -840|Vicarious Reality: Healing Pool (Part 1)|-172 -271 -840|Displacer Cannon
 L|7761189|of4a1|heal_pickup|item_battery@457 2379 384|Vicarious Reality: Battery (Part 1)|457 2379 384
 L|7761190|of4a1|heal_pickup|item_healthkit@-496 2112 385|Vicarious Reality: Health Kit (Part 1)|-496 2112 385
+L|7762061|of4a1|scientist|monster_scientist@-101 314 -799|Vicarious Reality: Scientist Saved (Part 1)|-101 314 -799|Displacer Cannon
 L|7760294|of4a2|map_reached||Vicarious Reality: Part 2 Reached
 L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality: Health Charger 1 (Part 2)|-2044 2 444|Barnacle Grapple
 L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality: Health Charger 2 (Part 2)|-544 -1318 1148|Barnacle Grapple
@@ -1540,7 +1550,7 @@ L|7761260|of4a5|ammo_pickup|ammo_9mmclip@956 804 -384|Pit Worm's Nest: 9mm Clip 
 L|7761261|of4a5|ammo_pickup|ammo_9mmclip@1016 880 -384|Pit Worm's Nest: 9mm Clip 2 (Part 2)|1016 880 -384
 L|7761262|of4a5|ammo_pickup|ammo_buckshot@752 888 -384|Pit Worm's Nest: Shotgun Shells (Part 2)|752 888 -384
 L|7761263|of4a5|ammo_pickup|ammo_gaussclip@1184 1280 -432|Pit Worm's Nest: Uranium (Part 2)|1184 1280 -432
-L|7761932|of4a5|scientist|monster_scientist@-2025 -1222 256|Pit Worm's Nest: Hanging Sci 1 (Part 2)|-2025 -1222 256
+L|7761932|of4a5|scientist|monster_scientist@-2025 -1222 256|Pit Worm's Nest: Hanging Sci 1 (Part 2)|-2025 -1222 256|Displacer Cannon
 L|7760303|of5a1|map_reached||Foxtrot Uniform: Part 1 Reached
 L|7760304|of5a1|charger|trigger_hurt@2580 1832 -840|Foxtrot Uniform: Healing Pool (Part 1)|2580 1832 -840|Displacer Cannon
 L|7761264|of5a1|heal_pickup|item_battery@-600 -100 168|Foxtrot Uniform: Battery 1 (Part 1)|-600 -100 168
@@ -1646,7 +1656,7 @@ L|7760312|of6a1|charger|trigger_hurt@-3244 -3352 -840|The Package: Healing Pool 
 L|7761336|of6a1|heal_pickup|item_healthkit@1408 1024 144|The Package: Health Kit 1 (Part 1)|1408 1024 144
 L|7761337|of6a1|heal_pickup|item_healthkit@1456 1056 144|The Package: Health Kit 2 (Part 1)|1456 1056 144
 L|7761338|of6a1|ammo_pickup|ammo_buckshot@-3368 2784 272|The Package: Shotgun Shells (Part 1)|-3368 2784 272
-L|7761933|of6a1|scientist|monster_scientist@-3173 -2767 -799|The Package: Scientist Saved (Part 1)|-3173 -2767 -799
+L|7761933|of6a1|scientist|monster_scientist@-3173 -2767 -799|The Package: Scientist Saved (Part 1)|-3173 -2767 -799|Displacer Cannon
 L|7762055|of6a1|soldier|monster_human_grunt_ally@-920 2912 130|The Package: Friendly1 (Part 1)|-920 2912 130
 L|7762056|of6a1|soldier|monster_human_grunt_ally@-832 3024 130|The Package: Friendly2 (Part 1)|-832 3024 130
 L|7760313|of6a2|map_reached||The Package: Part 2 Reached
@@ -1767,13 +1777,16 @@ L|7760323|of7a0|map_reached||Worlds Collide: Part 3 Reached
 L|7760324|ba_tram1|map_reached||Living Quarters Outbound: Part 1 Reached
 L|7761938|ba_tram1|scientist|monster_scientist@-1264 3024 1328|Living Quarters Outbound: Railchatter1 (Part 1)|-1264 3024 1328|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7761937|ba_tram1|scientist|monster_scientist@-1264 2976 1328|Living Quarters Outbound: Railchatter2 (Part 1)|-1264 2976 1328|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
-L|7761939|ba_tram1|barney|monster_barney@-2844 916 64|Living Quarters Outbound: Barn Playgame (Part 1)|-2844 916 64|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7760325|ba_tram2|map_reached||Living Quarters Outbound: Part 2 Reached
 L|7761940|ba_tram2|scientist|monster_scientist@160 -416 2340|Living Quarters Outbound: Rosenburg (Part 2)|160 -416 2340|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7761942|ba_tram2|scientist|monster_scientist@288 -1128 2496|Living Quarters Outbound: Topsitter (Part 2)|288 -1128 2496|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7761941|ba_tram2|scientist|monster_scientist@304 -944 2496|Living Quarters Outbound: Topwalker (Part 2)|304 -944 2496|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
-L|7761943|ba_tram2|barney|monster_barney@3488 -672 2272|Living Quarters Outbound: Barney Redding (Part 2)|3488 -672 2272|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7761943|ba_tram2|barney|monster_barney@3488 -672 2272|Living Quarters Outbound: Barney Redding (Part 3)|3488 -672 2272|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7760326|ba_tram3|map_reached||Living Quarters Outbound: Part 3 Reached
+L|7762062|ba_tram3|scientist|monster_scientist@1684 3680 541|Living Quarters Outbound: Scientist (Part 3)|1684 3680 541|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7762063|ba_tram3|scientist|monster_scientist@2080 3704 541|Living Quarters Outbound: Walker1 (Part 3)|2080 3704 541|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7762064|ba_tram3|scientist|monster_scientist@1296 3760 541|Living Quarters Outbound: Walker2 (Part 3)|1296 3760 541|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7762065|ba_tram3|barney|monster_barney@1600 3680 541|Living Quarters Outbound: Security Guard (Part 3)|1600 3680 541|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7760327|ba_security1|map_reached||Insecurity: Part 1 Reached
 L|7761944|ba_security1|barney|monster_barney@-864 2544 480|Insecurity: Sean Reardon (Part 1)|-864 2544 480
 L|7760328|ba_security2|map_reached||Insecurity: Part 2 Reached
@@ -1787,16 +1800,39 @@ L|7761945|ba_security2|scientist|monster_scientist@-1088 -1456 -240|Insecurity: 
 L|7761946|ba_security2|scientist|monster_scientist@-144 -1392 -240|Insecurity: Cam1 Walker2 (Part 2)|-144 -1392 -240
 L|7761947|ba_security2|scientist|monster_scientist@-864 -2192 -240|Insecurity: Cam1 Walker3 (Part 2)|-864 -2192 -240
 L|7762018|ba_security2|scientist|monster_scientist@-749 1645 192|Insecurity: Complainer (Part 2)|-749 1645 192
+X|7762018
 L|7762020|ba_security2|barney|monster_barney@-800 1696 192|Insecurity: Barney Admin (Part 2)|-800 1696 192
+X|7762020
 L|7762022|ba_security2|barney|monster_barney@322 1248 192|Insecurity: Bathroom Barney (Part 2)|322 1248 192
+X|7762022
 L|7762019|ba_security2|barney|monster_barney@-1356 1892 480|Insecurity: Black Knight (Part 2)|-1356 1892 480
+X|7762019
+L|7762066|ba_security2|barney|monster_generic@-656 1128 244|Insecurity: Front Desk Guard (Part 2)|-656 1128 244
+A|7762066|monster_generic@-656 1168 244
+H|7762066|The seated guard at the front desk; an invisible stand-in takes his hits, and hurting him fails the mission.
+X|7762066
 L|7762021|ba_security2|barney|monster_barney@636 1308 456|Insecurity: Shooter Mcgavin (Part 2)|636 1308 456
+X|7762021
+L|7762067|ba_security2|barney|monster_generic@648 1684 484|Insecurity: Wrangler (Part 2)|648 1684 484
+X|7762067
 L|7760330|ba_maint|map_reached||Insecurity: Part 3 Reached
 L|7762025|ba_maint|scientist|monster_scientist@-2102 1408 624|Insecurity: Bob (Part 3)|-2102 1408 624
+X|7762025
 L|7762024|ba_maint|scientist|monster_scientist@-1392 1168 480|Insecurity: Crunchie (Part 3)|-1392 1168 480
+X|7762024
 L|7762023|ba_maint|scientist|monster_scientist@-1840 1424 640|Insecurity: Joe (Part 3)|-1840 1424 640
+X|7762023
 L|7762026|ba_maint|barney|monster_barney@-2000 1136 624|Insecurity: Security Guard (Part 3)|-2000 1136 624
+X|7762026
 L|7760331|ba_elevator|map_reached||Insecurity: Part 4 Reached
+L|7762068|ba_elevator|scientist|monster_generic@-344 1408 3204|Insecurity: Mr Cranky (Part 4)|-344 1408 3204
+X|7762068
+L|7762069|ba_elevator|scientist|monster_scientist@32 2392 1556|Insecurity: Sci Flee (Part 4)|32 2392 1556
+R|7762069
+L|7762070|ba_elevator|scientist|monster_scientist@-612 1760 1664|Insecurity: Sci Runaway (Part 4)|-612 1760 1664
+R|7762070
+L|7762071|ba_elevator|scientist|monster_generic@-232 1348 3204|Insecurity: Silent Bob (Part 4)|-232 1348 3204
+X|7762071
 L|7761949|ba_elevator|barney|monster_barney@80 2392 1556|Insecurity: Ba Cochese (Part 4)|80 2392 1556
 L|7761948|ba_elevator|barney|monster_barney@716 1992 1604|Insecurity: Ba Sluggo (Part 4)|716 1992 1604
 L|7760332|ba_canal1|map_reached||Duty Calls: Part 1 Reached
@@ -1806,6 +1842,7 @@ L|7761432|ba_canal1|ammo_pickup|ammo_9mmclip@1146 -1288 -140|Duty Calls: 9mm Cli
 L|7761433|ba_canal1|ammo_pickup|ammo_9mmclip@1146 -1332 -140|Duty Calls: 9mm Clip 3 (Part 1)|1146 -1332 -140
 L|7761434|ba_canal1|ammo_pickup|func_breakable@1808 -8 32|Duty Calls: Crate 9mm Clip 1 (Part 1)|1808 -8 32
 L|7761435|ba_canal1|ammo_pickup|func_breakable@1024 1104 32|Duty Calls: Crate 9mm Clip 2 (Part 1)|1024 1104 32
+L|7762072|ba_canal1|scientist|monster_generic@744 -1404 180|Duty Calls: Scientist (Part 1)|744 -1404 180
 L|7761950|ba_canal1|barney|monster_barney@1928 208 24|Duty Calls: Security Guard (Part 1)|1928 208 24
 L|7760334|ba_canal1b|map_reached||Duty Calls: Part 2 Reached
 L|7761436|ba_canal1b|heal_pickup|func_breakable@336 896 -160|Duty Calls: Crate Health Kit 1 (Part 2)|336 896 -160
@@ -2021,6 +2058,10 @@ L|7761592|ba_power1|ammo_pickup|ammo_buckshot@800 -2488 -510|Power Struggle: Sho
 L|7761786|ba_power1|ammo_pickup|weapon_snark@-890 -1822 -112|Power Struggle: Snark Nest 1 (Part 2)|-890 -1822 -112
 L|7761787|ba_power1|ammo_pickup|weapon_snark@-790 -1890 -112|Power Struggle: Snark Nest 2 (Part 2)|-790 -1890 -112
 L|7761593|ba_power1|ammo_pickup|weaponbox@-832 -1908 -104|Power Struggle: Weapon Box (Part 2)|-832 -1908 -104
+L|7762073|ba_power1|scientist|monster_scientist@-232 184 -252|Power Struggle: Sci Porkins (Part 2)|-232 184 -252
+R|7762073
+L|7762074|ba_power1|barney|monster_barney@-188 268 -252|Power Struggle: Barn Tyree (Part 2)|-188 268 -252
+R|7762074
 L|7760368|ba_power2|map_reached||Power Struggle: Part 3 Reached
 L|7760369|ba_power2|charger|func_healthcharger@-1560 696 80|Power Struggle: Health Charger 1 (Part 3)|-1560 694 80
 L|7760370|ba_power2|charger|func_healthcharger@64 -1240 -356|Power Struggle: Health Charger 2 (Part 3)|64 -1240 -356

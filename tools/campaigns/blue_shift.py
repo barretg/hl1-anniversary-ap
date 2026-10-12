@@ -88,6 +88,72 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
     "Shotgun": ["ba_teleport2@-1456 -816 0"],
 }
 
+# Scientists and barneys that cannot be killed, as `{map: {(classname, (x, y,
+# z))}}`.
+UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Living Quarters Outbound part 1: the guard at the game table, out of
+    # sight of the tram.
+    "ba_tram1": {("monster_barney", (-2844, 916, 64))},
+}
+
+# NPCs the automatic exclusions drop that play shows count, same form.
+KILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Living Quarters Outbound part 3: all four on the platform can be shot
+    # from the tram, though the line-of-sight test missed them.
+    "ba_tram3": {
+        ("monster_scientist", (2080, 3704, 541)),
+        ("monster_scientist", (1296, 3760, 541)),
+        ("monster_barney", (1600, 3680, 541)),
+        ("monster_scientist", (1684, 3680, 541)),
+    },
+    # Insecurity part 4: the scientist who flees the elevator crash; the
+    # killtarget only clears him away once he is out of sight.
+    "ba_elevator": {("monster_scientist", (32, 2392, 1556))},
+}
+
+# Listed `monster_generic` stand-ins that count, as `{map: {(kind, (x, y, z))}}`.
+GENERIC_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Insecurity part 2: the guard who hands over the pistol, and the invisible
+    # stand-in for the one seated at the front desk. Hurting either fails the
+    # mission.
+    "ba_security2": {("barney", (648, 1684, 484)), ("barney", (-656, 1128, 244))},
+    # Insecurity part 4: the two scientists in the falling elevator.
+    "ba_elevator": {("scientist", (-344, 1408, 3204)), ("scientist", (-232, 1348, 3204))},
+    # Duty Calls part 1: the scientist sitting above with the flashlight.
+    "ba_canal1": {("scientist", (744, -1404, 180))},
+}
+
+# NPCs whose deletion by the map is their death.
+REMOVAL_DEATHS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Insecurity part 4: the scientist the vortigaunt takes behind the window,
+    # and the one who flees the crash, whose run ends out of sight.
+    "ba_elevator": {("monster_scientist", (-612, 1760, 1664)),
+                    ("monster_scientist", (32, 2392, 1556))},
+    # Power Struggle part 2: the guard and scientist the opening attack
+    # kills; their scripts end in a killtarget.
+    "ba_power1": {("monster_barney", (-188, 268, -252)),
+                  ("monster_scientist", (-232, 184, -252))},
+}
+
+# The front desk guard sits as a non-solid puppet (`controls_barney`) while an
+# invisible copy (`inviso_barney`) takes the hits: one check, either tagged.
+SWAPPED_NPCS = {
+    "ba_security2": {
+        ("monster_generic", (-656, 1128, 244)): (
+            ("monster_generic", (-656, 1168, 244)), "Front Desk Guard",
+            "The seated guard at the front desk; an invisible stand-in takes "
+            "his hits, and hurting him fails the mission."),
+    },
+}
+
+# NPCs whose check names a later part than their map, because the player
+# reaches them from there: `{map: {(classname, (x, y, z)): part map}}`.
+NPC_PARTS = {
+    # Living Quarters Outbound: placed in part 2's map, seen from part 3's tram.
+    "ba_tram2": {("monster_barney", (3488, -672, 2272)): "ba_tram3"},
+}
+
+
 BLUE_SHIFT = Campaign(
     key="blue_shift",
     name="Blue Shift",
@@ -104,6 +170,12 @@ BLUE_SHIFT = Campaign(
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     confirmed_copies=CONFIRMED_COPIES,
     unreachable_copies=UNREACHABLE_COPIES,
+    unkillable_npcs=UNKILLABLE_NPCS,
+    killable_npcs=KILLABLE_NPCS,
+    generic_npcs=GENERIC_NPCS,
+    removal_deaths=REMOVAL_DEATHS,
+    swapped_npcs=SWAPPED_NPCS,
+    npc_parts=NPC_PARTS,
     melee=["weapon_crowbar"],
     # Its HEV-style wall units are scenery: none is a `func_recharge`, and a
     # test keeps it that way.

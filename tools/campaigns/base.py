@@ -129,16 +129,29 @@ class Campaign:
     )
     # Two placed NPCs the map swaps in play, deleting the one the player meets
     # and moving a stand-in into its place: `{map: {(classname, (x, y, z)) of
-    # the one met: ((classname, (x, y, z)) of the stand-in, name, note)}}`. One
-    # check, at the first one's spot, sent by either; the note is what
-    # `!find` and `!trace` say about the swap.
-    swapped_npcs: dict[str, dict[tuple[str, tuple[int, int, int]],
-                                 tuple[tuple[str, tuple[int, int, int]], str, str]]] = field(
+    # the one met: ((classname, (x, y, z)) of the stand-in, name, note[,
+    # safe])}}`. One check, at the first one's spot, sent by either; the note
+    # is what `!find` and `!trace` say about the swap. `safe` when the
+    # stand-in can be killed without failing the mission, which keeps the
+    # check out of `include_critical_npcs` even if the first one's death fails it.
+    swapped_npcs: dict[str, dict[tuple[str, tuple[int, int, int]], tuple]] = field(
         default_factory=dict
     )
     # NPCs the map deletes as their scripted death (thrown, then swapped for a
     # corpse), as `{map: {(classname, (x, y, z))}}`: that removal sends.
     removal_deaths: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
+    # Logic for single NPCs, `{map: {(classname, (x, y, z)): gates}}` with
+    # gates as a location's (`{"always": [group, ...]}`): one only reachable
+    # with the Displacer, say.
+    npc_gates: dict[str, dict[tuple[str, tuple[int, int, int]], dict]] = field(
+        default_factory=dict
+    )
+    # Where `ap_find` points for an NPC that is not met where it is placed:
+    # `{map: {(classname, (x, y, z)): (x, y, z)}}`.
+    npc_positions: dict[str, dict[tuple[str, tuple[int, int, int]],
+                                  tuple[float, float, float]]] = field(
         default_factory=dict
     )
     # NPCs whose check names a later part than their map, because the player
