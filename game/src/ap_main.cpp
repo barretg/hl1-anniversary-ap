@@ -417,6 +417,15 @@ bool Live() {
     return true;
 }
 
+// Test builds also read the harness's per-scenario locations.
+std::string ProbesPath() {
+#ifdef HLAP_TEST_BUILD
+    return StoreDir() + "/aptest_probes.txt";
+#else
+    return std::string();
+#endif
+}
+
 void EnsureData() {
     // Once per process rather than once per map: rereading a file that cannot
     // have changed on every level transition is pure cost, and the whole point
@@ -425,9 +434,13 @@ void EnsureData() {
         return;
     }
     const std::string store = StoreDir();
-    if (!g_data.Load(store + "/checkdata.txt")) {
+    if (!g_data.Load(store + "/checkdata.txt", ProbesPath())) {
         Say("no checkdata.txt in " + store + " -- running as ordinary Half-Life");
     }
+}
+
+void ReloadData() {
+    g_data.Load(StoreDir() + "/checkdata.txt", ProbesPath());
 }
 
 void Startup() {

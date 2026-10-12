@@ -176,6 +176,10 @@ class Location:
     name: str
     pos: str = ""
     needs: str = ""
+    # From `A` and `H` records: stand-ins tagged as this check, and what
+    # `!find` says about it.
+    aliases: list[str] = field(default_factory=list)
+    note: str = ""
 
 
 @dataclass
@@ -226,6 +230,12 @@ def read_checkdata(path: Path) -> CheckData:
                                        f[5] if len(f) > 5 else ""))
         elif f[0] == "K" and len(f) >= 3:
             data.gated[f[1]] = f[2]
+        elif f[0] in ("A", "H") and len(f) >= 3 and int(f[1]) in data.locations:
+            owner = data.locations[int(f[1])]
+            if f[0] == "A":
+                owner.aliases.append(f[2])
+            else:
+                owner.note = f[2]
     return data
 
 
@@ -267,6 +277,9 @@ class Scenario:
     # Only `!tp` goes to `pos`; arriving starts at the map's spawn, for a spot
     # that would kill a player placed on it.
     manual_tp: bool = False
+    # Test-only locations the game tags for this scenario alone, so NPCs left
+    # out of the data can be labelled, found and traced: `(id, L record)`.
+    probes: list[tuple[int, str]] = field(default_factory=list)
 
 
 def cache_key(data: CheckData) -> str:
@@ -1774,7 +1787,8 @@ def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
                 *(f"  {l.name}: {l.arg.split('@')[0]}"
                   + (f" at {l.pos}" if l.pos else "")
                   + (" [fails the mission: quicksave, kill, quickload]"
-                     if l.id in critical else "") for l in npcs),
+                     if l.id in critical else "")
+                  + (f"\n    {l.note}" if l.note else "") for l in npcs),
             ]
             if intro:
                 lines += [
@@ -1787,6 +1801,10 @@ def npc_witness_scenarios(data: CheckData) -> list[Scenario]:
                 title=f"0.4.0-2: Witness every NPC death in {map_name}",
                 map=map_name, expect=[l.id for l in npcs], steps="\n".join(lines)))
     return out
+
+
+# Ids for `Scenario.probes`, well clear of every real location.
+PROBE_ID_BASE = 9_900_000
 
 
 def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
@@ -1808,6 +1826,9 @@ def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
                   for m, keys in c.unkillable_npcs.items() for cls, at in keys}
     intro = {m for c in KNOWN_CAMPAIGNS for m in c.intro_trains}
     kept = {(l.map, l.arg) for l in data.locations.values() if l.kind in NPC_KINDS}
+    # A stand-in is tagged as the NPC it replaces, so it is not left out.
+    kept |= {(l.map, alias) for l in data.locations.values() for alias in l.aliases}
+    next_probe = PROBE_ID_BASE
     out: list[Scenario] = []
     for chapter in data.chapters:
         for map_name in chapter.maps:
@@ -1816,6 +1837,7 @@ def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
                 continue
             ents = [resolve_world_item(e) for e in load_map(bsp)]
             left = []
+            probes: list[tuple[int, str]] = []
             for kind in NPC_TRIGGERS:
                 for n in map_npcs(kind, ents):
                     arg = (f"{n['classname']}@{' '.join(str(v) for v in n['at'])}"
@@ -1825,17 +1847,25 @@ def npc_excluded_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
                     why = n["out"] or ("curated" if (map_name, n["classname"], n["at"])
                                        in unkillable else "unseen" if map_name in intro
                                        else "?")
-                    left.append(f"  {n['classname']}"
-                                + (f" \"{n['targetname']}\"" if n["targetname"] else "")
+                    label = (f"Excluded {n['display']}"
+                             + (f" \"{n['targetname']}\"" if n["targetname"] else ""))
+                    left.append(f"  {label} ({n['classname']})"
                                 + f" at {' '.join(str(v) for v in n['at'])}: {reasons.get(why, why)}")
+                    pos = " ".join(f"{v:g}" for v in n["position"])
+                    probes.append((next_probe, f"L|{next_probe}|{map_name}|{kind}|{arg}|"
+                                               f"{label}|{pos}"))
+                    next_probe += 1
             if not left:
                 continue
             out.append(Scenario(
                 title=f"0.4.0-2: npc_excluded_check: {map_name}",
-                map=map_name, steps="\n".join([
+                map=map_name, probes=probes, steps="\n".join([
                     where_in_mission(data, map_name),
                     "These were left out of Scientistsanity / Barneysanity:",
                     *left,
+                    "For this scenario only they are tagged: labelled, in ap_tagged,",
+                    "and !find excluded / !trace excluded point at them. A death",
+                    "that would have counted says so here.",
                     "Play the map and judge each: is its death something a player",
                     "can fairly cause or witness without failing the mission?",
                     "!pass if all should stay out, else !fail naming the ones that",
@@ -2357,6 +2387,25 @@ def clear_results(results: Path, group: str, titles: set[str]) -> int:
     return len(dropped)
 
 
+def clear_titles(results: Path, titles: set[str]) -> int:
+    """Drop these scenarios' verdicts, whatever group recorded them, so they
+    read as untested again: for a failure fixed since. Kept in
+    `aptest_results_cleared.txt` like `clear_results`'s."""
+    if not results.exists():
+        return 0
+    kept: list[str] = []
+    dropped: list[str] = []
+    for line in results.read_text(encoding="utf-8").splitlines():
+        parts = line.split("|")
+        (dropped if len(parts) > 2 and parts[2] in titles else kept).append(line)
+    if dropped:
+        backup = results.with_name("aptest_results_cleared.txt")
+        with backup.open("a", encoding="utf-8") as handle:
+            handle.write("".join(line + "\n" for line in dropped))
+        results.write_text("".join(line + "\n" for line in kept), encoding="utf-8")
+    return len(dropped)
+
+
 class Harness:
     def __init__(self, store: Path, bridge_module, group: str,
                  scenarios: list[Scenario]) -> None:
@@ -2368,6 +2417,7 @@ class Harness:
         self.bridge.reset_cursor()
         self.results_path = store / "aptest_results.txt"
         self.go_path = store / "aptest_go.txt"
+        self.probes_path = store / "aptest_probes.txt"
         self.say_path = store / "aptest_say.txt"
         self.say_path.write_text("", encoding="utf-8")
         self.seq = self.last_seq()
@@ -2410,6 +2460,10 @@ class Harness:
             return -1
         return DATA.air_accelerate_value(*s.air_acceleration, self.air_received)
 
+    def probe_ids(self) -> set[int]:
+        s = self.scenario()
+        return {i for i, _ in s.probes} if s is not None else set()
+
     def server_checked(self) -> set[int]:
         s = self.scenario()
         return set(s.checked if s is not None else ()) | self.seen
@@ -2436,7 +2490,8 @@ class Harness:
             # the game has sent since the scenario started, so a load keeps
             # them collected as a real seed does.
             checked=sorted(self.server_checked()),
-            missing=sorted(set(self.data.locations) - self.server_checked()),
+            missing=sorted((set(self.data.locations) | self.probe_ids())
+                           - self.server_checked()),
             data_version=self.data.data_version,
             slot="aptest:1",
             force=force,
@@ -2469,6 +2524,9 @@ class Harness:
                 go.append("crouch=1")
             if s.manual_tp:
                 go.append("manual=1")
+            # Before the go file: the game rereads its data when that changes.
+            self.probes_path.write_text("".join(r + "\n" for _, r in s.probes),
+                                        encoding="utf-8")
             self.go_path.write_text("\n".join(go) + "\n", encoding="utf-8")
             self.tell(f"[aptest] {index}/{len(self.scenarios) - 1}: {s.title}")
             if s.take:
@@ -2643,6 +2701,12 @@ class Harness:
         name = location.name if location else f"id {location_id}"
         if location is not None and location.kind == "map_reached":
             return  # every arrival sends one; noise here
+        if location_id in self.probe_ids():
+            probe = next(r for i, r in s.probes if i == location_id)
+            self.tell(f"[aptest] Left-out NPC's death would have counted: "
+                      f"{probe.split('|')[5]}")
+            self.seen.add(location_id)
+            return
         if s is not None and location_id in s.expect:
             if location_id not in self.seen:
                 self.tell(f"[aptest] Expected check arrived: {name}. !pass if reachable.")
@@ -2835,6 +2899,7 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
         finally:
             harness.running = False
             harness.go_path.unlink(missing_ok=True)
+            harness.probes_path.unlink(missing_ok=True)
     print(f"{len(harness.scenarios)} scenarios from {store / 'checkdata.txt'}.")
     print("Drive it from the game: !next to begin, !pass / !fail <note> / !note <text>.")
     harness.status()
@@ -2861,6 +2926,7 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
     harness.running = False
     # A game started later must not load a scenario nobody is running.
     harness.go_path.unlink(missing_ok=True)
+    harness.probes_path.unlink(missing_ok=True)
     return 0
 
 

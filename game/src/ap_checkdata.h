@@ -82,6 +82,19 @@ struct Location {
         std::string drop;  // "hostile" or "ally" for a copy a monster drops
     };
     std::vector<Source> sources;
+
+    // scientist / barney, from `A`, `H` and `R` records: stand-ins the map
+    // swaps in for this NPC, keyed like it and tagged as the same check; what
+    // `ap_find` says about the check; and whether the map deleting the NPC is
+    // its death.
+    struct Alias {
+        std::string classname;
+        float at[3] = {0, 0, 0};
+        int ordinal = 1;
+    };
+    std::vector<Alias> aliases;
+    std::string note;
+    bool removal_death = false;
 };
 
 struct Chapter {
@@ -195,7 +208,9 @@ public:
     // (the hub).
     const Campaign& CampaignOfMap(const std::string& map) const;
 
-    bool Load(const std::string& path);
+    // `extra`, when given and present, is read after `path` as more of it:
+    // the scenario harness's test-only records.
+    bool Load(const std::string& path, const std::string& extra = "");
 
     // `map|classname|x y z|ordinal` -> a placed pickup, built by `Load`.
     std::unordered_map<std::string, const Location*> pickup_index;

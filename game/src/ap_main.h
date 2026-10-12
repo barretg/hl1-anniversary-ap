@@ -34,6 +34,7 @@
 //   port/of              CSporeAmmo::SporeTouch       -> ap::OnPickupTouched
 //   dlls/combat.cpp      CBaseMonster::Killed         -> ap::OnNpcKilled
 //   dlls/monsters.cpp    SCRIPT_EVENT_DEAD            -> ap::OnNpcScriptDeath
+//   dlls/subs.cpp        SUB_UseTargets killtarget    -> ap::OnKillTarget
 
 #pragma once
 
@@ -82,6 +83,7 @@ void OnCrateDrop(CBaseEntity* crate, CBaseEntity* drop);     // ap_locations
 void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup); // ap_locations
 void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker); // ap_locations
 void OnNpcScriptDeath(CBaseEntity* monster);                 // ap_locations
+void OnKillTarget(CBaseEntity* entity);                      // ap_locations
 bool HandleChat(CBasePlayer* player, const std::string& said);       // ap_hub
 bool MenuSelect(CBasePlayer* player, int key);                       // ap_menu
 bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub
@@ -145,6 +147,9 @@ CheckData& Data();
 // because precaching runs *before* ServerActivate and on the very first map of a
 // session there would otherwise be nothing loaded to precache against.
 void EnsureData();
+// Read checkdata.txt again, for the scenario harness, whose
+// `aptest_probes.txt` adds test-only locations for one scenario.
+void ReloadData();
 Bridge& Wire();
 
 // Is it safe to send checks? False when checkdata.txt is missing, when the

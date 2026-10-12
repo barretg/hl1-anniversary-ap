@@ -8,6 +8,10 @@
 #   F|<location id>|<map>|<x y z>|<needs>|<drop>  one way to a weapon check:
 #     a mission's first copy. <x y z> is empty for one handed over; <drop>
 #     is hostile or ally for a copy a monster drops, empty for one placed.
+#   A|<location id>|<classname>@<x y z>[#n]  a stand-in the map swaps in
+#     for that NPC, tagged as the same check
+#   H|<location id>|<text>        what ap_find says about that check
+#   R|<location id>                that NPC's removal by the map is its death
 #   K|<classname>|<item name>      weapon pickup that must be unlocked
 #   S|<classname>                  always granted, never randomised
 #   P|<button targetname>|<chapter key>   a lobby panel and where it goes
@@ -28,7 +32,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's or barney's <arg> is the same as a placed pickup's.
 V|8
-D|dae126c1a7ce
+D|2d4f8d87fc2e
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -1236,11 +1240,14 @@ L|7760258|of1a1|charger|func_healthcharger@-584 2980 56|Welcome To Black Mesa: H
 L|7761063|of1a1|heal_pickup|func_breakable@1024 -704 32|Welcome To Black Mesa: Crate Battery (Part 1)|1024 -704 32
 L|7761064|of1a1|heal_pickup|func_breakable@992 -464 32|Welcome To Black Mesa: Crate Health Kit 1 (Part 1)|992 -464 32
 L|7761065|of1a1|heal_pickup|func_breakable@1360 -272 288|Welcome To Black Mesa: Crate Health Kit 2 (Part 1)|1360 -272 288
+L|7762034|of1a1|scientist|monster_generic@-424 1448 36|Welcome To Black Mesa: Catscan Scientist2 (Part 1)|-424 1448 36
+R|7762034
 L|7761914|of1a1|scientist|monster_scientist@-472 3192 0|Welcome To Black Mesa: Scientist 1 (Part 1)|-472 3192 0
 L|7761915|of1a1|scientist|monster_scientist@240 2704 0|Welcome To Black Mesa: Scientist 2 (Part 1)|240 2704 0
 L|7761916|of1a1|scientist|monster_scientist@360 2288 56|Welcome To Black Mesa: Scientist 3 (Part 1)|360 2288 56
-L|7761917|of1a1|barney|monster_otis@-2584 -1048 -128|Welcome To Black Mesa: Otis2 (Part 1)|-2584 -1048 -128
-L|7761918|of1a1|barney|monster_barney@688 -1047 0|Welcome To Black Mesa: Security Guard (Part 1)|688 -1047 0
+L|7762035|of1a1|barney|monster_otis@-1328 -136 -128|Welcome To Black Mesa: Otis (Part 1)|-1328 -136 -128
+A|7762035|monster_otis@-2584 -1048 -128
+H|7762035|Taking the PCV swaps him for a copy (otis1 for otis2) in the same spot; either one sends this.
 L|7760259|of1a2|map_reached||Welcome To Black Mesa: Part 2 Reached
 L|7761066|of1a2|heal_pickup|item_battery@336 -592 -176|Welcome To Black Mesa: Battery 1 (Part 2)|336 -592 -176
 L|7761067|of1a2|heal_pickup|item_battery@2200 220 -104|Welcome To Black Mesa: Battery 2 (Part 2)|2200 220 -104
@@ -1271,6 +1278,7 @@ L|7761731|of1a4b|ammo_pickup|weapon_handgrenade@-544 1856 -976|Welcome To Black 
 L|7760264|of1a5|map_reached||We Are Pulling Out: Part 1 Reached
 L|7761087|of1a5|ammo_pickup|ammo_9mmclip@1840 -3416 1339|We Are Pulling Out: 9mm Clip (Part 1)|1840 -3416 1339
 L|7761920|of1a5|scientist|monster_scientist@-1560 -688 336|We Are Pulling Out: Runningman (Part 1)|-1560 -688 336
+L|7762036|of1a5|barney|monster_otis@1560 -3424 1339|We Are Pulling Out: GleasonX (Part 1)|1560 -3424 1339
 L|7760265|of1a5b|map_reached||We Are Pulling Out: Part 2 Reached
 L|7760266|of1a5b|charger|func_recharge@-1516 -3216 2264|We Are Pulling Out: HEV Charger (Part 2)|-1516 -3216 2264
 L|7761088|of1a5b|ammo_pickup|ammo_9mmclip@784 -1832 1344|We Are Pulling Out: 9mm Clip (Part 2)|784 -1832 1344

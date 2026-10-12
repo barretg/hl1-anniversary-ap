@@ -127,6 +127,20 @@ class Campaign:
     critical_npcs: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
         default_factory=dict
     )
+    # Two placed NPCs the map swaps in play, deleting the one the player meets
+    # and moving a stand-in into its place: `{map: {(classname, (x, y, z)) of
+    # the one met: ((classname, (x, y, z)) of the stand-in, name, note)}}`. One
+    # check, at the first one's spot, sent by either; the note is what
+    # `!find` and `!trace` say about the swap.
+    swapped_npcs: dict[str, dict[tuple[str, tuple[int, int, int]],
+                                 tuple[tuple[str, tuple[int, int, int]], str, str]]] = field(
+        default_factory=dict
+    )
+    # NPCs the map deletes as their scripted death (thrown, then swapped for a
+    # corpse), as `{map: {(classname, (x, y, z))}}`: that removal sends.
+    removal_deaths: dict[str, set[tuple[str, tuple[int, int, int]]]] = field(
+        default_factory=dict
+    )
     # NPCs whose check names a later part than their map, because the player
     # reaches them from there: `{map: {(classname, (x, y, z)): part map}}`.
     npc_parts: dict[str, dict[tuple[str, tuple[int, int, int]], str]] = field(

@@ -1113,12 +1113,23 @@ def build(
                 out_here = campaign.unkillable_npcs.get(map_name, set())
                 in_here = campaign.killable_npcs.get(map_name, set())
                 critical_here = campaign.critical_npcs.get(map_name, set())
+                swaps = campaign.swapped_npcs.get(map_name, {})
+                stand_ins = {standin for standin, _, _ in swaps.values()}
+                removals = campaign.removal_deaths.get(map_name, set())
                 npcs: list[dict] = []
                 generics = frozenset(at for k, at in campaign.generic_npcs.get(map_name, ())
                                      if k == kind)
                 for npc in map_npcs(kind, ents, generics):
                     key = (npc["classname"], npc["at"])
                     reason = npc["out"]
+                    if key in stand_ins:
+                        # Tagged as the one it replaces; no check of its own.
+                        continue
+                    # Deleted to make way for its stand-in, or as its death.
+                    if reason == "removed" and (key in swaps or key in removals):
+                        reason = ""
+                    npc["swap"] = swaps.get(key)
+                    npc["removal_death"] = key in removals
                     # A death that fails the mission still sends first, so a
                     # quicksave makes it a fair check: in, behind its own option.
                     npc["critical"] = reason == "fails" or key in critical_here
@@ -1152,7 +1163,8 @@ def build(
                     part = parts.get((npc["classname"], npc["at"]))
                     npc["suffix"] = (f" ({part_label(chapter_maps, part)})" if part
                                      else suffix)
-                    by_display.setdefault((npc_name(npc), npc["suffix"]), []).append(npc)
+                    name = npc["swap"][1] if npc["swap"] else npc_name(npc)
+                    by_display.setdefault((name, npc["suffix"]), []).append(npc)
                 for display in sorted(by_display):
                     group = sorted(
                         by_display[display],
@@ -1170,6 +1182,12 @@ def build(
                             trigger["targetname"] = npc["targetname"]
                         if npc["critical"]:
                             trigger["critical"] = True
+                        if npc["swap"]:
+                            (cls, at), _, note = npc["swap"]
+                            trigger["aliases"] = [f"{cls}@{format_position(at)}"]
+                            trigger["note"] = note
+                        if npc["removal_death"]:
+                            trigger["removal_death"] = True
                         location = builder.add(chapter, map_name,
                                                f"{display[0]}{count}{npc['suffix']}",
                                                trigger, position=npc["position"])

@@ -194,7 +194,7 @@ class Scientistsanity(Toggle):
     can never be reached, are left out. On the intro tram ride, only the ones
     in sight of the tram count, and they need a gun.
 
-    106 of them: 82 in Half-Life (8 on the intro ride), 14 in Opposing Force
+    107 of them: 82 in Half-Life (8 on the intro ride), 15 in Opposing Force
     and 10 in Blue Shift (5 on the intro ride).
     """
 

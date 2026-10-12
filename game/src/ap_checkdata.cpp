@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 
 #include "ap_text.h"
 
@@ -70,7 +71,7 @@ std::string PickupKey(const std::string& map, const std::string& classname,
     return map + "|" + classname + where;
 }
 
-bool CheckData::Load(const std::string& path) {
+bool CheckData::Load(const std::string& path, const std::string& extra) {
     chapters.clear();
     locations.clear();
     pickup_index.clear();
@@ -82,10 +83,21 @@ bool CheckData::Load(const std::string& path) {
     goal_chapter.clear();
     campaigns.clear();
 
-    std::ifstream file(path.c_str());
-    if (!file) {
+    std::ifstream main_file(path.c_str());
+    if (!main_file) {
         return false;
     }
+    // `extra`'s records read as if they followed the file's own.
+    std::stringstream file;
+    file << main_file.rdbuf();
+    if (!extra.empty()) {
+        std::ifstream more(extra.c_str());
+        // An empty file inserts nothing, which fails the stream.
+        if (more && more.peek() != std::ifstream::traits_type::eof()) {
+            file << "\n" << more.rdbuf();
+        }
+    }
+    file.clear();
 
     std::string line;
     while (std::getline(file, line)) {
@@ -184,6 +196,28 @@ bool CheckData::Load(const std::string& path) {
                 }
                 locations.back().sources.push_back(source);
             }
+        } else if ((record == "A" || record == "H" || record == "R") && f.size() >= 2) {
+            // Right after their `L`, like `F`.
+            if (locations.empty() || locations.back().id != ParseLong(f[1])) {
+                continue;
+            }
+            Location& owner = locations.back();
+            if (record == "A" && f.size() >= 3) {
+                Location parsed;
+                if (ParsePickupArg(f[2], parsed)) {
+                    Location::Alias alias;
+                    alias.classname = parsed.pickup_classname;
+                    alias.at[0] = parsed.at[0];
+                    alias.at[1] = parsed.at[1];
+                    alias.at[2] = parsed.at[2];
+                    alias.ordinal = parsed.ordinal;
+                    owner.aliases.push_back(alias);
+                }
+            } else if (record == "H" && f.size() >= 3) {
+                owner.note = f[2];
+            } else if (record == "R") {
+                owner.removal_death = true;
+            }
         } else if (record == "K" && f.size() >= 3) {
             gated_classnames.push_back(std::make_pair(f[1], f[2]));
         } else if (record == "S" && f.size() >= 2) {
@@ -227,6 +261,13 @@ bool CheckData::Load(const std::string& path) {
                                static_cast<int>(std::floor(location.at[2] + 0.5f))};
             pickup_index[PickupKey(location.map, location.pickup_classname, at,
                                    location.ordinal)] = &location;
+            for (const Location::Alias& alias : location.aliases) {
+                const int alias_at[3] = {static_cast<int>(std::floor(alias.at[0] + 0.5f)),
+                                         static_cast<int>(std::floor(alias.at[1] + 0.5f)),
+                                         static_cast<int>(std::floor(alias.at[2] + 0.5f))};
+                pickup_index[PickupKey(location.map, alias.classname, alias_at,
+                                       alias.ordinal)] = &location;
+            }
         }
     }
 

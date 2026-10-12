@@ -1,5 +1,5 @@
 {
- "data_version": "dae126c1a7ce",
+ "data_version": "2d4f8d87fc2e",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -21844,6 +21844,25 @@
    ]
   },
   {
+   "id": 7762034,
+   "name": "Welcome To Black Mesa: Catscan Scientist2 (Part 1)",
+   "chapter": "of1a1",
+   "map": "of1a1",
+   "trigger": {
+    "type": "scientist",
+    "map": "of1a1",
+    "classname": "monster_generic",
+    "at": "-424 1448 36",
+    "targetname": "catscan_scientist2",
+    "removal_death": true
+   },
+   "position": [
+    -424,
+    1448,
+    36
+   ]
+  },
+  {
    "id": 7761914,
    "name": "Welcome To Black Mesa: Scientist 1 (Part 1)",
    "chapter": "of1a1",
@@ -21898,38 +21917,25 @@
    ]
   },
   {
-   "id": 7761917,
-   "name": "Welcome To Black Mesa: Otis2 (Part 1)",
+   "id": 7762035,
+   "name": "Welcome To Black Mesa: Otis (Part 1)",
    "chapter": "of1a1",
    "map": "of1a1",
    "trigger": {
     "type": "barney",
     "map": "of1a1",
     "classname": "monster_otis",
-    "at": "-2584 -1048 -128",
-    "targetname": "otis2"
+    "at": "-1328 -136 -128",
+    "targetname": "otis1",
+    "aliases": [
+     "monster_otis@-2584 -1048 -128"
+    ],
+    "note": "Taking the PCV swaps him for a copy (otis1 for otis2) in the same spot; either one sends this."
    },
    "position": [
-    -2584,
-    -1048,
+    -1328,
+    -136,
     -128
-   ]
-  },
-  {
-   "id": 7761918,
-   "name": "Welcome To Black Mesa: Security Guard (Part 1)",
-   "chapter": "of1a1",
-   "map": "of1a1",
-   "trigger": {
-    "type": "barney",
-    "map": "of1a1",
-    "classname": "monster_barney",
-    "at": "688 -1047 0"
-   },
-   "position": [
-    688,
-    -1047,
-    0
    ]
   },
   {
@@ -22440,6 +22446,24 @@
     -1560,
     -688,
     336
+   ]
+  },
+  {
+   "id": 7762036,
+   "name": "We Are Pulling Out: GleasonX (Part 1)",
+   "chapter": "of1a5",
+   "map": "of1a5",
+   "trigger": {
+    "type": "barney",
+    "map": "of1a5",
+    "classname": "monster_otis",
+    "at": "1560 -3424 1339",
+    "targetname": "gleasonX"
+   },
+   "position": [
+    1560,
+    -3424,
+    1339
    ]
   },
   {

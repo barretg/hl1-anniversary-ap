@@ -213,6 +213,45 @@ UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 }
 
 
+# Scientists and barneys that cannot be killed, as `{map: {(classname, (x, y,
+# z))}}`.
+UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Welcome To Black Mesa part 1: the guard shut in with the G-Man, confirmed
+    # out of reach in play.
+    "of1a1": {("monster_barney", (688, -1047, 0))},
+}
+
+# NPCs the automatic exclusions drop that play shows count, same form.
+KILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # We Are Pulling Out part 1: Gleason's preview past the changelevel. The
+    # killtarget only fires as the level ends; confirmed killable in play.
+    "of1a5": {("monster_otis", (1560, -3424, 1339))},
+}
+
+# Listed `monster_generic` stand-ins that count, as `{map: {(kind, (x, y, z))}}`.
+GENERIC_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Welcome To Black Mesa part 1: the cleansuit scientist thrown through the
+    # CAT scan window. Confirmed witnessed in play.
+    "of1a1": {("scientist", (-424, 1448, 36))},
+}
+
+# Its throw ends with a killtarget and a corpse in its place: that is its death.
+REMOVAL_DEATHS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    "of1a1": {("monster_generic", (-424, 1448, 36))},
+}
+
+# Welcome To Black Mesa part 1: taking the PCV deletes `otis1`, the Otis behind
+# the door, and teleports `otis2` from a closet into his place.
+SWAPPED_NPCS = {
+    "of1a1": {
+        ("monster_otis", (-1328, -136, -128)): (
+            ("monster_otis", (-2584, -1048, -128)), "Otis",
+            "Taking the PCV swaps him for a copy (otis1 for otis2) in the same "
+            "spot; either one sends this."),
+    },
+}
+
+
 OPPOSING_FORCE = Campaign(
     key="opposing_force",
     name="Opposing Force",
@@ -234,6 +273,11 @@ OPPOSING_FORCE = Campaign(
     confirmed_copies=CONFIRMED_COPIES,
     unreachable=UNREACHABLE_CHARGERS,
     unreachable_pickups=UNREACHABLE_PICKUPS,
+    unkillable_npcs=UNKILLABLE_NPCS,
+    killable_npcs=KILLABLE_NPCS,
+    generic_npcs=GENERIC_NPCS,
+    removal_deaths=REMOVAL_DEATHS,
+    swapped_npcs=SWAPPED_NPCS,
     weapon_source_gates=WEAPON_SOURCE_GATES,
     location_gates=LOCATION_GATES,
     # Boot camp: the training course, left out like Half-Life's hazard course.

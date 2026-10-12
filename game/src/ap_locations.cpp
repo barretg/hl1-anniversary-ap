@@ -864,6 +864,19 @@ void OnNpcScriptDeath(CBaseEntity* monster) {
     SendCheck(monster->m_apLocation);
 }
 
+void OnKillTarget(CBaseEntity* entity) {
+    if (entity == nullptr || entity->m_apLocation == 0 || !Live()) {
+        return;
+    }
+    const Location* location = Data().LocationById(entity->m_apLocation);
+    if (location == nullptr || !location->removal_death) {
+        return;
+    }
+    ALERT(at_console, "AP: %s removed as its scripted death\n",
+          STRING(entity->pev->classname));
+    SendCheck(entity->m_apLocation);
+}
+
 void ListTagged() {
     int count = 0;
     for (int index = 1; index < gpGlobals->maxEntities; ++index) {
@@ -1302,6 +1315,9 @@ void DescribeLocation(CBasePlayer* player, const Location& location,
     }
 
     Notify((Collected(location) ? "[found] " : "") + location.name);
+    if (!location.note.empty()) {
+        Notify(location.note);
+    }
 
     // This map's copy if there is one, else the earliest one the player can
     // get to now, else the earliest at all. Not a weapon check: the check itself.

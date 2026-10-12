@@ -257,6 +257,8 @@ void RunTestHarness() {
         g_looked = true;
         if (ReadDestination(next) && next.seq != g_destination.seq) {
             g_destination = next;
+            // The scenario's probes, before its map spawns and is tagged.
+            ReloadData();
             if (!first) {
                 Load();
             }

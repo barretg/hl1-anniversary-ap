@@ -4155,7 +4155,7 @@ index 6ff1701..34c2a68 100644
  
  	int	Save( CSave &save ); 
 diff --git a/dlls/subs.cpp b/dlls/subs.cpp
-index 288d78a..176a57d 100644
+index 288d78a..10f7a12 100644
 --- a/dlls/subs.cpp
 +++ b/dlls/subs.cpp
 @@ -26,6 +26,7 @@
@@ -4175,6 +4175,14 @@ index 288d78a..176a57d 100644
  	ALERT( at_aiconsole, "Firing: (%s)\n", targetName );
  
  	for (;;)
+@@ -267,6 +270,7 @@ void CBaseDelay :: SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, fl
+ 		pentKillTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(m_iszKillTarget) );
+ 		while ( !FNullEnt(pentKillTarget) )
+ 		{
++			ap::OnKillTarget( CBaseEntity::Instance(pentKillTarget) );
+ 			UTIL_Remove( CBaseEntity::Instance(pentKillTarget) );
+ 
+ 			ALERT( at_aiconsole, "killing %s\n", STRING( pentKillTarget->v.classname ) );
 diff --git a/dlls/talkmonster.cpp b/dlls/talkmonster.cpp
 index 027d7fc..9c661d9 100644
 --- a/dlls/talkmonster.cpp

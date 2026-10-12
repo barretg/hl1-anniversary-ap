@@ -84,6 +84,10 @@ def render(campaign: dict) -> str:
         "#   F|<location id>|<map>|<x y z>|<needs>|<drop>  one way to a weapon check:",
         "#     a mission's first copy. <x y z> is empty for one handed over; <drop>",
         "#     is hostile or ally for a copy a monster drops, empty for one placed.",
+        "#   A|<location id>|<classname>@<x y z>[#n]  a stand-in the map swaps in",
+        "#     for that NPC, tagged as the same check",
+        "#   H|<location id>|<text>        what ap_find says about that check",
+        "#   R|<location id>                that NPC's removal by the map is its death",
         "#   K|<classname>|<item name>      weapon pickup that must be unlocked",
         "#   S|<classname>                  always granted, never randomised",
         "#   P|<button targetname>|<chapter key>   a lobby panel and where it goes",
@@ -180,6 +184,14 @@ def render(campaign: dict) -> str:
             record += "|" + needs
         lines.append(record)
         # Right after their `L`, which is how the game knows whose they are.
+        # A stand-in the map swaps in for this NPC, tagged as the same check;
+        # what `!find` says about it; and a removal that is its death.
+        for alias in trigger.get("aliases", ()):
+            lines.append(f"A|{location['id']}|{alias}")
+        if trigger.get("note"):
+            lines.append(f"H|{location['id']}|{trigger['note']}")
+        if trigger.get("removal_death"):
+            lines.append(f"R|{location['id']}")
         for source in location.get("sources", ()):
             lines.append("F|{id}|{map}|{pos}|{needs}|{drop}".format(
                 id=location["id"],

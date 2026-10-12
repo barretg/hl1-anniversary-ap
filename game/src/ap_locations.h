@@ -85,6 +85,9 @@ void OnPickupTouched(CBaseEntity* toucher, CBaseEntity* pickup);
 // `OnNpcScriptDeath`, from a script's death event, which never reaches `Killed`.
 void OnNpcKilled(CBaseEntity* monster, entvars_t* attacker);
 void OnNpcScriptDeath(CBaseEntity* monster);
+// A `killtarget` about to delete `entity`: the death of an NPC whose check is
+// marked as dying that way (thrown, then swapped for a corpse).
+void OnKillTarget(CBaseEntity* entity);
 
 // `ap_tagged`: every entity in this map carrying a location id, for curating
 // which NPCs and pickups count.
