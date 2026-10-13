@@ -254,9 +254,11 @@ public:
     const Location* ChargerAt(const std::string& map, const std::string& classname,
                               const float at[3]) const;
 
-    // The check this map sends when it fires `targetname`. Null for nearly
-    // every firing there is, so it is cheap to ask about all of them.
-    const Location* FiredBy(const std::string& map, const char* targetname) const;
+    // The checks this map sends when it fires `targetname`: one event can be
+    // several deaths. Empty for nearly every firing there is, so it is cheap
+    // to ask about all of them.
+    std::vector<const Location*> FiredBy(const std::string& map,
+                                         const char* targetname) const;
 
     // The weapon check this classname fires *in this map*, if any.
     //

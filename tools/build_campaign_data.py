@@ -616,10 +616,11 @@ def location_key(chapter_key: str, map_name: str, trigger: dict,
         arg = trigger["chapter"]
     elif kind == "charger":
         arg = f"{trigger['classname']}@{trigger['at']}"
+    elif "fires" in trigger:
+        # Before the NPC kinds: a death the map only stages is one of theirs.
+        arg = trigger["fires"]
     elif kind in PICKUP_TRIGGERS or kind in NPC_TRIGGERS:
         arg = pickup_arg(trigger)
-    elif "fires" in trigger:
-        arg = trigger["fires"]
     elif kind == "weapon_pickup":
         # A campaign-wide location: its identity is the weapon, not where the
         # earliest copy happens to sit. Anchoring the key to the map would

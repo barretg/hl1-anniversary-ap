@@ -155,17 +155,18 @@ def render(campaign: dict) -> str:
             # its classname and where it stands, rounded the same way on both
             # sides. See `charger_key_position` in build_campaign_data.py.
             arg = f"{trigger['classname']}@{trigger['at']}"
+        elif "fires" in trigger:
+            # A map event, whatever the YAML calls its category: the game
+            # matches the targetname the map fired. Ahead of the NPC kinds,
+            # since a death the map only stages is one of theirs.
+            kind = "fired"
+            arg = trigger["fires"]
         elif kind in ("heal_pickup", "ammo_pickup", "scientist", "barney", "soldier"):
             # The entity the game tags at spawn: a placed pickup's origin to
             # the unit and which of several there, or a crate's centre.
             ordinal = trigger.get("ordinal", 1)
             arg = (f"{trigger['classname']}@{trigger['at']}"
                    + (f"#{ordinal}" if ordinal > 1 else ""))
-        elif "fires" in trigger:
-            # A map event, whatever the YAML calls its category: the game
-            # matches the targetname the map fired.
-            kind = "fired"
-            arg = trigger["fires"]
         else:  # map_reached
             arg = ""
         # A seventh field where we know where the thing is, which is what

@@ -34,7 +34,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|8f9e109d553f
+D|def5c8a98e4d
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -173,7 +173,7 @@ L|7761600|c1a1b|ammo_pickup|weapon_handgrenade@-152 -795 -19|Unforeseen Conseque
 L|7761601|c1a1b|ammo_pickup|weapon_handgrenade@-141 -805 -19|Unforeseen Consequences: Hand Grenade 2 (Part 5)|-141 -805 -19
 L|7761602|c1a1b|ammo_pickup|weapon_handgrenade@-120 -804 -19|Unforeseen Consequences: Hand Grenade 3 (Part 5)|-120 -804 -19
 L|7761853|c1a1b|scientist|monster_scientist@-304 -696 -216|Unforeseen Consequences: Scientist 1 (Part 5)|-304 -696 -216
-L|7761855|c1a1b|scientist|monster_scientist@1284 -1024 -268|Unforeseen Consequences: Scientist 2 (Part 5)|1284 -1024 -268
+L|7761855|c1a1b|scientist|monster_scientist@1284 -1024 -268|Unforeseen Consequences: Scientist 2 (Part 5)|1284 -1024 -268|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7761854|c1a1b|scientist|monster_scientist@609 -1185 -72|Unforeseen Consequences: Sitting Scientist (Part 5)|609 -1185 -72
 L|7762032|c1a1b|scientist|monster_scientist@-508 -592 -182|Unforeseen Consequences: Vent Pull Sci (Part 5)|-508 -592 -182
 L|7760027|c1a1c|map_reached||Unforeseen Consequences: Part 6 Reached
@@ -691,6 +691,8 @@ L|7760694|c2a4f|ammo_pickup|func_breakable@-568 -192 488|Questionable Ethics: Cr
 L|7760695|c2a4f|ammo_pickup|func_breakable@-928 -176 488|Questionable Ethics: Crate MP5 Grenades 2 (Part 3)|-928 -176 488
 L|7760696|c2a4f|ammo_pickup|ammo_gaussclip@-504 32 504|Questionable Ethics: Uranium 1 (Part 3)|-504 32 504
 L|7760697|c2a4f|ammo_pickup|ammo_gaussclip@-504 160 504|Questionable Ethics: Uranium 2 (Part 3)|-504 160 504
+L|7762075|c2a4f|fired|taublast2_mm|Questionable Ethics: Tau Test Scientist (Part 3)|416 -1088 544
+L|7762076|c2a4f|fired|taublast2_mm|Questionable Ethics: Tau Test Security Guard (Part 3)|416 -1088 544
 L|7760151|c2a4g|map_reached||Questionable Ethics: Part 4 Reached
 L|7760698|c2a4g|heal_pickup|func_breakable@-1352 -1760 112|Questionable Ethics: Crate Battery 1 (Part 4)|-1352 -1760 112
 L|7760699|c2a4g|heal_pickup|func_breakable@-1368 -1824 112|Questionable Ethics: Crate Battery 2 (Part 4)|-1368 -1824 112

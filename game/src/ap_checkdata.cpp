@@ -467,15 +467,16 @@ const Location* CheckData::CrateAt(const std::string& map,
     return best;
 }
 
-const Location* CheckData::FiredBy(const std::string& map,
-                                   const char* targetname) const {
+std::vector<const Location*> CheckData::FiredBy(const std::string& map,
+                                                const char* targetname) const {
+    std::vector<const Location*> found;
     for (const Location& location : locations) {
         if (location.type == TriggerType::Fired && location.fires == targetname &&
             location.map == map) {
-            return &location;
+            found.push_back(&location);
         }
     }
-    return nullptr;
+    return found;
 }
 
 const Location* CheckData::WeaponPickupFor(const std::string& classname,

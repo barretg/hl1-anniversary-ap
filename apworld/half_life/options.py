@@ -192,9 +192,10 @@ class Scientistsanity(Toggle):
     you did not witness sends nothing, and that check waits until the mission
     is replayed from the hub. Scientists whose death fails the mission, or who
     can never be reached, are left out. On the intro tram ride, only the ones
-    in sight of the tram count, and they need a gun.
+    in sight of the tram count, and they need a gun. The Questionable Ethics
+    tau cannon test sends when its blast goes off.
 
-    117 of them: 82 in Half-Life (8 on the intro ride), 18 in Opposing Force
+    118 of them: 83 in Half-Life (8 on the intro ride), 18 in Opposing Force
     and 17 in Blue Shift (8 on the intro ride).
     """
 
@@ -205,7 +206,7 @@ class Barneysanity(Toggle):
     """Experimental. Every security guard, Otis included, is a check, sent the
     same way as Scientistsanity's: when one dies and you witnessed it.
 
-    49 of them: 32 in Half-Life (3 on the intro ride), 9 in Opposing Force and
+    50 of them: 33 in Half-Life (3 on the intro ride), 9 in Opposing Force and
     8 in Blue Shift (2 on the intro ride).
     """
 

@@ -1117,8 +1117,7 @@ void OnTargetFired(const char* targetname) {
     if (targetname == nullptr || !Live()) {
         return;
     }
-    const Location* location = Data().FiredBy(g_map, targetname);
-    if (location != nullptr) {
+    for (const Location* location : Data().FiredBy(g_map, targetname)) {
         SendCheck(location->id);
     }
 }

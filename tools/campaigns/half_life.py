@@ -295,12 +295,27 @@ NPC_PARTS: dict[str, dict[tuple[str, tuple[int, int, int]], str]] = {
     "c2a5c": {("monster_scientist", (-64, -768, -336)): "c2a5d"},
 }
 
+# Logic for single NPCs, `{map: {(classname, (x, y, z)): gates}}`.
+NPC_GATES = {
+    # Unforeseen Consequences part 5: the scientist hiding in the dumpster. The
+    # lid keeps a melee swing from reaching him.
+    "c1a1b": {("monster_scientist", (1284, -1024, -268)): {"always": ["ranged"]}},
+}
+
 # The break room microwave. Five buttons share its panel, each mastered by the
 # multisource the one before fired, so only the fifth press reaches
 # `microwavepopmm1`: the multi_manager that bursts the casserole. The first
 # press alone only beeps.
+#
+# Questionable Ethics part 3: the scientist and guard testing the tau cannon
+# behind the wall. They are only voices and gibs, no monsters, so their deaths
+# are the blast that ends the scene: `taublast2_mm` fires the gibs.
 FIRED_CHECKS: dict[str, list[tuple[str, str, str]]] = {
     "c1a0d": [("microwave", "microwavepopmm1", "Microwave")],
+    "c2a4f": [
+        ("scientist", "taublast2_mm", "Tau Test Scientist (Part 3)"),
+        ("barney", "taublast2_mm", "Tau Test Security Guard (Part 3)"),
+    ],
 }
 
 
@@ -327,6 +342,7 @@ HALF_LIFE = Campaign(
     killable_npcs=KILLABLE_NPCS,
     critical_npcs=CRITICAL_NPCS,
     npc_parts=NPC_PARTS,
+    npc_gates=NPC_GATES,
     fired_checks=FIRED_CHECKS,
     # The hazard course: a training course rather than part of the campaign.
     # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and

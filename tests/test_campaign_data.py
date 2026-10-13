@@ -949,7 +949,9 @@ def test_npc_checks_have_unique_keys(campaign: dict) -> None:
     for l in campaign["locations"]:
         t = l["trigger"]
         if t["type"] in ("scientist", "barney", "soldier"):
-            key = (l["map"], t["classname"], t["at"], t.get("ordinal", 1))
+            # A death the map only stages is keyed by the event that is it.
+            key = ((l["map"], t["type"], t["fires"]) if "fires" in t
+                   else (l["map"], t["classname"], t["at"], t.get("ordinal", 1)))
             assert key not in seen, l["name"]
             seen.add(key)
 

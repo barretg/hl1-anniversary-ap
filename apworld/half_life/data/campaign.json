@@ -1,5 +1,5 @@
 {
- "data_version": "8f9e109d553f",
+ "data_version": "def5c8a98e4d",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -3178,7 +3178,12 @@
     1284,
     -1024,
     -268
-   ]
+   ],
+   "gates": {
+    "always": [
+     "ranged"
+    ]
+   }
   },
   {
    "id": 7761854,
@@ -12155,6 +12160,38 @@
     -504,
     160,
     504
+   ]
+  },
+  {
+   "id": 7762075,
+   "name": "Questionable Ethics: Tau Test Scientist (Part 3)",
+   "chapter": "c2a4d",
+   "map": "c2a4f",
+   "trigger": {
+    "type": "scientist",
+    "map": "c2a4f",
+    "fires": "taublast2_mm"
+   },
+   "position": [
+    416,
+    -1088,
+    544
+   ]
+  },
+  {
+   "id": 7762076,
+   "name": "Questionable Ethics: Tau Test Security Guard (Part 3)",
+   "chapter": "c2a4d",
+   "map": "c2a4f",
+   "trigger": {
+    "type": "barney",
+    "map": "c2a4f",
+    "fires": "taublast2_mm"
+   },
+   "position": [
+    416,
+    -1088,
+    544
    ]
   },
   {
