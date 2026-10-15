@@ -87,6 +87,7 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     # The Desert Eagle is a pistol: ranged, not heavy.
     "heavy": ["M249", "Sniper Rifle"],
     "explosives": ["Spore Launcher"],
+    "not_rpg": _RANGED_WEAPONS,
     "underwater": ["Desert Eagle"],
     "barnacle_grapple": ["Barnacle Grapple"],
     "displacer": ["Displacer Cannon"],

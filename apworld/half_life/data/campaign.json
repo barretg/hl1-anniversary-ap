@@ -176,7 +176,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -203,7 +204,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "map_gates": {
@@ -236,7 +238,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -257,7 +260,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -278,7 +282,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -305,7 +310,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -325,7 +331,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -349,7 +356,8 @@
    "gates": {
     "strict": [
      "heavy",
-     "explosives"
+     "explosives",
+     "not_rpg"
     ]
    },
    "complete_on_arrival": false,
@@ -39102,6 +39110,26 @@
   "thrown_explosives": [
    "Hand Grenade",
    "Satchel Charge"
+  ],
+  "not_rpg": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Shotgun",
+   "Crossbow",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Hivehand",
+   "Snarks",
+   "Hand Grenade",
+   "Satchel Charge",
+   "Tripmine",
+   "Desert Eagle",
+   "M249",
+   "Sniper Rifle",
+   "Shock Roach",
+   "Spore Launcher",
+   "Displacer Cannon"
   ],
   "flashlight": [
    "Flashlight"

@@ -243,6 +243,11 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     # only loose logic counts on it.
     "crate_breaker": ["Hand Grenade", "Satchel Charge", "MP5"],
     "thrown_explosives": ["Hand Grenade", "Satchel Charge"],
+    # Every weapon but the RPG. Gates check each group on its own, so the RPG
+    # alone satisfies `heavy` and `explosives` both; adding this group asks for
+    # a second weapon alongside it.
+    "not_rpg": list(dict.fromkeys(
+        w for w in RANGED_WEAPONS + HEAVY_WEAPONS + EXPLOSIVES if w != "RPG")),
     "flashlight": ["Flashlight"],
 }
 
