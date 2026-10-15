@@ -81,10 +81,13 @@ from .options import (
     Scientistsanity,
     Soldiersanity,
     BlueShiftMissionsRequired,
+    ButterfingersReissue,
+    Chargesanity,
     HalfLifeOptions,
     Healsanity,
     IncludeBlueShift,
     IncludeHalfLife,
+    IncludeMicrowave,
     IncludeOpposingForce,
     MeleeThrow,
     MissionsRequired,
@@ -92,6 +95,9 @@ from .options import (
     ProgressiveAirAcceleration,
     RandomStartingWeapon,
     ShuffleFlashlight,
+    ShuffleHevSuit,
+    ShuffleLongJump,
+    TrapPercentage,
     ViewmodelStyle,
 )
 from .regions import create_regions
@@ -146,10 +152,9 @@ class HalfLifeWeb(WebWorld):
     ]
 
     # Which games the seed holds, and how much of each the goal asks, together.
-    # Anything in the experimental group is off by default and known to be rough.
-    # Grouping it says so in the template YAML and on the website without the
-    # player having to read the option's own description first, and keeps it out
-    # of the run of settings that are safe to turn on without thinking about it.
+    # The rest grouped by what they change: the item pool, which things are
+    # checks, NPC deaths as checks, how the game plays, and traps. Anything left
+    # out (logic difficulty, intro missions, DeathLink) stays in Game Options.
     option_groups = [
         OptionGroup(
             "Games",
@@ -158,12 +163,26 @@ class HalfLifeWeb(WebWorld):
              IncludeBlueShift, BlueShiftMissionsRequired],
         ),
         OptionGroup(
-            "Experimental Features",
-            [RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
-             AllyWeaponDrops, ProgressiveAirAcceleration, AirAccelerationMinimum,
-             AirAccelerationMaximum, Healsanity, Ammosanity, Scientistsanity,
-             Barneysanity, Soldiersanity, IncludeCriticalNpcs],
-            start_collapsed=True,
+            "Item Pool",
+            [RandomStartingWeapon, ShuffleHevSuit, ShuffleLongJump,
+             ShuffleFlashlight, MeleeThrow, ProgressiveAirAcceleration,
+             AirAccelerationMinimum, AirAccelerationMaximum],
+        ),
+        OptionGroup(
+            "Checks",
+            [Chargesanity, IncludeMicrowave, Healsanity, Ammosanity],
+        ),
+        OptionGroup(
+            "NPCSanity",
+            [Scientistsanity, Barneysanity, Soldiersanity, IncludeCriticalNpcs],
+        ),
+        OptionGroup(
+            "Gameplay",
+            [ViewmodelStyle, AllyWeaponDrops],
+        ),
+        OptionGroup(
+            "Traps",
+            [TrapPercentage, ButterfingersReissue],
         ),
     ]
 

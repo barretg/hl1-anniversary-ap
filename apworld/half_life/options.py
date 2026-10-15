@@ -161,7 +161,7 @@ class IncludeMicrowave(Toggle):
 
 
 class Healsanity(Toggle):
-    """Experimental. Every health kit, battery and Blue Shift armour vest or
+    """Every health kit, battery and Blue Shift armour vest or
     helmet is a check, sent the moment you touch it, even at full health or
     armour (it stays where it is). So is every crate that drops one: break it,
     then touch what falls out.
@@ -174,7 +174,7 @@ class Healsanity(Toggle):
 
 
 class Ammosanity(Toggle):
-    """Experimental. Every ammo pickup is a check, sent the moment you touch
+    """Every ammo pickup is a check, sent the moment you touch
     it, even with that ammo full (it stays where it is): clips and boxes on the
     floor, the weapon boxes some maps leave lying about, Opposing Force's spore
     plants, and every crate that drops ammo when broken.
@@ -187,7 +187,7 @@ class Ammosanity(Toggle):
 
 
 class Scientistsanity(Toggle):
-    """Experimental. Every scientist is a check, sent when one dies and you saw
+    """Every scientist is a check, sent when one dies and you saw
     it happen: you killed it, or it died in plain sight or close by. A death
     you did not witness sends nothing, and that check waits until the mission
     is replayed from the hub. Scientists whose death fails the mission, or who
@@ -203,7 +203,7 @@ class Scientistsanity(Toggle):
 
 
 class Barneysanity(Toggle):
-    """Experimental. Every security guard, Otis included, is a check, sent the
+    """Every security guard, Otis included, is a check, sent the
     same way as Scientistsanity's: when one dies and you witnessed it.
 
     50 of them: 33 in Half-Life (3 on the intro ride), 9 in Opposing Force and
@@ -214,7 +214,7 @@ class Barneysanity(Toggle):
 
 
 class Soldiersanity(Toggle):
-    """Experimental. Opposing Force only. Every friendly marine (grunts,
+    """Opposing Force only. Every friendly marine (grunts,
     medics and engineers) is a check, sent the same way as Scientistsanity's:
     when one dies and you witnessed it.
 
@@ -225,7 +225,7 @@ class Soldiersanity(Toggle):
 
 
 class IncludeCriticalNpcs(Toggle):
-    """Experimental. With Scientistsanity, Barneysanity or Soldiersanity, also
+    """With Scientistsanity, Barneysanity or Soldiersanity, also
     count the scientists, guards and soldiers whose death fails the mission or
     strands you (Rosenberg, the Insecurity guards, the guard who opens the
     intro train's door, and the like). The check is sent the moment one dies,
