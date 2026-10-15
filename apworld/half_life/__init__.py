@@ -153,7 +153,7 @@ class HalfLifeWeb(WebWorld):
 
     # Which games the seed holds, and how much of each the goal asks, together.
     # The rest grouped by what they change: the item pool, which things are
-    # checks, NPC deaths as checks, how the game plays, and traps. Anything left
+    # checks, pickups and NPC deaths as checks, how the game plays, and traps. Anything left
     # out (logic difficulty, intro missions, DeathLink) stays in Game Options.
     option_groups = [
         OptionGroup(
@@ -170,7 +170,11 @@ class HalfLifeWeb(WebWorld):
         ),
         OptionGroup(
             "Checks",
-            [Chargesanity, IncludeMicrowave, Healsanity, Ammosanity],
+            [Chargesanity, IncludeMicrowave],
+        ),
+        OptionGroup(
+            "Itemsanity",
+            [Healsanity, Ammosanity],
         ),
         OptionGroup(
             "NPCSanity",
