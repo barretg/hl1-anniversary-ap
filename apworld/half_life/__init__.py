@@ -61,7 +61,6 @@ from .items import (
     melee_items,
     optional_items,
     trap_items,
-    trap_weights,
     unlock_item_for_chapter,
     weapon_items,
 )
@@ -98,6 +97,13 @@ from .options import (
     ShuffleHevSuit,
     ShuffleLongJump,
     TrapPercentage,
+    ScientistTrapWeight,
+    HeadcrabTrapWeight,
+    ButterfingersTrapWeight,
+    BotSwarmTrapWeight,
+    BunnyHopTrapWeight,
+    StickyKeyTrapWeight,
+    ReloadTrapWeight,
     ViewmodelStyle,
 )
 from .regions import create_regions
@@ -153,8 +159,9 @@ class HalfLifeWeb(WebWorld):
 
     # Which games the seed holds, and how much of each the goal asks, together.
     # The rest grouped by what they change: the item pool, which things are
-    # checks, pickups and NPC deaths as checks, how the game plays, and traps. Anything left
-    # out (logic difficulty, intro missions, DeathLink) stays in Game Options.
+    # checks, pickups and NPC deaths as checks, how the game plays, and traps.
+    # Anything left out (logic difficulty, intro missions, DeathLink) stays in
+    # Game Options.
     option_groups = [
         OptionGroup(
             "Games",
@@ -186,7 +193,10 @@ class HalfLifeWeb(WebWorld):
         ),
         OptionGroup(
             "Traps",
-            [TrapPercentage, ButterfingersReissue],
+            [TrapPercentage, ButterfingersReissue,
+             ScientistTrapWeight, HeadcrabTrapWeight, ButterfingersTrapWeight,
+             BotSwarmTrapWeight, BunnyHopTrapWeight, StickyKeyTrapWeight,
+             ReloadTrapWeight],
         ),
     ]
 
@@ -490,14 +500,22 @@ class HalfLifeWorld(World):
 
     def get_filler_names(self, count: int) -> list[str]:
         """Fill the leftover locations, with `trap_percentage` of them traps."""
+        weights = [self.trap_weight(name) for name in trap_items]
         traps = round(count * self.options.trap_percentage.value / 100)
-        names = self.random.choices(trap_items, weights=trap_weights, k=traps)
+        # Every trap weighted to 0 means no traps at all, not a crash.
+        if not any(weights):
+            traps = 0
+        names = self.random.choices(trap_items, weights=weights, k=traps) if traps else []
         names += self.random.choices(
             filler_items, weights=filler_weights, k=count - traps
         )
         # Otherwise every trap lands in the same stretch of the pool.
         self.random.shuffle(names)
         return names
+
+    def trap_weight(self, name: str) -> int:
+        """The YAML's weight for one trap, e.g. `headcrab_trap_weight`."""
+        return getattr(self.options, name.lower().replace(" ", "_") + "_weight").value
 
     def get_filler_item_name(self) -> str:
         return self.random.choices(filler_items, weights=filler_weights, k=1)[0]

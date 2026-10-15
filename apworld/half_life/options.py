@@ -419,6 +419,83 @@ class TrapPercentage(Range):
     default = 15
 
 
+class ScientistTrapWeight(Range):
+    """How often the Scientist Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Scientist Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class HeadcrabTrapWeight(Range):
+    """How often the Headcrab Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Headcrab Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class ButterfingersTrapWeight(Range):
+    """How often the Butterfingers Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Butterfingers Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class BotSwarmTrapWeight(Range):
+    """How often the Bot Swarm Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Bot Swarm Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class BunnyHopTrapWeight(Range):
+    """How often the Bunny Hop Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Bunny Hop Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class StickyKeyTrapWeight(Range):
+    """How often the Sticky Key Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Sticky Key Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class ReloadTrapWeight(Range):
+    """How often the Reload Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Reload Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
 @dataclass
 class HalfLifeOptions(PerGameCommonOptions):
     include_half_life: IncludeHalfLife
@@ -449,6 +526,13 @@ class HalfLifeOptions(PerGameCommonOptions):
     ally_weapon_drops: AllyWeaponDrops
     ammo_relief: AmmoRelief
     trap_percentage: TrapPercentage
+    scientist_trap_weight: ScientistTrapWeight
+    headcrab_trap_weight: HeadcrabTrapWeight
+    butterfingers_trap_weight: ButterfingersTrapWeight
+    bot_swarm_trap_weight: BotSwarmTrapWeight
+    bunny_hop_trap_weight: BunnyHopTrapWeight
+    sticky_key_trap_weight: StickyKeyTrapWeight
+    reload_trap_weight: ReloadTrapWeight
     butterfingers_reissue: ButterfingersReissue
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

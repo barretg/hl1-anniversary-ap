@@ -25,7 +25,6 @@ filler_items: list[str] = [e["name"] for e in ITEMS if e["classification"] == "f
 filler_weights: list[int] = [e.get("weight", 1) for e in ITEMS if e["classification"] == "filler"]
 
 trap_items: list[str] = [e["name"] for e in ITEMS if e["classification"] == "trap"]
-trap_weights: list[int] = [e.get("weight", 1) for e in ITEMS if e["classification"] == "trap"]
 
 chapter_unlock_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "chapter"]
 weapon_items: list[str] = [e["name"] for e in ITEMS if e.get("group") == "weapon"]
