@@ -591,6 +591,9 @@ class HalfLifeWorld(World):
             # so the client must gate its pickup like any other. Seeds from
             # before this existed left the long jump module ungated instead.
             "placed_at_vanilla": sorted(self.vanilla_placements),
+            # Seeds from before this key also took the First HEV Suit from Lambda
+            # Core, where no suit spawns; the client sends it there for them.
+            "lambda_core_suit": False,
             # Game -> the item that is armour on its maps, and the equipment
             # actually shuffled into this seed's pool. Named and shaped as the
             # Sven world writes them; nothing here reads them yet.

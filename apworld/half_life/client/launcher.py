@@ -40,7 +40,7 @@ from .. import mod
 from ..data import AIR_ACCELERATE_ITEM, air_accelerate_value
 
 MELEE_THROW_ITEM = "Melee Throw"
-from ..data.legacy import LEGACY_LOCATIONS
+from ..data.legacy import LEGACY_LOCATIONS, LEGACY_SOURCES
 from . import settings
 from .bridge import Bridge, find_store_dir, is_game_dir, warp_save_key
 
@@ -271,6 +271,8 @@ class HalfLifeContext(SuperContext):
         # Legacy checks already sent this run, so one waiting on the server's
         # round trip is not sent again every poll.
         self.legacy_sent: set[int] = set()
+        # LEGACY_SOURCES entries this seed predates, `{id: map}`.
+        self.legacy_sources: dict[int, str] = {}
         # Each map's "Reached" check, which says when a legacy check is due.
         self.reached_id_by_map = {
             entry["map"]: entry["id"] for entry in self.campaign["locations"]
@@ -573,6 +575,11 @@ class HalfLifeContext(SuperContext):
         self.butterfingers_reissue = bool(slot_data.get("butterfingers_reissue", True))
         self.air_acceleration = slot_data.get("air_acceleration")
         self.melee_throw = bool(slot_data.get("melee_throw", False))
+        self.legacy_sources = {
+            location_id: map_name
+            for location_id, (map_name, key) in LEGACY_SOURCES.items()
+            if key not in slot_data
+        }
 
     def relay_to_game(self, args: dict) -> None:
         """Show multiworld chat in the game.
@@ -679,14 +686,17 @@ class HalfLifeContext(SuperContext):
         return False
 
     def legacy_checks_due(self, new_checks: list[int]) -> list[int]:
-        """Removed checks this seed still lists, whose map has been reached.
+        """Removed checks (or checks a removed copy counted toward) this seed
+        still lists, whose map has been reached.
 
         Nothing in the game fires them any more (see `data/legacy.py`), so this
         is the only way an older seed gets them.
         """
         reached = self.checked_locations | set(new_checks)
+        maps = {location_id: map_name for location_id, (_, map_name) in LEGACY_LOCATIONS.items()}
+        maps.update(self.legacy_sources)
         return sorted(
-            location_id for location_id, (_, map_name) in LEGACY_LOCATIONS.items()
+            location_id for location_id, map_name in maps.items()
             if location_id in self.missing_locations
             and location_id not in self.legacy_sent
             and self.reached_id_by_map.get(map_name) in reached
@@ -1122,7 +1132,7 @@ async def pump(ctx: HalfLifeContext) -> None:
     for location_id in due:
         ctx.legacy_sent.add(location_id)
         if location_id not in new_checks:
-            logger.info("Check (removed location, sent on reaching its map): "
+            logger.info("Check (legacy, sent on reaching its map): "
                         f"{ctx.location_name_by_id.get(location_id, location_id)}")
             new_checks.append(location_id)
 

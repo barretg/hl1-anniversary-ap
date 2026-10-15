@@ -2157,7 +2157,6 @@ F|7760219|c3a2e|2744 3116 304||
 F|7760219|c4a1b|-2280 -376 -224||
 L|7760240|c1a0d|weapon_pickup|item_suit|First HEV Suit|-3648 960 -248
 F|7760240|c1a0d|-3648 960 -248||
-F|7760240|c3a2d|1056 -176 -224||
 L|7760220|c3a2d|weapon_pickup|item_longjump|First Long Jump Module|1806 -448 -209
 F|7760220|c3a2d|1806 -448 -209||
 L|7760221|c1a1|weapon_pickup|weapon_crowbar|First Crowbar|1745 1847 -129

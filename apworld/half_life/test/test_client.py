@@ -268,6 +268,7 @@ class TestLegacyChecks(unittest.TestCase):
     def setUp(self) -> None:
         self.ctx = context()
         self.ctx.legacy_sent = set()
+        self.ctx.legacy_sources = {}
         self.ctx.reached_id_by_map = {
             entry["map"]: entry["id"] for entry in self.ctx.campaign["locations"]
             if entry["trigger"]["type"] == "map_reached"
@@ -292,6 +293,33 @@ class TestLegacyChecks(unittest.TestCase):
 
     def test_never_for_a_seed_without_it(self) -> None:
         self.ctx.missing_locations = {self.reached}
+        self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [])
+
+
+class TestLegacySources(unittest.TestCase):
+    """Lambda Core's suit counted toward First HEV Suit in older seeds only, so
+    only they get the check on reaching that map."""
+
+    SUIT = 7760240
+
+    def setUp(self) -> None:
+        self.ctx = context()
+        self.ctx.legacy_sent = set()
+        self.ctx.reached_id_by_map = {
+            entry["map"]: entry["id"] for entry in self.ctx.campaign["locations"]
+            if entry["trigger"]["type"] == "map_reached"
+        }
+        self.reached = self.ctx.reached_id_by_map["c3a2d"]
+        self.ctx.checked_locations = set()
+        self.ctx.missing_locations = {self.SUIT, self.reached}
+
+    def test_old_seed(self) -> None:
+        self.ctx.apply_slot_data({})
+        self.assertEqual(self.ctx.legacy_checks_due([]), [])
+        self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [self.SUIT])
+
+    def test_new_seed(self) -> None:
+        self.ctx.apply_slot_data({"lambda_core_suit": False})
         self.assertEqual(self.ctx.legacy_checks_due([self.reached]), [])
 
 
