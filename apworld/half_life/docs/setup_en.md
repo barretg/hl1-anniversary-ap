@@ -32,6 +32,9 @@ and the client's `/uninstall` does exactly that.
    Properties → Launch Options), or pick **Half-Life Archipelago** from the game
    list under Custom Game.
 
+Linux users: You must be running with Proton, as native linux is currently unsupported.
+Tested with Proton Hotfix.
+
 ## Playing
 
 **Connect the client first, then start the game.** Nothing is unlocked until the
