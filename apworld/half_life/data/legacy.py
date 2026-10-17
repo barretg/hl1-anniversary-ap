@@ -17,3 +17,11 @@ LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     # Out of reach in play; in v0.3-pre.
     7760297: ("Vicarious Reality: Health Charger 3 (Part 2)", "of4a2"),
 }
+
+# Checks a removed copy once counted toward, `{id: (map, slot_data key)}`. A seed
+# without the key was generated while the copy still counted, so its logic may
+# expect the check from that map: the client sends it once the map is reached.
+LEGACY_SOURCES: dict[int, tuple[str, str]] = {
+    # First HEV Suit: Lambda Core's suit never spawns; in v0.4-pre1 and earlier.
+    7760240: ("c3a2d", "lambda_core_suit"),
+}

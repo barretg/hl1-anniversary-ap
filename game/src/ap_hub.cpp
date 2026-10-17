@@ -376,7 +376,7 @@ const char* StatusOf(const Chapter& chapter) {
     // it, and this list is read to find where there is still something left. A
     // mission with nothing left in it is done with whether or not its own door
     // is still open.
-    if (Finished(chapter)) {
+    if (Finished(chapter) && !state.RemoteComplete(chapter.key)) {
         return "complete";
     }
     if (!Installed(chapter)) {
@@ -428,10 +428,10 @@ void ListMissions() {
         }
         const Campaign* campaign = Data().CampaignByKey(chapter.campaign);
         char line[192];
-        std::snprintf(line, sizeof(line), "  %2d. %-26s (%s %d)  [%s]", chapter.index,
+        std::snprintf(line, sizeof(line), "  %2d. %-26s (%s %d)  %s", chapter.index,
                       chapter.name.c_str(),
                       campaign != nullptr ? campaign->shortname.c_str() : "?",
-                      RelativeNumber(chapter), StatusOf(chapter));
+                      RelativeNumber(chapter), MissionLabel(chapter).c_str());
         Say(line);
     }
     Say("Head into a mission from the hub, or !warp <number or name>, plus a "
@@ -738,7 +738,12 @@ bool RunCommand(const std::string& name, const std::string& rest) {
     return Dispatch(name, rest);
 }
 
-const char* MissionStatus(const Chapter& chapter) { return StatusOf(chapter); }
+// The status in brackets. A mission the server counts but this machine never
+// finished reads as still to play, with a note that the server has it.
+std::string MissionLabel(const Chapter& chapter) {
+    const bool remote = Finished(chapter) && State().RemoteComplete(chapter.key);
+    return std::string("[") + StatusOf(chapter) + "]" + (remote ? " (Remote Complete)" : "");
+}
 
 int MissionNumberInGame(const Chapter& chapter) { return RelativeNumber(chapter); }
 

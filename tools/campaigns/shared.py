@@ -406,10 +406,10 @@ ENABLED_LOCATION_TYPES = {
     "charger",
     "weapon_pickup",
     "microwave",
-    # Experimental, off by default in the YAML: every pickup is a check.
+    # Off by default in the YAML: every pickup is a check.
     "heal_pickup",
     "ammo_pickup",
-    # Experimental, off by default: every witnessed scientist / barney /
+    # Off by default: every witnessed scientist / barney /
     # friendly soldier death.
     "scientist",
     "barney",

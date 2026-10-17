@@ -30,6 +30,9 @@ struct Snapshot {
 
     std::set<std::string> open_chapters;      // missions that may be entered
     std::set<std::string> excluded_chapters;  // not in this seed at all
+    // Complete on the server but never finished on this machine for this slot:
+    // collected, released, or played by someone else on it.
+    std::set<std::string> remote_complete;
     std::set<std::string> held_items;         // item names the player has been sent
     std::set<std::string> ungated_classnames; // left entirely to the game
     std::vector<std::string> starting_weapons;
@@ -82,6 +85,9 @@ struct Snapshot {
     }
     bool ChapterExcluded(const std::string& key) const {
         return excluded_chapters.find(key) != excluded_chapters.end();
+    }
+    bool RemoteComplete(const std::string& key) const {
+        return remote_complete.find(key) != remote_complete.end();
     }
     bool Ungated(const std::string& classname) const {
         return ungated_classnames.find(classname) != ungated_classnames.end();

@@ -167,7 +167,7 @@ class IncludeMicrowave(Toggle):
 
 
 class Healsanity(Toggle):
-    """Experimental. Every health kit, battery and Blue Shift armour vest or
+    """Every health kit, battery and Blue Shift armour vest or
     helmet is a check, sent the moment you touch it, even at full health or
     armour (it stays where it is). So is every crate that drops one: break it,
     then touch what falls out.
@@ -180,7 +180,7 @@ class Healsanity(Toggle):
 
 
 class Ammosanity(Toggle):
-    """Experimental. Every ammo pickup is a check, sent the moment you touch
+    """Every ammo pickup is a check, sent the moment you touch
     it, even with that ammo full (it stays where it is): clips and boxes on the
     floor, the weapon boxes some maps leave lying about, Opposing Force's spore
     plants, and every crate that drops ammo when broken.
@@ -193,7 +193,7 @@ class Ammosanity(Toggle):
 
 
 class Scientistsanity(Toggle):
-    """Experimental. Every scientist is a check, sent when one dies and you saw
+    """Every scientist is a check, sent when one dies and you saw
     it happen: you killed it, or it died in plain sight or close by. A death
     you did not witness sends nothing, and that check waits until the mission
     is replayed from the hub. Scientists whose death fails the mission, or who
@@ -209,7 +209,7 @@ class Scientistsanity(Toggle):
 
 
 class Barneysanity(Toggle):
-    """Experimental. Every security guard, Otis included, is a check, sent the
+    """Every security guard, Otis included, is a check, sent the
     same way as Scientistsanity's: when one dies and you witnessed it.
 
     50 of them: 33 in Half-Life (3 on the intro ride), 9 in Opposing Force and
@@ -220,7 +220,7 @@ class Barneysanity(Toggle):
 
 
 class Soldiersanity(Toggle):
-    """Experimental. Opposing Force only. Every friendly marine (grunts,
+    """Opposing Force only. Every friendly marine (grunts,
     medics and engineers) is a check, sent the same way as Scientistsanity's:
     when one dies and you witnessed it.
 
@@ -231,7 +231,7 @@ class Soldiersanity(Toggle):
 
 
 class IncludeCriticalNpcs(Toggle):
-    """Experimental. With Scientistsanity, Barneysanity or Soldiersanity, also
+    """With Scientistsanity, Barneysanity or Soldiersanity, also
     count the scientists, guards and soldiers whose death fails the mission or
     strands you (Rosenberg, the Insecurity guards, the guard who opens the
     intro train's door, and the like). The check is sent the moment one dies,
@@ -524,6 +524,83 @@ class BlueShiftChapters(OptionSet):
     default = frozenset(SUPPORTED_CHAPTER_NAMES["blue_shift"])
 
 
+class ScientistTrapWeight(Range):
+    """How often the Scientist Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Scientist Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class HeadcrabTrapWeight(Range):
+    """How often the Headcrab Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Headcrab Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class ButterfingersTrapWeight(Range):
+    """How often the Butterfingers Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Butterfingers Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class BotSwarmTrapWeight(Range):
+    """How often the Bot Swarm Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Bot Swarm Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class BunnyHopTrapWeight(Range):
+    """How often the Bunny Hop Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Bunny Hop Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class StickyKeyTrapWeight(Range):
+    """How often the Sticky Key Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Sticky Key Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
+class ReloadTrapWeight(Range):
+    """How often the Reload Trap is picked when a filler slot becomes a trap,
+    relative to the other trap weights. 0 leaves it out.
+    """
+
+    display_name = "Reload Trap Weight"
+    range_start = 0
+    range_end = 100
+    default = 25
+
+
 @dataclass
 class HalfLifeOptions(PerGameCommonOptions):
     include_half_life: IncludeHalfLife
@@ -554,6 +631,13 @@ class HalfLifeOptions(PerGameCommonOptions):
     ally_weapon_drops: AllyWeaponDrops
     ammo_relief: AmmoRelief
     trap_percentage: TrapPercentage
+    scientist_trap_weight: ScientistTrapWeight
+    headcrab_trap_weight: HeadcrabTrapWeight
+    butterfingers_trap_weight: ButterfingersTrapWeight
+    bot_swarm_trap_weight: BotSwarmTrapWeight
+    bunny_hop_trap_weight: BunnyHopTrapWeight
+    sticky_key_trap_weight: StickyKeyTrapWeight
+    reload_trap_weight: ReloadTrapWeight
     butterfingers_reissue: ButterfingersReissue
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink

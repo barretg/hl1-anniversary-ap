@@ -262,7 +262,7 @@ void Build(Page page) {
                 }
                 const int index = chapter.index;
                 g_entries.push_back({std::to_string(MissionNumberInGame(chapter)) + ". " +
-                                         chapter.name + " [" + MissionStatus(chapter) + "]",
+                                         chapter.name + " " + MissionLabel(chapter),
                                      [index] {
                                          const Chapter* c = Data().ChapterByIndex(index);
                                          int reached = 0;
@@ -331,7 +331,7 @@ void Build(Page page) {
                 return;
             }
             const std::string here = CurrentMap();
-            g_header = "Tracker: " + chapter->name + " [" + MissionStatus(*chapter) + "]";
+            g_header = "Tracker: " + chapter->name + " " + MissionLabel(*chapter);
             for (size_t p = 1; p <= chapter->maps.size(); ++p) {
                 const int part = static_cast<int>(p);
                 const std::vector<const Location*> checks = PartChecks(*chapter, part);

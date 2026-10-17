@@ -76,6 +76,7 @@ def lifted_context():
     ctx = scope["Context"]()
     ctx.campaign = json.loads(CAMPAIGN.read_text(encoding="utf-8"))
     ctx.completed_missions = set()
+    ctx.played_missions = set()
     ctx.legacy_sent = set()
     ctx.goal_sent = False
     ctx.state_slot = ""
@@ -201,5 +202,5 @@ def test_clear_with_nothing_to_drop_leaves_the_file_alone(tmp_path) -> None:
 def test_every_group_the_harness_names_can_be_selected() -> None:
     source = (REPO / "tests" / "aptest" / "aptest.py").read_text(encoding="utf-8")
     for group in aptest.GROUPS:
-        if group != "sources":
+        if group not in ("sources", "seed"):  # seed is chosen by --seed-file
             assert f'"--{group}"' in source, group

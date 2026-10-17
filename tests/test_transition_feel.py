@@ -27,7 +27,8 @@ def test_feel_pairs_are_trusted_walk_transitions() -> None:
             assert t["kind"] == "walk" and t["partner"] and not t.get("flags"), tid
         assert a != b and built[a]["partner"] != b, "a vanilla pair would not be rewritten"
     data = aptest.read_checkdata(CHECKDATA)
-    assert len(aptest.transition_feel_scenarios(data)) == len(aptest.TRANSITION_FEEL_PAIRS)
+    assert len(aptest.transition_feel_scenarios(data)) == (
+        len(aptest.TRANSITION_FEEL_PAIRS) + len(aptest.TRANSITION_FOLLOW_PAIRS))
 
 
 class FakeBridge:
@@ -48,7 +49,7 @@ def test_a_feel_scenario_writes_its_pair(tmp_path) -> None:
     h = aptest.Harness(tmp_path, types.SimpleNamespace(Bridge=FakeBridge), "transitionfeel",
                        scenarios)
     h.start(0)
-    a, b, _ = aptest.TRANSITION_FEEL_PAIRS[0]
+    a, b = scenarios[0].pairs[0]
     go = h.go_path.read_text(encoding="utf-8").splitlines()
     assert f"pair={a} {b}" in go
     assert f"map={a.split(':')[0]}" in go

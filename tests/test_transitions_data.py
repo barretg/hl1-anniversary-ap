@@ -137,4 +137,4 @@ def test_checkdata_carries_every_transition(transitions: list[dict]) -> None:
              CHECKDATA_PATH.read_text(encoding="utf-8").splitlines()
              if line.startswith("E|")]
     assert [f[1] for f in lines] == [t["id"] for t in transitions]
-    assert all(len(f) == 14 for f in lines)
+    assert all(len(f) == 16 for f in lines)

@@ -63,7 +63,6 @@ from .items import (
     melee_items,
     optional_items,
     trap_items,
-    trap_weights,
     unlock_item_for_chapter,
     weapon_items,
 )
@@ -87,10 +86,13 @@ from .options import (
     GenerationDifficulty,
     AllowReverse,
     HalfLifeChapters,
+    ButterfingersReissue,
+    Chargesanity,
     HalfLifeOptions,
     Healsanity,
     IncludeBlueShift,
     IncludeHalfLife,
+    IncludeMicrowave,
     IncludeOpposingForce,
     MapShuffle,
     MeleeThrow,
@@ -102,6 +104,16 @@ from .options import (
     RandomStartingWeapon,
     ShuffleFlashlight,
     TransitionHub,
+    ShuffleHevSuit,
+    ShuffleLongJump,
+    TrapPercentage,
+    ScientistTrapWeight,
+    HeadcrabTrapWeight,
+    ButterfingersTrapWeight,
+    BotSwarmTrapWeight,
+    BunnyHopTrapWeight,
+    StickyKeyTrapWeight,
+    ReloadTrapWeight,
     ViewmodelStyle,
 )
 from .regions import create_regions
@@ -159,10 +171,10 @@ class HalfLifeWeb(WebWorld):
     ]
 
     # Which games the seed holds, and how much of each the goal asks, together.
-    # Anything in the experimental group is off by default and known to be rough.
-    # Grouping it says so in the template YAML and on the website without the
-    # player having to read the option's own description first, and keeps it out
-    # of the run of settings that are safe to turn on without thinking about it.
+    # The rest grouped by what they change: the item pool, which things are
+    # checks, pickups and NPC deaths as checks, how the game plays, and traps.
+    # Anything left out (logic difficulty, intro missions, DeathLink) stays in
+    # Game Options.
     option_groups = [
         OptionGroup(
             "Games",
@@ -171,12 +183,33 @@ class HalfLifeWeb(WebWorld):
              IncludeBlueShift, BlueShiftMissionsRequired],
         ),
         OptionGroup(
-            "Experimental Features",
-            [RandomStartingWeapon, ViewmodelStyle, ShuffleFlashlight, MeleeThrow,
-             AllyWeaponDrops, ProgressiveAirAcceleration, AirAccelerationMinimum,
-             AirAccelerationMaximum, Healsanity, Ammosanity, Scientistsanity,
-             Barneysanity, Soldiersanity, IncludeCriticalNpcs],
-            start_collapsed=True,
+            "Item Pool",
+            [RandomStartingWeapon, ShuffleHevSuit, ShuffleLongJump,
+             ShuffleFlashlight, MeleeThrow, ProgressiveAirAcceleration,
+             AirAccelerationMinimum, AirAccelerationMaximum],
+        ),
+        OptionGroup(
+            "Checks",
+            [Chargesanity, IncludeMicrowave],
+        ),
+        OptionGroup(
+            "Itemsanity",
+            [Healsanity, Ammosanity],
+        ),
+        OptionGroup(
+            "NPCSanity",
+            [Scientistsanity, Barneysanity, Soldiersanity, IncludeCriticalNpcs],
+        ),
+        OptionGroup(
+            "Gameplay",
+            [ViewmodelStyle, AllyWeaponDrops],
+        ),
+        OptionGroup(
+            "Traps",
+            [TrapPercentage, ButterfingersReissue,
+             ScientistTrapWeight, HeadcrabTrapWeight, ButterfingersTrapWeight,
+             BotSwarmTrapWeight, BunnyHopTrapWeight, StickyKeyTrapWeight,
+             ReloadTrapWeight],
         ),
         OptionGroup(
             "Map Randomization",
@@ -584,14 +617,22 @@ class HalfLifeWorld(World):
 
     def get_filler_names(self, count: int) -> list[str]:
         """Fill the leftover locations, with `trap_percentage` of them traps."""
+        weights = [self.trap_weight(name) for name in trap_items]
         traps = round(count * self.options.trap_percentage.value / 100)
-        names = self.random.choices(trap_items, weights=trap_weights, k=traps)
+        # Every trap weighted to 0 means no traps at all, not a crash.
+        if not any(weights):
+            traps = 0
+        names = self.random.choices(trap_items, weights=weights, k=traps) if traps else []
         names += self.random.choices(
             filler_items, weights=filler_weights, k=count - traps
         )
         # Otherwise every trap lands in the same stretch of the pool.
         self.random.shuffle(names)
         return names
+
+    def trap_weight(self, name: str) -> int:
+        """The YAML's weight for one trap, e.g. `headcrab_trap_weight`."""
+        return getattr(self.options, name.lower().replace(" ", "_") + "_weight").value
 
     def get_filler_item_name(self) -> str:
         return self.random.choices(filler_items, weights=filler_weights, k=1)[0]
@@ -671,6 +712,9 @@ class HalfLifeWorld(World):
             # so the client must gate its pickup like any other. Seeds from
             # before this existed left the long jump module ungated instead.
             "placed_at_vanilla": sorted(self.vanilla_placements),
+            # Seeds from before this key also took the First HEV Suit from Lambda
+            # Core, where no suit spawns; the client sends it there for them.
+            "lambda_core_suit": False,
             # Game -> the item that is armour on its maps, and the equipment
             # actually shuffled into this seed's pool. Named and shaped as the
             # Sven world writes them; nothing here reads them yet.

@@ -170,6 +170,8 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
     "MP5": [
         "c2a4d@384 560 16",  # a maker that spawns conditionally; others here drop
     ],
+    # Lambda Core's suit never spawns in.
+    "HEV Suit": ["c3a2d"],
 }
 
 # Copies confirmed reachable in play that the flood fill could not prove.
