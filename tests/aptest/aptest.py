@@ -369,8 +369,9 @@ def seed_file_scenario(path: Path) -> Scenario:
             f" {len(seed.get('inert_transitions', []))} inert,"
             f" starting on {seed['start_map']}.",
             f"Spoiler: {spoiler}",
-            "Labels name each trigger by id. Play the seed through: each transition",
-            "should go where the spoiler says.",
+            "Labels name each trigger by id and where it leads. Play the seed",
+            "through: each transition should go where the spoiler says, and one",
+            "labelled (not in seed) or (inert) should do nothing.",
             "!note <what> for anything wrong on the way, then !pass or !fail <what>.",
         ]))
 
@@ -2092,9 +2093,11 @@ def transition_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
         steps="\n".join([
             f"A transitions seed (area): {pairs}; one-way {ways or 'none'};",
             f"orbs {orbs or 'none'}; inert {', '.join(seed['inert_transitions'])}.",
-            f"Every other transition is vanilla, so you start in {paired_map},",
-            "where its pair is. Noclip wherever the map blocks you.",
-            "Labels name each trigger by id. Walking an inert one does nothing.",
+            "The rest inside its chapters are vanilla, so you start in "
+            f"{paired_map}, where its pair is;",
+            "any leading out of them is inert and labelled (not in seed). Noclip",
+            "wherever the map blocks you. Labels name each trigger by id and where",
+            "it leads. Walking an inert one does nothing.",
             "A paired one lands you in place at its partner; walk back through and",
             "you return, where its partner can be walked into. A scripted one (the",
             "resonance cascade's exit, c1a0e:0) fires when its script ends: push the",

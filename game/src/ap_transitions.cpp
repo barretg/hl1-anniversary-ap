@@ -33,6 +33,9 @@ std::unordered_map<std::string, std::string> g_pairs;
 std::unordered_map<std::string, std::vector<std::string>> g_one_way_in;
 // Triggers that do nothing in this seed.
 std::set<std::string> g_inert;
+// The maps of the seed's chapters, and its ending map. A transition outside
+// them is inert too: see `OutsideSeed`.
+std::set<std::string> g_seed_maps;
 // Whether the pairing above came from a seed rather than `ap_transition_pair`,
 // and which snapshot section it was, so an unchanged one is not reapplied.
 bool g_seeded = false;
@@ -44,6 +47,10 @@ constexpr float kCentreSlack = 2.0f;
 // The transition volume reaches this far past the trigger on every side, so a
 // follower right behind the player comes too.
 constexpr float kVolumePad = 48.0f;
+// Monsters this far past the trigger, following or not, cross with the
+// player. The engine's volume stays at `kVolumePad`: anything else it carries
+// is not ours to widen.
+constexpr float kCarryPad = 144.0f;
 // A player kept this far inside a trigger's edge, across it.
 constexpr float kLateralMargin = 16.0f;
 // How long the arrival end ignores the player after they are placed.
@@ -53,7 +60,8 @@ constexpr float kArrivalGuard = 0.5f;
 struct Follower {
     std::string classname;
     Vector offset;        // from the exit's landmark, where it stood
-    bool parked = false;  // moved onto the landmark to cross
+    bool parked = false;     // moved onto the landmark to cross
+    bool following = false;  // placed within `kFollowerSpan`, else `kCarryPad`
 };
 
 // The pending arrival. Set as the engine is told to change level, used on the
@@ -165,6 +173,8 @@ constexpr float kFollowerSpan = 96.0f;
 constexpr float kFollowerDrop = 128.0f;
 // How high above the floor a player in the air arrives, at most.
 constexpr float kArrivalLift = 48.0f;
+// How far below an arrival to look for the ground.
+constexpr float kArrivalDrop = 4096.0f;
 // How far above a frame's floor point its landmark sits.
 constexpr float kLandmarkLift = 16.0f;
 
@@ -178,7 +188,7 @@ float AboveFloor(CBasePlayer* player) {
 }
 
 // Put a carried monster near its offset, turned with the player (placed first,
-// at `toward`). It comes no further than `kFollowerSpan` from the player, and
+// at `toward`). It comes no further than `span` from the player, and
 // only somewhere its hull reaches from the player in a straight line: that
 // keeps it out of walls, off the player and in the player's room. Failing
 // that, spots closer to the player are tried; one that fits nowhere is left
@@ -187,11 +197,11 @@ float AboveFloor(CBasePlayer* player) {
 // floor: monsters do not fall, and the offset's height is from the trigger's
 // centre.
 bool PlaceFollower(CBaseEntity* entity, Vector origin, float dyaw, const Vector& toward,
-                   bool remove = false) {
+                   float span = kFollowerSpan, bool remove = false) {
     origin.z = toward.z;
     Vector reach = origin - toward;
-    if (reach.Length() > kFollowerSpan) {
-        origin = toward + reach.Normalize() * kFollowerSpan;
+    if (reach.Length() > span) {
+        origin = toward + reach.Normalize() * span;
     }
     static const Vector kTries[] = {
         Vector(0, 0, 0),    Vector(0, 0, 16),    Vector(24, 0, 0),    Vector(-24, 0, 0),
@@ -248,8 +258,8 @@ void Place(CBasePlayer* player, const Transition& a, const Transition& b, Vector
            const Vector& velocity, const Vector& angles, const Vector& v_angle, float above) {
     const float dyaw = (b.yaw + 180.0f) - a.yaw;
     const bool seamless = Walkish(a) && Walkish(b);
-    const bool ducked = (player->pev->flags & FL_DUCKING) != 0;
-    const int hull = ducked ? head_hull : human_hull;
+    bool ducked = (player->pev->flags & FL_DUCKING) != 0;
+    int hull = ducked ? head_hull : human_hull;
     const Vector normal = Normal(b);
     const Vector lateral(-normal.y, normal.x, 0.0f);
 
@@ -277,6 +287,20 @@ void Place(CBasePlayer* player, const Transition& a, const Transition& b, Vector
         }
         spot = spot - normal * 8.0f;
     }
+    // A vent: no room to stand, room to crouch. Arrive crouched, as the
+    // movement code leaves a player with no room to stand up.
+    if (!ducked && !HullFits(player, spot, hull)) {
+        const Vector low = spot + Vector(0, 0, VEC_HULL_MIN.z - VEC_DUCK_HULL_MIN.z);
+        if (HullFits(player, low, head_hull)) {
+            ducked = true;
+            hull = head_hull;
+            spot = low;
+            player->pev->flags |= FL_DUCKING;
+            player->pev->view_ofs = VEC_DUCK_VIEW;
+            UTIL_SetSize(player->pev, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
+            Trace(("  arriving crouched at " + b.id).c_str());
+        }
+    }
     if (!HullFits(player, spot, hull)) {
         // Not one in the trigger or past it, in the stub.
         Vector found;
@@ -288,9 +312,12 @@ void Place(CBasePlayer* player, const Transition& a, const Transition& b, Vector
             spot = found;
         }
     }
+    // On the ground, however far below: an arrival in the air (c1a0c's, over
+    // the test chamber) would fall out of the player's control and hurt.
     TraceResult tr;
-    UTIL_TraceHull(spot, spot - Vector(0, 0, 512), ignore_monsters, hull, player->edict(), &tr);
-    if (!tr.fStartSolid) {
+    UTIL_TraceHull(spot, spot - Vector(0, 0, kArrivalDrop), ignore_monsters, hull,
+                   player->edict(), &tr);
+    if (!tr.fStartSolid && tr.flFraction < 1.0f) {
         spot = tr.vecEndPos;
     }
     if (across != 0.0f) {
@@ -331,12 +358,14 @@ bool Follows(CBaseEntity* entity, CBaseEntity* player) {
     return monster != nullptr && monster->m_hTargetEnt == player;
 }
 
-// What crosses a transition with the player: the monsters standing in its
-// padded volume, and those following the player from anywhere in the map.
+// What crosses a transition with the player: the monsters following the
+// player from anywhere in the map, and those walking about within `kCarryPad`
+// of the trigger. Not one that cannot walk (a turret, a barnacle, a flier) or
+// is playing a script: moved, it would be stuck or break the script.
 std::vector<CBaseEntity*> CarriedBy(CBaseEntity* trigger, CBaseEntity* player) {
     std::vector<CBaseEntity*> out;
-    const Vector lo = trigger->pev->absmin - Vector(kVolumePad, kVolumePad, 0);
-    const Vector hi = trigger->pev->absmax + Vector(kVolumePad, kVolumePad, 0);
+    const Vector lo = trigger->pev->absmin - Vector(kCarryPad, kCarryPad, kCarryPad);
+    const Vector hi = trigger->pev->absmax + Vector(kCarryPad, kCarryPad, kCarryPad);
     for (int i = 1; i < gpGlobals->maxEntities; ++i) {
         edict_t* edict = INDEXENT(i);
         if (edict == nullptr || edict->free || !(edict->v.flags & FL_MONSTER)) {
@@ -346,8 +375,14 @@ std::vector<CBaseEntity*> CarriedBy(CBaseEntity* trigger, CBaseEntity* player) {
         if (entity == nullptr || entity == player || entity->IsPlayer() || !entity->IsAlive()) {
             continue;
         }
-        if (Overlaps(entity->pev->absmin, entity->pev->absmax, lo, hi) ||
-            Follows(entity, player)) {
+        if (Follows(entity, player)) {
+            out.push_back(entity);
+            continue;
+        }
+        CBaseMonster* monster = entity->MyMonsterPointer();
+        if (monster != nullptr && entity->pev->movetype == MOVETYPE_STEP &&
+            monster->m_pCine == nullptr && monster->m_MonsterState != MONSTERSTATE_SCRIPT &&
+            Overlaps(entity->pev->absmin, entity->pev->absmax, lo, hi)) {
             out.push_back(entity);
         }
     }
@@ -366,7 +401,8 @@ void MoveWithinMap(CBasePlayer* player, CBaseEntity* trigger, const Transition& 
           player->pev->angles, player->pev->v_angle, AboveFloor(player));
     for (size_t i = 0; i < carried.size(); ++i) {
         PlaceFollower(carried[i], BesidePlayer(b, rels[i], player->pev->origin), dyaw,
-                      player->pev->origin);
+                      player->pev->origin,
+                      Follows(carried[i], player) ? kFollowerSpan : kCarryPad);
     }
     g_last_move = gpGlobals->time;
 }
@@ -392,6 +428,7 @@ void ApplySeedTransitions(const Snapshot& state, bool force) {
         if (g_seeded) {  // a hub seed now: nothing of the last one stands
             SetTransitionPairs({});
             g_inert.clear();
+            g_seed_maps.clear();
             g_seeded = false;
             g_seed_key.clear();
         }
@@ -409,11 +446,24 @@ void ApplySeedTransitions(const Snapshot& state, bool force) {
     for (const std::string& id : state.inert_transitions) {
         key += id + ";";
     }
+    key += "|";
+    for (const std::string& chapter : state.transition_chapters) {
+        key += chapter + ";";
+    }
     if (g_seeded && key == g_seed_key && !force) {
         return;
     }
     SetTransitionPairs(state.transition_pairs, state.one_way_transitions);
     g_inert = state.inert_transitions;
+    g_seed_maps.clear();
+    for (const Chapter& chapter : Data().chapters) {
+        if (state.transition_chapters.count(chapter.key)) {
+            g_seed_maps.insert(chapter.maps.begin(), chapter.maps.end());
+        }
+    }
+    if (!state.ending_map.empty()) {
+        g_seed_maps.insert(state.ending_map);
+    }
     g_seeded = true;
     g_seed_key = key;
     // The snapshot is usually already here when a level spawns, but not on the
@@ -432,7 +482,23 @@ std::string LeadsTo(const Transition& t) {
     return b != nullptr ? b->map : t.to;
 }
 
-bool Inert(const std::string& id) { return g_inert.find(id) != g_inert.end(); }
+bool OutsideSeed(const Transition& t) {
+    if (!g_seeded || g_seed_maps.empty()) {
+        return false;
+    }
+    // On a map the seed has none of, or left unlisted (vanilla) but leading
+    // to one: a dead trigger's vanilla way out, say.
+    return !g_seed_maps.count(t.map) ||
+           (SeedPartner(t.id) == nullptr && !g_seed_maps.count(t.to));
+}
+
+bool Inert(const std::string& id) {
+    if (g_inert.find(id) != g_inert.end()) {
+        return true;
+    }
+    const Transition* t = Data().TransitionById(id);
+    return t != nullptr && OutsideSeed(*t);
+}
 
 void RewriteLevelTransitions() {
     if (!Data().Loaded()) {
@@ -654,6 +720,25 @@ int OnTransition(CBaseEntity* trigger) {
     if (std::strncmp(ChangeLevelLandmark(trigger), "aplm_", 5) != 0) {
         return kTransitionNotOurs;
     }
+    // The engine changes level only with the player in the landmark's volume,
+    // which is sized from the changelevel's brush. One fired by name from a
+    // trigger elsewhere (c1a2b's way to c1a3, fired from below its brush)
+    // would abort, so the volume takes in the player first.
+    if (CBasePlayer* player = Player()) {
+        CBaseEntity* volume = nullptr;
+        while ((volume = UTIL_FindEntityByTargetname(volume, ChangeLevelLandmark(trigger))) !=
+               nullptr) {
+            if (FClassnameIs(volume->pev, "trigger_transition")) {
+                Vector lo = volume->pev->absmin;
+                Vector hi = volume->pev->absmax;
+                for (int k = 0; k < 3; ++k) {
+                    lo[k] = (std::min)(lo[k], player->pev->absmin[k]);
+                    hi[k] = (std::max)(hi[k], player->pev->absmax[k]);
+                }
+                UTIL_SetSize(volume->pev, lo - volume->pev->origin, hi - volume->pev->origin);
+            }
+        }
+    }
     return kTransitionChange;
 }
 
@@ -738,18 +823,15 @@ void BeforeChangeLevel(CBaseEntity* trigger, CBaseEntity* player) {
     g_pending.shift = frame - Vec(t->origin);
     for (CBaseEntity* entity : carried) {
         // The engine moves what crosses by the landmarks' difference, unturned,
-        // and frees whatever that lands in solid. A follower crosses on the
-        // landmark, which is open on both sides, and is placed beside the
-        // player on arrival.
-        const bool parked = Follows(entity, player);
+        // and frees whatever that lands in solid. Each crosses on the landmark,
+        // which is open on both sides, and is placed near the player on arrival.
+        const bool following = Follows(entity, player);
         g_pending.followers.push_back(
-            {STRING(entity->pev->classname), entity->pev->origin - frame, parked});
-        if (parked) {
-            entity->pev->velocity = g_vecZero;
-            UTIL_SetOrigin(entity->pev, frame);
-        }
+            {STRING(entity->pev->classname), entity->pev->origin - frame, true, following});
+        entity->pev->velocity = g_vecZero;
+        UTIL_SetOrigin(entity->pev, frame);
         Trace(("  carrying " + std::string(STRING(entity->pev->classname)) +
-               (parked ? " (following)" : "")).c_str());
+               (following ? " (following)" : "")).c_str());
         for (int k = 0; k < 3; ++k) {
             lo[k] = (std::min)(lo[k], entity->pev->absmin[k]);
             hi[k] = (std::max)(hi[k], entity->pev->absmax[k]);
@@ -800,8 +882,8 @@ void RunTransitionArrival() {
     std::vector<CBaseEntity*> placed;
     for (const Follower& follower : pending.followers) {
         const Vector at = follower.parked ? frame : frame + follower.offset;
-        CBaseEntity* list[16];
-        const int count = UTIL_EntitiesInBox(list, 16, at - Vector(32, 32, 32),
+        CBaseEntity* list[64];
+        const int count = UTIL_EntitiesInBox(list, 64, at - Vector(32, 32, 32),
                                              at + Vector(32, 32, 32), FL_MONSTER);
         CBaseEntity* best = nullptr;
         for (int i = 0; i < count; ++i) {
@@ -819,7 +901,8 @@ void RunTransitionArrival() {
         PlaceFollower(best,
                       BesidePlayer(*b, Rotate(follower.offset - player_offset, dyaw),
                                    player->pev->origin),
-                      dyaw, player->pev->origin);
+                      dyaw, player->pev->origin,
+                      follower.following ? kFollowerSpan : kCarryPad);
         placed.push_back(best);
     }
     // A follower that came across but was not matched: beside the player.

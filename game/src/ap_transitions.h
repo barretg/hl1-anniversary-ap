@@ -39,7 +39,10 @@ void SetTransitionPairs(
 void ApplySeedTransitions(const Snapshot& state, bool force = false);
 // The seed being played is a transitions mode one.
 bool TransitionsMode();
-// A trigger that does nothing in this seed.
+// Not part of the seed being played: on a map outside its chapters, or left
+// vanilla but leading out of them. Such a trigger is inert.
+bool OutsideSeed(const Transition& t);
+// A trigger that does nothing in this seed: listed inert, or outside it.
 bool Inert(const std::string& id);
 // The map a transition leads to in this seed: its seed partner's, else its
 // vanilla `to`. Empty for an inert one.

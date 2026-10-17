@@ -120,6 +120,8 @@ class Plan:
     # A transition left over in an odd group: one way into another's arrival.
     one_way: dict[str, str] = field(default_factory=dict)
     backtrack_orbs: dict[str, str] = field(default_factory=dict)
+    # Route nodes (maps, or chapter keys) played end to start (allow_reverse).
+    reversed: list[str] = field(default_factory=list)
 
 
 # -- helpers on the transition table -------------------------------------------
@@ -132,6 +134,12 @@ def vanilla_partner(tid: str) -> str:
 def is_forward(t: dict) -> bool:
     """Leads to a map later in the campaigns' order."""
     return MAP_ORDER.get(t["to"], -1) > MAP_ORDER[t["map"]]
+
+
+def entered_reversed(plan: Plan, node_of: Callable[[str], str]) -> list[str]:
+    """Route nodes entered through a way forwards: played end to start."""
+    into = {node_of(b): is_forward(TRANSITIONS_BY_ID[b]) for _, b in plan.fixed}
+    return [n for n in plan.spine[1:] if into.get(n)]
 
 
 def cross_chapter(t: dict) -> bool:
@@ -161,6 +169,7 @@ def make_plan(world: "HalfLifeWorld") -> Plan:
         plan.inert = list(passthrough.get("inert_transitions", []))
         plan.one_way = dict(passthrough.get("one_way_transitions", {}))
         plan.backtrack_orbs = dict(passthrough.get("backtrack_orbs", {}))
+        plan.reversed = list(passthrough.get("reversed", []))
         listed = {a for pair in passthrough.get("transition_pairs", []) for a in pair}
         plan.fixed = [tuple(p) for p in passthrough.get("transition_pairs", [])]
         # A transition the seed left at its vanilla partner is not listed.
@@ -336,16 +345,24 @@ def plan_chapters(world: "HalfLifeWorld", plan: Plan, chapters: list[dict], live
     # a transition back to an earlier map, out through one forward.
     spare: dict[str, list[str]] = {k: list(v) for k, v in by_chapter.items()}
 
+    chain = [k for k in plan.spine if k not in middle_bosses]
+    # Out forwards and in backwards, as the chapters are made to be played;
+    # with allow_reverse, any way at all, each as likely. Not with nothing
+    # shuffled.
+    any_way = bool(world.options.allow_reverse) and shuffle != MapShuffle.option_off
+
     def take(chapter: str, forward: bool) -> str | None:
         ends = spare.get(chapter, [])
         if not ends:
             return None
-        preferred = [tid for tid in ends if is_forward(TRANSITIONS_BY_ID[tid]) == forward]
-        tid = (preferred or ends)[0]
+        if any_way:
+            tid = world.random.choice(ends)
+        else:
+            preferred = [tid for tid in ends if is_forward(TRANSITIONS_BY_ID[tid]) == forward]
+            tid = (preferred or ends)[0]
         ends.remove(tid)
         return tid
 
-    chain = [k for k in plan.spine if k not in middle_bosses]
     for here, there in zip(chain, chain[1:]):
         out, into = take(here, True), take(there, False)
         if out is None or into is None:
@@ -354,6 +371,7 @@ def plan_chapters(world: "HalfLifeWorld", plan: Plan, chapters: list[dict], live
                 f"{CHAPTERS_BY_KEY[there]['name']} cannot be joined: one has no way "
                 "left between chapters. Try map_shuffle total.")
         plan.fixed.append((out, into))
+    plan.reversed = entered_reversed(plan, lambda tid: MAP_CHAPTER[TRANSITIONS_BY_ID[tid]["map"]])
     # A boss other than the final one is a dead end; it hangs off a chapter
     # with a way to spare, as late on the route as there is one.
     for boss in [k for k in plan.spine if k in middle_bosses]:
@@ -425,10 +443,14 @@ def plan_total(world: "HalfLifeWorld", plan: Plan, live: list[str], standard: bo
     spare = {m: list(v) for m, v in by_map.items()}
     rng = world.random
 
+    # Out forwards and in backwards, as the maps are made to be played; with
+    # allow_reverse, any way at all, each as likely.
+    any_way = bool(world.options.allow_reverse)
+
     def take(map_name: str, forward: bool) -> str:
         ends = spare[map_name]
         preferred = [tid for tid in ends if is_forward(TRANSITIONS_BY_ID[tid]) == forward]
-        tid = rng.choice(preferred or ends)
+        tid = rng.choice(ends if any_way else preferred or ends)
         ends.remove(tid)
         return tid
 
@@ -436,6 +458,7 @@ def plan_total(world: "HalfLifeWorld", plan: Plan, live: list[str], standard: bo
         if not spare.get(here) or not spare.get(there):
             raise OptionError(f"{world.player_name}: {here} cannot lead on to {there}")
         plan.fixed.append((take(here, True), take(there, False)))
+    plan.reversed = entered_reversed(plan, lambda tid: TRANSITIONS_BY_ID[tid]["map"])
     for ends in spare.values():
         for tid in ends:
             plan.groups[tid] = GROUP_DEFAULT
@@ -681,6 +704,8 @@ def transition_slot_data(world: "HalfLifeWorld") -> dict[str, Any]:
         "ending_map": plan.ending_map,
         "final_boss": plan.final_boss,
         "generation_difficulty": world.options.generation_difficulty.current_key,
+        # Route nodes played end to start: maps in total, chapter keys else.
+        "reversed": list(plan.reversed),
         "boss_exits": {campaign_of(CHAPTERS_BY_KEY[k]): CAMPAIGNS_BY_KEY[
             campaign_of(CHAPTERS_BY_KEY[k])]["boss_map"] for k in plan.bosses},
     }

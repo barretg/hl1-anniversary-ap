@@ -280,7 +280,14 @@ void SendPointLabels(CBasePlayer* player) {
         return TransitionNumber(*a) < TransitionNumber(*b);
     });
     for (size_t n = 0; n < here.size(); ++n) {
-        std::string text = "T" + std::to_string(n + 1) + " > " + here[n]->to;
+        std::string text = "T" + std::to_string(n + 1);
+        if (OutsideSeed(*here[n])) {
+            text += " (not in seed)";
+        } else if (Inert(here[n]->id)) {
+            text += " (inert)";
+        } else {
+            text += " > " + LeadsTo(*here[n]);
+        }
         if (here[n]->id == g_destination.entry) {
             text += " (entry)";
         }

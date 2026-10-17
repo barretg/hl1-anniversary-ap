@@ -13,6 +13,8 @@ Each run gets its own `tests/out/<runid>/` (untracked), holding:
   AP_<seed>.zip           Archipelago's output
   AP_<seed>_Spoiler.txt   Archipelago's spoiler, taken out of the zip
   slot_data.json          the seed's slot data, as the client gets it
+  seed.txt                the seed number, which `--seed` takes to make it again
+                          (not the number in the zip's name: that is its name)
   transitions.txt         the transition spoiler: every pairing, where each end is
 
 Then the aptest harness hosts one scenario that plays the seed (`--seed-file`),
@@ -24,6 +26,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import os
 import subprocess
 import zipfile
 import sys
@@ -54,7 +57,8 @@ def pick(data: dict, spec: str) -> list[str]:
     return names if goal in names else names + [goal]
 
 
-def write_yaml(path: Path, chapters: list[str], shuffle: str, difficulty: str) -> None:
+def write_yaml(path: Path, chapters: list[str], shuffle: str, difficulty: str,
+               reverse: bool) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     listed = "".join(f"      - {json.dumps(name)}\n" for name in chapters)
     path.write_text(
@@ -64,6 +68,7 @@ def write_yaml(path: Path, chapters: list[str], shuffle: str, difficulty: str) -
         "  progression_mode: transitions\n"
         f"  map_shuffle: {shuffle}\n"
         f"  generation_difficulty: {difficulty}\n"
+        f"  allow_reverse: {'true' if reverse else 'false'}\n"
         "  half_life_chapters:\n" + listed,
         encoding="utf-8")
 
@@ -97,6 +102,7 @@ def generate(out: Path, seed: int | None) -> None:
     if seed is not None:
         sys.argv += ["--seed", str(seed)]
     args, seed_number = Generate.main()
+    (out / "seed.txt").write_text(f"{seed_number}\n", encoding="utf-8")
     ap_main(args, seed_number)
     (out / "slot_data.json").write_text(json.dumps(kept, indent=1, sort_keys=True),
                                         encoding="utf-8")
@@ -114,7 +120,8 @@ def labels(transitions: list[dict]) -> dict[str, str]:
     return out
 
 
-def write_spoiler(out: Path, slot: dict, data: dict, chapters: list[str]) -> Path:
+def write_spoiler(out: Path, slot: dict, data: dict, chapters: list[str],
+                  again: str) -> Path:
     by_id = {t["id"]: t for t in data["transitions"]}
     label = labels(data["transitions"])
 
@@ -126,10 +133,12 @@ def write_spoiler(out: Path, slot: dict, data: dict, chapters: list[str]) -> Pat
         return (f"{tid:<14} {t['map']} {label[tid]:<4} {t['kind']:<9} at {at:<18}"
                 f" vanilla to {t['to']}")
 
-    lines = [f"Chapters: {', '.join(chapters)}",
+    lines = [f"Again: {again}",
+             f"Chapters: {', '.join(chapters)}",
              f"Shuffle: {slot.get('map_shuffle')}",
              f"Start map: {slot.get('start_map')}",
              f"Final boss: {slot.get('final_boss')}",
+             f"Played backwards: {', '.join(slot.get('reversed', [])) or 'none'}",
              "", "Pairs (either way):"]
     for a, b in slot.get("transition_pairs", []):
         lines += [f"  {where(a)}", f"    <> {where(b)}"]
@@ -152,6 +161,8 @@ def main() -> int:
                         help="chapter range, inclusive, Black Mesa Inbound being 0")
     parser.add_argument("--shuffle", choices=SHUFFLES, default="area")
     parser.add_argument("--difficulty", choices=("standard", "chaotic"), default="standard")
+    parser.add_argument("--allow-reverse", action="store_true",
+                        help="any way in or out of each map on the route, forwards or back")
     parser.add_argument("--seed", type=int, help="Archipelago seed number")
     parser.add_argument("--game-root", type=Path, default=GAME_ROOT)
     parser.add_argument("--no-host", action="store_true",
@@ -167,12 +178,18 @@ def main() -> int:
     chapters = pick(data, args.chapters)
     runid = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     out = OUT / runid
-    write_yaml(out / "players" / "half_life.yaml", chapters, args.shuffle, args.difficulty)
+    write_yaml(out / "players" / "half_life.yaml", chapters, args.shuffle, args.difficulty,
+               args.allow_reverse)
     command = [str(AP_PYTHON), str(Path(__file__).resolve()), "--chapters", args.chapters,
                "--generate", str(out)]
     if args.seed is not None:
         command += ["--seed", str(args.seed)]
-    if subprocess.run(command, cwd=AP_SRC).returncode != 0:
+    try:
+        failed = subprocess.run(command, cwd=AP_SRC).returncode != 0
+    except KeyboardInterrupt:
+        print(f"\nGeneration stopped; {out} is incomplete.")
+        return 130
+    if failed:
         print(f"Generation failed; see {out}.")
         return 1
     for archive in out.glob("AP_*.zip"):
@@ -181,13 +198,21 @@ def main() -> int:
                 if name.endswith("_Spoiler.txt"):
                     (out / name).write_bytes(zf.read(name))
     slot = json.loads((out / "slot_data.json").read_text(encoding="utf-8"))
-    spoiler = write_spoiler(out, slot, data, chapters)
-    print(f"Run {runid}: {spoiler}")
+    seed = (out / "seed.txt").read_text(encoding="utf-8").strip()
+    again = (f"python tools/seed_run.py --chapters {args.chapters} --shuffle {args.shuffle}"
+             f" --difficulty {args.difficulty}"
+             + (" --allow-reverse" if args.allow_reverse else "") + f" --seed {seed}")
+    spoiler = write_spoiler(out, slot, data, chapters, again)
+    print(f"Run {runid}, seed {seed}: {spoiler}")
+    print(f"Again: {again}")
     if args.no_host:
         return 0
-    return subprocess.run([sys.executable, str(REPO / "tests" / "aptest" / "aptest.py"),
-                           "--game-root", str(args.game_root),
-                           "--seed-file", str(out / "slot_data.json")]).returncode
+    # Replaced by the harness rather than waiting on it: ^C reaches both, and
+    # a waiting parent would kill the harness while it puts the dll back.
+    harness = [sys.executable, str(REPO / "tests" / "aptest" / "aptest.py"),
+               "--game-root", str(args.game_root), "--seed-file", str(out / "slot_data.json")]
+    sys.stdout.flush()
+    os.execv(sys.executable, harness)
 
 
 if __name__ == "__main__":

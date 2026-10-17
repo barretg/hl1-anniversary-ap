@@ -85,6 +85,7 @@ from .options import (
     BlueShiftChapters,
     BlueShiftMissionsRequired,
     GenerationDifficulty,
+    AllowReverse,
     HalfLifeChapters,
     HalfLifeOptions,
     Healsanity,
@@ -179,7 +180,7 @@ class HalfLifeWeb(WebWorld):
         ),
         OptionGroup(
             "Map Randomization",
-            [ProgressionMode, MapShuffle, GenerationDifficulty, TransitionHub,
+            [ProgressionMode, MapShuffle, GenerationDifficulty, AllowReverse, TransitionHub,
              HalfLifeChapters, OpposingForceChapters, BlueShiftChapters],
             start_collapsed=True,
         ),

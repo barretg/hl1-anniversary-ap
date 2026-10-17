@@ -478,6 +478,15 @@ class GenerationDifficulty(Choice):
     default = 0
 
 
+class AllowReverse(Toggle):
+    """Transitions mode only. Off, the route enters each map (in total shuffle)
+    or mission (in area and chapter_maps) at its start and leaves at its end.
+    On, any of its ways in or out is as likely as any other at each step, so a
+    map can be played backwards."""
+
+    display_name = "Allow Reverse"
+
+
 class TransitionHub(Toggle):
     """Transitions mode only. The first map of each mission gets a Hub
     teleporter, leading to the hub with your gear and health intact. From there
@@ -552,6 +561,7 @@ class HalfLifeOptions(PerGameCommonOptions):
     progression_mode: ProgressionMode
     map_shuffle: MapShuffle
     generation_difficulty: GenerationDifficulty
+    allow_reverse: AllowReverse
     transition_hub: TransitionHub
     half_life_chapters: HalfLifeChapters
     opposing_force_chapters: OpposingForceChapters

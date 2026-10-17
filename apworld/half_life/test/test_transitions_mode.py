@@ -24,6 +24,7 @@ class TransitionsTestBase(HalfLifeTestBase):
     chapters: list[str] = FIRST_STEP
     shuffle = "total"
     difficulty = "standard"
+    reverse = False
 
     def setUp(self) -> None:
         patch = mock.patch.dict("worlds.half_life.SUPPORTED_CHAPTER_NAMES", SUPPORTED)
@@ -31,6 +32,7 @@ class TransitionsTestBase(HalfLifeTestBase):
         self.addCleanup(patch.stop)
         self.options = {"progression_mode": "transitions", "map_shuffle": self.shuffle,
                         "generation_difficulty": self.difficulty,
+                        "allow_reverse": self.reverse,
                         "half_life_chapters": self.chapters}
         super().setUp()
 
@@ -98,6 +100,17 @@ class TestSeveralChapterMaps(TransitionsTestBase):
             ta, tb = TRANSITIONS_BY_ID[a], TRANSITIONS_BY_ID[b]
             if not cross_chapter(ta) and not cross_chapter(tb):
                 self.assertEqual(MAP_CHAPTER[ta["map"]], MAP_CHAPTER[tb["map"]], (a, b))
+
+
+class TestSeveralTotalReverse(TransitionsTestBase):
+    chapters = SEVERAL
+    reverse = True
+
+
+class TestSeveralAreaReverse(TransitionsTestBase):
+    chapters = SEVERAL
+    shuffle = "area"
+    reverse = True
 
 
 class TestSeveralChaotic(TransitionsTestBase):
