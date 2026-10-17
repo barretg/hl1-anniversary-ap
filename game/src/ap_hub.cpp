@@ -1001,6 +1001,12 @@ void RunSeamDoors() {
         if (FStringNull(entity->pev->globalname)) {
             continue;
         }
+        // Only a door still at its start. Use toggles, and one already open (a
+        // level restored from its transition save) would close and fire its
+        // close target: in c1a2 that is the change level back to c1a1c.
+        if (static_cast<CBaseToggle*>(entity)->m_toggle_state != TS_AT_BOTTOM) {
+            continue;
+        }
         Trace(("  opening seam door " + std::string(STRING(entity->pev->globalname)))
                   .c_str());
         entity->Use(player, player, USE_ON, 0);

@@ -149,8 +149,9 @@ def make_plan(world: "HalfLifeWorld") -> Plan:
     chapters = [CHAPTERS_BY_KEY[k] for k in world.transition_chapters]
     plan.maps = [m for c in chapters for m in c["maps"] if m not in ENDING_MAPS]
     in_world = set(plan.maps)
+    # A dead transition (one nothing fires and no one reaches) stays vanilla.
     plan.pool = [t["id"] for t in TRANSITIONS
-                 if t["map"] in in_world and t["to"] not in ENDING_MAPS]
+                 if t["map"] in in_world and t["to"] not in ENDING_MAPS and not t.get("dead")]
     plan.bosses = [c["key"] for c in chapters if c["is_goal"]]
 
     if passthrough.get("progression_mode") == "transitions":

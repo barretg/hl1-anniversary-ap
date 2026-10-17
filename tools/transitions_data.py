@@ -33,7 +33,7 @@ Vec = tuple[float, float, float]
 Bounds = tuple[Vec, Vec]
 
 KINDS = ("walk", "lift", "ride", "drivable", "fall", "teleport", "scripted")
-OVERRIDE_FIELDS = {"kind", "partner", "two_way", "frame", "orb_at", "fixed"}
+OVERRIDE_FIELDS = {"kind", "partner", "two_way", "frame", "orb_at", "fixed", "dead"}
 
 # `trigger_changelevel` spawnflag: fired by a target only, never by touch.
 SF_CHANGELEVEL_USEONLY = 2

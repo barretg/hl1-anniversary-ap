@@ -145,6 +145,13 @@ MAP_GATES: dict[str, dict[str, list[str]]] = {
     "c2a2e": {"always": ["crate_breaker"], "strict": ["thrown_explosives"]},
 }
 
+# Corrections to the built transition table, `{transition id: {field: value}}`.
+TRANSITION_OVERRIDES: dict[str, dict] = {
+    # c1a0c's exit to c1a0e, left in c1a0b's copy of the same geometry. Nothing
+    # fires it and the player cannot reach it there before the disaster.
+    "c1a0b:1": {"dead": True},
+}
+
 # Copies that do not count toward their weapon's check, `{item: [maps]}`.
 UNREACHABLE_COPIES: dict[str, list[str]] = {
     # The guard waving at the tram, which the player never leaves. The rest
@@ -333,6 +340,7 @@ HALF_LIFE = Campaign(
     gates=CHAPTER_GATES,
     map_gates=MAP_GATES,
     unreachable_copies=UNREACHABLE_COPIES,
+    transition_overrides=TRANSITION_OVERRIDES,
     confirmed_copies=CONFIRMED_COPIES,
     weapons=WEAPON_ITEMS,
     optional_items=OPTIONAL_ITEMS,

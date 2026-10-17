@@ -192,7 +192,7 @@ class Campaign:
     boss_exit: tuple[str, str] = ("", "")
     ending_map: str = ""
     # `{transition id: {field: value}}` corrections to the built transition
-    # table: kind, partner, two_way, frame, orb_at, fixed.
+    # table: kind, partner, two_way, frame, orb_at, fixed, dead.
     transition_overrides: dict[str, dict] = field(default_factory=dict)
     # The scripted train rides, `{name: {"train": globalname, "maps": {map:
     # {"entry": id | None, "exit": id}}}}`. Seeded by hand (risk 4).

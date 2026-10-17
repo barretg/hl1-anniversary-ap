@@ -43119,8 +43119,10 @@
    "fixed": false,
    "flags": [
     "horizontal",
-    "yaw_guess"
-   ]
+    "yaw_guess",
+    "override"
+   ],
+   "dead": true
   },
   {
    "id": "c1a0b:2",
@@ -53179,5 +53181,6 @@
    "two_way": true,
    "fixed": false
   }
- ]
+ ],
+ "map_logic": {}
 }

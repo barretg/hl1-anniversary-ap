@@ -11,3 +11,4 @@ build/
 # not a source file.
 apworld/half_life/mod/files/dlls/
 apworld/half_life/mod/files/cl_dlls/
+tests/out/

@@ -356,6 +356,25 @@ class Scenario:
     seed: dict | None = None
 
 
+def seed_file_scenario(path: Path) -> Scenario:
+    """One scenario playing a whole generated seed, from `tools/seed_run.py`."""
+    seed = json.loads(path.read_text(encoding="utf-8"))
+    spoiler = path.parent / "transitions.txt"
+    return Scenario(
+        title=f"Seed run {path.parent.name}",
+        map=seed["start_map"], entry="", seed=seed,
+        steps="\n".join([
+            f"Seed {path.parent.name}: {len(seed.get('transition_pairs', []))} pairs,"
+            f" {len(seed.get('one_way_transitions', {}))} one-way,"
+            f" {len(seed.get('inert_transitions', []))} inert,"
+            f" starting on {seed['start_map']}.",
+            f"Spoiler: {spoiler}",
+            "Labels name each trigger by id. Play the seed through: each transition",
+            "should go where the spoiler says.",
+            "!note <what> for anything wrong on the way, then !pass or !fail <what>.",
+        ]))
+
+
 def load_seed(name: str) -> dict:
     """A seed's slot data kept under `seeds/`, from the apworld's generator."""
     return json.loads((Path(__file__).parent / "seeds" / f"{name}.json").read_text(
@@ -2048,8 +2067,8 @@ def transition_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
                 "at the transition. You hold only the crowbar: no suit, no HUD.",
                 "Labels 'T1 > ...' float at each transition, the entry marked",
                 "(entry), visible from across the map, through walls.",
-                "!status: the terminal's '(from game) status' line ends with your",
-                "position and facing after an @.",
+                "!status: it ends 'You are at x y z yaw map' with your position and",
+                "facing, as does the terminal's '(from game) status' line after an @.",
                 "Type kill in the console and respawn: the labels come back.",
                 "Walk through a transition: the next map's transitions are labelled",
                 "too, none marked (entry).",
@@ -2065,16 +2084,21 @@ def transition_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     pairs = ", ".join(f"{a} <> {b}" for a, b in seed["transition_pairs"])
     ways = ", ".join(f"{a} > {b}" for a, b in seed["one_way_transitions"].items())
     orbs = ", ".join(f"{a} > {b}" for a, b in seed["backtrack_orbs"].items())
+    paired_map = seed["transition_pairs"][0][0].split(":")[0]
     out.append(Scenario(
         title="Transition: an area seed, Anomalous Materials into Nihilanth",
-        map=seed["start_map"], entry="", seed=seed,
+        # Where its pair is, not the seed's start: the way there is vanilla.
+        map=paired_map, entry="", seed=seed,
         steps="\n".join([
-            f"A transitions seed (area): {pairs}; one-way {ways}; orbs {orbs};",
-            f"inert {', '.join(seed['inert_transitions'])}. Every other transition",
-            "is vanilla. Noclip wherever the map blocks you.",
+            f"A transitions seed (area): {pairs}; one-way {ways or 'none'};",
+            f"orbs {orbs or 'none'}; inert {', '.join(seed['inert_transitions'])}.",
+            f"Every other transition is vanilla, so you start in {paired_map},",
+            "where its pair is. Noclip wherever the map blocks you.",
             "Labels name each trigger by id. Walking an inert one does nothing.",
             "A paired one lands you in place at its partner; walk back through and",
-            "you return. The one-way one lands at its target, where an orb leads back.",
+            "you return, where its partner can be walked into. A scripted one (the",
+            "resonance cascade's exit, c1a0e:0) fires when its script ends: push the",
+            "sample in and wait for the teleport.",
             "!trace from a map: it follows the seed's pairing, not vanilla.",
             "The warp menu lists only chapters you have been in, and no hub.",
             "Leaving Anomalous Materials by its pair: 'Anomalous Materials",
@@ -2268,6 +2292,14 @@ TRANSITION_FOLLOW_PAIRS = [
 ]
 
 
+def inside_exit(a: Transition) -> str:
+    """`"x y z"` a step inside exit `a`, on the map's side of it."""
+    yaw = math.radians(a.yaw)
+    return " ".join(f"{v:g}" for v in (
+        a.origin[0] - TRANSITION_FEEL_STEP_IN * math.cos(yaw),
+        a.origin[1] - TRANSITION_FEEL_STEP_IN * math.sin(yaw), a.origin[2]))
+
+
 def pair_seed(data: CheckData, a: Transition, b: Transition) -> dict | None:
     """A transitions mode seed playing just `a <> b`, for a pair across two
     chapters: in hub mode leaving the chapter finishes it and returns to the
@@ -2301,9 +2333,11 @@ def transition_feel_scenarios(data: CheckData) -> list[Scenario]:
         same = a.map == b.map
         out.append(Scenario(
             title=f"Transition follow: {a_id} to {b_id} ({what})",
-            map=a.map, entry=a_id, pairs=[(a_id, b_id)], seed=pair_seed(data, a, b),
-            steps="\n".join([
-                f"{labels[a_id]} (marked entry) now leads to {b_id}"
+            map=a.map, pos=inside_exit(a), yaw=(a.yaw + 180) % 360, entry=a_id,
+            pairs=[(a_id, b_id)], seed=pair_seed(data, a, b), steps="\n".join([
+                f"You start just inside {labels[a_id]} (marked entry, behind you),"
+                " facing into the map.",
+                f"{labels[a_id]} now leads to {b_id}"
                 + (", in this same map." if same else f" in {b.map}."),
                 "Get a scientist following you (press use on him) and lead him",
                 f"through {labels[a_id]}, with him trailing a few steps behind.",
@@ -2317,16 +2351,13 @@ def transition_feel_scenarios(data: CheckData) -> list[Scenario]:
         a, b = by_id.get(a_id), by_id.get(b_id)
         if a is None or b is None:
             continue
-        yaw = math.radians(a.yaw)
-        pos = (a.origin[0] - TRANSITION_FEEL_STEP_IN * math.cos(yaw),
-               a.origin[1] - TRANSITION_FEEL_STEP_IN * math.sin(yaw), a.origin[2])
         turn = ((b.yaw + 180) - a.yaw) % 360
         same = a.map == b.map
         seed = pair_seed(data, a, b)
         labels = {t.id: f"T{n}" for n, t in enumerate(map_transitions(data, a.map), 1)}
         out.append(Scenario(
             title=f"Transition feel: {a_id} to {b_id} ({what})",
-            map=a.map, pos=" ".join(f"{v:g}" for v in pos), yaw=a.yaw,
+            map=a.map, pos=inside_exit(a), yaw=a.yaw,
             entry=a_id, pairs=[(a_id, b_id)], seed=seed, steps="\n".join([
                 f"You face {labels[a_id]} (marked entry), which now leads to {b_id}"
                 f" in {b.map}" + (", in this same map" if same else "") + "."
@@ -2775,10 +2806,10 @@ class DllSwap:
 # verdict, so `clear` can drop one group's results and leave the others.
 GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2",
           "npc_witness", "npc_excluded_check", "pctest", "sweep", "transition",
-          "maplogic", "transitionfeel")
+          "maplogic", "transitionfeel", "seed")
 # Groups whose `!note` records a finding and stays in the scenario: only
 # `!pass` and `!fail` are its verdict.
-NOTES_STAY = {"maplogic"}
+NOTES_STAY = {"maplogic", "seed"}
 
 
 def held_after(given: list[str]) -> list[str]:
@@ -2801,7 +2832,10 @@ SUBGROUPS = {"npc_witness": "0.4.0-2", "npc_excluded_check": "0.4.0-2"}
 
 def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
                      unproven: bool = False,
-                     chapters: list[str] | None = None) -> list[Scenario]:
+                     chapters: list[str] | None = None,
+                     seed_file: Path | None = None) -> list[Scenario]:
+    if group == "seed":
+        return [seed_file_scenario(seed_file)]
     if group == "maplogic":
         order = rollout_order(data)
         picked = pick_chapters(data, chapters) if chapters else order
@@ -3108,7 +3142,7 @@ class Harness:
                     notes[parts[2]] = parts[4]
         return notes
 
-    def status(self) -> None:
+    def status(self, where: str = "") -> None:
         verdicts = self.latest_verdicts()
         counts: dict[str, int] = {}
         for s in self.scenarios:
@@ -3118,6 +3152,8 @@ class Harness:
         first = self.first_untested()
         if first is not None:
             self.tell(f"[aptest] First untested: {first} {self.scenarios[first].title}")
+        if where:
+            self.tell(f"[aptest] You are at {where} (x y z yaw map).")
 
     def list(self, text: str) -> None:
         verdicts = self.latest_verdicts()
@@ -3190,7 +3226,7 @@ class Harness:
             elif verb == "info":
                 self.info()
             elif verb == "status":
-                self.status()
+                self.status(where)
             elif verb == "list":
                 self.list(arg)
             elif verb == "clear":
@@ -3344,6 +3380,8 @@ def main(argv: list[str] | None = None) -> int:
                         default=[], metavar="KEYS",
                         help="with --maplogic: only these chapters, by key or name, "
                              "comma separated (still in rollout order)")
+    parser.add_argument("--seed-file", type=Path, metavar="SLOT_DATA",
+                        help="play one generated seed's slot data (tools/seed_run.py)")
     parser.add_argument("--group", choices=GROUPS + tuple(FORMER_GROUPS),
                         help="the group to run, by name; the same as its own flag")
     parser.add_argument("--clear", action="store_true",
@@ -3358,6 +3396,8 @@ def main(argv: list[str] | None = None) -> int:
              "pctest": "pctest", "sweep": "sweep", "transition": "transition",
              "maplogic": "maplogic", "transitionfeel": "transitionfeel"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
+    if args.seed_file is not None:
+        chosen.append("seed")
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
         if named not in chosen:
@@ -3366,12 +3406,14 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
                      "--parity, --0.4.0, --0.4.0-2, --npc_witness, "
                      "--npc_excluded_check, --pctest, --sweep, --transition, --maplogic, "
-                     "--transitionfeel")
+                     "--transitionfeel, --seed-file")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")
     if args.chapters and args.group != "maplogic":
         parser.error("--chapters only goes with --maplogic")
+    if args.group == "seed" and args.seed_file is None:
+        parser.error("the seed group needs --seed-file")
 
     bridge_module = load_bridge()
     store = bridge_module.find_store_dir(args.game_root)
@@ -3381,7 +3423,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.clear:
         data = read_checkdata(store / "checkdata.txt")
         scenarios = select_scenarios(args.group, data, store, args.game_root,
-                                     chapters=args.chapters)
+                                     chapters=args.chapters, seed_file=args.seed_file)
         count = clear_results(store / "aptest_results.txt", args.group,
                               {s.title for s in scenarios})
         print(f"Cleared {count} '{args.group}' result(s); "
@@ -3445,7 +3487,7 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
     data = read_checkdata(store / "checkdata.txt")
     harness = Harness(store, bridge_module, args.group,
                       select_scenarios(args.group, data, store, args.game_root,
-                                       args.unproven, args.chapters))
+                                       args.unproven, args.chapters, args.seed_file))
     harness.publish(force=True)
     if args.group == "sweep":
         threading.Thread(target=harness.poll, daemon=True).start()
