@@ -2,6 +2,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "player.h"
+#include "weapons.h"
 
 #include "ap_transitions.h"
 
@@ -997,6 +998,105 @@ void Cmd_TransitionPair() {
 }
 }  // namespace
 #endif
+
+// One-way lips (TRANSITION_RANDO.md 3.3). A one-way crossed back with an item
+// warns a player who reaches its lip without one: set back once, with the
+// reason, and let through if they go over again. Logic never expects the
+// crossing without it; this is the player choosing an older save as the way
+// back. The confirmation holds until they wander off or the map changes.
+namespace {
+constexpr float kLipStillNear = 256.0f;  // past this from the box, warn again
+
+struct LipState {
+    std::string map;
+    bool warned = false;
+};
+std::vector<LipState> g_lips;
+Vector g_last_clear;
+bool g_have_clear = false;
+
+bool Owns(CBasePlayer* player, const std::string& classname) {
+    if (classname == "item_longjump") {
+        return player->m_fLongJump != FALSE;
+    }
+    if (classname == "item_suit") {
+        return (player->pev->weapons & (1 << WEAPON_SUIT)) != 0;
+    }
+    return player->HasNamedPlayerItem(classname.c_str()) != FALSE;
+}
+
+bool CanCrossBack(CBasePlayer* player, const OneWayLip& lip) {
+    for (const std::vector<std::string>& group : lip.needs) {
+        bool any = false;
+        for (const std::string& classname : group) {
+            any = any || Owns(player, classname);
+        }
+        if (!any) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// How far `at` is from the box, 0 inside it.
+float FromBox(const OneWayLip& lip, const Vector& at) {
+    float out = 0.0f;
+    for (int i = 0; i < 3; ++i) {
+        const float d = (std::max)(lip.mins[i] - at[i], at[i] - lip.maxs[i]);
+        out = (std::max)(out, d);
+    }
+    return (std::max)(out, 0.0f);
+}
+}  // namespace
+
+void RunOneWayLips() {
+    const std::vector<OneWayLip>& lips = Data().one_way_lips;
+    if (lips.empty() || !TransitionsMode()) {
+        return;
+    }
+    CBasePlayer* player = Player();
+    if (player == nullptr || !player->IsAlive()) {
+        return;
+    }
+    const std::string map = CurrentMap();
+    if (g_lips.size() != lips.size() || (!g_lips.empty() && g_lips[0].map != map)) {
+        g_lips.assign(lips.size(), LipState());
+        for (LipState& state : g_lips) {
+            state.map = map;
+        }
+        g_have_clear = false;
+    }
+    const Vector at = player->pev->origin;
+    bool inside_any = false;
+    for (size_t i = 0; i < lips.size(); ++i) {
+        const OneWayLip& lip = lips[i];
+        if (lip.map != map) {
+            continue;
+        }
+        const float from = FromBox(lip, at);
+        if (from > kLipStillNear) {
+            g_lips[i].warned = false;
+        }
+        if (from > 0.0f) {
+            continue;
+        }
+        inside_any = true;
+        if (g_lips[i].warned || CanCrossBack(player, lip) || !g_have_clear) {
+            continue;
+        }
+        g_lips[i].warned = true;
+        UTIL_SetOrigin(player->pev, g_last_clear);
+        player->pev->velocity = g_vecZero;
+        Notify("You can't come back this way without " + lip.names +
+               ". Go over again to cross anyway; only an older save would bring you back.");
+        Trace(("one-way lip on " + map + ": warned").c_str());
+        return;
+    }
+    if (!inside_any) {
+        g_last_clear = at;
+        g_have_clear = true;
+    }
+}
 
 void RegisterTransitionCommands() {
 #ifdef HLAP_TEST_BUILD

@@ -271,6 +271,16 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
             if (ParseVector(f[5], t.at) && ParseVector(f[9], t.origin)) {
                 transitions.push_back(t);
             }
+        } else if (record == "W" && f.size() >= 6) {
+            OneWayLip lip;
+            lip.map = f[1];
+            for (const std::string& group : Split(f[4], ';')) {
+                lip.needs.push_back(Split(group, ','));
+            }
+            lip.names = f[5];
+            if (ParseVector(f[2], lip.mins) && ParseVector(f[3], lip.maxs)) {
+                one_way_lips.push_back(lip);
+            }
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.

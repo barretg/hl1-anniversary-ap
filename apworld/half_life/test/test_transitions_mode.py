@@ -6,6 +6,7 @@ world tests (everything reachable with all items, something reachable with
 none, a fill that completes) run on each.
 """
 
+import unittest
 from unittest import mock
 
 from . import HalfLifeTestBase
@@ -148,3 +149,34 @@ class TestTrackerRebuildsThePairs(TransitionsTestBase):
         mine = {tid: e.connected_region.name for tid, e in self.world.transition_exits.items()}
         theirs = {tid: e.connected_region.name for tid, e in again.transition_exits.items()}
         self.assertEqual(mine, theirs)
+
+
+class TestWayBack(unittest.TestCase):
+    """A one-way edge's reverse (3.3): free with a teleporter, absent with
+    another route back, and gated on the item that crosses it back."""
+
+    def world(self, pool: set[str]):
+        from types import SimpleNamespace
+
+        from ..options import LogicDifficulty
+        return SimpleNamespace(player=1, available_item_names=pool, options=SimpleNamespace(
+            logic_difficulty=SimpleNamespace(value=LogicDifficulty.option_loose)))
+
+    def test_each_way_back(self) -> None:
+        from ..transitions import way_back_rule
+
+        world = self.world({"Long Jump Module"})
+        edge = {"from": "a", "to": "b", "one_way": True}
+        self.assertIsNone(way_back_rule(world, edge))
+        self.assertIs(way_back_rule(world, dict(edge, way_back="alt")), False)
+        rule = way_back_rule(world, dict(edge, way_back="item", back=["longjump"]))
+        has = mock.Mock(**{"has_any.return_value": True})
+        lacks = mock.Mock(**{"has_any.return_value": False})
+        self.assertTrue(rule(has))
+        self.assertFalse(rule(lacks))
+
+    def test_an_item_not_in_the_pool_crosses_nothing_back(self) -> None:
+        from ..transitions import way_back_rule
+
+        edge = {"from": "a", "to": "b", "one_way": True, "way_back": "item", "back": ["longjump"]}
+        self.assertIs(way_back_rule(self.world(set()), edge), False)

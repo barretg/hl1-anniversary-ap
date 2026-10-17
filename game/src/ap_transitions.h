@@ -65,6 +65,8 @@ std::string PairLandmark(const std::string& a, const std::string& b);
 
 // The arrival, once the player is in the new level. StartFrame.
 void RunTransitionArrival();
+// Warns at the lip of a one-way the player could not come back over. StartFrame.
+void RunOneWayLips();
 // At ServerActivate: a stash for some other map is stale.
 void OnTransitionLevelStart();
 

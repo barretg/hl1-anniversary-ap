@@ -1551,7 +1551,28 @@ def check_map_logic(map_logic: dict[str, dict], transitions: list[dict]) -> dict
         for edge in logic.get("edges", []):
             if edge.get("from") not in segments or edge.get("to") not in segments:
                 raise SystemExit(f"map_logic {map_name}: edge {edge} joins unknown segments")
+            if edge.get("one_way"):
+                check_way_back(map_name, edge)
     return map_logic
+
+
+WAY_BACK = ("alt", "item", "tp")
+
+
+def check_way_back(map_name: str, edge: dict) -> None:
+    """A one-way edge's way back (3.3). `item` names what crosses back, as
+    `always` keys, and a `lip` where the game warns a player without it."""
+    way = edge.get("way_back", "tp")
+    if way not in WAY_BACK:
+        raise SystemExit(f"map_logic {map_name}: edge {edge} has way_back {way!r}")
+    if way != "item":
+        return
+    back = edge.get("back")
+    if not back or not isinstance(back, list):
+        raise SystemExit(f"map_logic {map_name}: item edge {edge} names no `back` items")
+    lip = edge.get("lip", {})
+    if len(lip.get("at", ())) != 3 or "yaw" not in lip:
+        raise SystemExit(f"map_logic {map_name}: item edge {edge} needs a lip {{at, yaw}}")
 
 
 def changelevels(

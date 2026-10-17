@@ -159,6 +159,7 @@ def test_report_drafts_gates_and_returns() -> None:
         f"t|0|{title}|fail|x||maplogic|Shotgun",
         f"t|0|{title}|note|T2 needs MP5||maplogic|MP5",
         f"t|0|{title}|note|oneway drop @1 2 3 450||maplogic|MP5",
+        f"t|0|{title}|note|oneway gap item longjump @4 5 6 180||maplogic|MP5",
         f"t|0|{title}|note|T3 one-way lift||maplogic|MP5",
         f"t|0|{title}|pass|||maplogic|MP5",
         # Another group's line with the same shape is not read.
@@ -174,8 +175,13 @@ def test_report_drafts_gates_and_returns() -> None:
     assert body["transitions"] == {"m:0": "start", "m:1": "to_1", "m:2": "start"}
     assert {"from": "start", "to": "to_1", "always": ["crate_breaker"]} in body["edges"]
     returns = [e for e in body["edges"] if e.get("one_way")]
-    assert returns == [{"from": "?", "to": "?", "one_way": True,
-                        "return": {"at": [1, 2, 3], "yaw": 90, "kind": "drop"}}]
+    assert returns == [
+        {"from": "?", "to": "?", "one_way": True, "way_back": "tp",
+         "return": {"at": [1, 2, 3], "yaw": 90, "kind": "drop"}},
+        # Sent at the lip: the spot is the lip's, and the far side is to fill in.
+        {"from": "?", "to": "?", "one_way": True, "way_back": "item", "back": ["longjump"],
+         "lip": {"at": [4, 5, 6], "yaw": 180}, "return": {"at": "?", "yaw": "?", "kind": "gap"}},
+    ]
     assert any("m:2 one-way lift" in c for c in draft.comments)
     rendered = map_logic_report.render(draft)
     compile("MAP_LOGIC = {\n" + rendered + "\n}", "<draft>", "exec")

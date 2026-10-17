@@ -11,8 +11,10 @@ It never writes a campaign module itself.
 A transition note (`T3 needs MP5`) proposes a gate for reaching that
 transition from the entry: the narrowest requirement group holding the named
 item (or every held item, if none is named), with the other candidates listed.
-`oneway <kind> @x y z yaw` proposes a one-way edge with a return teleporter at
-that spot. Anything else is carried into the fragment as a comment.
+`oneway <kind> <way back> @x y z yaw` proposes a one-way edge. The way back is
+`tp` (the default: a return teleporter at that spot), `alt` (another route back,
+no teleporter) or `item <keys>` (sent standing at the lip, facing over it: the
+game warns a player without the items there). Anything else is carried into the fragment as a comment.
 
 Usage:
     python tools/map_logic_report.py [--results <aptest_results.txt>] [--diff] [maps...]
@@ -44,10 +46,11 @@ CHAPTER_TITLE = re.compile(r"^Map logic: (?P<chapter>.+) (?P<n>[1-4]) \((?P<how>
 MAP_PREFIX = re.compile(r"^\[(?P<map>[^\]\s]+)\]\s*")
 NEEDS = re.compile(r"^T(?P<n>\d+)\s+needs\s+(?P<what>.+)$", re.I)
 ONE_WAY_T = re.compile(r"^T(?P<n>\d+)\s+one-?way\s*(?P<kind>\w*)", re.I)
-ONE_WAY_AT = re.compile(r"^oneway\s+(?P<kind>\w+).*@\s*(?P<x>-?[\d.]+)\s+(?P<y>-?[\d.]+)"
+ONE_WAY_AT = re.compile(r"^oneway\s+(?P<kind>\w+)(?P<back>[^@]*)@\s*(?P<x>-?[\d.]+)\s+(?P<y>-?[\d.]+)"
                         r"\s+(?P<z>-?[\d.]+)\s+(?P<yaw>-?[\d.]+)\s*$", re.I)
 SEGMENT = re.compile(r"^seg\s+(?P<name>\w+)", re.I)
-RETURN_KINDS = ("lift", "drop", "shaft", "door")
+RETURN_KINDS = ("lift", "drop", "shaft", "door", "gap")
+WAY_BACK = ("alt", "item", "tp")
 
 
 @dataclass
@@ -177,13 +180,20 @@ def draft_map(map_name: str, attempts: list[Attempt], transitions: list[dict],
                     draft.gates.setdefault(tid, []).append((attempt.entry, options, text))
             elif m := ONE_WAY_AT.match(text):
                 kind = m["kind"].lower()
-                draft.one_way.append({
-                    "from": "?", "to": "?", "one_way": True,
-                    "return": {"at": [round(float(m[a])) for a in "xyz"],
-                               "yaw": round(float(m["yaw"])) % 360,
-                               "kind": kind if kind in RETURN_KINDS else "?"},
-                })
-                proposed = "one_way edge"
+                spot = {"at": [round(float(m[a])) for a in "xyz"],
+                        "yaw": round(float(m["yaw"])) % 360}
+                way, *items = m["back"].lower().split() or ["tp"]
+                edge = {"from": "?", "to": "?", "one_way": True,
+                        "way_back": way if way in WAY_BACK else "?"}
+                if way == "item":
+                    # Sent standing at the lip, facing over it.
+                    edge["back"] = items or ["?"]
+                    edge["lip"] = spot
+                    edge["return"] = {"at": "?", "yaw": "?", "kind": kind}
+                else:
+                    edge["return"] = dict(spot, kind=kind if kind in RETURN_KINDS else "?")
+                draft.one_way.append(edge)
+                proposed = f"one_way edge ({edge['way_back']})"
             elif m := ONE_WAY_T.match(text):
                 tid = draft.labels.get(int(m["n"]), f"T{m['n']}")
                 draft.comments.append(f"{tid} one-way {m['kind'] or '?'} "

@@ -492,6 +492,24 @@ def both(a: Callable | None, b: Callable | None) -> Callable | None:
 # -- regions ---------------------------------------------------------------------
 
 
+def way_back_rule(world: "HalfLifeWorld", edge: dict) -> Callable | None | bool:
+    """The reverse of a one-way edge (3.3): free with a return teleporter (`tp`),
+    absent when another route back exists (`alt`), and gated on its items for
+    `item`. Crossing without them is the player's choice after a warning, never
+    something logic expects. False means no reverse edge, which is also what an
+    `item` edge gets when its items are not in this pool: nothing in logic
+    crosses back."""
+    way = edge.get("way_back", "tp")
+    if way == "alt":
+        return False
+    if way == "tp":
+        return None
+    conditions = gate_conditions(world, {"always": edge["back"]})
+    if len(conditions) < len(edge["back"]):
+        return False
+    return all_of(conditions)
+
+
 def create_transition_regions(world: "HalfLifeWorld") -> None:
     multiworld, player = world.multiworld, world.player
     plan = make_plan(world)
@@ -509,8 +527,7 @@ def create_transition_regions(world: "HalfLifeWorld") -> None:
             multiworld.regions.append(region)
     menu.connect(regions[region_name(plan.start_map, segments_of(plan.start_map)[0])], "Start")
 
-    # Segment edges (3.3). A one-way edge has a return teleporter, so its
-    # reverse is free.
+    # Segment edges (3.3).
     for map_name in plan.maps:
         for edge in MAP_LOGIC.get(map_name, {}).get("edges", []):
             source = regions[region_name(map_name, edge["from"])]
@@ -518,8 +535,10 @@ def create_transition_regions(world: "HalfLifeWorld") -> None:
             rule = both(gates[map_name], all_of(gate_conditions(world, edge)))
             source.connect(target, f"{map_name}: {edge['from']} to {edge['to']}", rule)
             if edge.get("one_way"):
-                target.connect(source, f"{map_name}: {edge['to']} back to {edge['from']}",
-                               gates[map_name])
+                back = way_back_rule(world, edge)
+                if back is not False:
+                    target.connect(source, f"{map_name}: {edge['to']} back to {edge['from']}",
+                                   both(gates[map_name], back))
 
     add_locations(world, plan, regions, gates)
 

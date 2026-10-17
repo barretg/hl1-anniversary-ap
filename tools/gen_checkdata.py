@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 from campaign_layout import CLASSNAME_TO_ITEM, STARTING_WEAPONS
@@ -109,6 +110,11 @@ def render(campaign: dict) -> str:
         "#     centre, which is how the game finds it; <ox oy oz> and <yaw> are its",
         "#     frame: where a player stands at it and the way out through it.",
         "#     <partner> is the vanilla transition on the other side, empty if none.",
+        "#   W|<map>|<mins>|<maxs>|<classnames>|<names>   the lip of a one-way",
+        "#     crossed back with an item (TRANSITION_RANDO.md 3.3). A player who",
+        "#     enters the box owning none of one group is warned once and set",
+        "#     back. <classnames> is `;`-separated groups of `,`-separated",
+        "#     classnames, any of a group and every group; <names> says them.",
         "#   D|<data version>               must match the client's, or ids differ",
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
@@ -260,7 +266,45 @@ def render(campaign: dict) -> str:
                 changedelay=t.get("changedelay", 0),
             ))
 
+    lines.extend(lip_records(campaign))
+
     return "\n".join(lines) + "\n"
+
+
+# Gate keys that name one piece of equipment rather than a requirement group;
+# the apworld's EQUIPMENT_GATES, by classname.
+EQUIPMENT = {"longjump": ("item_longjump", "the Long Jump Module"),
+             "suit": ("item_suit", "the HEV Suit")}
+# The lip box, from the spot at the edge and the way over it: centred this far
+# out over the edge, this half-size across and up.
+LIP_OUT, LIP_HALF, LIP_HALF_UP = 48.0, 32.0, 36.0
+
+
+def lip_records(campaign: dict) -> list[str]:
+    classnames_of = {item["name"]: item.get("classnames", []) for item in campaign["items"]}
+    groups = campaign["requirement_groups"]
+    records = []
+    for map_name, logic in sorted(campaign.get("map_logic", {}).items()):
+        for edge in logic.get("edges", []):
+            if not edge.get("one_way") or edge.get("way_back") != "item":
+                continue
+            needs, said = [], []
+            for key in edge["back"]:
+                if key in EQUIPMENT:
+                    needs.append(EQUIPMENT[key][0])
+                    said.append(EQUIPMENT[key][1])
+                else:
+                    needs.append(",".join(c for name in groups[key]
+                                          for c in classnames_of.get(name, [])))
+                    said.append(f"a {key.replace('_', ' ')} weapon")
+            at, yaw = edge["lip"]["at"], math.radians(edge["lip"]["yaw"])
+            centre = (at[0] + LIP_OUT * math.cos(yaw), at[1] + LIP_OUT * math.sin(yaw), at[2])
+            mins = (centre[0] - LIP_HALF, centre[1] - LIP_HALF, centre[2] - LIP_HALF_UP)
+            maxs = (centre[0] + LIP_HALF, centre[1] + LIP_HALF, centre[2] + LIP_HALF_UP)
+            records.append("W|{}|{}|{}|{}|{}".format(
+                map_name, " ".join(f"{v:g}" for v in mins), " ".join(f"{v:g}" for v in maxs),
+                ";".join(needs), " and ".join(said)))
+    return records
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -185,6 +185,18 @@ struct Transition {
     float changedelay = 0.0f;
 };
 
+// The lip of a one-way crossed back with an item (the `W` record): a player
+// who enters the box owning none of one group is warned once. See
+// .claude/TRANSITION_RANDO.md, 3.3.
+struct OneWayLip {
+    std::string map;
+    float mins[3] = {0.0f, 0.0f, 0.0f};
+    float maxs[3] = {0.0f, 0.0f, 0.0f};
+    // Every group is needed, any classname of a group will do.
+    std::vector<std::vector<std::string>> needs;
+    std::string names;  // how the warning says them
+};
+
 // One game the seed may include (format 5's `N` record).
 struct Campaign {
     std::string key;
@@ -225,6 +237,8 @@ public:
 
     // Empty in a file older than format 9.
     std::vector<Transition> transitions;
+    // Empty in a file older than the `W` record, or before any chapter audit.
+    std::vector<OneWayLip> one_way_lips;
     // Null for an id the file does not describe.
     const Transition* TransitionById(const std::string& id) const;
 

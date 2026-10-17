@@ -138,3 +138,28 @@ def test_checkdata_carries_every_transition(transitions: list[dict]) -> None:
              if line.startswith("E|")]
     assert [f[1] for f in lines] == [t["id"] for t in transitions]
     assert all(len(f) == 16 for f in lines)
+
+
+def test_item_one_ways_name_their_items_and_lip() -> None:
+    from build_campaign_data import check_way_back
+    from gen_checkdata import lip_records
+
+    edge = {"from": "a", "to": "b", "one_way": True, "way_back": "item",
+            "back": ["longjump"], "lip": {"at": [0, 0, 0], "yaw": 90}}
+    check_way_back("m", edge)
+    check_way_back("m", {"from": "a", "to": "b", "one_way": True})  # tp by default
+    for bad in ({"way_back": "fly"}, {"way_back": "item", "lip": edge["lip"]},
+                {"way_back": "item", "back": ["longjump"]}):
+        with pytest.raises(SystemExit):
+            check_way_back("m", dict({"from": "a", "to": "b", "one_way": True}, **bad))
+
+    campaign = {"items": [{"name": "MP5", "classnames": ["weapon_9mmAR"]}],
+                "requirement_groups": {"ranged": ["MP5"]},
+                "map_logic": {"m": {"edges": [
+                    edge, dict(edge, back=["longjump", "ranged"], lip={"at": [0, 0, 0], "yaw": 0}),
+                    {"from": "a", "to": "b", "one_way": True, "way_back": "tp"}]}}}
+    assert lip_records(campaign) == [
+        "W|m|-32 16 -36|32 80 36|item_longjump|the Long Jump Module",
+        "W|m|16 -32 -36|80 32 36|item_longjump;weapon_9mmAR"
+        "|the Long Jump Module and a ranged weapon",
+    ]

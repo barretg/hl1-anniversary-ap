@@ -29,6 +29,11 @@
 #     centre, which is how the game finds it; <ox oy oz> and <yaw> are its
 #     frame: where a player stands at it and the way out through it.
 #     <partner> is the vanilla transition on the other side, empty if none.
+#   W|<map>|<mins>|<maxs>|<classnames>|<names>   the lip of a one-way
+#     crossed back with an item (TRANSITION_RANDO.md 3.3). A player who
+#     enters the box owning none of one group is warned once and set
+#     back. <classnames> is `;`-separated groups of `,`-separated
+#     classnames, any of a group and every group; <names> says them.
 #   D|<data version>               must match the client's, or ids differ
 # A charger's <arg> is <classname>@<x y z>, the rounded world-space centre
 # of the unit. Brush model indices are deliberately not used: the game's
