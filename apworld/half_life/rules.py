@@ -25,9 +25,10 @@ from .options import LogicDifficulty
 if TYPE_CHECKING:
     from . import HalfLifeWorld
 
-# Gate keys used by `gates["always"]` in the campaign data. Anything else there
-# is a requirement group, needed at every logic difficulty: Opposing Force's
-# `barnacle_grapple`, without which Pit Worm's Nest cannot be crossed at all.
+# Equipment gate keys, in `gates["always"]` or `gates["strict"]` of the campaign
+# data. Anything else in `always` is a requirement group, needed at every logic
+# difficulty: Opposing Force's `barnacle_grapple`, without which Pit Worm's Nest
+# cannot be crossed at all.
 EQUIPMENT_GATES = {"longjump": "Long Jump Module", "suit": "HEV Suit"}
 
 
@@ -47,8 +48,8 @@ def group_items(world: "HalfLifeWorld", group: str) -> list[str]:
 def any_of(
     world: "HalfLifeWorld", groups: list[str]
 ) -> Callable[[CollectionState], bool] | None:
-    """Require at least one item from each named group."""
-    requirements = [group_items(world, group) for group in groups]
+    """Require at least one item from each named group (or equipment key)."""
+    requirements = [always_items(world, group) for group in groups]
     requirements = [names for names in requirements if names]
     if not requirements:
         return None
@@ -76,7 +77,7 @@ def chapter_is_startable(world: "HalfLifeWorld", chapter: dict) -> bool:
     gates = chapter["gates"]
 
     if world.options.logic_difficulty.value == LogicDifficulty.option_strict:
-        if any(group_items(world, group) for group in gates.get("strict", [])):
+        if any(always_items(world, group) for group in gates.get("strict", [])):
             return False
 
     for key in gates.get("always", []):

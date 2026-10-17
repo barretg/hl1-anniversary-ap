@@ -117,8 +117,9 @@ XEN_CHAPTERS = ("c4a1", "c4a2", "c4a1a", "c4a3")
 
 
 class XenNeedsLongJumpMixin:
-    """Every Xen mission and check is out of logic until the long jump module
-    arrives, whether it is shuffled or locked to its vanilla location."""
+    """On strict logic (the default) Xen itself is out of logic until the long
+    jump module arrives, whether it is shuffled or locked to its vanilla
+    location; the missions after it never want it."""
 
     def test_xen_requires_the_long_jump_module(self) -> None:
         world = self.multiworld.worlds[self.player]
@@ -136,30 +137,42 @@ class XenNeedsLongJumpMixin:
         state = self.multiworld.get_all_state(False)
         self.assertEqual(state.count(name, self.player), 0)
 
-        xen_names = {e["name"] for e in LOCATIONS if e["chapter"] in XEN_CHAPTERS}
+        xen_names = {e["name"] for e in LOCATIONS if e["chapter"] == "c4a1"}
         xen_locations = [
             location for location in self.multiworld.get_locations(self.player)
             if location.name in xen_names
         ]
         self.assertTrue(xen_locations)
-
-        for key in XEN_CHAPTERS:
-            entrance = f"Enter {CHAPTERS_BY_KEY[key]['name']}"
-            self.assertFalse(
-                state.can_reach_entrance(entrance, self.player),
-                f"{entrance} is reachable without the {name}",
-            )
+        self.assertFalse(
+            state.can_reach_entrance("Enter Xen", self.player),
+            f"Enter Xen is reachable without the {name}",
+        )
         self.assertEqual(
             [location.name for location in xen_locations if location.can_reach(state)], []
         )
+        # Nihilanth, the goal, waits on the rest of the run as well.
+        for key in ("c4a2", "c4a1a"):
+            entrance = f"Enter {CHAPTERS_BY_KEY[key]['name']}"
+            self.assertTrue(state.can_reach_entrance(entrance, self.player),
+                            f"{entrance} wants the {name}")
 
         state.collect(world.create_item(name), True)
         state.sweep_for_advancements()
-        for key in XEN_CHAPTERS:
-            self.assertTrue(
-                state.can_reach_entrance(f"Enter {CHAPTERS_BY_KEY[key]['name']}", self.player)
-            )
+        self.assertTrue(state.can_reach_entrance("Enter Xen", self.player))
         self.assertTrue(all(location.can_reach(state) for location in xen_locations))
+
+
+class TestLooseXenNoLongJump(HalfLifeTestBase):
+    options = {"shuffle_longjump": True, "logic_difficulty": "loose"}
+
+    def test_xen_does_not_want_the_long_jump_module(self) -> None:
+        world = self.multiworld.worlds[self.player]
+        state = self.multiworld.get_all_state(False)
+        state.remove(world.create_item("Long Jump Module"))
+        state.sweep_for_advancements()
+        for key in ("c4a1", "c4a2", "c4a1a"):
+            self.assertTrue(state.can_reach_entrance(
+                f"Enter {CHAPTERS_BY_KEY[key]['name']}", self.player))
 
 
 class TestEquipmentShuffled(XenNeedsLongJumpMixin, StartingMissionMixin, HalfLifeTestBase):

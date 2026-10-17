@@ -177,7 +177,7 @@ def test_report_drafts_gates_and_returns() -> None:
     returns = [e for e in body["edges"] if e.get("one_way")]
     assert returns == [
         {"from": "?", "to": "?", "one_way": True, "way_back": "tp",
-         "return": {"at": [1, 2, 3], "yaw": 90, "kind": "drop"}},
+         "return": {"at": [1, 2, 3], "yaw": 90, "to": "?", "kind": "drop"}},
         # Sent at the lip: the spot is the lip's, and the far side is to fill in.
         {"from": "?", "to": "?", "one_way": True, "way_back": "item", "back": ["longjump"],
          "lip": {"at": [4, 5, 6], "yaw": 180}, "return": {"at": "?", "yaw": "?", "kind": "gap"}},
@@ -226,5 +226,38 @@ def test_seed_scenario_publishes_its_slot_data(data, tmp_path) -> None:
     h = harness(tmp_path, [scenario], group="transition")
     h.start(0)
     snap = h.bridge.snapshots[-1]
-    assert snap["transitions"] is seed
+    # The seed, plus the workshop's teleporters and door openers.
+    assert {k: v for k, v in snap["transitions"].items()
+            if k not in ("teleporters", "door_openers")} == seed
+    assert "teleporters" in snap["transitions"] and "door_openers" in snap["transitions"]
     assert snap["chapters"] == seed["transition_chapters"]
+
+
+def test_workshop_orb_and_door_are_kept_and_published(data, tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(aptest, "WORKSHOP", tmp_path / "workshop.json")
+    seed = aptest.load_seed("first_step_area")
+    h = harness(tmp_path, [aptest.Scenario(title="s", map=seed["start_map"], entry="",
+                                           seed=seed)], group="maplogic")
+    h.start(0)
+    h.command("orb", "from Up", "10 20 30 90 c1a0e")
+    h.command("orb", "to", "40 50 60 180 c1a0b")
+    h.command("door", "*12 func_door door1", "1 2 3 0 c1a0e")
+    snap = h.bridge.snapshots[-1]["transitions"]
+    assert snap["teleporters"] == [{"map": "c1a0e", "at": [10.0, 20.0, 30.0], "label": "Up",
+                                    "to_map": "c1a0b", "to": [40.0, 50.0, 60.0, 180.0]}]
+    assert [(d["map"], d["model"]) for d in snap["door_openers"]] == [("c1a0e", "*12")]
+    h.command("orb", "drop", "")
+    assert aptest.load_workshop()["teleporters"] == []
+
+
+def test_plain_chat_is_kept_without_a_verdict(data, tmp_path) -> None:
+    scenarios = aptest.transition_feel_scenarios(data)
+    h = harness(tmp_path, scenarios, "transitionfeel")
+    h.start(0)
+    h.command("chat", "arrived in the wall here", where="1 2 3 90 c1a2b")
+    assert h.current == 0, "chat never ends a scenario"
+    line = h.results_path.read_text(encoding="utf-8").splitlines()[-1].split("|")
+    assert line[3:5] == ["remark", "[c1a2b] arrived in the wall here @1 2 3 90"]
+    assert h.latest_verdicts() == {}, "a remark is not a verdict"
+    h.command("pass", "")
+    assert h.latest_verdicts() == {scenarios[0].title: "pass"}

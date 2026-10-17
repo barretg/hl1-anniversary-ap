@@ -808,6 +808,13 @@ bool HandleChat(CBasePlayer* player, const std::string& said) {
     // multiworld (the client decides whether to relay it) and the engine still
     // shows it here.
     if (text[0] != '!' && text[0] != '/') {
+#ifdef HLAP_TEST_BUILD
+        // The harness stands in for the client, so there is no multiworld to
+        // chat to: a plain line is a note, recorded where the player stands.
+        if (TestDispatch("chat", text)) {
+            return true;
+        }
+#endif
         Wire().Send("CHAT", std::vector<std::string>{
                                 Sanitise(STRING(player->pev->netname)), Sanitise(text)});
         return false;

@@ -267,8 +267,7 @@ class ShuffleHevSuit(Toggle):
     it is the suit that draws the weapon HUD and a player without one cannot
     change weapons at all.
 
-    The Xen missions expect it either way, because the long jump module runs off
-    suit power.
+    The Xen missions expect it either way.
     """
 
     display_name = "Shuffle HEV Suit"
@@ -277,7 +276,7 @@ class ShuffleHevSuit(Toggle):
 class ShuffleLongJump(Toggle):
     """Shuffle the long jump module into the item pool.
 
-    When on, the Xen missions expect it in logic, and you cannot long jump until
+    When on, strict logic expects it for Xen, and you cannot long jump until
     the item arrives however many modules the campaign puts in front of you.
 
     When off, the module stays where the campaign hands it over, in Forget About

@@ -183,6 +183,19 @@ struct Transition {
     // and after how long. Arriving at its partner fires it in vanilla.
     std::string changetarget;
     float changedelay = 0.0f;
+    // Where its backtrack orb stands, when the audit set one (7.2).
+    bool has_orb_at = false;
+    float orb_at[3] = {0.0f, 0.0f, 0.0f};
+};
+
+// A return teleporter inside a map (the `O` record, 7.2a): stood in at `at`, it
+// sends the player to `to`, facing `yaw`.
+struct ReturnTeleporter {
+    std::string map;
+    float at[3] = {0.0f, 0.0f, 0.0f};
+    float to[3] = {0.0f, 0.0f, 0.0f};
+    float yaw = 0.0f;
+    std::string label;
 };
 
 // The lip of a one-way crossed back with an item (the `W` record): a player
@@ -239,6 +252,7 @@ public:
     std::vector<Transition> transitions;
     // Empty in a file older than the `W` record, or before any chapter audit.
     std::vector<OneWayLip> one_way_lips;
+    std::vector<ReturnTeleporter> return_teleporters;
     // Null for an id the file does not describe.
     const Transition* TransitionById(const std::string& id) const;
 

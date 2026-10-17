@@ -1,5 +1,6 @@
 #include "ap_bridge.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 
@@ -64,6 +65,32 @@ void CollectPairs(const std::string& value,
         const std::string b = Trim(entry.substr(comma + 1));
         if (!a.empty() && !b.empty()) {
             out.push_back({a, b});
+        }
+    }
+}
+
+// `map,x,y,z,to_map,x,y,z,yaw,label;...`, one teleporter per entry.
+void CollectTeleporters(const std::string& value, std::vector<Snapshot::Teleporter>& out) {
+    out.clear();
+    std::vector<std::string> entries;
+    CollectList(value, ';', entries);
+    for (const std::string& entry : entries) {
+        std::vector<std::string> f;
+        CollectList(entry, ',', f);
+        if (f.size() < 9) {
+            continue;
+        }
+        Snapshot::Teleporter tp;
+        tp.map = Trim(f[0]);
+        tp.to_map = Trim(f[4]);
+        for (int k = 0; k < 3; ++k) {
+            tp.at[k] = static_cast<float>(std::atof(f[1 + k].c_str()));
+            tp.to[k] = static_cast<float>(std::atof(f[5 + k].c_str()));
+        }
+        tp.yaw = static_cast<float>(std::atof(f[8].c_str()));
+        tp.label = f.size() > 9 ? Trim(f[9]) : "Teleporter";
+        if (!tp.map.empty() && !tp.to_map.empty()) {
+            out.push_back(tp);
         }
     }
 }
@@ -196,6 +223,11 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
             CollectPairs(value, parsed.one_way_transitions);
         } else if (key == "backtrack_orbs") {
             CollectPairs(value, parsed.backtrack_orbs);
+        } else if (key == "door_openers") {
+            CollectPairs(value, parsed.door_openers);
+        } else if (key == "teleporters") {
+            CollectTeleporters(value, parsed.teleporters);
+            parsed.teleporters_raw = Trim(value);
         } else if (key == "now") {
             now = ParseLong(value);
         }

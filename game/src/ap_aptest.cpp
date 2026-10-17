@@ -5,6 +5,8 @@
 
 #include "ap_aptest.h"
 
+#include <cstring>
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -234,6 +236,16 @@ void Teleport() {
         spot = target;
         Notify("[aptest] No room to stand near the spot; placed on it anyway.");
     }
+    if (!g_destination.entry.empty()) {
+        // A spot by a transition, which can hang in the air (c1a0e's teleport):
+        // on the ground below it, as an arrival would be.
+        TraceResult tr;
+        UTIL_TraceHull(spot, spot - Vector(0, 0, 4096), ignore_monsters,
+                       g_destination.crouch ? head_hull : human_hull, player->edict(), &tr);
+        if (!tr.fStartSolid && tr.flFraction < 1.0f) {
+            spot = tr.vecEndPos;
+        }
+    }
     UTIL_SetOrigin(player->pev, spot);
     player->pev->velocity = g_vecZero;
     if (g_destination.has_yaw) {
@@ -321,8 +333,24 @@ void RunPointLabels() {
 const char* const kHarnessVerbs[] = {
     "pass", "fail", "note", "next", "prev", "redo", "go", "info", "status",
     "list", "give", "take", "item", "trap", "deathlink", "clear", "connect",
-    "disconnect",
+    "disconnect", "chat", "orb", "door",
 };
+
+// The door the player is looking at, as `<model> <classname> <targetname>`,
+// or empty: for `!door`, which the harness records as an opener.
+std::string AimedDoor(CBasePlayer* player) {
+    UTIL_MakeVectors(player->pev->v_angle);
+    const Vector eye = player->pev->origin + player->pev->view_ofs;
+    TraceResult tr;
+    UTIL_TraceLine(eye, eye + gpGlobals->v_forward * 192.0f, dont_ignore_monsters,
+                   player->edict(), &tr);
+    CBaseEntity* hit = tr.pHit != nullptr ? CBaseEntity::Instance(tr.pHit) : nullptr;
+    if (hit == nullptr || std::strncmp(STRING(hit->pev->classname), "func_door", 9) != 0) {
+        return "";
+    }
+    return std::string(STRING(hit->pev->model)) + " " + STRING(hit->pev->classname) + " " +
+           (FStringNull(hit->pev->targetname) ? "-" : STRING(hit->pev->targetname));
+}
 
 void Cmd_Test() {
     const std::string verb = Lower(CMD_ARGC() > 1 ? CMD_ARGV(1) : "");
@@ -368,7 +396,16 @@ bool TestDispatch(const std::string& name, const std::string& rest) {
                 SERVER_COMMAND(const_cast<char*>(command.c_str()));
                 Notify("[aptest] Saved as " + g_destination.save_as + ".");
             }
-            Wire().Send("APTEST", std::vector<std::string>{name, Sanitise(rest), where});
+            std::string text = rest;
+            if (name == "door" && player != nullptr) {
+                const std::string door = AimedDoor(player);
+                if (door.empty() && Trim(rest).empty()) {
+                    Notify("[aptest] !door: look at the door, within a few steps.");
+                    return true;
+                }
+                text = door.empty() ? rest : door + (rest.empty() ? "" : " " + rest);
+            }
+            Wire().Send("APTEST", std::vector<std::string>{name, Sanitise(text), where});
             return true;
         }
     }

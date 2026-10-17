@@ -413,7 +413,7 @@ def test_chapter_gates_reference_real_groups(campaign: dict) -> None:
     groups = set(campaign["requirement_groups"])
     for chapter in campaign["chapters"]:
         for name in chapter["gates"].get("strict", []):
-            assert name in groups, chapter["key"]
+            assert name in ("longjump", "suit") or name in groups, chapter["key"]
         for name in chapter["gates"].get("always", []):
             # Equipment by key, or a group needed at every difficulty.
             assert name in ("longjump", "suit") or name in groups, chapter["key"]

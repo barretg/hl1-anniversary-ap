@@ -21,6 +21,9 @@ In game, in chat (or `testing_aptest <verb>` in the console):
     !tp                back to the scenario's spot
     !info / !status / !list [text]
     !give <item> / !take <item>    change what the snapshot holds
+    !orb from|to|list|drop   place a teleporter to try (seed scenarios only)
+    !door [list|drop]        looking at a one-way door: it opens near you
+    plain chat               a note, recorded with where you stand
 
 The same verbs, without the `!`, can be typed into the terminal.
 
@@ -78,7 +81,7 @@ relaunched; it then carries on from the next map. `--clear` with it starts over.
 a human check (see `transition_scenarios`). It is appended to as work lands that only play can
 confirm; a scenario stays until its verdict is in, and a fix clears its title.
 
-`--maplogic [--chapters <keys>]` runs map logic discovery for the transition
+`--maplogic [--chapters <list>]` runs map logic discovery for the transition
 rando (see `maplogic_scenarios`), chapter by chapter in rollout order (or only
 the named chapters), four scenarios each:
     1 forward from the chapter's start to its end, crowbar only;
@@ -119,7 +122,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --transition | --maplogic [--chapters <keys>] | --transitionfeel | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --transition | --maplogic [--chapters <list>] | --transitionfeel | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -374,6 +377,25 @@ def seed_file_scenario(path: Path) -> Scenario:
             "labelled (not in seed) or (inert) should do nothing.",
             "!note <what> for anything wrong on the way, then !pass or !fail <what>.",
         ]))
+
+
+# Teleporters and door openers placed in game with `!orb` and `!door`, for
+# working out one-ways before they go into the map data (TRANSITION_RANDO.md
+# 3.3). Every scenario seed carries them.
+WORKSHOP = Path(__file__).parent / "workshop.json"
+
+
+def load_workshop() -> dict:
+    try:
+        data = json.loads(WORKSHOP.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    return {"teleporters": list(data.get("teleporters", [])),
+            "door_openers": list(data.get("door_openers", []))}
+
+
+def save_workshop(data: dict) -> None:
+    WORKSHOP.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
 
 
 def load_seed(name: str) -> dict:
@@ -2128,6 +2150,34 @@ def transition_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             "complete.' Die and reload mid-map: the pairing still holds.",
             "!pass, or !fail <what was different>.",
         ])))
+
+    # Backtrack orbs (7.2): a one-way into a map whose own way back is inert.
+    by_id = {t.id: t for t in data.transitions}
+    exit_, arrival = by_id["c1a2:0"], by_id["c1a2b:0"]
+    orb_seed = copy.deepcopy(seed)
+    orb_seed.update(
+        start_map=exit_.map, starting_chapters=["c1a2"], transition_chapters=["c1a2"],
+        transition_pairs=[], one_way_transitions={exit_.id: arrival.id},
+        backtrack_orbs={arrival.id: exit_.id}, inert_transitions=[arrival.id],
+        excluded_chapters=[k for k in seed["excluded_chapters"] if k != "c1a2"]
+        + [k for k in seed["transition_chapters"] if k != "c1a2"])
+    out.append(Scenario(
+        title="Transition: a backtrack orb, c1a2:0 one way into c1a2b:0",
+        map=exit_.map, pos=inside_exit(exit_), yaw=(exit_.yaw + 180) % 360,
+        entry=exit_.id, seed=orb_seed, steps="\n".join([
+            f"You are a step inside {exit_.map}'s T1 ({exit_.id}), facing into the map.",
+            "Bring a scientist or Barney if you like. Turn round and walk through",
+            f"T1: you land in {arrival.map} at {arrival.id}, whose own trigger is",
+            "inert. Beside you, behind and to one side, is Lambda Core's orange",
+            "entrance orb, labelled Back. Before crossing, a green exit orb stands",
+            f"just inside T1 in {exit_.map}, unlabelled, doing nothing when walked into.",
+            "Step into the orange one: a beam sound, and you are back at T1 in "
+            f"{exit_.map}, in the green one, standing,",
+            "facing into the map, not walked straight back out. A follower comes",
+            f"too. {exit_.map} is as you left it. Do it twice; a third time, die",
+            f"and reload in {arrival.map} first: the orb is still there, just one.",
+            "!pass, or !fail <what was different>.",
+        ])))
     return out
 
 
@@ -2144,16 +2194,25 @@ def map_transitions(data: CheckData, map_name: str) -> list[Transition]:
 
 
 def pick_chapters(data: CheckData, wanted: list[str]) -> list[Chapter]:
-    """The chapters named on the command line, by key or name, in data order."""
+    """The chapters named on the command line, in data order: by key, name,
+    or Half-Life campaign number (`N` or `A:B`, Black Mesa Inbound being 0, as
+    `tools/seed_run.py` counts them)."""
+    numbered = [c for c in data.chapters if c.campaign == "half_life"]
     picked: list[Chapter] = []
     for name in wanted:
-        chapter = next((c for c in data.chapters
-                        if name == c.key or name.lower() == c.name.lower()), None)
-        if chapter is None:
-            raise SystemExit(f"--chapters: no chapter {name!r}; use a key such as "
-                             f"{data.chapters[0].key}")
-        if chapter not in picked:
-            picked.append(chapter)
+        first, colon, last = name.partition(":")
+        if first.isdigit() and (not colon or last.isdigit()):
+            lo, hi = int(first), int(last or first)
+            if not 0 <= lo <= hi < len(numbered):
+                raise SystemExit(f"--chapters {name}: chapters run 0 to {len(numbered) - 1}")
+            found = numbered[lo:hi + 1]
+        else:
+            found = [c for c in data.chapters
+                     if name == c.key or name.lower() == c.name.lower()][:1]
+        if not found:
+            raise SystemExit(f"--chapters: no chapter {name!r}; use a number, or a key "
+                             f"such as {data.chapters[0].key}")
+        picked += [c for c in found if c not in picked]
     order = {c.key: i for i, c in enumerate(data.chapters)}
     return sorted(picked, key=lambda c: order[c.key])
 
@@ -2219,7 +2278,10 @@ MAPLOGIC_NOTES = [
     "!note T<n> one-way <kind> for a transition that only goes one way.",
     "!note oneway lift|drop|shaft|door at the bottom of a one-way obstacle,",
     "facing back the way you came. !note seg <name> where a map splits.",
-    "Anything else of interest: !note <text>.",
+    "Anything else of interest: !note <text>, or just type it.",
+    "Turn noclip off before walking into a transition: noclip touches no triggers.",
+    "To try a fix: !orb from [label] where a teleporter goes, !orb to where it lands",
+    "(any map); !door looking at a one-way door opens it near you. !orb list, !orb drop.",
 ]
 
 
@@ -2231,10 +2293,14 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
     2. backward, carrying on from 1's save: its level state and holdings;
     3. backward from the exit, every map fresh, crowbar only;
     4. forward, carrying on from 3's save.
+    A boss chapter's way out is its boss exit, which leads on once the boss is
+    dead (TRANSITION_RANDO.md 7.6): runs 3 and 4 start at the bottom of the
+    arena, where the onward teleporter stands, and the exit itself is inert.
     """
     out: list[Scenario] = []
     for chapter in chapters:
         entry, exit_ = chapter_entry(data, chapter), chapter_exit(data, chapter)
+        boss = chapter.key == data.goal_chapter
         save = f"aptest_ml_{chapter.key}"
         ways = (f"{len(chapter.maps)} maps: " + ", ".join(chapter.maps))
         start_at = (f"at {entry.id}, its way in from {entry.to}," if entry else
@@ -2243,6 +2309,7 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
                   "its end")
         out.append(Scenario(
             title=maplogic_title(chapter, 1), map=chapter.maps[0],
+            seed=chapter_seed(data, chapter, chapter.maps[0]),
             pos=step_in(entry, MAPLOGIC_STEP_IN) if entry else "",
             yaw=(entry.yaw + 180) % 360 if entry else None,
             holds=[], entry=entry.id if entry else "", save_as=f"{save}_1",
@@ -2255,6 +2322,7 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
             ])))
         out.append(Scenario(
             title=maplogic_title(chapter, 2), map=chapter.maps[-1], entry="", holds=[],
+            seed=chapter_seed(data, chapter, chapter.maps[-1]),
             load=f"{save}_1", inherit=maplogic_title(chapter, 1),
             steps="\n".join([
                 f"{chapter.name} backwards, carrying on from scenario 1: its maps as",
@@ -2267,15 +2335,21 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
             ])))
         out.append(Scenario(
             title=maplogic_title(chapter, 3), map=exit_.map if exit_ else chapter.maps[-1],
-            pos=step_in(exit_, MAPLOGIC_STEP_IN) if exit_ else "",
-            yaw=(exit_.yaw + 180) % 360 if exit_ else None,
-            holds=[], entry=exit_.id if exit_ else "", save_as=f"{save}_3",
+            seed=chapter_seed(data, chapter, exit_.map if exit_ else chapter.maps[-1]),
+            # A boss exit's trigger is out of reach: start from spawn instead.
+            pos=step_in(exit_, MAPLOGIC_STEP_IN) if exit_ and not boss else "",
+            yaw=(exit_.yaw + 180) % 360 if exit_ and not boss else None,
+            holds=[], entry=exit_.id if exit_ and not boss else "", save_as=f"{save}_3",
             steps="\n".join([
                 f"{chapter.name} backwards from scratch, as if come in from the next",
-                f"chapter: every map loads fresh. You start in "
-                f"{exit_.map if exit_ else chapter.maps[-1]} by "
-                + (f"{exit_.id}, the way out to {exit_.to}," if exit_ else "its end,")
-                + " holding only the crowbar.",
+                "chapter: every map loads fresh, holding only the crowbar."
+                + ("" if boss else f" You start in {exit_.map if exit_ else chapter.maps[-1]} by "
+                   + (f"{exit_.id}, the way out to {exit_.to}." if exit_ else "its end.")),
+                *([f"Its boss exit ({exit_.id}) becomes a teleporter near the bottom of",
+                   "the arena once the boss is dead. You start at the map's spawn: noclip",
+                   "to where that teleporter should stand, noclip off, and note it",
+                   "(just type it). That is where coming in backwards arrives."]
+                  if boss else []),
                 f"Walk back to {chapter.maps[0]}'s way in"
                 + (f" ({entry.id})" if entry else "") + "; do not take it.",
                 "Noclip through anything one-way, and !note it before you do.",
@@ -2284,6 +2358,7 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
             ])))
         out.append(Scenario(
             title=maplogic_title(chapter, 4), map=chapter.maps[0], entry="", holds=[],
+            seed=chapter_seed(data, chapter, chapter.maps[0]),
             load=f"{save}_3", inherit=maplogic_title(chapter, 3),
             steps="\n".join([
                 f"{chapter.name} forwards again, carrying on from scenario 3: its maps",
@@ -2560,8 +2635,43 @@ def sweep_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             bsp = game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
             if bsp.is_file():
                 out.append(Scenario(title=f"Sweep: {map_name}", map=map_name,
+                                    seed=sweep_seed(data, map_name),
                                     steps="Automated: nothing to do."))
     return out
+
+
+def chapter_seed(data: CheckData, chapter: Chapter, start_map: str) -> dict:
+    """A transitions mode seed for map logic discovery of this chapter,
+    shuffling nothing. Its ways out work as in vanilla, one map into the next
+    chapter, so arriving through them can be played; in those neighbouring
+    chapters everything but the way back in is inert, so play stays put."""
+    inside = set(chapter.maps)
+    near = {n.key for t in data.transitions if t.map in inside and t.to not in inside
+            for n in [data.chapter_of(t.to)] if n is not None and n.key != chapter.key}
+    neighbours = [n for n in data.chapters if n.key in near]
+    inert = [t.id for n in neighbours for t in data.transitions
+             if t.map in n.maps and t.to not in inside]
+    seed = copy.deepcopy(load_seed("first_step_area"))
+    keys = [chapter.key] + [n.key for n in neighbours]
+    seed.update(
+        start_map=start_map, starting_chapters=keys, transition_chapters=keys,
+        transition_pairs=[], one_way_transitions={}, backtrack_orbs={},
+        inert_transitions=inert, ending_map="",
+        excluded_chapters=[k for k in seed["excluded_chapters"] if k not in keys])
+    return seed
+
+
+def sweep_seed(data: CheckData, map_name: str) -> dict:
+    """A transitions mode seed over every chapter, shuffling nothing: the mode
+    precaches the orbs, so the sweep measures the worst case."""
+    seed = copy.deepcopy(load_seed("first_step_area"))
+    keys = [c.key for c in data.chapters]
+    chapter = next(c.key for c in data.chapters if map_name in c.maps)
+    seed.update(
+        start_map=map_name, starting_chapters=[chapter], transition_chapters=keys,
+        transition_pairs=[], one_way_transitions={}, backtrack_orbs={},
+        inert_transitions=[], excluded_chapters=[])
+    return seed
 
 
 @dataclass
@@ -3016,7 +3126,8 @@ class Harness:
                       if s is not None and s.seed else
                       [c.key for c in self.data.chapters
                        if s is None or c.key not in s.closed]),
-            transitions=s.seed if s is not None else None,
+            transitions=(dict(s.seed, **load_workshop())
+                         if s is not None and s.seed else None),
             items=sorted(self.items),
             goal_open=True,
             death_link=False,
@@ -3148,8 +3259,8 @@ class Harness:
         if self.results_path.exists():
             for line in self.results_path.read_text(encoding="utf-8").splitlines():
                 parts = line.split("|")
-                if len(parts) >= 4 and not (parts[3] == "note" and len(parts) > 6
-                                            and parts[6] in NOTES_STAY):
+                if len(parts) >= 4 and parts[3] != "remark" and not (
+                        parts[3] == "note" and len(parts) > 6 and parts[6] in NOTES_STAY):
                     verdicts[parts[2]] = parts[3]
         return verdicts
 
@@ -3168,7 +3279,7 @@ class Harness:
         if self.results_path.exists():
             for line in self.results_path.read_text(encoding="utf-8").splitlines():
                 parts = line.split("|")
-                if len(parts) >= 5:
+                if len(parts) >= 5 and parts[3] != "remark":
                     notes[parts[2]] = parts[4]
         return notes
 
@@ -3208,6 +3319,97 @@ class Harness:
                   "they are kept in aptest_results_cleared.txt.")
         self.status()
 
+    def workshop_orb(self, arg: str, where: str) -> None:
+        """`!orb from [label]` where the teleporter stands, `!orb to` where it
+        sends you (any map), `!orb list`, `!orb drop [n]`."""
+        words = arg.split(maxsplit=1)
+        what = words[0].lower() if words else ""
+        data = load_workshop()
+        fields = where.split()
+        if what in ("from", "to") and len(fields) < 5:
+            self.tell("[aptest] !orb from/to has to be sent from the game.")
+            return
+        if what == "from":
+            self.orb_from = {"map": fields[4], "at": [float(v) for v in fields[:3]],
+                             "label": words[1] if len(words) > 1 else "Teleporter"}
+            self.tell(f"[aptest] Teleporter starts here on {fields[4]}; go to where "
+                      "it sends you and !orb to.")
+        elif what == "to":
+            start = getattr(self, "orb_from", None)
+            if start is None:
+                self.tell("[aptest] !orb from first, where the teleporter stands.")
+                return
+            tp = dict(start, to_map=fields[4], to=[float(v) for v in fields[:4]])
+            data["teleporters"].append(tp)
+            save_workshop(data)
+            self.orb_from = None
+            self.record_only("note", f"[{tp['map']}] teleporter {tp['label']} "
+                             f"@{' '.join(f'{v:.0f}' for v in tp['at'])} to [{tp['to_map']}] "
+                             f"@{' '.join(fields[:4])}")
+            self.tell(f"[aptest] Teleporter {len(data['teleporters'])} placed: "
+                      f"{tp['map']} to {tp['to_map']}.")
+            self.publish(force=True)
+        elif what == "list":
+            self.workshop_list(data)
+        elif what == "drop":
+            self.workshop_drop(data, "teleporters", words[1] if len(words) > 1 else "")
+        else:
+            self.tell("[aptest] !orb from [label] | to | list | drop [n]")
+
+    def workshop_door(self, arg: str, where: str) -> None:
+        """`!door` looking at a one-way door from its far side (the side it
+        will not open from): it opens for you from there, and from the near
+        side once it has been opened in play. `!door list`, `!door drop [n]`."""
+        words = arg.split()
+        data = load_workshop()
+        if words and words[0].lower() == "list":
+            self.workshop_list(data)
+            return
+        if words and words[0].lower() == "drop":
+            self.workshop_drop(data, "door_openers", words[1] if len(words) > 1 else "")
+            return
+        fields = where.split()
+        if len(words) < 3 or not words[0].startswith("*") or len(fields) < 5:
+            self.tell("[aptest] !door: look at the door, within a few steps.")
+            return
+        door = {"map": fields[4], "model": words[0], "classname": words[1],
+                "targetname": words[2], "at": [float(v) for v in fields[:3]],
+                "note": " ".join(words[3:])}
+        if any(d["map"] == door["map"] and d["model"] == door["model"]
+               for d in data["door_openers"]):
+            self.tell("[aptest] That door already opens.")
+            return
+        data["door_openers"].append(door)
+        save_workshop(data)
+        self.record_only("note", f"[{door['map']}] door opener {door['model']} "
+                         f"({door['targetname']}) @{' '.join(fields[:4])}")
+        self.tell(f"[aptest] Door {door['model']} on {door['map']} now opens as you come "
+                  "near it from this side, and from the other once it has opened.")
+        self.publish(force=True)
+
+    def workshop_list(self, data: dict) -> None:
+        for n, tp in enumerate(data["teleporters"], 1):
+            self.tell(f"[aptest] orb {n}: {tp['map']} {' '.join(f'{v:.0f}' for v in tp['at'])}"
+                      f" to {tp['to_map']} ({tp['label']})")
+        for n, d in enumerate(data["door_openers"], 1):
+            self.tell(f"[aptest] door {n}: {d['map']} {d['model']} ({d['targetname']})")
+        if not data["teleporters"] and not data["door_openers"]:
+            self.tell("[aptest] Nothing placed yet.")
+
+    def workshop_drop(self, data: dict, kind: str, which: str) -> None:
+        items = data[kind]
+        if not items:
+            self.tell("[aptest] Nothing to drop.")
+            return
+        n = int(which) if which.isdigit() else len(items)
+        if not 1 <= n <= len(items):
+            self.tell(f"[aptest] No {n}; !orb list shows them.")
+            return
+        gone = items.pop(n - 1)
+        save_workshop(data)
+        self.tell(f"[aptest] Dropped {kind[:-1].replace('_', ' ')} {n} on {gone['map']}.")
+        self.publish(force=True)
+
     def command(self, verb: str, arg: str, where: str = "") -> None:
         """One verb, from the game (`!pass`) or typed here (`pass`). `where` is
         the player's `x y z yaw map` when the game sent it."""
@@ -3224,15 +3426,31 @@ class Harness:
                 if len(fields) >= 5:
                     arg = f"[{fields[4]}] {arg}"
                     where = " ".join(fields[:4])
-                if re.sub(r"^\[\S+\]\s*", "", arg).lower().startswith("oneway"):
-                    if not where:
-                        self.tell("[aptest] Send !note oneway from the game, standing "
-                                  "at the return teleporter's spot.")
-                        return
+                if re.sub(r"^\[\S+\]\s*", "", arg).lower().startswith("oneway") and not where:
+                    self.tell("[aptest] Send !note oneway from the game, standing "
+                              "at the return teleporter's spot.")
+                    return
+                # Every note from the game says where it was made.
+                if where:
                     arg += f" @{where}"
                 if self.record_only("note", arg):
                     given = "; ".join(self.given) or "nothing"
                     self.tell(f"[aptest] Noted, after giving {given}: {arg}")
+            elif verb == "orb":
+                self.workshop_orb(arg, where)
+            elif verb == "door":
+                self.workshop_door(arg, where)
+            elif verb == "chat":
+                # Plain chat in the game, in any group: kept as a note for
+                # later, with where it was said, and the scenario carries on.
+                fields = where.split()
+                if len(fields) >= 5:
+                    arg = f"[{fields[4]}] {arg} @{' '.join(fields[:4])}"
+                # A note where notes stay, so the reports read it; elsewhere
+                # a remark, which is never a verdict.
+                kind = "note" if self.group in NOTES_STAY else "remark"
+                if arg and self.record_only(kind, arg):
+                    self.tell(f"[aptest] Noted: {arg}")
             elif verb in ("fail", "note"):
                 if arg:
                     self.record(verb, arg)
@@ -3408,8 +3626,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--transitionfeel", action="store_true",
                         help="the seamless transition transform, with set pairs")
     parser.add_argument("--chapters", type=lambda v: [c for c in v.split(",") if c],
-                        default=[], metavar="KEYS",
-                        help="with --maplogic: only these chapters, by key or name, "
+                        default=[], metavar="LIST",
+                        help="with --maplogic: only these chapters, by number (N or A:B, Black Mesa Inbound 0), key or name, "
                              "comma separated (still in rollout order)")
     parser.add_argument("--seed-file", type=Path, metavar="SLOT_DATA",
                         help="play one generated seed's slot data (tools/seed_run.py)")

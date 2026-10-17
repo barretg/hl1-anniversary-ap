@@ -127,14 +127,15 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "c2a5": {"strict": ["heavy", "explosives", "not_rpg"]},
     "c3a1": {"strict": ["heavy", "explosives", "not_rpg"]},
     "c3a2e": {"strict": ["heavy", "explosives", "not_rpg"]},
-    # Xen onward: the long jump module is standard equipment from here, and the
-    # suit is what powers it. Strict logic names the two weapons by hand rather
-    # than a tier -- the alien grunt and Gonarch fights are not something to walk
-    # into with a shotgun -- so both the Tau cannon and the RPG are required.
-    "c4a1": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
-    "c4a2": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
-    "c4a1a": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
-    "c4a3": {"strict": ["tau_cannon", "rpg"], "always": ["longjump", "suit"]},
+    # Xen onward: the suit is standard equipment from here. Strict logic names
+    # the two weapons by hand rather than a tier (the alien grunt and Gonarch
+    # fights are not something to walk into with a shotgun), so both the Tau
+    # cannon and the RPG are required. Only Xen itself wants the long jump
+    # module, and only on strict.
+    "c4a1": {"strict": ["tau_cannon", "rpg", "longjump"], "always": ["suit"]},
+    "c4a2": {"strict": ["tau_cannon", "rpg"], "always": ["suit"]},
+    "c4a1a": {"strict": ["tau_cannon", "rpg"], "always": ["suit"]},
+    "c4a3": {"strict": ["tau_cannon", "rpg"], "always": ["suit"]},
 }
 
 # Gates from a later map of a mission on, `{map: gates}`.

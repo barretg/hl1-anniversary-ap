@@ -65,6 +65,13 @@ std::string PairLandmark(const std::string& a, const std::string& b);
 
 // The arrival, once the player is in the new level. StartFrame.
 void RunTransitionArrival();
+// Spawns this map's backtrack orbs and return teleporters, and sends the player
+// through one stepped into. StartFrame.
+void RunOrbs();
+// One-way doors the seed opens from their far side: as the player comes near.
+void RunDoorOpeners();
+// The orb's sprite and sound, on every map. CWorld::Precache.
+void PrecacheOrbs();
 // Warns at the lip of a one-way the player could not come back over. StartFrame.
 void RunOneWayLips();
 // At ServerActivate: a stash for some other map is stale.

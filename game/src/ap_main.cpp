@@ -525,6 +525,8 @@ void RunFrame() {
     // Before anything looks at where the player is.
     RunTransitionArrival();
     RunOneWayLips();
+    RunOrbs();
+    RunDoorOpeners();
     FlushNotices();
     FixPlayerModels();
     RunLoadout();

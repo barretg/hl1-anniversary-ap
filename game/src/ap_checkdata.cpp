@@ -268,8 +268,19 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
                 t.changetarget = f[14];
                 t.changedelay = static_cast<float>(atof(f[15].c_str()));
             }
+            if (f.size() >= 17 && !f[16].empty()) {
+                t.has_orb_at = ParseVector(f[16], t.orb_at);
+            }
             if (ParseVector(f[5], t.at) && ParseVector(f[9], t.origin)) {
                 transitions.push_back(t);
+            }
+        } else if (record == "O" && f.size() >= 6) {
+            ReturnTeleporter tp;
+            tp.map = f[1];
+            tp.yaw = static_cast<float>(atof(f[4].c_str()));
+            tp.label = f[5];
+            if (ParseVector(f[2], tp.at) && ParseVector(f[3], tp.to)) {
+                return_teleporters.push_back(tp);
             }
         } else if (record == "W" && f.size() >= 6) {
             OneWayLip lip;

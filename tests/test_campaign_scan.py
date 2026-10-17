@@ -134,7 +134,8 @@ def test_gate_groups_exist() -> None:
     for campaign in KNOWN_CAMPAIGNS:
         for table in (*campaign.gates.values(), *campaign.map_gates.values()):
             for group in table.get("strict", []):
-                assert group in groups, (campaign.key, group)
+                assert group in groups or group in ("longjump", "suit"), (
+                    campaign.key, group)
             for group in table.get("always", []):
                 assert group in groups or group in ("longjump", "suit"), (
                     campaign.key, group)

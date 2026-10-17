@@ -5,6 +5,7 @@
 #include "weapons.h"
 
 #include "ap_traps.h"
+#include "ap_transitions.h"
 #include "ap_throw.h"
 
 #include <string>
@@ -640,6 +641,7 @@ void PrecacheTraps() {
     PrecacheMark("bot skins");
     PrecacheThrow();
     PrecachePathTrace();
+    PrecacheOrbs();
     PrecacheMark("throw and path trace");
     // Off for now; see `DressHubChamber`.
     // PrecacheHubChamber();

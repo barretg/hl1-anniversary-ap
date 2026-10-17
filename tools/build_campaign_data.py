@@ -1565,6 +1565,11 @@ def check_way_back(map_name: str, edge: dict) -> None:
     way = edge.get("way_back", "tp")
     if way not in WAY_BACK:
         raise SystemExit(f"map_logic {map_name}: edge {edge} has way_back {way!r}")
+    if way == "tp":
+        ret = edge.get("return", {})
+        if len(ret.get("at", ())) != 3 or len(ret.get("to", ())) != 3 or "yaw" not in ret:
+            raise SystemExit(f"map_logic {map_name}: tp edge {edge} needs a return "
+                             "{at, to, yaw}")
     if way != "item":
         return
     back = edge.get("back")

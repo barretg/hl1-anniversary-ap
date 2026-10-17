@@ -1,0 +1,41 @@
+{
+ "teleporters": [],
+ "door_openers": [
+  {
+   "map": "c1a0e",
+   "model": "*91",
+   "classname": "func_door",
+   "targetname": "test_lab_entry_door",
+   "at": [
+    1480.0,
+    -143.0,
+    -312.0
+   ],
+   "note": ""
+  },
+  {
+   "map": "c1a0e",
+   "model": "*9",
+   "classname": "func_door",
+   "targetname": "tldoor",
+   "at": [
+    1668.0,
+    80.0,
+    -324.0
+   ],
+   "note": ""
+  },
+  {
+   "map": "c1a0e",
+   "model": "*10",
+   "classname": "func_door",
+   "targetname": "tldoor",
+   "at": [
+    1649.0,
+    90.0,
+    -324.0
+   ],
+   "note": ""
+  }
+ ]
+}

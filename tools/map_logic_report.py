@@ -191,7 +191,9 @@ def draft_map(map_name: str, attempts: list[Attempt], transitions: list[dict],
                     edge["lip"] = spot
                     edge["return"] = {"at": "?", "yaw": "?", "kind": kind}
                 else:
-                    edge["return"] = dict(spot, kind=kind if kind in RETURN_KINDS else "?")
+                    # Where it sends the player is the top or near side, to fill in.
+                    edge["return"] = dict(spot, to="?",
+                                          kind=kind if kind in RETURN_KINDS else "?")
                 draft.one_way.append(edge)
                 proposed = f"one_way edge ({edge['way_back']})"
             elif m := ONE_WAY_T.match(text):

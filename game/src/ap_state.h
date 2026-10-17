@@ -73,6 +73,20 @@ struct Snapshot {
     std::vector<std::pair<std::string, std::string>> transition_pairs;
     std::vector<std::pair<std::string, std::string>> one_way_transitions;
     std::vector<std::pair<std::string, std::string>> backtrack_orbs;
+    // Teleporters placed by spot rather than by transition: an orange entrance
+    // at `at` on `map`, sending the player to `to` on `to_map` facing `yaw`.
+    struct Teleporter {
+        std::string map, to_map, label;
+        float at[3] = {0, 0, 0};
+        float to[3] = {0, 0, 0};
+        float yaw = 0.0f;
+    };
+    std::vector<Teleporter> teleporters;
+    std::string teleporters_raw;  // as sent, for telling one set from another
+    // One-way doors opened from their far side: (map, `*N,x,y,z`), the door's
+    // brush model and a spot on its far side. From the near side it opens only
+    // once it has been opened in play.
+    std::vector<std::pair<std::string, std::string>> door_openers;
 
     std::set<long> checked;   // for ap_tracker
     std::set<long> missing;   // ids in neither set are not in this seed

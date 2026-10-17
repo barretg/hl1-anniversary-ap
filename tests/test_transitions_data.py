@@ -137,19 +137,22 @@ def test_checkdata_carries_every_transition(transitions: list[dict]) -> None:
              CHECKDATA_PATH.read_text(encoding="utf-8").splitlines()
              if line.startswith("E|")]
     assert [f[1] for f in lines] == [t["id"] for t in transitions]
-    assert all(len(f) == 16 for f in lines)
+    assert all(len(f) == 17 for f in lines)
 
 
 def test_item_one_ways_name_their_items_and_lip() -> None:
     from build_campaign_data import check_way_back
-    from gen_checkdata import lip_records
+    from gen_checkdata import lip_records, return_records
 
     edge = {"from": "a", "to": "b", "one_way": True, "way_back": "item",
             "back": ["longjump"], "lip": {"at": [0, 0, 0], "yaw": 90}}
     check_way_back("m", edge)
-    check_way_back("m", {"from": "a", "to": "b", "one_way": True})  # tp by default
+    tp = {"from": "a", "to": "b", "one_way": True,  # tp by default
+          "return": {"at": [0, 0, 0], "to": [0, 0, 64], "yaw": 90, "kind": "lift"}}
+    check_way_back("m", tp)
     for bad in ({"way_back": "fly"}, {"way_back": "item", "lip": edge["lip"]},
-                {"way_back": "item", "back": ["longjump"]}):
+                {"way_back": "item", "back": ["longjump"]},
+                {"return": {"at": [0, 0, 0], "yaw": 90}}):
         with pytest.raises(SystemExit):
             check_way_back("m", dict({"from": "a", "to": "b", "one_way": True}, **bad))
 
@@ -157,9 +160,10 @@ def test_item_one_ways_name_their_items_and_lip() -> None:
                 "requirement_groups": {"ranged": ["MP5"]},
                 "map_logic": {"m": {"edges": [
                     edge, dict(edge, back=["longjump", "ranged"], lip={"at": [0, 0, 0], "yaw": 0}),
-                    {"from": "a", "to": "b", "one_way": True, "way_back": "tp"}]}}}
+                    tp, dict(tp, way_back="alt")]}}}
     assert lip_records(campaign) == [
         "W|m|-32 16 -36|32 80 36|item_longjump|the Long Jump Module",
         "W|m|16 -32 -36|80 32 36|item_longjump;weapon_9mmAR"
         "|the Long Jump Module and a ranged weapon",
     ]
+    assert return_records(campaign) == ["O|m|0 0 0|0 0 64|90|Up"]

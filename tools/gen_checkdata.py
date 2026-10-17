@@ -105,11 +105,17 @@ def render(campaign: dict) -> str:
         "#     part's Reached or a mission's Complete. <to map> is empty for a",
         "#     trigger_endsection.",
         "#   E|<id>|<map>|<to map>|<landmark>|<x y z>|<kind>|<partner>|<two way>"
-        "|<ox oy oz>|<yaw>|<width>|<height>|<use only>",
+        "|<ox oy oz>|<yaw>|<width>|<height>|<use only>|<changetarget>|<changedelay>"
+        "|<orb x y z>",
         "#     a level transition (one trigger_changelevel). <x y z> is its brush's",
         "#     centre, which is how the game finds it; <ox oy oz> and <yaw> are its",
         "#     frame: where a player stands at it and the way out through it.",
         "#     <partner> is the vanilla transition on the other side, empty if none.",
+        "#     <orb x y z> is where its backtrack orb stands, when the audit set one;",
+        "#     empty puts it beside the frame.",
+        "#   O|<map>|<x y z>|<to x y z>|<yaw>|<label>   a return teleporter inside a",
+        "#     map (TRANSITION_RANDO.md 7.2a): at <x y z>, sending the player to",
+        "#     <to x y z> facing <yaw>. Transitions mode only.",
         "#   W|<map>|<mins>|<maxs>|<classnames>|<names>   the lip of a one-way",
         "#     crossed back with an item (TRANSITION_RANDO.md 3.3). A player who",
         "#     enters the box owning none of one group is warned once and set",
@@ -255,7 +261,7 @@ def render(campaign: dict) -> str:
         frame = t["frame"]
         lines.append(
             "E|{id}|{map}|{to}|{landmark}|{at}|{kind}|{partner}|{two_way}|{origin}"
-            "|{yaw}|{width}|{height}|{use_only}|{changetarget}|{changedelay}".format(
+            "|{yaw}|{width}|{height}|{use_only}|{changetarget}|{changedelay}|{orb_at}".format(
                 id=t["id"], map=t["map"], to=t["to"], landmark=t["landmark"],
                 at=" ".join(str(v) for v in t["at"]), kind=t["kind"],
                 partner=t["partner"], two_way=1 if t["two_way"] else 0,
@@ -264,9 +270,11 @@ def render(campaign: dict) -> str:
                 use_only=1 if t["use_only"] else 0,
                 changetarget=t.get("changetarget", ""),
                 changedelay=t.get("changedelay", 0),
+                orb_at=" ".join(str(v) for v in t.get("orb_at", ())),
             ))
 
     lines.extend(lip_records(campaign))
+    lines.extend(return_records(campaign))
 
     return "\n".join(lines) + "\n"
 
@@ -304,6 +312,22 @@ def lip_records(campaign: dict) -> list[str]:
             records.append("W|{}|{}|{}|{}|{}".format(
                 map_name, " ".join(f"{v:g}" for v in mins), " ".join(f"{v:g}" for v in maxs),
                 ";".join(needs), " and ".join(said)))
+    return records
+
+
+def return_records(campaign: dict) -> list[str]:
+    """The `tp` one-ways' return teleporters (7.2a), labelled as fits the
+    obstacle: up a lift, drop or shaft, back through a door or over a gap."""
+    records = []
+    for map_name, logic in sorted(campaign.get("map_logic", {}).items()):
+        for edge in logic.get("edges", []):
+            if not edge.get("one_way") or edge.get("way_back", "tp") != "tp":
+                continue
+            ret = edge["return"]
+            label = "Up" if ret.get("kind") in ("lift", "drop", "shaft") else "Back"
+            records.append("O|{}|{}|{}|{:g}|{}".format(
+                map_name, " ".join(f"{v:g}" for v in ret["at"]),
+                " ".join(f"{v:g}" for v in ret["to"]), ret["yaw"], label))
     return records
 
 

@@ -14,6 +14,7 @@ Directions:
 from __future__ import annotations
 
 import os
+import re
 import time
 import uuid
 from collections import deque
@@ -343,6 +344,15 @@ class Bridge:
         self.in_path.with_suffix(".tmp").unlink(missing_ok=True)
 
 
+def teleporter_entry(t: dict) -> str:
+    """`map,x,y,z,to_map,x,y,z,yaw,label`: a teleporter placed by spot, its
+    label kept clear of the separators."""
+    label = re.sub(r"[,;\n]", " ", t.get("label", "Teleporter")).strip() or "Teleporter"
+    at, to = t["at"], t["to"]
+    return ",".join([t["map"], *(f"{v:.0f}" for v in at[:3]), t["to_map"],
+                     *(f"{v:.0f}" for v in to[:3]), f"{to[3] if len(to) > 3 else 0:.0f}", label])
+
+
 def transition_lines(slot_data: dict | None) -> list[str]:
     """The snapshot's transitions section, from a transitions mode seed's slot
     data. Nothing at all for a hub seed, so its snapshot reads as it always did.
@@ -367,6 +377,9 @@ def transition_lines(slot_data: dict | None) -> list[str]:
         "one_way_transitions=" + pairs(
             sorted(slot_data.get("one_way_transitions", {}).items())),
         "backtrack_orbs=" + pairs(sorted(slot_data.get("backtrack_orbs", {}).items())),
+        "teleporters=" + ";".join(teleporter_entry(t) for t in slot_data.get("teleporters", ())),
+        "door_openers=" + pairs((d["map"], ",".join([d["model"]] + [f"{v:.0f}" for v in d.get("at", ())[:3]]))
+                                for d in slot_data.get("door_openers", ())),
         f"transition_hub={1 if slot_data.get('transition_hub') else 0}",
         f"ending_map={slot_data.get('ending_map', '')}",
         f"final_boss={slot_data.get('final_boss', '')}",
