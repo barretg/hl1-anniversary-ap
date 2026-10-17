@@ -32,6 +32,7 @@ def context() -> HalfLifeContext:
     ctx.viewmodel_hands = ""
     ctx.ally_weapon_drops = False
     ctx.completed_missions = set()
+    ctx.played_missions = set()
     ctx.unlocked_chapters = set()
     ctx.unlocked_items = set()
     ctx.air_accelerate_received = 0
@@ -413,3 +414,78 @@ class TestSlotChange(unittest.TestCase):
         self.ctx.seed_name = "seed-b"
         self.ctx.forget_other_slot()
         self.assertEqual(self.ctx.completed_missions, set())
+
+
+class TestRemoteCompletions(unittest.TestCase):
+    """A completion the server has but this machine never played is remote."""
+
+    def setUp(self) -> None:
+        import tempfile
+        from pathlib import Path
+
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = Path(self.tmp.name)
+        self.ctx = self.fresh()
+        self.office = next(
+            entry["id"] for entry in self.ctx.campaign["locations"]
+            if entry["trigger"]["type"] == "chapter_complete" and entry["chapter"] == "c1a2"
+        )
+
+    def fresh(self) -> HalfLifeContext:
+        ctx = context()
+        ctx.bridge = SimpleNamespace(dir=self.store)
+        ctx.legacy_sent = set()
+        ctx.goal_sent = False
+        ctx.state_slot = ""
+        ctx.checked_locations = set()
+        return ctx
+
+    def connect(self, ctx: HalfLifeContext, seed: str = "A") -> None:
+        ctx.seed_name, ctx.slot = seed, 1
+        ctx.forget_other_slot()
+        ctx.resume_played_missions()
+
+    def test_a_mission_finished_here_is_not_remote(self) -> None:
+        self.connect(self.ctx)
+        self.ctx.finished_here("c1a2")
+        self.ctx.checked_locations = {self.office}
+        self.ctx.sync_completed_missions()
+        self.assertEqual(self.ctx.remote_completed, set())
+        ctx = self.fresh()
+        ctx.checked_locations = {self.office}
+        self.connect(ctx)
+        self.assertEqual(ctx.remote_completed, set())
+
+    def test_a_collected_mission_is_remote(self) -> None:
+        self.connect(self.ctx)
+        self.ctx.checked_locations = {self.office}
+        self.ctx.sync_completed_missions()
+        self.assertEqual(self.ctx.remote_completed, {"c1a2"})
+        # Played to its end after all: complete here too.
+        self.ctx.finished_here("c1a2")
+        self.assertEqual(self.ctx.remote_completed, set())
+
+    def test_new_run_forgets_local_completions(self) -> None:
+        self.connect(self.ctx)
+        self.ctx.finished_here("c1a2")
+        self.ctx.checked_locations = {self.office}
+        self.assertTrue(HalfLifeCommandProcessor(self.ctx)._cmd_newrun())
+        self.assertEqual(self.ctx.remote_completed, {"c1a2"})
+        ctx = self.fresh()
+        ctx.checked_locations = {self.office}
+        self.connect(ctx)
+        self.assertEqual(ctx.remote_completed, {"c1a2"})
+
+    def test_run_under_way_without_a_record_counts_as_played(self) -> None:
+        self.ctx.checked_locations = {self.office}
+        self.connect(self.ctx)
+        self.assertEqual(self.ctx.remote_completed, set())
+
+    def test_completions_are_per_slot(self) -> None:
+        self.connect(self.ctx, "A")
+        self.ctx.finished_here("c1a2")
+        self.connect(self.ctx, "B")
+        self.ctx.checked_locations = {self.office}
+        self.ctx.sync_completed_missions()
+        self.assertEqual(self.ctx.remote_completed, {"c1a2"})

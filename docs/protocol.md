@@ -133,6 +133,7 @@ death_link_amnesty=4
 viewmodel_hands=
 chapters=c1a2,c1a4
 excluded=c0a0
+remote=
 items=RPG;Shotgun
 ungated=item_longjump
 starting=weapon_crowbar
@@ -143,7 +144,7 @@ event=4|ITEM|Ammo Cache|1786000000
 event=5|DEATHLINK|PlayerTwo~a gargantua|1786000001
 ```
 
-`chapters` and `excluded` are comma separated; `items` and `ungated` are
+`chapters`, `excluded` and `remote` are comma separated; `items` and `ungated` are
 semicolon separated because item names may legitimately contain commas.
 
 `data_version` is the fingerprint of the id map the apworld was built from. The
@@ -154,6 +155,11 @@ differently and every check would land on the wrong location.
 `excluded` is the missions the seed left out. It is not the same as "locked": no
 item will ever unlock them, so the game reports "not in this seed" rather than
 leaving the player waiting for a key that does not exist.
+
+`remote` is the missions complete on the server but never finished on this
+machine for this slot (collected, released, or played elsewhere). The game lists
+them with their open or locked status and "(Remote Complete)" after it. Absent
+(an older client) means none.
 
 `goal_open` is whether Nihilanth's seal has lifted. No item unlocks the finale;
 it opens once `missions_required` other missions are finished, and the client

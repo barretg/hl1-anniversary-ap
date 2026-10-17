@@ -56,8 +56,9 @@ bool HandleChat(CBasePlayer* player, const std::string& said);
 // `!menu` choice runs, so a menu warp passes every gate a typed one does.
 bool RunCommand(const std::string& name, const std::string& rest);
 
-// For `!menu`: what `!ap` says of a mission, and its number within its game.
-const char* MissionStatus(const Chapter& chapter);
+// For `!menu`: what `!ap` says of a mission, its status in brackets with
+// "(Remote Complete)" after it when that applies, and its number within its game.
+std::string MissionLabel(const Chapter& chapter);
 int MissionNumberInGame(const Chapter& chapter);
 
 // One of the player's `!setwarp` points, by its label. False if there is none.

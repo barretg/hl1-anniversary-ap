@@ -76,6 +76,7 @@ def lifted_context():
     ctx = scope["Context"]()
     ctx.campaign = json.loads(CAMPAIGN.read_text(encoding="utf-8"))
     ctx.completed_missions = set()
+    ctx.played_missions = set()
     ctx.legacy_sent = set()
     ctx.goal_sent = False
     ctx.state_slot = ""

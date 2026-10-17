@@ -141,6 +141,8 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
             CollectStrings(value, ',', parsed.open_chapters);
         } else if (key == "excluded") {
             CollectStrings(value, ',', parsed.excluded_chapters);
+        } else if (key == "remote") {
+            CollectStrings(value, ',', parsed.remote_complete);
         } else if (key == "items") {
             CollectStrings(value, ';', parsed.held_items);
         } else if (key == "ungated") {

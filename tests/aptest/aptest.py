@@ -1893,7 +1893,27 @@ def release_0_4_0_2_scenarios(data: CheckData, game_root: Path) -> list[Scenario
             + eagle_restore_scenarios(data, game_root)
             + npc_mechanics_scenarios(data)
             + npc_map_scenarios(data, game_root)
-            + viewmodel_scenarios())
+            + viewmodel_scenarios()
+            + remote_complete_scenarios(data))
+
+
+def remote_complete_scenarios(data: CheckData) -> list[Scenario]:
+    """A completion the server has but this machine never played is marked."""
+    complete = {l.arg: l.id for l in data.locations.values() if l.kind == "chapter_complete"}
+    if not {"c1a0c", "c1a2"} <= complete.keys():
+        return []
+    return [Scenario(
+        title="0.4.0-2: A mission complete only on the server is marked remote",
+        map="c1a0", closed=["c1a0c"],
+        checked=[complete["c1a0c"], complete["c1a2"]],
+        steps="\n".join([
+            "Unforeseen Consequences (locked) and Office Complex (open) were",
+            "completed on the server, not played here. Type !ap: Unforeseen",
+            "Consequences' line ends '[locked] (Remote Complete)' and Office",
+            "Complex's '[unlocked] (Remote Complete)'. Open !menu and its mission",
+            "warps: Office Complex's entry ends '[unlocked] (Remote Complete)'.",
+            "!pass, or !fail <what was shown>.",
+        ]))]
 
 
 def npc_map_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
@@ -2437,6 +2457,9 @@ class Harness:
         # Progressive Air Acceleration copies given: counted, not held.
         self.air_received = 0
         self.seen: set[int] = set()
+        # Missions the game finished since the scenario started. A preset
+        # completion not among them was never played here: it is remote.
+        self.played: set[str] = set()
         self.connected = True
         # Re-entrant: a verdict from the game arrives inside the poll and
         # starts the next scenario, which takes the lock again.
@@ -2495,6 +2518,9 @@ class Harness:
             melee_throw=s.melee_throw if s is not None else True,
             viewmodel_hands=s.viewmodel_hands if s is not None else "",
             excluded=[],
+            remote=[l.arg for l in self.data.locations.values()
+                    if l.kind == "chapter_complete" and l.id in self.server_checked()
+                    and l.arg not in self.played],
             ungated=[],
             starting=["weapon_crowbar"],
             # What the server would hold: the scenario's own, plus every check
@@ -2525,6 +2551,7 @@ class Harness:
             self.items = self.base_items() - set(s.take)
             self.air_received = 0
             self.seen = set()
+            self.played = set()
             self.connected = s.connected
             self.publish(force=True)
             # The game loads the map when the sequence number moves, so a
@@ -2745,6 +2772,7 @@ class Harness:
                     elif event.kind == "ACK":
                         self.bridge.acknowledge(int(event.arg))
                     elif event.kind in ("COMPLETE", "GOAL"):
+                        self.played.add(event.arg)
                         self.judge_complete(event.kind, event.arg)
                     elif event.kind in ("DEATH", "CHAT"):
                         self.tell(f"[aptest] {event.kind}: " + " | ".join(event.args))

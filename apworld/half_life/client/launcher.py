@@ -7,8 +7,10 @@ the Archipelago Launcher and can be started with an `archipelago://` URI.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sys
+from pathlib import Path
 
 import Utils
 from CommonClient import (
@@ -47,6 +49,9 @@ from .bridge import Bridge, find_store_dir, is_game_dir, warp_save_key
 GAME_NAME = "Half-Life"
 HALF_LIFE = "half_life"
 POLL_INTERVAL = 0.2
+# In the bridge directory: per slot, the missions finished on this machine, so a
+# completion the server reports and this machine never saw reads as remote.
+COMPLETED_NAME = "ap_completed.json"
 
 # `viewmodel_style` -> the campaign whose first-person models every map uses.
 VIEWMODEL_HANDS = {
@@ -222,6 +227,18 @@ class HalfLifeCommandProcessor(ClientCommandProcessor):
         self.ctx.print_missions()
         return True
 
+    def _cmd_newrun(self) -> bool:
+        """Restarting this slot from scratch: forget the missions finished here,
+        so the server's completions read as remote until played again."""
+        if not self.ctx.slot_identity:
+            logger.info("Connect to the slot first.")
+            return False
+        self.ctx.played_missions.clear()
+        self.ctx.save_played_missions()
+        logger.info("Forgot this slot's local completions. Every mission the server counts "
+                    "now shows as (Remote Complete) until you finish it again.")
+        return True
+
     def _cmd_chat(self) -> bool:
         """Toggle relaying chat between the game and the multiworld."""
         self.ctx.chat_relay = not self.ctx.chat_relay
@@ -303,6 +320,9 @@ class HalfLifeContext(SuperContext):
             self.campaign.get("starting_weapons", ())
         )
         self.completed_missions: set[str] = set()
+        # The completed missions this machine finished itself, kept per slot in
+        # COMPLETED_NAME. The rest of `completed_missions` came from the server.
+        self.played_missions: set[str] = set()
         self.missions_required = len(
             [c for c in self.campaign["chapters"]
              if not c["is_goal"] and c.get("campaign", HALF_LIFE) == HALF_LIFE]
@@ -498,6 +518,7 @@ class HalfLifeContext(SuperContext):
             self.items_synced = False
 
             self.apply_slot_data(args.get("slot_data", {}))
+            self.resume_played_missions()
             if self.death_link_enabled:
                 asyncio.create_task(self.update_death_link(True), name="UpdateDeathLink")
 
@@ -718,10 +739,12 @@ class HalfLifeContext(SuperContext):
         identity = self.slot_identity
         if identity == self.state_slot:
             return
+        # Missions finished before any slot was named belong to the first one.
         if self.state_slot:
             logger.info("Connected to a different slot; forgetting the last one's "
                         "finished missions.")
             self.force_melee_throw = False
+            self.played_missions.clear()
         self.state_slot = identity
         self.completed_missions.clear()
         self.legacy_sent.clear()
@@ -749,6 +772,56 @@ class HalfLifeContext(SuperContext):
             for location_id in self.checked_locations
             if self.is_mission_complete(location_id)
         } - {""}
+
+    def record_path(self) -> Path | None:
+        return self.bridge.dir / COMPLETED_NAME if self.bridge else None
+
+    def read_record(self) -> dict:
+        path = self.record_path()
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) if path else {}
+        except (OSError, ValueError):
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def resume_played_missions(self) -> None:
+        """On connect: the slot's local completions, joined with any finished
+        before a slot was named. No record on a run under way (a client from
+        before the record existed) counts what the server has as played here,
+        rather than every completion reading as remote."""
+        saved = self.read_record().get(self.slot_identity)
+        if isinstance(saved, list):
+            self.played_missions |= {str(key) for key in saved}
+        elif self.checked_locations:
+            self.sync_completed_missions()
+            self.played_missions |= self.completed_missions
+        self.save_played_missions()
+
+    def save_played_missions(self) -> None:
+        path = self.record_path()
+        if path is None or not self.slot_identity:
+            return
+        record = self.read_record()
+        record[self.slot_identity] = sorted(self.played_missions)
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            temp = path.with_suffix(".tmp")
+            temp.write_text(json.dumps(record), encoding="utf-8")
+            os.replace(temp, path)
+        except OSError as exc:
+            logger.warning(f"Could not save which missions were finished here ({exc}).")
+
+    def finished_here(self, chapter_key: str) -> None:
+        """The game finished a mission on this machine."""
+        self.completed_missions.add(chapter_key)
+        if chapter_key not in self.played_missions:
+            self.played_missions.add(chapter_key)
+            self.save_played_missions()
+
+    @property
+    def remote_completed(self) -> set[str]:
+        """Completed on the server, never finished on this machine."""
+        return self.completed_missions - self.played_missions
 
     @property
     def slot_identity(self) -> str:
@@ -894,9 +967,12 @@ class HalfLifeContext(SuperContext):
                 shown = owner
                 names = {c["key"]: c["name"] for c in self.campaign.get("campaigns", ())}
                 logger.info(f"{names.get(owner, owner)}:")
+            # Complete on the server alone: listed as still to play, with a note.
+            remote = key in self.remote_completed
+            note = " (Remote Complete)" if remote else ""
             if key in self.excluded_chapters:
                 status = "not in this seed"
-            elif key in self.completed_missions:
+            elif key in self.completed_missions and not remote:
                 status = "complete"
             elif chapter["is_goal"]:
                 owner = chapter.get("campaign", HALF_LIFE)
@@ -911,7 +987,7 @@ class HalfLifeContext(SuperContext):
                 status = "unlocked"
             else:
                 status = "locked"
-            logger.info(f"  {chapter['index']:2d}. {chapter['name']:26} [{status}]")
+            logger.info(f"  {chapter['index']:2d}. {chapter['name']:26} [{status}]{note}")
 
     def make_gui(self):
         """Name the window for this game rather than "Archipelago Text Client".
@@ -1058,6 +1134,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         air_accelerate=ctx.air_accelerate,
         melee_throw=ctx.melee_throw,
         excluded=sorted(ctx.excluded_chapters),
+        remote=sorted(ctx.remote_completed),
         ungated=sorted(ctx.ungated_classnames),
         starting=list(ctx.starting_weapons),
         checked=sorted(ctx.checked_locations),
@@ -1094,9 +1171,9 @@ async def pump(ctx: HalfLifeContext) -> None:
         if event.kind == "CHECK":
             new_checks.append(int(event.arg))
         elif event.kind == "COMPLETE":
-            ctx.completed_missions.add(event.arg)
+            ctx.finished_here(event.arg)
         elif event.kind == "GOAL":
-            ctx.completed_missions.add(event.arg)
+            ctx.finished_here(event.arg)
             if not ctx.run_complete:
                 # One finale of several. The slot is won with all of them.
                 left = [

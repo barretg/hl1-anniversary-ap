@@ -97,6 +97,15 @@ def test_snapshot_carries_excluded_missions(bridge: Bridge) -> None:
     assert "excluded=c0a0" in bridge.in_path.read_text(encoding="utf-8")
 
 
+def test_snapshot_carries_remote_completions(bridge: Bridge) -> None:
+    """A completion the server has but this machine never played."""
+    snapshot(bridge)
+    assert "remote=\n" in bridge.in_path.read_text(encoding="utf-8")
+
+    assert snapshot(bridge, remote=["c1a2", "c1a0"]) is True
+    assert "remote=c1a0,c1a2" in bridge.in_path.read_text(encoding="utf-8")
+
+
 def test_snapshot_carries_the_starting_weapons(bridge: Bridge) -> None:
     """What the seed opens with, and what the game must never take away."""
     snapshot(bridge)

@@ -209,6 +209,7 @@ class Bridge:
         goal_open: bool,
         death_link: bool,
         excluded: list[str] | None = None,
+        remote: list[str] | None = None,
         ungated: list[str] | None = None,
         starting: list[str] | None = None,
         checked: list[int] | None = None,
@@ -268,6 +269,9 @@ class Bridge:
             # ever unlock these, and the game should say so rather than leaving
             # the player waiting for a key that does not exist.
             "excluded=" + ",".join(sorted(excluded or ())),
+            # Missions complete on the server but never finished here for this
+            # slot: collected, released, or played by someone else on it.
+            "remote=" + ",".join(sorted(remote or ())),
             "items=" + ";".join(sorted(items)),
             # Classnames this seed does not gate at all, which is not the same as
             # gating them and calling them owned: the game keeps its own schedule
