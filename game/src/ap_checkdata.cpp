@@ -79,6 +79,7 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
     gated_classnames.clear();
     starting_weapons.clear();
     changelevels.clear();
+    transitions.clear();
     format_version = 0;
     data_version.clear();
     goal_chapter.clear();
@@ -250,6 +251,22 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
             if (ParseVector(f[3], changelevel.at)) {
                 changelevels.push_back(changelevel);
             }
+        } else if (record == "E" && f.size() >= 14) {
+            Transition t;
+            t.id = f[1];
+            t.map = f[2];
+            t.to = f[3];
+            t.landmark = f[4];
+            t.kind = f[6];
+            t.partner = f[7];
+            t.two_way = f[8] == "1";
+            t.yaw = static_cast<float>(atof(f[10].c_str()));
+            t.width = static_cast<float>(atof(f[11].c_str()));
+            t.height = static_cast<float>(atof(f[12].c_str()));
+            t.use_only = f[13] == "1";
+            if (ParseVector(f[5], t.at) && ParseVector(f[9], t.origin)) {
+                transitions.push_back(t);
+            }
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.
@@ -371,6 +388,15 @@ const Campaign& HalfLifeDefault(const std::string& goal) {
 }
 
 }  // namespace
+
+const Transition* CheckData::TransitionById(const std::string& id) const {
+    for (const Transition& transition : transitions) {
+        if (transition.id == id) {
+            return &transition;
+        }
+    }
+    return nullptr;
+}
 
 const Campaign* CheckData::CampaignByKey(const std::string& key) const {
     for (const Campaign& campaign : campaigns) {

@@ -21,6 +21,7 @@
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
+#include "ap_transitions.h"
 #include "ap_warpsave.h"
 
 namespace ap {
@@ -236,6 +237,12 @@ bool Finished(const Chapter& chapter) {
 
 }  // namespace
 
+bool WarpReachable(const Chapter& chapter) {
+    // Transitions mode: a warp is a way back, so only to chapters already
+    // walked into (7.4). Their first map's arrival check says so.
+    return !TransitionsMode() || chapter.maps.empty() || Visited(chapter.maps.front());
+}
+
 bool ChapterIsOpen(const Chapter& chapter) {
     const Snapshot& state = State();
     if (state.ChapterOpen(chapter.key)) {
@@ -308,6 +315,12 @@ bool MissionOpen(const Chapter& chapter, bool on_screen) {
         return false;
     }
 
+    if (!WarpReachable(chapter)) {
+        Refuse(on_screen, "You have not reached " + chapter.name +
+                              " yet. Warps only go where this run has been.");
+        return false;
+    }
+
     return true;
 }
 
@@ -368,6 +381,9 @@ const char* StatusOf(const Chapter& chapter) {
     }
     if (!Installed(chapter)) {
         return "not installed";
+    }
+    if (!WarpReachable(chapter)) {
+        return "not reached";
     }
     if (chapter.is_goal) {
         return ChapterIsOpen(chapter) ? "OPEN" : "sealed";
@@ -549,7 +565,11 @@ void Warp(const std::string& argument) {
 
     if (request.part <= 1) {
         Notify(std::string("Warping to ") + chapter->name + ".");
-        GoTo(chapter->maps.front());
+        if (TransitionsMode()) {
+            RequestMap(chapter->maps.front());  // fresh, at its start (7.4)
+        } else {
+            GoTo(chapter->maps.front());
+        }
         return;
     }
 
@@ -763,6 +783,7 @@ void RegisterCommands() {
     RegisterTrapCommands();
     RegisterBotCommands();
     RegisterTestCommands();
+    RegisterTransitionCommands();
     Trace("  commands registered");
 }
 
@@ -920,7 +941,9 @@ void RequestMap(const std::string& map_name) {
 }
 
 void RequestLoad(const std::string& save_name, const std::string& map_name) {
-    if (save_name.empty() || map_name.empty()) {
+    // An empty map is a save whose map is not known (the aptest harness's): its
+    // arrival is not ours, so `AuthoriseMap` asks about it as for any other.
+    if (save_name.empty()) {
         return;
     }
     // `load` rather than `map`, and otherwise the same contract: one deferred
@@ -1217,6 +1240,9 @@ bool LastRequestCold() { return g_intended_cold; }
 bool InterceptChangeLevel(const std::string& from_map, const std::string& to_map) {
     if (!Data().Loaded()) {
         return false;  // ordinary Half-Life; leave every transition alone
+    }
+    if (TransitionsMode()) {
+        return false;  // one walked world: chapter boundaries are not exits
     }
 
     const Chapter* from = Data().ChapterOfMap(from_map);

@@ -1,0 +1,117 @@
+{
+ "air_acceleration": null,
+ "ally_weapon_drops": false,
+ "ammosanity": false,
+ "armour_items": {
+  "blue_shift": "Security Armor",
+  "half_life": "HEV Suit",
+  "opposing_force": "PCV"
+ },
+ "backtrack_orbs": {
+  "c1a0b:0": "c1a0e:0"
+ },
+ "barneysanity": false,
+ "boss_exits": {
+  "half_life": "c4a3"
+ },
+ "butterfingers_reissue": true,
+ "campaigns": [
+  "half_life"
+ ],
+ "death_link": false,
+ "death_link_amnesty": 4,
+ "ending_map": "c5a1",
+ "excluded_chapters": [
+  "ba_canal1",
+  "ba_security1",
+  "ba_teleport2",
+  "ba_tram1",
+  "ba_xen1",
+  "ba_yard1",
+  "c0a0",
+  "c1a0c",
+  "c1a2",
+  "c1a3",
+  "c1a4",
+  "c2a1",
+  "c2a2",
+  "c2a3",
+  "c2a4",
+  "c2a4d",
+  "c2a5",
+  "c3a1",
+  "c3a2e",
+  "c4a1",
+  "c4a1a",
+  "c4a2",
+  "of0a0",
+  "of1a1",
+  "of1a5",
+  "of2a1",
+  "of2a4",
+  "of3a1",
+  "of3a4",
+  "of4a1",
+  "of4a4",
+  "of5a1",
+  "of6a1",
+  "of6a4b"
+ ],
+ "excluded_triggers": [
+  "ammo_pickup",
+  "barney",
+  "heal_pickup",
+  "microwave",
+  "npc_critical",
+  "scientist",
+  "soldier"
+ ],
+ "final_boss": "c4a3",
+ "generation_difficulty": "standard",
+ "goal_chapter": "c4a3",
+ "goal_chapters": {
+  "half_life": "c4a3"
+ },
+ "healsanity": false,
+ "include_critical_npcs": false,
+ "include_microwave": false,
+ "inert_transitions": [
+  "c1a0:0"
+ ],
+ "map_shuffle": "area",
+ "melee_throw": false,
+ "missions_required": 1,
+ "missions_required_by_campaign": {
+  "half_life": 1
+ },
+ "one_way_transitions": {
+  "c1a0e:0": "c1a0b:0"
+ },
+ "placed_at_vanilla": [],
+ "progression_mode": "transitions",
+ "scientistsanity": false,
+ "shuffle_flashlight": false,
+ "shuffle_hev_suit": false,
+ "shuffle_longjump": false,
+ "shuffled_equipment": [],
+ "soldiersanity": false,
+ "start_map": "c1a0",
+ "starting_chapters": [
+  "c1a0"
+ ],
+ "starting_weapons": [
+  "weapon_crowbar"
+ ],
+ "transition_chapters": [
+  "c1a0",
+  "c4a3"
+ ],
+ "transition_hub": false,
+ "transition_pairs": [
+  [
+   "c1a0b:1",
+   "c4a3:1"
+  ]
+ ],
+ "viewmodel_style": "per_campaign"
+}

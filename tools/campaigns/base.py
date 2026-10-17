@@ -182,6 +182,25 @@ class Campaign:
     # names and item names were published without a campaign in them. It keeps
     # those forms; every later campaign's are prefixed with its key or name.
     legacy: bool = False
+    # Transitions mode (see .claude/TRANSITION_RANDO.md). Chapters whose rollout
+    # step is done, by key. Only these are valid in the YAML's chapter lists.
+    transition_supported: frozenset[str] = frozenset()
+    # The finale's boss fight, the changelevel that fires when it is won
+    # (`(map, target map)`), and the closing scene it leads to. The ending map
+    # is cut from the world in transitions mode; the boss exit is the win.
+    boss_map: str = ""
+    boss_exit: tuple[str, str] = ("", "")
+    ending_map: str = ""
+    # `{transition id: {field: value}}` corrections to the built transition
+    # table: kind, partner, two_way, frame, orb_at, fixed.
+    transition_overrides: dict[str, dict] = field(default_factory=dict)
+    # The scripted train rides, `{name: {"train": globalname, "maps": {map:
+    # {"entry": id | None, "exit": id}}}}`. Seeded by hand (risk 4).
+    train_sequences: dict[str, dict] = field(default_factory=dict)
+    # `MAP_LOGIC` (3.3): `{map: {"segments", "transitions", "edges", "tier"}}`,
+    # drafted by `tools/map_logic_report.py` from the `maplogic` aptest group.
+    # A map not in it is one segment under the chapter's existing gates.
+    map_logic: dict[str, dict] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         keys = [key for key, _, _ in self.chapters]
@@ -207,6 +226,14 @@ class Campaign:
             if map_name not in maps or map_name in firsts:
                 raise ValueError(f"{self.key}: map gate on {map_name!r}, which is "
                                  "not a later map of one of its missions")
+        for chapter in self.transition_supported:
+            if chapter not in keys:
+                raise ValueError(f"{self.key}: transition_supported names "
+                                 f"{chapter!r}, which is not one of its chapters")
+        for map_name in (self.boss_map, *self.boss_exit, self.ending_map):
+            if map_name and map_name not in maps:
+                raise ValueError(f"{self.key}: boss or ending map {map_name!r} "
+                                 "is not one of its maps")
         for mode in self.complete_on.values():
             if mode not in COMPLETE_ON:
                 raise ValueError(f"{self.key}: unknown complete_on {mode!r}")

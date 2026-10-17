@@ -6,16 +6,24 @@
 #include "ap_aptest.h"
 
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "ap_bridge.h"
+#include "ap_checkdata.h"
 #include "ap_hub.h"
 #include "ap_locations.h"
 #include "ap_main.h"
 #include "ap_text.h"
+#include "ap_transitions.h"
+#include "ap_warpsave.h"
+
+extern int gmsgAPLabel;  // player.cpp
 
 namespace ap {
 
@@ -36,6 +44,27 @@ struct Destination {
     // Only `tp` goes to the spot; arriving leaves the player at spawn, for a
     // spot that would kill them.
     bool manual = false;
+    // The way the player faces when placed.
+    bool has_yaw = false;
+    float yaw = 0.0f;
+    // Label every transition of whatever map the player is on, `T<n> > <to>`,
+    // n by id number. `entry` is the one the scenario came in through.
+    bool transition_labels = false;
+    std::string entry;
+    // Text drawn at points in the scenario's map.
+    struct Label {
+        float position[3];
+        std::string text;
+    };
+    std::vector<Label> labels;
+    // `pair=<id> <id>`: the transition pairs the scenario plays with.
+    std::vector<std::pair<std::string, std::string>> pairs;
+    // `save=<name>`: the game is saved under this name on `!pass` or `!fail`,
+    // for a later scenario to carry on from.
+    std::string save_as;
+    // `load=<name>`: the scenario starts by loading this save, wherever it was
+    // taken, instead of loading `map` fresh.
+    std::string load;
 };
 
 Destination g_destination;
@@ -50,6 +79,11 @@ bool g_looked = false;
 bool g_arriving = false;
 // When the player was first seen alive on the destination map.
 float g_alive_since = -1.0f;
+// The map and life the point labels were last sent for. A level change or a
+// death reloads the client's level, and it forgets them with it.
+std::string g_labels_map;
+float g_labels_since = -1.0f;
+bool g_labels_sent = false;
 float g_next_poll = 0.0f;
 // How far into `aptest_say.txt` has been shown. It starts at the end, so a
 // previous session's lines are not replayed.
@@ -83,9 +117,37 @@ bool ReadDestination(Destination& out) {
             out.crouch = value == "1";
         } else if (key == "manual") {
             out.manual = value == "1";
+        } else if (key == "pair") {
+            std::istringstream fields(value);
+            std::string a, b;
+            if (fields >> a >> b) {
+                out.pairs.push_back({a, b});
+            }
+        } else if (key == "save") {
+            out.save_as = value;
+        } else if (key == "load") {
+            out.load = value;
+        } else if (key == "transitions") {
+            out.transition_labels = value == "1";
+        } else if (key == "entry") {
+            out.entry = value;
+        } else if (key == "yaw") {
+            out.has_yaw = true;
+            out.yaw = static_cast<float>(std::atof(value.c_str()));
+        } else if (key == "label") {
+            // `x y z text`
+            std::istringstream fields(value);
+            Destination::Label label;
+            if (fields >> label.position[0] >> label.position[1] >> label.position[2]) {
+                std::getline(fields, label.text);
+                label.text = Trim(label.text);
+                if (!label.text.empty()) {
+                    out.labels.push_back(label);
+                }
+            }
         }
     }
-    return !out.map.empty();
+    return !out.map.empty() || !out.load.empty();
 }
 
 // Lines the harness wants shown, `hud|text` on screen and in the console,
@@ -133,38 +195,17 @@ void Load() {
     ForgetSentChecks();
     g_arriving = true;
     g_alive_since = -1.0f;
-    RequestMap(g_destination.map);
-}
-
-// Somewhere a standing player fits, as near the point as possible. Item and
-// monster origins sit in lockers, on shelves and against walls, and dropping a
-// player on the exact spot puts them in the geometry. Rings outward and upward,
-// each spot checked with the player hull, then settled onto the floor.
-bool StandSpot(CBasePlayer* player, const Vector& target, Vector& out,
-               int hull = human_hull) {
-    static const float kRadii[] = {0.0f, 24.0f, 48.0f, 80.0f, 128.0f};
-    static const float kHeights[] = {36.0f, 72.0f, 0.0f, 128.0f};
-    for (float height : kHeights) {
-        for (float radius : kRadii) {
-            const int steps = radius == 0.0f ? 1 : 8;
-            for (int i = 0; i < steps; ++i) {
-                const float angle = 6.2831853f * i / steps;
-                const Vector spot = target + Vector(radius * std::cos(angle),
-                                                    radius * std::sin(angle), height);
-                TraceResult tr;
-                UTIL_TraceHull(spot, spot, ignore_monsters, hull,
-                               player->edict(), &tr);
-                if (tr.fStartSolid || tr.fAllSolid) {
-                    continue;
-                }
-                UTIL_TraceHull(spot, spot - Vector(0, 0, 256), ignore_monsters,
-                               hull, player->edict(), &tr);
-                out = tr.vecEndPos;
-                return true;
-            }
+    if (!g_destination.load.empty()) {
+        if (!WarpSaveExists(g_destination.load)) {
+            g_arriving = false;
+            Notify("[aptest] No save '" + g_destination.load + "' yet: !pass or !fail the "
+                   "scenario before this one first, then !redo.");
+            return;
         }
+        RequestLoad(g_destination.load, "");
+        return;
     }
-    return false;
+    RequestMap(g_destination.map);
 }
 
 void Teleport() {
@@ -182,19 +223,91 @@ void Teleport() {
     if (g_destination.crouch) {
         // Ducked as the movement code would leave it: crouched size and view,
         // and it stays that way while there is no room to stand up.
-        if (!StandSpot(player, target, spot, head_hull)) {
+        if (!FindStandSpot(player, target, spot, head_hull)) {
             spot = target;
             Notify("[aptest] No room to crouch near the spot; placed on it anyway.");
         }
         player->pev->flags |= FL_DUCKING;
         player->pev->view_ofs = VEC_DUCK_VIEW;
         UTIL_SetSize(player->pev, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
-    } else if (!StandSpot(player, target, spot)) {
+    } else if (!FindStandSpot(player, target, spot)) {
         spot = target;
         Notify("[aptest] No room to stand near the spot; placed on it anyway.");
     }
     UTIL_SetOrigin(player->pev, spot);
     player->pev->velocity = g_vecZero;
+    if (g_destination.has_yaw) {
+        player->pev->angles = player->pev->v_angle = Vector(0, g_destination.yaw, 0);
+        player->pev->fixangle = 1;
+    }
+}
+
+// The scenario's labels, as points: a negative index tells the client the
+// label is a position, not an entity.
+void SendPointLabel(CBasePlayer* player, int index, const float at[3],
+                    const std::string& text) {
+    MESSAGE_BEGIN(MSG_ONE, gmsgAPLabel, nullptr, player->pev);
+    WRITE_SHORT(-index);
+    WRITE_COORD(at[0]);
+    WRITE_COORD(at[1]);
+    WRITE_COORD(at[2]);
+    WRITE_STRING(text.c_str());
+    MESSAGE_END();
+}
+
+long TransitionNumber(const Transition& t) {
+    return ParseLong(t.id.substr(t.id.rfind(':') + 1));
+}
+
+void SendPointLabels(CBasePlayer* player) {
+    const std::string map = CurrentMap();
+    int index = 0;
+    if (map == g_destination.map) {
+        for (const Destination::Label& label : g_destination.labels) {
+            SendPointLabel(player, ++index, label.position, label.text);
+        }
+    }
+    if (!g_destination.transition_labels) {
+        return;
+    }
+    std::vector<const Transition*> here;
+    for (const Transition& t : Data().transitions) {
+        if (t.map == map) {
+            here.push_back(&t);
+        }
+    }
+    std::sort(here.begin(), here.end(), [](const Transition* a, const Transition* b) {
+        return TransitionNumber(*a) < TransitionNumber(*b);
+    });
+    for (size_t n = 0; n < here.size(); ++n) {
+        std::string text = "T" + std::to_string(n + 1) + " > " + here[n]->to;
+        if (here[n]->id == g_destination.entry) {
+            text += " (entry)";
+        }
+        SendPointLabel(player, ++index, here[n]->at, text);
+    }
+}
+
+// Once per map and life, a second in, when the client is in the level, and
+// not while a scenario is still placing the player.
+void RunPointLabels() {
+    CBasePlayer* player = Player();
+    if (player == nullptr || !player->IsAlive() || g_destination.seq < 0) {
+        g_labels_since = -1.0f;
+        return;
+    }
+    if (g_labels_since < 0.0f || CurrentMap() != g_labels_map ||
+        gpGlobals->time < g_labels_since) {
+        g_labels_map = CurrentMap();
+        g_labels_since = gpGlobals->time;
+        g_labels_sent = false;
+        return;
+    }
+    if (g_labels_sent || g_arriving || gpGlobals->time - g_labels_since < 1.0f) {
+        return;
+    }
+    SendPointLabels(player);
+    g_labels_sent = true;
 }
 
 // Everything but `tp` is the harness's to answer.
@@ -231,7 +344,24 @@ bool TestDispatch(const std::string& name, const std::string& rest) {
     }
     for (const char* verb : kHarnessVerbs) {
         if (name == verb) {
-            Wire().Send("APTEST", std::vector<std::string>{name, Sanitise(rest)});
+            // Where the player stands and faces, for a note that records a spot.
+            std::string where;
+            CBasePlayer* player = Player();
+            if (player != nullptr) {
+                char text[160];
+                snprintf(text, sizeof(text), "%.0f %.0f %.0f %.0f %s", player->pev->origin.x,
+                         player->pev->origin.y, player->pev->origin.z,
+                         player->pev->v_angle.y, CurrentMap().c_str());
+                where = text;
+            }
+            // The state this scenario ends in, for the one that carries on.
+            if ((name == "pass" || name == "fail") && !g_destination.save_as.empty() &&
+                player != nullptr && player->IsAlive()) {
+                const std::string command = "save " + g_destination.save_as + "\n";
+                SERVER_COMMAND(const_cast<char*>(command.c_str()));
+                Notify("[aptest] Saved as " + g_destination.save_as + ".");
+            }
+            Wire().Send("APTEST", std::vector<std::string>{name, Sanitise(rest), where});
             return true;
         }
     }
@@ -259,6 +389,13 @@ void RunTestHarness() {
             g_destination = next;
             // The scenario's probes, before its map spawns and is tagged.
             ReloadData();
+            // And its pairs, before its triggers spawn and are rewritten. A
+            // seed in the snapshot has the say over a scenario's own.
+            if (TransitionsMode()) {
+                ApplySeedTransitions(State(), true);
+            } else {
+                SetTransitionPairs(g_destination.pairs);
+            }
             if (!first) {
                 Load();
             }
@@ -271,7 +408,10 @@ void RunTestHarness() {
         }
     }
 
-    if (!g_arriving || CurrentMap() != g_destination.map) {
+    RunPointLabels();
+    // A loaded save lands wherever it was taken.
+    const bool loaded = !g_destination.load.empty();
+    if (!g_arriving || (!loaded && CurrentMap() != g_destination.map)) {
         return;
     }
     CBasePlayer* player = Player();
@@ -289,9 +429,11 @@ void RunTestHarness() {
         return;
     }
     g_arriving = false;
-    if (!g_destination.manual) {
+    if (!g_destination.manual && !loaded) {
         Teleport();
     }
+    // Placed: the labels go out afresh, after the move.
+    g_labels_since = -1.0f;
     ShowSaid();
 #endif
 }

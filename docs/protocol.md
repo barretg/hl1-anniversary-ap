@@ -202,6 +202,33 @@ a starting weapon and a `K` record: it is always yours, and the gate exists so
 that the table is the single answer to "is this pickup gated", with no classname
 falling through it unlisted.
 
+A transitions mode seed adds a section after `missing` (a hub seed's snapshot
+has none of these keys, and a game that has never heard of them ignores them):
+
+```
+progression_mode=transitions
+map_shuffle=total
+start_map=c1a0
+transition_chapters=c1a0,c4a3
+transition_pairs=c1a0:1,c4a3:0;c1a0d:0,c4a3a:2
+inert_transitions=c1a0:0
+one_way_transitions=c4a3b:1,c1a0d:1
+backtrack_orbs=c1a0d:1,c4a3b:1
+transition_hub=0
+ending_map=c5a1
+final_boss=c4a3
+boss_maps=c4a3
+```
+
+Transition ids hold a colon but never a comma or semicolon, so a pair is `a,b`
+and entries are joined with `;`. `transition_pairs` lists only the pairs that are
+not vanilla, each meaning both directions; anything unlisted keeps its vanilla
+partner. `one_way_transitions` is `exit,arrival` for the odd exits that lead into
+an arrival already paired elsewhere, and `backtrack_orbs` is `arrival,exit` for
+the arrivals that get a way back. `inert_transitions` are the triggers that do
+nothing at all. In this mode `chapters` lists every included chapter, since the
+world is walked rather than unlocked.
+
 `now` is the client's wall clock at write time. Event freshness is judged by
 comparing an event's timestamp against `now` from the same snapshot, so the two
 sides never have to agree on a clock -- and a DeathLink that arrived during a map

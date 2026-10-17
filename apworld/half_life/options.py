@@ -6,6 +6,7 @@ from Options import (
     Choice,
     DeathLink,
     DefaultOnToggle,
+    OptionSet,
     PerGameCommonOptions,
     Range,
     StartInventoryPool,
@@ -13,7 +14,12 @@ from Options import (
     Visibility,
 )
 
-from .data import AIR_ACCELERATE_CAP, MAX_MISSIONS, MAX_MISSIONS_BY_CAMPAIGN
+from .data import (
+    AIR_ACCELERATE_CAP,
+    MAX_MISSIONS,
+    MAX_MISSIONS_BY_CAMPAIGN,
+    SUPPORTED_CHAPTER_NAMES,
+)
 
 
 class MissionsRequired(Range):
@@ -419,6 +425,96 @@ class TrapPercentage(Range):
     default = 15
 
 
+class ProgressionMode(Choice):
+    """How the run is laid out.
+
+    hub: missions are entered from the hub, each unlocked by its own item.
+    transitions: one contiguous world built from the included chapters' maps,
+    walked from map to map through shuffled level transitions. No mission
+    unlock items; the goal is beating every included finale's boss.
+    """
+
+    display_name = "Progression Mode"
+    option_hub = 0
+    option_transitions = 1
+    default = 0
+
+
+class MapShuffle(Choice):
+    """How level transitions are shuffled.
+
+    off: vanilla transitions.
+    area: missions keep their own transitions; a transition leaving a mission
+    leads into a random mission. Transitions mode only.
+    chapter_maps: each mission's own transitions are shuffled among themselves.
+    In transitions mode, mission exits also lead to random missions.
+    total: any transition can lead to any other. Transitions mode only.
+
+    In hub mode, area and total become chapter_maps.
+    """
+
+    display_name = "Map Shuffle"
+    option_off = 0
+    option_area = 1
+    option_chapter_maps = 2
+    option_total = 3
+    default = 0
+
+
+class GenerationDifficulty(Choice):
+    """Transitions mode only. How maps are placed along the run.
+
+    standard: by difficulty, easy maps early and hard ones late, with soft
+    borders so a map can turn up a little early or late, less often the further
+    out.
+    chaotic: anything anywhere, the start included. The only guarantee is that
+    the last chapter is a boss fight, sealed until every other boss in the seed
+    is beaten. Logic still guarantees the seed can be finished.
+    """
+
+    display_name = "Generation Difficulty"
+    option_standard = 0
+    option_chaotic = 1
+    default = 0
+
+
+class TransitionHub(Toggle):
+    """Transitions mode only. The first map of each mission gets a Hub
+    teleporter, leading to the hub with your gear and health intact. From there
+    you can step into any mission you have already found."""
+
+    display_name = "Transition Hub"
+
+
+class HalfLifeChapters(OptionSet):
+    """Transitions mode only. The Half-Life chapters whose maps are in the
+    world. Defaults to every chapter this version supports."""
+
+    display_name = "Half-Life Chapters"
+    valid_keys = SUPPORTED_CHAPTER_NAMES["half_life"]
+    default = frozenset(SUPPORTED_CHAPTER_NAMES["half_life"])
+
+
+class OpposingForceChapters(OptionSet):
+    """Transitions mode only. The Opposing Force chapters whose maps are in the
+    world. Ignored unless Opposing Force is included. Defaults to every chapter
+    this version supports."""
+
+    display_name = "Opposing Force Chapters"
+    valid_keys = SUPPORTED_CHAPTER_NAMES["opposing_force"]
+    default = frozenset(SUPPORTED_CHAPTER_NAMES["opposing_force"])
+
+
+class BlueShiftChapters(OptionSet):
+    """Transitions mode only. The Blue Shift chapters whose maps are in the
+    world. Ignored unless Blue Shift is included. Defaults to every chapter
+    this version supports."""
+
+    display_name = "Blue Shift Chapters"
+    valid_keys = SUPPORTED_CHAPTER_NAMES["blue_shift"]
+    default = frozenset(SUPPORTED_CHAPTER_NAMES["blue_shift"])
+
+
 @dataclass
 class HalfLifeOptions(PerGameCommonOptions):
     include_half_life: IncludeHalfLife
@@ -453,3 +549,10 @@ class HalfLifeOptions(PerGameCommonOptions):
     start_inventory_from_pool: StartInventoryPool
     death_link: DeathLink
     death_link_amnesty: DeathLinkAmnesty
+    progression_mode: ProgressionMode
+    map_shuffle: MapShuffle
+    generation_difficulty: GenerationDifficulty
+    transition_hub: TransitionHub
+    half_life_chapters: HalfLifeChapters
+    opposing_force_chapters: OpposingForceChapters
+    blue_shift_chapters: BlueShiftChapters

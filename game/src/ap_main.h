@@ -21,6 +21,8 @@
 //   dlls/gamerules.cpp   CGameRules::CanHavePlayerItem-> ap::CanCollect
 //   dlls/singleplay_gamerules.cpp CHalfLifeRules::CanHaveItem -> ap::CanCollect
 //   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::InterceptChangeLevel
+//   dlls/triggers.cpp    CChangeLevel::ChangeLevelNow -> ap::OnTransition, BeforeChangeLevel
+//   dlls/triggers.cpp    CChangeLevel::Spawn          -> ap::OnChangeLevelSpawned
 //   dlls/triggers.cpp    CTriggerEndSection           -> ap::InterceptEndSection
 //   dlls/triggers.cpp    CTriggerHurt::HurtTouch      -> ap::OnHealingTouch
 //   dlls/triggers.cpp    CBaseTrigger::MultiTouch     -> ap::TouchHubTrigger
@@ -94,6 +96,19 @@ bool TouchHubTrigger(CBaseEntity* toucher, CBaseEntity* trigger);   // ap_hub
 bool InterceptChangeLevel(const std::string& from_map,
                           const std::string& to_map);       // ap_hub
 bool InterceptEndSection(const std::string& map_name);      // ap_hub
+
+// What `OnTransition` decided about a trigger_changelevel that fired.
+constexpr int kTransitionNotOurs = 0;   // the game's own, or the hub's to judge
+constexpr int kTransitionSwallowed = 1; // nothing happens (or happened in place)
+constexpr int kTransitionChange = 2;    // a randomized pair: the engine changes level
+void OnChangeLevelSpawned(CBaseEntity* trigger);             // ap_transitions
+int OnTransition(CBaseEntity* trigger);                     // ap_transitions
+void BeforeChangeLevel(CBaseEntity* trigger, CBaseEntity* player);  // ap_transitions
+// CChangeLevel's names, which no header declares. Defined in triggers.cpp.
+const char* ChangeLevelMap(CBaseEntity* trigger);
+const char* ChangeLevelLandmark(CBaseEntity* trigger);
+void SetChangeLevelDestination(CBaseEntity* trigger, const char* map,
+                               const char* landmark);
 
 // Once per map load: find the mod folder, read checkdata.txt, open the bridge,
 // and announce ourselves with HELLO so the client sends a full snapshot.

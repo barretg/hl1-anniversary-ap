@@ -8,6 +8,7 @@
 
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ap {
@@ -53,6 +54,22 @@ struct Snapshot {
     // why nothing happened. Off from older clients: mouse2 stays silent.
     bool melee_throw = false;
     int death_link_amnesty = 0;
+
+    // Transitions mode (absent from a hub seed's snapshot). Directed entries
+    // are (from, to); `transition_pairs` holds each non-vanilla pair once and
+    // means both directions.
+    bool transitions_mode = false;
+    std::string map_shuffle;
+    std::string start_map;
+    std::string ending_map;
+    std::string final_boss;
+    bool transition_hub = false;
+    std::set<std::string> transition_chapters;
+    std::set<std::string> boss_maps;
+    std::set<std::string> inert_transitions;
+    std::vector<std::pair<std::string, std::string>> transition_pairs;
+    std::vector<std::pair<std::string, std::string>> one_way_transitions;
+    std::vector<std::pair<std::string, std::string>> backtrack_orbs;
 
     std::set<long> checked;   // for ap_tracker
     std::set<long> missing;   // ids in neither set are not in this seed

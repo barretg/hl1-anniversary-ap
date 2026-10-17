@@ -336,6 +336,9 @@ class HalfLifeContext(SuperContext):
         self.air_accelerate_received = 0
         # Melee Throw is in this seed's pool.
         self.melee_throw = False
+        # A transitions mode seed's slot data, passed to the game as is. None
+        # for a hub seed.
+        self.transitions: dict | None = None
         # Melee Throw turned on by hand, for seeds from before the item.
         self.force_melee_throw = False
         self.goal_sent = False
@@ -573,6 +576,8 @@ class HalfLifeContext(SuperContext):
         self.butterfingers_reissue = bool(slot_data.get("butterfingers_reissue", True))
         self.air_acceleration = slot_data.get("air_acceleration")
         self.melee_throw = bool(slot_data.get("melee_throw", False))
+        self.transitions = (dict(slot_data)
+                            if slot_data.get("progression_mode") == "transitions" else None)
 
     def relay_to_game(self, args: dict) -> None:
         """Show multiworld chat in the game.
@@ -823,6 +828,11 @@ class HalfLifeContext(SuperContext):
     @property
     def open_chapters(self) -> set[str]:
         """Every mission the game should let a player walk into."""
+        if self.transitions is not None:
+            # Walked, not unlocked: every included chapter is open, and the
+            # transitions themselves say how far the player can get.
+            return {key for key, owner in self.campaign_of_chapter.items()
+                    if owner in self.campaigns and key not in self.excluded_chapters}
         chapters = set(self.unlocked_chapters)
         for campaign, finale in self.goal_chapters.items():
             if self.seal_open(campaign) and finale not in self.excluded_chapters:
@@ -1054,6 +1064,7 @@ def publish(ctx: HalfLifeContext, force: bool = False) -> None:
         missing=sorted(ctx.missing_locations),
         data_version=ctx.data_version,
         slot=ctx.slot_identity,
+        transitions=ctx.transitions,
         force=force,
     )
 

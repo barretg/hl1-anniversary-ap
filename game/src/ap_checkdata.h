@@ -160,6 +160,27 @@ struct Changelevel {
     float at[3] = {0.0f, 0.0f, 0.0f};
 };
 
+// A level transition, one `trigger_changelevel` (format 9's `E` record), for
+// transitions mode. See .claude/TRANSITION_RANDO.md, 3.1 and 3.2.
+struct Transition {
+    std::string id;        // `<map>:<n>`, n by changelevel order in the BSP
+    std::string map;
+    std::string to;
+    std::string landmark;
+    // Its brush's centre, which is how the entity is found again at spawn.
+    float at[3] = {0.0f, 0.0f, 0.0f};
+    std::string kind;      // walk, lift, ride, drivable, fall, teleport, scripted
+    std::string partner;   // the vanilla transition on the other side, or empty
+    bool two_way = false;
+    // The frame: where a player stands at it, the way out through it, and the
+    // slab's extent across and up, for clamping a carried position.
+    float origin[3] = {0.0f, 0.0f, 0.0f};
+    float yaw = 0.0f;
+    float width = 0.0f;
+    float height = 0.0f;
+    bool use_only = false;
+};
+
 // One game the seed may include (format 5's `N` record).
 struct Campaign {
     std::string key;
@@ -197,6 +218,11 @@ public:
 
     // Empty in a file older than the `T` record: no trace to a way on.
     std::vector<Changelevel> changelevels;
+
+    // Empty in a file older than format 9.
+    std::vector<Transition> transitions;
+    // Null for an id the file does not describe.
+    const Transition* TransitionById(const std::string& id) const;
 
     // Every game in the file, in mission order. Empty in a file older than
     // format 5, which is Half-Life alone; see `CampaignByKey`.

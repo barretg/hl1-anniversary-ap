@@ -49,6 +49,25 @@ void CollectList(const std::string& value, char delimiter,
     }
 }
 
+// `a,b;c,d`, as the client writes transition pairs.
+void CollectPairs(const std::string& value,
+                  std::vector<std::pair<std::string, std::string>>& out) {
+    out.clear();
+    std::vector<std::string> entries;
+    CollectList(value, ';', entries);
+    for (const std::string& entry : entries) {
+        const size_t comma = entry.find(',');
+        if (comma == std::string::npos) {
+            continue;
+        }
+        const std::string a = Trim(entry.substr(0, comma));
+        const std::string b = Trim(entry.substr(comma + 1));
+        if (!a.empty() && !b.empty()) {
+            out.push_back({a, b});
+        }
+    }
+}
+
 }  // namespace
 
 void Bridge::Open(const std::string& store) {
@@ -151,6 +170,30 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
             CollectIds(value, parsed.checked);
         } else if (key == "missing") {
             CollectIds(value, parsed.missing);
+        } else if (key == "progression_mode") {
+            parsed.transitions_mode = Trim(value) == "transitions";
+        } else if (key == "map_shuffle") {
+            parsed.map_shuffle = Trim(value);
+        } else if (key == "start_map") {
+            parsed.start_map = Trim(value);
+        } else if (key == "ending_map") {
+            parsed.ending_map = Trim(value);
+        } else if (key == "final_boss") {
+            parsed.final_boss = Trim(value);
+        } else if (key == "transition_hub") {
+            parsed.transition_hub = ParseBool(value);
+        } else if (key == "transition_chapters") {
+            CollectStrings(value, ',', parsed.transition_chapters);
+        } else if (key == "boss_maps") {
+            CollectStrings(value, ',', parsed.boss_maps);
+        } else if (key == "inert_transitions") {
+            CollectStrings(value, ';', parsed.inert_transitions);
+        } else if (key == "transition_pairs") {
+            CollectPairs(value, parsed.transition_pairs);
+        } else if (key == "one_way_transitions") {
+            CollectPairs(value, parsed.one_way_transitions);
+        } else if (key == "backtrack_orbs") {
+            CollectPairs(value, parsed.backtrack_orbs);
         } else if (key == "now") {
             now = ParseLong(value);
         }

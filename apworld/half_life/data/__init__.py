@@ -82,6 +82,21 @@ MAX_MISSIONS_BY_CAMPAIGN: dict[str, int] = {
 # Half-Life's, which is what `missions_required` has always meant.
 MAX_MISSIONS: int = MAX_MISSIONS_BY_CAMPAIGN[HALF_LIFE]
 
+# Transitions mode: the chapters each game supports so far, by display name,
+# in campaign order. A chapter joins when its rollout step is done; until then
+# no YAML can ask for it.
+SUPPORTED_CHAPTER_NAMES: dict[str, list[str]] = {
+    c["key"]: [ch["name"] for ch in CHAPTERS
+               if campaign_of(ch) == c["key"] and ch.get("transition_supported")]
+    for c in CAMPAIGNS
+}
+
+# The level transitions, one per `trigger_changelevel`. Absent in data built
+# before transitions mode.
+TRANSITIONS: list[dict[str, Any]] = CAMPAIGN.get("transitions", [])
+# Maps split into segments, `{map: {"segments", "transitions", "edges", "tier"}}`.
+MAP_LOGIC: dict[str, dict[str, Any]] = CAMPAIGN.get("map_logic", {})
+
 # Items that only enter the pool when the matching YAML toggle is on. Each
 # game's armour item follows the HEV suit's toggle, and only exists in a seed
 # that includes its game.

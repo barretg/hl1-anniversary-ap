@@ -16,6 +16,7 @@
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
+#include "ap_transitions.h"
 #include "ap_warpsave.h"
 
 // Registered in player.cpp and declared in no header.
@@ -228,7 +229,9 @@ void Build(Page page) {
             g_entries.push_back({"Find the nearest check", [] { RunCommand("find", ""); }});
             g_entries.push_back({PathTraceActive() ? "Stop tracing" : "Trace to the nearest check",
                                  [] { RunCommand("trace", ""); }});
-            g_entries.push_back({"Go to the hub", [] { RunCommand("hub", ""); }});
+            if (!TransitionsMode()) {  // one walked world: the hub is not a stop (7.4)
+                g_entries.push_back({"Go to the hub", [] { RunCommand("hub", ""); }});
+            }
             g_entries.push_back({"Set this part's warp point", [] { RunCommand("setwarp", ""); }});
             break;
         case Page::kWarpGames:
@@ -254,7 +257,7 @@ void Build(Page page) {
             }
             for (const Chapter& chapter : Data().chapters) {
                 if (chapter.campaign != g_game || State().ChapterExcluded(chapter.key) ||
-                    !ChapterIsOpen(chapter)) {
+                    !ChapterIsOpen(chapter) || !WarpReachable(chapter)) {
                     continue;
                 }
                 const int index = chapter.index;

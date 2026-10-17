@@ -356,4 +356,7 @@ HALF_LIFE = Campaign(
     armour_item="HEV Suit",
     short="hl",
     legacy=True,
+    boss_map="c4a3",
+    boss_exit=("c4a3", "c5a1"),
+    ending_map="c5a1",
 )

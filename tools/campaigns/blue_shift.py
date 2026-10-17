@@ -188,4 +188,8 @@ BLUE_SHIFT = Campaign(
     hub_button_prefix="bs_",
     armour_item="Security Armor",
     short="bs",
+    # No boss fight: the leap out of the teleporter lab is the win.
+    boss_map="ba_teleport2",
+    boss_exit=("ba_teleport2", "ba_outro"),
+    ending_map="ba_outro",
 )

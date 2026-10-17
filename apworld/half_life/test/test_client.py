@@ -385,3 +385,33 @@ class TestSlotChange(unittest.TestCase):
         self.ctx.seed_name = "seed-b"
         self.ctx.forget_other_slot()
         self.assertEqual(self.ctx.completed_missions, set())
+
+
+class TestTransitionsSeed(unittest.TestCase):
+    """A transitions mode seed: the world is walked, so every included chapter
+    is open, and its pairing reaches the game. A hub seed has none of it."""
+
+    SLOT_DATA = dict(OLD_SLOT_DATA, **{
+        "progression_mode": "transitions",
+        "map_shuffle": "total",
+        "start_map": "c1a0",
+        "transition_chapters": ["c1a0", "c4a3"],
+        "excluded_chapters": [c["key"] for c in load_campaign()["chapters"]
+                              if c["key"] not in ("c1a0", "c4a3")],
+        "transition_pairs": [["c1a0:1", "c4a3:0"]],
+    })
+
+    def setUp(self) -> None:
+        self.ctx = context()
+
+    def test_a_hub_seed_has_no_transitions(self) -> None:
+        self.ctx.apply_slot_data(OLD_SLOT_DATA)
+        self.assertIsNone(self.ctx.transitions)
+
+    def test_every_included_chapter_is_open(self) -> None:
+        self.ctx.apply_slot_data(self.SLOT_DATA)
+        self.assertEqual(self.ctx.open_chapters, {"c1a0", "c4a3"})
+
+    def test_the_pairing_is_kept_for_the_game(self) -> None:
+        self.ctx.apply_slot_data(self.SLOT_DATA)
+        self.assertEqual(self.ctx.transitions["transition_pairs"], [["c1a0:1", "c4a3:0"]])

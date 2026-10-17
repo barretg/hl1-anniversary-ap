@@ -69,6 +69,7 @@ from campaigns import (
     weapon_items,
 )
 from campaigns.half_life import STARTING_WEAPONS
+from transitions_data import build_transitions
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_PATH = REPO_ROOT / "apworld" / "half_life" / "data" / "campaign.json"
@@ -569,6 +570,20 @@ class IdRegistry:
             self.data = {}
         self.data.setdefault("locations", {})
         self.data.setdefault("items", {})
+        # `{transition id: "<to>|<landmark>|<x y z>"}`, so a BSP update that
+        # renumbers a map's changelevels fails the build instead of quietly
+        # changing what a seed's transition ids mean.
+        self.data.setdefault("transitions", {})
+
+    def pin_transitions(self, transitions: list[dict]) -> None:
+        table = self.data["transitions"]
+        for record in transitions:
+            signature = "{}|{}|{}".format(record["to"], record["landmark"],
+                                          " ".join(str(v) for v in record["at"]))
+            known = table.setdefault(record["id"], signature)
+            if known != signature:
+                raise SystemExit(f"transition {record['id']} was {known}, now "
+                                 f"{signature}: the map's changelevels moved")
 
     def get(self, kind: str, key: str, base: int) -> int:
         table = self.data[kind]
@@ -597,7 +612,10 @@ class IdRegistry:
         over the `map_reached` set would produce.
         """
         payload = json.dumps(
-            {"registry": self.data, "live": sorted(live)}, sort_keys=True
+            # Locations and items only: the transition table is pinned in the
+            # same file, but adding it must not move every seed's version.
+            {"registry": {k: self.data[k] for k in ("items", "locations")},
+             "live": sorted(live)}, sort_keys=True
         ).encode("utf-8")
         return hashlib.sha1(payload).hexdigest()[:12]
 
@@ -1410,6 +1428,14 @@ def build(
     # corruption rather than as a bug in this file.
     items = build_items(chapters, campaigns, registry)
 
+    transitions = build_transitions(
+        [m for c in campaigns for m in c.maps], entities, bounds, bsp_paths,
+        {k: v for c in campaigns for k, v in c.transition_overrides.items()},
+    )
+    registry.pin_transitions(transitions)
+    map_logic = check_map_logic(
+        {k: v for c in campaigns for k, v in c.map_logic.items()}, transitions)
+
     # What this build actually ships, so that dropping a location moves the
     # version even though the append-only registry keeps its id forever.
     live = (
@@ -1446,6 +1472,11 @@ def build(
                 # Starting-melee candidates, in preference order: the first is
                 # this game's default when the start is not randomised.
                 "melee": list(campaign.melee),
+                # Transitions mode: the boss fight, the changelevel its win
+                # fires, and the closing scene (cut from the world there).
+                "boss_map": campaign.boss_map,
+                "boss_exit": list(campaign.boss_exit),
+                "ending_map": campaign.ending_map,
             }
             for campaign in campaigns
         ],
@@ -1479,6 +1510,10 @@ def build(
                 # The same, as one of `arrival`, `forward_exit` or `endsection`:
                 # a finale can also end on `trigger_endsection` (Blue Shift's).
                 "complete_on": chapter["complete_on"],
+                # Playable in transitions mode. Only written once true, so
+                # older chapter records are unchanged.
+                **({"transition_supported": True} if chapter["key"]
+                   in by_key[chapter["campaign"]].transition_supported else {}),
             }
             for chapter in chapters
         ],
@@ -1490,7 +1525,33 @@ def build(
         "hub_buttons": build_hub_buttons(chapters, campaigns, lobby_path),
         "carried_monsters": carried_monsters(chapters, entities),
         "changelevels": changelevels(chapters, entities, centres),
+        "transitions": transitions,
+        # `MAP_LOGIC` (TRANSITION_RANDO.md 3.3): maps split into segments.
+        "map_logic": map_logic,
     }
+
+
+def check_map_logic(map_logic: dict[str, dict], transitions: list[dict]) -> dict[str, dict]:
+    """The campaign modules' `map_logic`, checked against the transition table:
+    every map's transitions are placed in one of its segments, and every edge
+    joins two of them."""
+    ids = {t["id"]: t["map"] for t in transitions}
+    for map_name, logic in map_logic.items():
+        segments = logic.get("segments", [])
+        if not segments or len(segments) != len(set(segments)):
+            raise SystemExit(f"map_logic {map_name}: segments must be a non-empty unique list")
+        mine = {i for i, m in ids.items() if m == map_name}
+        placed = logic.get("transitions", {})
+        if set(placed) != mine:
+            raise SystemExit(f"map_logic {map_name}: transitions {sorted(set(placed) ^ mine)} "
+                             "are missing or not this map's")
+        for tid, segment in placed.items():
+            if segment not in segments:
+                raise SystemExit(f"map_logic {map_name}: {tid} is in no segment {segment!r}")
+        for edge in logic.get("edges", []):
+            if edge.get("from") not in segments or edge.get("to") not in segments:
+                raise SystemExit(f"map_logic {map_name}: edge {edge} joins unknown segments")
+    return map_logic
 
 
 def changelevels(
@@ -2334,6 +2395,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--out", type=Path)
     parser.add_argument("--ids", type=Path, default=IDS_PATH)
+    parser.add_argument(
+        "--transitions",
+        action="store_true",
+        help="also print the level transition table, for a chapter's audit",
+    )
     args = parser.parse_args(argv)
 
     if args.maps is not None:
@@ -2384,6 +2450,18 @@ def main(argv: list[str] | None = None) -> int:
     counts = collections.Counter(l["trigger"]["type"] for l in data["locations"])
     for kind, count in counts.most_common():
         print(f"    {kind:18} {count}")
+    kinds = collections.Counter(t["kind"] for t in data["transitions"])
+    print(f"  transitions: {len(data['transitions'])} ("
+          + ", ".join(f"{k} {n}" for k, n in kinds.most_common()) + ")")
+    if args.transitions:
+        for t in data["transitions"]:
+            frame = t["frame"]
+            print("    {id:16} -> {to:13} {kind:9} {partner:16} yaw {yaw:5} "
+                  "at {origin} {flags}".format(
+                      id=t["id"], to=t["to"], kind=t["kind"],
+                      partner=t["partner"] or "(one-way)", yaw=frame["yaw"],
+                      origin=" ".join(str(int(v)) for v in frame["origin"]),
+                      flags=",".join(t.get("flags", ()))))
     return 0
 
 

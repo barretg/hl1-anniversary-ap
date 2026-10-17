@@ -57,7 +57,10 @@ OUT_PATH = (
 #
 # 8 adds the `scientist`, `barney` and `soldier` location types, keyed like a
 # placed pickup. Additive in the same way as 7.
-FORMAT_VERSION = 8
+#
+# 9 adds `E`, every level transition, for transitions mode. Additive: a format
+# 8 reader skips it, and hub mode never needs it.
+FORMAT_VERSION = 9
 
 
 def location_needs(location: dict, groups: dict[str, list[str]]) -> str:
@@ -100,6 +103,12 @@ def render(campaign: dict) -> str:
         "#   T|<map>|<to map>|<x y z>      a changelevel's centre, for !trace to a",
         "#     part's Reached or a mission's Complete. <to map> is empty for a",
         "#     trigger_endsection.",
+        "#   E|<id>|<map>|<to map>|<landmark>|<x y z>|<kind>|<partner>|<two way>"
+        "|<ox oy oz>|<yaw>|<width>|<height>|<use only>",
+        "#     a level transition (one trigger_changelevel). <x y z> is its brush's",
+        "#     centre, which is how the game finds it; <ox oy oz> and <yaw> are its",
+        "#     frame: where a player stands at it and the way out through it.",
+        "#     <partner> is the vanilla transition on the other side, empty if none.",
         "#   D|<data version>               must match the client's, or ids differ",
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
@@ -235,6 +244,19 @@ def render(campaign: dict) -> str:
         lines.append("T|{map}|{to}|{at}".format(
             map=changelevel["map"], to=changelevel["to"],
             at=" ".join(str(value) for value in changelevel["at"])))
+
+    for t in campaign.get("transitions", ()):
+        frame = t["frame"]
+        lines.append(
+            "E|{id}|{map}|{to}|{landmark}|{at}|{kind}|{partner}|{two_way}|{origin}"
+            "|{yaw}|{width}|{height}|{use_only}".format(
+                id=t["id"], map=t["map"], to=t["to"], landmark=t["landmark"],
+                at=" ".join(str(v) for v in t["at"]), kind=t["kind"],
+                partner=t["partner"], two_way=1 if t["two_way"] else 0,
+                origin=" ".join(str(v) for v in frame["origin"]), yaw=frame["yaw"],
+                width=frame["width"], height=frame["height"],
+                use_only=1 if t["use_only"] else 0,
+            ))
 
     return "\n".join(lines) + "\n"
 

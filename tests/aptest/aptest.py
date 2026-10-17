@@ -74,8 +74,34 @@ Verdicts go to `aptest_results.txt` under the `sweep` group and a
 summary to `build/precache_sweep.txt`. A crash stops it until the game is
 relaunched; it then carries on from the next map. `--clear` with it starts over.
 
+`--transition` runs the transition rando group: anything on that work awaiting
+a human check (see `transition_scenarios`). It is appended to as work lands that only play can
+confirm; a scenario stays until its verdict is in, and a fix clears its title.
+
+`--maplogic [--chapters <keys>]` runs map logic discovery for the transition
+rando (see `maplogic_scenarios`), chapter by chapter in rollout order (or only
+the named chapters), four scenarios each:
+    1 forward from the chapter's start to its end, crowbar only;
+    2 backward, carrying on from 1's save (its level state and holdings);
+    3 backward from the end, every map fresh, crowbar only;
+    4 forward, carrying on from 3's save.
+`!pass` or `!fail` saves the game for the scenario after. Labels `T1`..`Tn`
+mark each map's transitions in game. `!give` and `!take` are kept in order
+with each note, and each note records the map it was made on, so
+`tools/map_logic_report.py` can tell what each finding needed. A note does not
+end the scenario; `!pass` or `!fail` does. Conventions:
+    !note T3 needs <item or group>    !note T2 one-way <kind>
+    !note seg <name>                  !note oneway lift|drop|shaft|door
+The last records where you stand as the return teleporter's spot: at the bottom
+of the obstacle, facing back the way you came.
+
+`--transitionfeel` plays the seamless transition transform with set pairs (see
+`transition_feel_scenarios`): walk out through one transition and in through
+another, turned, at speed, and back.
+
 `--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
-0.4.0-2, npc_witness, npc_excluded_check, pctest or sweep.
+0.4.0-2, npc_witness, npc_excluded_check, pctest, sweep, transition, maplogic or
+transitionfeel.
 
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
@@ -93,13 +119,15 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --transition | --maplogic [--chapters <keys>] | --transitionfeel | --group <name>] [--clear]
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import importlib.util
+import math
 import os
 import re
 import shutil
@@ -194,6 +222,20 @@ class Source:
 
 
 @dataclass
+class Transition:
+    """An `E` record: one trigger_changelevel."""
+    id: str
+    map: str
+    to: str
+    at: tuple[float, float, float]
+    kind: str
+    partner: str
+    origin: tuple[float, float, float]
+    yaw: float
+    use_only: bool
+
+
+@dataclass
 class CheckData:
     data_version: str = ""
     chapters: list[Chapter] = field(default_factory=list)
@@ -201,6 +243,7 @@ class CheckData:
     sources: list[Source] = field(default_factory=list)
     gated: dict[str, str] = field(default_factory=dict)  # classname -> item
     goal_chapter: str = ""
+    transitions: list[Transition] = field(default_factory=list)
 
     def chapter_of(self, map_name: str) -> Chapter | None:
         return next((c for c in self.chapters if map_name in c.maps), None)
@@ -232,6 +275,10 @@ def read_checkdata(path: Path) -> CheckData:
                                        f[5] if len(f) > 5 else ""))
         elif f[0] == "K" and len(f) >= 3:
             data.gated[f[1]] = f[2]
+        elif f[0] == "E" and len(f) >= 14:
+            data.transitions.append(Transition(
+                f[1], f[2], f[3], tuple(float(v) for v in f[5].split()), f[6], f[7],
+                tuple(float(v) for v in f[9].split()), float(f[10]), f[13] == "1"))
         elif f[0] == "X" and len(f) >= 2 and int(f[1]) in data.locations:
             data.locations[int(f[1])].harm = True
         elif f[0] in ("A", "H") and len(f) >= 3 and int(f[1]) in data.locations:
@@ -284,6 +331,34 @@ class Scenario:
     # Test-only locations the game tags for this scenario alone, so NPCs left
     # out of the data can be labelled, found and traced: `(id, L record)`.
     probes: list[tuple[int, str]] = field(default_factory=list)
+    # Exactly what the snapshot holds (the crowbar always comes), in place of
+    # every item; for map logic discovery.
+    holds: list[str] | None = None
+    # The way the player faces when placed, in degrees.
+    yaw: float | None = None
+    # `(text, "x y z")` labels drawn at points in the map.
+    labels: list[tuple[str, str]] = field(default_factory=list)
+    # Label every transition of whatever map the player is on (`T<n> > <to>`),
+    # marking this one, the entry, as `(entry)`. None for no transition labels.
+    entry: str | None = None
+    # Transition pairs the dll plays with for this scenario, in place of a seed's.
+    pairs: list[tuple[str, str]] = field(default_factory=list)
+    # The game is saved under this name on `!pass` or `!fail`.
+    save_as: str = ""
+    # Start by loading this save (wherever it was taken) instead of `map`.
+    load: str = ""
+    # Start holding what the scenario with this title last ended holding (its
+    # own `holds` plus what was given in it), and keep counting from there.
+    inherit: str = ""
+    # A transitions mode seed's slot data, published as the client would: the
+    # dll plays its pairing, and only its chapters are open.
+    seed: dict | None = None
+
+
+def load_seed(name: str) -> dict:
+    """A seed's slot data kept under `seeds/`, from the apworld's generator."""
+    return json.loads((Path(__file__).parent / "seeds" / f"{name}.json").read_text(
+        encoding="utf-8"))
 
 
 def cache_key(data: CheckData) -> str:
@@ -1906,6 +1981,321 @@ def npc_map_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     return [s for _, _, s in sorted(tagged, key=lambda t: (t[0], t[1]))]
 
 
+def transition_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
+    """Transition rando: anything awaiting a human check. Appended to, never
+    reordered; verdicts match by title."""
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import load_map
+    from campaigns import KNOWN_CAMPAIGNS
+
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+    out: list[Scenario] = []
+
+    # Transition rando foundation: checkdata format 9 adds `E` records. Hub
+    # play must be unchanged with them in the file.
+    source = next((s for s in data.sources if s.pos and not s.drop and not s.needs
+                   and s.id in data.locations
+                   and (c := data.chapter_of(s.map)) and c.campaign == "half_life"),
+                  None)
+    if source is not None:
+        location = data.locations[source.id]
+        item = data.gated.get(location.arg.split(",")[0])
+        out.append(Scenario(
+            title="Transition: format 9 checkdata, a hub-mode pickup",
+            map=source.map, pos=source.pos,
+            take=[item] if item else [], expect=[location.id], steps="\n".join([
+                "checkdata.txt now carries transition (`E`) records. The map loaded",
+                "and nothing on screen or in ap_boot.txt complains about the data.",
+                f"You are at a copy. Touch it: expect '{location.name}', once.",
+                "!pass, or !fail <what was different>.",
+            ])))
+    for chapter in data.chapters:
+        # Not the tram ride: its changelevels are crossed riding, not walking.
+        if (chapter.campaign != "half_life" or len(chapter.maps) < 2
+                or chapter.maps[0].startswith("c0a0")):
+            continue
+        bsp = game_root / game_dir.get(chapter.maps[0], "valve") / "maps" / f"{chapter.maps[0]}.bsp"
+        if not bsp.is_file():
+            continue
+        spot = changelevel_spot(bsp, load_map(bsp), chapter.maps[1:2])
+        if spot is None:
+            continue
+        target, pos, crouched = spot
+        out.append(Scenario(
+            title="Transition: format 9 checkdata, a hub-mode changelevel",
+            map=chapter.maps[0], pos=pos, crouch=crouched, steps="\n".join([
+                f"{chapter.name}, part 1. A changelevel to {target} is beside you"
+                + (", in a vent: keep holding crouch" if crouched else "") + ".",
+                "Walk through it. The next part loads as it always has: you",
+                "arrive in place, holding what you held, with no hub detour.",
+                "!pass, or !fail <what was different>.",
+            ])))
+        break
+
+    # Map logic discovery's harness (9.2 step 3): placed facing in from an
+    # entry, crowbar only, the map's transitions labelled at their centres.
+    # Rollout step 1's chapter (9.4), the first discovery will be run on.
+    first_step = next((c for c in data.chapters if c.key == "c1a0"), None)
+    discovery = maplogic_scenarios(data, [first_step]) if first_step else []
+    if discovery:
+        first = discovery[0]
+        out.append(Scenario(
+            title="Transition: map logic labels, facing and holdings",
+            map=first.map, pos=first.pos, yaw=first.yaw, holds=[], entry=first.entry,
+            steps="\n".join([
+                f"You are just inside {first.map}'s entry, facing into the map, not",
+                "at the transition. You hold only the crowbar: no suit, no HUD.",
+                "Labels 'T1 > ...' float at each transition, the entry marked",
+                "(entry), visible from across the map, through walls.",
+                "!status: the terminal's '(from game) status' line ends with your",
+                "position and facing after an @.",
+                "Type kill in the console and respawn: the labels come back.",
+                "Walk through a transition: the next map's transitions are labelled",
+                "too, none marked (entry).",
+                "!pass, or !fail <what was different>.",
+            ])))
+
+    # The transform (9.2 step 4), the same scenarios as `--transitionfeel`.
+    out += transition_feel_scenarios(data)
+
+    # Seed plumbing (9.2 step 6): the generator's area seed for rollout step 1,
+    # played through the snapshot as a real seed is.
+    seed = load_seed("first_step_area")
+    pairs = ", ".join(f"{a} <> {b}" for a, b in seed["transition_pairs"])
+    ways = ", ".join(f"{a} > {b}" for a, b in seed["one_way_transitions"].items())
+    orbs = ", ".join(f"{a} > {b}" for a, b in seed["backtrack_orbs"].items())
+    out.append(Scenario(
+        title="Transition: an area seed, Anomalous Materials into Nihilanth",
+        map=seed["start_map"], entry="", seed=seed,
+        steps="\n".join([
+            f"A transitions seed (area): {pairs}; one-way {ways}; orbs {orbs};",
+            f"inert {', '.join(seed['inert_transitions'])}. Every other transition",
+            "is vanilla. Noclip wherever the map blocks you.",
+            "Labels name each trigger by id. Walking an inert one does nothing.",
+            "A paired one lands you in place at its partner; walk back through and",
+            "you return. The one-way one lands at its target, where an orb leads back.",
+            "!trace from a map: it follows the seed's pairing, not vanilla.",
+            "The warp menu lists only chapters you have been in, and no hub.",
+            "Leaving Anomalous Materials by its pair: 'Anomalous Materials",
+            "complete.' Die and reload mid-map: the pairing still holds.",
+            "!pass, or !fail <what was different>.",
+        ])))
+    return out
+
+
+# How far inside its transition a map logic scenario starts, so the player
+# does not walk straight back out through it.
+MAPLOGIC_STEP_IN = 64
+
+
+def map_transitions(data: CheckData, map_name: str) -> list[Transition]:
+    """The map's transitions in label order: `T1` is the first by id. The same
+    order `tools/map_logic_report.py` reads the labels back in."""
+    return sorted((t for t in data.transitions if t.map == map_name),
+                  key=lambda t: int(t.id.rpartition(":")[2]))
+
+
+def pick_chapters(data: CheckData, wanted: list[str]) -> list[Chapter]:
+    """The chapters named on the command line, by key or name, in data order."""
+    picked: list[Chapter] = []
+    for name in wanted:
+        chapter = next((c for c in data.chapters
+                        if name == c.key or name.lower() == c.name.lower()), None)
+        if chapter is None:
+            raise SystemExit(f"--chapters: no chapter {name!r}; use a key such as "
+                             f"{data.chapters[0].key}")
+        if chapter not in picked:
+            picked.append(chapter)
+    order = {c.key: i for i, c in enumerate(data.chapters)}
+    return sorted(picked, key=lambda c: order[c.key])
+
+
+# The train ride chapters, last in the rollout (TRANSITION_RANDO.md 9.4).
+ROLLOUT_LAST = ["of1a5", "c0a0", "of0a0", "ba_tram1"]
+# The goal chapter that joins rollout step 1.
+ROLLOUT_WITH_FIRST = "c4a3"
+
+
+def rollout_order(data: CheckData) -> list[Chapter]:
+    """Chapters in rollout order (9.4): campaign order, Nihilanth straight after
+    Anomalous Materials, the train rides last."""
+    last = [c for k in ROLLOUT_LAST for c in data.chapters if c.key == k]
+    rest = [c for c in data.chapters if c.key not in ROLLOUT_LAST]
+    goal = [c for c in rest if c.key == ROLLOUT_WITH_FIRST]
+    rest = [c for c in rest if c.key != ROLLOUT_WITH_FIRST]
+    first = next((i for i, c in enumerate(rest) if c.campaign == "half_life"), 0)
+    return rest[:first + 1] + goal + rest[first + 1:] + last
+
+
+def step_in(t: Transition, distance: float) -> str:
+    """A spot `distance` inside the map from a transition's frame."""
+    yaw = math.radians(t.yaw)
+    return " ".join(f"{v:g}" for v in (t.origin[0] - distance * math.cos(yaw),
+                                        t.origin[1] - distance * math.sin(yaw),
+                                        t.origin[2]))
+
+
+def chapter_entry(data: CheckData, chapter: Chapter) -> Transition | None:
+    """The way into a chapter's first map from an earlier chapter's."""
+    order = {m: i for i, m in enumerate(m for c in data.chapters for m in c.maps)}
+    first = chapter.maps[0]
+    return next((t for t in map_transitions(data, first)
+                 if t.to in order and order[t.to] < order[first]
+                 and t.to not in chapter.maps), None)
+
+
+def chapter_exit(data: CheckData, chapter: Chapter) -> Transition | None:
+    """The way out of a chapter forwards: from its last map if it has one,
+    else from whichever of its maps leads to a later chapter, else (a finale)
+    the way into its last map, the ending scene."""
+    order = {m: i for i, m in enumerate(m for c in data.chapters for m in c.maps)}
+    last = order[chapter.maps[-1]]
+    ways = [t for m in reversed(chapter.maps) for t in map_transitions(data, m)
+            if t.to in order and order[t.to] > last]
+    if not ways and len(chapter.maps) > 1:
+        # A finale that ends in its ending scene: the way into that.
+        ways = [t for t in map_transitions(data, chapter.maps[-2]) if t.to == chapter.maps[-1]]
+    return ways[0] if ways else None
+
+
+def maplogic_title(chapter: Chapter, n: int) -> str:
+    return f"Map logic: {chapter.name} {n} ({MAPLOGIC_PASSES[n - 1]})"
+
+
+MAPLOGIC_PASSES = ["forward", "backward, kept state", "backward, fresh",
+                   "forward, after backward"]
+
+MAPLOGIC_NOTES = [
+    "Where a way on needs something, !give it (only what it always needs), then",
+    "!note T<n> needs <item>. T<n> is this map's label; the note records the map.",
+    "!note T<n> one-way <kind> for a transition that only goes one way.",
+    "!note oneway lift|drop|shaft|door at the bottom of a one-way obstacle,",
+    "facing back the way you came. !note seg <name> where a map splits.",
+    "Anything else of interest: !note <text>.",
+]
+
+
+def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenario]:
+    """Map logic discovery (TRANSITION_RANDO.md section 8), four scenarios per
+    chapter, in the order given:
+
+    1. forward from the chapter's entry to its exit, crowbar only;
+    2. backward, carrying on from 1's save: its level state and holdings;
+    3. backward from the exit, every map fresh, crowbar only;
+    4. forward, carrying on from 3's save.
+    """
+    out: list[Scenario] = []
+    for chapter in chapters:
+        entry, exit_ = chapter_entry(data, chapter), chapter_exit(data, chapter)
+        save = f"aptest_ml_{chapter.key}"
+        ways = (f"{len(chapter.maps)} maps: " + ", ".join(chapter.maps))
+        start_at = (f"at {entry.id}, its way in from {entry.to}," if entry else
+                    "at its start,")
+        end_at = (f"the way out to {exit_.to} ({exit_.id}, {exit_.kind})" if exit_ else
+                  "its end")
+        out.append(Scenario(
+            title=maplogic_title(chapter, 1), map=chapter.maps[0],
+            pos=step_in(entry, MAPLOGIC_STEP_IN) if entry else "",
+            yaw=(entry.yaw + 180) % 360 if entry else None,
+            holds=[], entry=entry.id if entry else "", save_as=f"{save}_1",
+            steps="\n".join([
+                f"{chapter.name} forwards. {ways}. You start in {chapter.maps[0]} "
+                f"{start_at} holding only the crowbar.",
+                f"Play through to {end_at}; do not take it.",
+                *MAPLOGIC_NOTES,
+                f"!pass at the end (the game is saved for scenario 2), or !fail <what>.",
+            ])))
+        out.append(Scenario(
+            title=maplogic_title(chapter, 2), map=chapter.maps[-1], entry="", holds=[],
+            load=f"{save}_1", inherit=maplogic_title(chapter, 1),
+            steps="\n".join([
+                f"{chapter.name} backwards, carrying on from scenario 1: its maps as",
+                "you left them, holding what you held.",
+                f"Walk back to {chapter.maps[0]}'s way in"
+                + (f" ({entry.id})" if entry else "") + "; do not take it.",
+                "Noclip through anything one-way, and !note it before you do.",
+                *MAPLOGIC_NOTES,
+                "!pass at the start, or !fail <what>.",
+            ])))
+        out.append(Scenario(
+            title=maplogic_title(chapter, 3), map=exit_.map if exit_ else chapter.maps[-1],
+            pos=step_in(exit_, MAPLOGIC_STEP_IN) if exit_ else "",
+            yaw=(exit_.yaw + 180) % 360 if exit_ else None,
+            holds=[], entry=exit_.id if exit_ else "", save_as=f"{save}_3",
+            steps="\n".join([
+                f"{chapter.name} backwards from scratch, as if come in from the next",
+                f"chapter: every map loads fresh. You start in "
+                f"{exit_.map if exit_ else chapter.maps[-1]} by "
+                + (f"{exit_.id}, the way out to {exit_.to}," if exit_ else "its end,")
+                + " holding only the crowbar.",
+                f"Walk back to {chapter.maps[0]}'s way in"
+                + (f" ({entry.id})" if entry else "") + "; do not take it.",
+                "Noclip through anything one-way, and !note it before you do.",
+                *MAPLOGIC_NOTES,
+                "!pass at the start (the game is saved for scenario 4), or !fail <what>.",
+            ])))
+        out.append(Scenario(
+            title=maplogic_title(chapter, 4), map=chapter.maps[0], entry="", holds=[],
+            load=f"{save}_3", inherit=maplogic_title(chapter, 3),
+            steps="\n".join([
+                f"{chapter.name} forwards again, carrying on from scenario 3: its maps",
+                "as the backward run left them, holding what you held.",
+                f"Play through to {end_at}; do not take it.",
+                "Note anything that differs from scenario 1, and every one-way and its kind.",
+                *MAPLOGIC_NOTES,
+                "!pass at the end, or !fail <what>.",
+            ])))
+    return out
+
+
+# The transform's pairs (TRANSITION_RANDO.md 9.2 step 4): (exit, arrival, what
+# it shows). Walk transitions with partners and no audit flags, so the frames
+# are trusted.
+TRANSITION_FEEL_PAIRS = [
+    ("c1a0:1", "c1a0b:2", "no turn: a straight carry into another map"),
+    ("c1a0:1", "c1a2:0", "a quarter turn"),
+    ("c1a0d:1", "c1a0b:2", "a half turn"),
+    ("c1a2:0", "c1a2:2", "a same-map pair: no level change"),
+]
+# How far inside the exit a transition feel scenario starts.
+TRANSITION_FEEL_STEP_IN = 128
+
+
+def transition_feel_scenarios(data: CheckData) -> list[Scenario]:
+    """The seamless transform, felt without a seed: each scenario pairs two
+    transitions and starts the player inside the first, facing out of it."""
+    by_id = {t.id: t for t in data.transitions}
+    out: list[Scenario] = []
+    for a_id, b_id, what in TRANSITION_FEEL_PAIRS:
+        a, b = by_id.get(a_id), by_id.get(b_id)
+        if a is None or b is None:
+            continue
+        yaw = math.radians(a.yaw)
+        pos = (a.origin[0] - TRANSITION_FEEL_STEP_IN * math.cos(yaw),
+               a.origin[1] - TRANSITION_FEEL_STEP_IN * math.sin(yaw), a.origin[2])
+        turn = ((b.yaw + 180) - a.yaw) % 360
+        same = a.map == b.map
+        labels = {t.id: f"T{n}" for n, t in enumerate(map_transitions(data, a.map), 1)}
+        out.append(Scenario(
+            title=f"Transition feel: {a_id} to {b_id} ({what})",
+            map=a.map, pos=" ".join(f"{v:g}" for v in pos), yaw=a.yaw,
+            entry=a_id, pairs=[(a_id, b_id)], steps="\n".join([
+                f"You face {labels[a_id]} (marked entry), which now leads to {b_id}"
+                f" in {b.map}" + (", in this same map" if same else "") + ".",
+                "Walk, then run, through it. Expect: " + (
+                    "no load at all; you are moved across the map" if same else
+                    f"{b.map} loads with your gear and health") + ",",
+                f"you come out just inside {b_id}, facing into the map (a {turn:g} degree",
+                "turn from how you went in), still moving, not in a wall, not",
+                "bounced back through it.",
+                "Turn round and walk back through: you come out where you went in,",
+                f"facing back into {a.map}. A scientist or guard following you",
+                "comes through too, turned the same way.",
+                "!pass, or !fail <what was off: position, facing, speed, stuck, bounce>.",
+            ])))
+    return out
+
+
 # A map with at least this many brush models is a precache suspect: each one
 # takes a model slot before anything in the map is spawned, and the engine has
 # 511 in all. Pit Worm's Nest part 1 has 331 and is reported unplayable.
@@ -2333,7 +2723,23 @@ class DllSwap:
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
 GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2",
-          "npc_witness", "npc_excluded_check", "pctest", "sweep")
+          "npc_witness", "npc_excluded_check", "pctest", "sweep", "transition",
+          "maplogic", "transitionfeel")
+# Groups whose `!note` records a finding and stays in the scenario: only
+# `!pass` and `!fail` are its verdict.
+NOTES_STAY = {"maplogic"}
+
+
+def held_after(given: list[str]) -> list[str]:
+    """What a run of `!give` and `-`-prefixed `!take` steps leaves held."""
+    held: list[str] = []
+    for step in given:
+        if step.startswith("-"):
+            if step[1:] in held:
+                held.remove(step[1:])
+        elif step not in held:
+            held.append(step)
+    return held
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
@@ -2343,7 +2749,12 @@ SUBGROUPS = {"npc_witness": "0.4.0-2", "npc_excluded_check": "0.4.0-2"}
 
 
 def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
-                     unproven: bool = False) -> list[Scenario]:
+                     unproven: bool = False,
+                     chapters: list[str] | None = None) -> list[Scenario]:
+    if group == "maplogic":
+        order = rollout_order(data)
+        picked = pick_chapters(data, chapters) if chapters else order
+        return maplogic_scenarios(data, [c for c in order if c in picked])
     if group == "parity":
         return parity_scenarios(data)
     if group == "trace":
@@ -2362,6 +2773,10 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return precache_scenarios(data, game_root)
     if group == "sweep":
         return sweep_scenarios(data, game_root)
+    if group == "transition":
+        return transition_scenarios(data, game_root)
+    if group == "transitionfeel":
+        return transition_feel_scenarios(data)
     only = None
     if unproven:
         only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
@@ -2434,6 +2849,8 @@ class Harness:
         self.seq = self.last_seq()
         self.current = -1
         self.items: set[str] = self.base_items()
+        # Every `!give` and `!take` (as `-Item`) since the scenario started.
+        self.given: list[str] = []
         # Progressive Air Acceleration copies given: counted, not held.
         self.air_received = 0
         self.seen: set[int] = set()
@@ -2483,8 +2900,12 @@ class Harness:
         s = self.scenario()
         self.bridge.write_snapshot(
             connected=self.connected,
-            chapters=[c.key for c in self.data.chapters
-                      if s is None or c.key not in s.closed],
+            chapters=([c.key for c in self.data.chapters
+                       if c.key in s.seed["transition_chapters"]]
+                      if s is not None and s.seed else
+                      [c.key for c in self.data.chapters
+                       if s is None or c.key not in s.closed]),
+            transitions=s.seed if s is not None else None,
             items=sorted(self.items),
             goal_open=True,
             death_link=False,
@@ -2522,7 +2943,17 @@ class Harness:
         with self.lock:
             self.current = index
             s = self.scenarios[index]
-            self.items = self.base_items() - set(s.take)
+            self.items = (set(s.holds) if s.holds is not None
+                          else self.base_items() - set(s.take))
+            self.given = []
+            if s.inherit:
+                given = self.last_given(s.inherit)
+                if given is None:
+                    self.tell(f"[aptest] '{s.inherit}' has no verdict yet; holding only "
+                              "this scenario's own.")
+                else:
+                    self.given = given
+                    self.items |= set(held_after(given))
             self.air_received = 0
             self.seen = set()
             self.connected = s.connected
@@ -2531,6 +2962,16 @@ class Harness:
             # redo of the same scenario reloads it too.
             self.seq += 1
             go = [f"seq={self.seq}", f"map={s.map}"] + ([f"pos={s.pos}"] if s.pos else [])
+            if s.load:
+                go.append(f"load={s.load}")
+            if s.save_as:
+                go.append(f"save={s.save_as}")
+            if s.yaw is not None:
+                go.append(f"yaw={s.yaw:g}")
+            go += [f"label={pos} {text}" for text, pos in s.labels]
+            if s.entry is not None:
+                go += ["transitions=1", f"entry={s.entry}"]
+            go += [f"pair={a} {b}" for a, b in s.pairs]
             if s.crouch:
                 go.append("crouch=1")
             if s.manual_tp:
@@ -2542,6 +2983,9 @@ class Harness:
             self.tell(f"[aptest] {index}/{len(self.scenarios) - 1}: {s.title}")
             if s.take:
                 self.tell(f"[aptest] Without: {', '.join(s.take)}")
+            if s.holds is not None:
+                held = sorted(self.items) if s.inherit else s.holds
+                self.tell(f"[aptest] Holding only: {', '.join(['Crowbar', *held])}")
             if not s.connected:
                 self.tell("[aptest] The client reads as disconnected. !connect to change.")
             self.info()
@@ -2567,7 +3011,8 @@ class Harness:
             return False
         sent = ",".join(str(i) for i in sorted(self.seen))
         line = "|".join([time.strftime("%Y-%m-%d %H:%M:%S"), str(self.current),
-                         s.title, verdict, note.replace("|", "/"), sent, self.group])
+                         s.title, verdict, note.replace("|", "/"), sent, self.group,
+                         ";".join(self.given).replace("|", "/")])
         with self.results_path.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
         return True
@@ -2588,9 +3033,20 @@ class Harness:
         if self.results_path.exists():
             for line in self.results_path.read_text(encoding="utf-8").splitlines():
                 parts = line.split("|")
-                if len(parts) >= 4:
+                if len(parts) >= 4 and not (parts[3] == "note" and len(parts) > 6
+                                            and parts[6] in NOTES_STAY):
                     verdicts[parts[2]] = parts[3]
         return verdicts
+
+    def last_given(self, title: str) -> list[str] | None:
+        """The 8th field of the latest verdict (pass or fail) for `title`."""
+        given = None
+        if self.results_path.exists():
+            for line in self.results_path.read_text(encoding="utf-8").splitlines():
+                parts = line.split("|")
+                if len(parts) >= 4 and parts[2] == title and parts[3] in ("pass", "fail"):
+                    given = [g for g in (parts[7] if len(parts) > 7 else "").split(";") if g]
+        return given
 
     def latest_notes(self) -> dict[str, str]:
         notes: dict[str, str] = {}
@@ -2635,11 +3091,31 @@ class Harness:
                   "they are kept in aptest_results_cleared.txt.")
         self.status()
 
-    def command(self, verb: str, arg: str) -> None:
-        """One verb, from the game (`!pass`) or typed here (`pass`)."""
+    def command(self, verb: str, arg: str, where: str = "") -> None:
+        """One verb, from the game (`!pass`) or typed here (`pass`). `where` is
+        the player's `x y z yaw map` when the game sent it."""
         with self.lock:
             if verb == "pass":
                 self.record("pass", arg)
+            elif verb == "note" and self.group in NOTES_STAY:
+                if not arg:
+                    self.tell("[aptest] !note needs a note.")
+                    return
+                # `x y z yaw map` from the game: the map goes in front of the
+                # note, so a T<n> in it reads against the right map.
+                fields = where.split()
+                if len(fields) >= 5:
+                    arg = f"[{fields[4]}] {arg}"
+                    where = " ".join(fields[:4])
+                if re.sub(r"^\[\S+\]\s*", "", arg).lower().startswith("oneway"):
+                    if not where:
+                        self.tell("[aptest] Send !note oneway from the game, standing "
+                                  "at the return teleporter's spot.")
+                        return
+                    arg += f" @{where}"
+                if self.record_only("note", arg):
+                    given = "; ".join(self.given) or "nothing"
+                    self.tell(f"[aptest] Noted, after giving {given}: {arg}")
             elif verb in ("fail", "note"):
                 if arg:
                     self.record(verb, arg)
@@ -2697,6 +3173,7 @@ class Harness:
                 # Chat is not careful about case; the snapshot is.
                 arg = next((n for n in self.base_items() if n.lower() == arg.lower()), arg)
                 (self.items.add if verb == "give" else self.items.discard)(arg)
+                self.given.append(arg if verb == "give" else f"-{arg}")
                 self.publish()
                 self.tell(f"[aptest] {verb}: {arg}")
             else:
@@ -2753,8 +3230,10 @@ class Harness:
                     elif event.kind == "APTEST" and event.args:
                         verb = event.args[0]
                         arg = event.args[1] if len(event.args) > 1 else ""
-                        print(f"(from game) {verb} {arg}".rstrip())
-                        self.command(verb, arg.strip())
+                        where = event.args[2] if len(event.args) > 2 else ""
+                        print(f"(from game) {verb} {arg}".rstrip()
+                              + (f" @{where}" if where else ""))
+                        self.command(verb, arg.strip(), where.strip())
                 self.publish()
             time.sleep(0.2)
 
@@ -2803,6 +3282,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--from", dest="start_at", type=int, metavar="N",
                         help="with --sweep: sweep again from scenario N (the number "
                              "in aptest_results.txt), results or not")
+    parser.add_argument("--transition", action="store_true",
+                        help="the transition rando scenarios awaiting a human check")
+    parser.add_argument("--maplogic", action="store_true",
+                        help="map logic discovery for the transition rando, every "
+                             "chapter in rollout order, or those --chapters names")
+    parser.add_argument("--transitionfeel", action="store_true",
+                        help="the seamless transition transform, with set pairs")
+    parser.add_argument("--chapters", type=lambda v: [c for c in v.split(",") if c],
+                        default=[], metavar="KEYS",
+                        help="with --maplogic: only these chapters, by key or name, "
+                             "comma separated (still in rollout order)")
     parser.add_argument("--group", choices=GROUPS + tuple(FORMER_GROUPS),
                         help="the group to run, by name; the same as its own flag")
     parser.add_argument("--clear", action="store_true",
@@ -2814,7 +3304,8 @@ def main(argv: list[str] | None = None) -> int:
     flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0",
              "0.4.0-2": "v0_4_0_2",
              "npc_witness": "npc_witness", "npc_excluded_check": "npc_excluded_check",
-             "pctest": "pctest", "sweep": "sweep"}
+             "pctest": "pctest", "sweep": "sweep", "transition": "transition",
+             "maplogic": "maplogic", "transitionfeel": "transitionfeel"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
@@ -2823,10 +3314,13 @@ def main(argv: list[str] | None = None) -> int:
     if len(chosen) > 1:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
                      "--parity, --0.4.0, --0.4.0-2, --npc_witness, "
-                     "--npc_excluded_check, --pctest, --sweep")
+                     "--npc_excluded_check, --pctest, --sweep, --transition, --maplogic, "
+                     "--transitionfeel")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")
+    if args.chapters and args.group != "maplogic":
+        parser.error("--chapters only goes with --maplogic")
 
     bridge_module = load_bridge()
     store = bridge_module.find_store_dir(args.game_root)
@@ -2835,7 +3329,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.clear:
         data = read_checkdata(store / "checkdata.txt")
-        scenarios = select_scenarios(args.group, data, store, args.game_root)
+        scenarios = select_scenarios(args.group, data, store, args.game_root,
+                                     chapters=args.chapters)
         count = clear_results(store / "aptest_results.txt", args.group,
                               {s.title for s in scenarios})
         print(f"Cleared {count} '{args.group}' result(s); "
@@ -2899,7 +3394,7 @@ def run(args: argparse.Namespace, store: Path, bridge_module) -> int:
     data = read_checkdata(store / "checkdata.txt")
     harness = Harness(store, bridge_module, args.group,
                       select_scenarios(args.group, data, store, args.game_root,
-                                       args.unproven))
+                                       args.unproven, args.chapters))
     harness.publish(force=True)
     if args.group == "sweep":
         threading.Thread(target=harness.poll, daemon=True).start()

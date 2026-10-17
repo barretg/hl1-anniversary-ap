@@ -28,6 +28,9 @@ struct Chapter;
 // the `G` record names, which is how a client from before there was more than
 // one game says so.
 bool ChapterIsOpen(const Chapter& chapter);
+// Whether a warp may go to this chapter at all: always in hub mode; in
+// transitions mode only once its first map has been visited.
+bool WarpReachable(const Chapter& chapter);
 
 // Registered with the engine once, at GameDLLInit.
 //   ap                 every mission and its unlock status

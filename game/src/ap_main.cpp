@@ -23,6 +23,7 @@
 #include "ap_state.h"
 #include "ap_throw.h"
 #include "ap_traps.h"
+#include "ap_transitions.h"
 #include "ap_warpsave.h"
 
 namespace ap {
@@ -482,6 +483,7 @@ void Startup() {
     Trace("  bridge open");
 
     OnMapStart(CurrentMap());
+    OnTransitionLevelStart();
     Trace("  map start done");
 
     // Last: everything above may precache, and the texture files give way to
@@ -520,6 +522,8 @@ void RunFrame() {
     // anything a hook wanted to tell the player is sent from here rather than
     // from the hook.
     ExecBinds();
+    // Before anything looks at where the player is.
+    RunTransitionArrival();
     FlushNotices();
     FixPlayerModels();
     RunLoadout();
@@ -575,6 +579,7 @@ void RunFrame() {
 
         AnnounceArrivals(had_session, had_items, had_chapters, had_goal,
                          had_air_accelerate);
+        ApplySeedTransitions(State());
 
         for (const PendingEvent& event : events) {
             ApplyEvent(event);

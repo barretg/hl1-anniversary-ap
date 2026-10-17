@@ -22,6 +22,7 @@
 #include "ap_main.h"
 #include "ap_state.h"
 #include "ap_text.h"
+#include "ap_transitions.h"
 #include "ap_traps.h"
 #include "ap_warpsave.h"
 
@@ -1218,14 +1219,49 @@ const Location::Source* SourceHere(const Location& location) {
 // changelevel into that part, or out of the mission forwards (its endsection, or
 // its last map for a finale that completes on arrival). False for any other
 // check, or when no way from this map leads there.
+// Transitions mode: where each trigger leads is the seed's, so a part may be
+// reached from another chapter's map, and a chapter is finished by its vanilla
+// way forwards wherever that now goes.
+bool WayOnHereSeeded(const Location& location, bool reached, const Vector& from,
+                     Vector& out) {
+    const Chapter* here = Data().ChapterOfMap(g_map);
+    const Chapter* chapter = Data().ChapterOfMap(location.map);
+    if (here == nullptr || chapter == nullptr || (!reached && here->key != chapter->key)) {
+        return false;
+    }
+    bool any = false;
+    float best = 0.0f;
+    for (const Transition& t : Data().transitions) {
+        if (t.map != g_map) {
+            continue;
+        }
+        const bool leads = reached ? LeadsTo(t) == location.map
+                                   : !LeadsTo(t).empty() && CompletesChapter(t);
+        if (!leads) {
+            continue;
+        }
+        const Vector at(t.at[0], t.at[1], t.at[2]);
+        const float score = WalkScore(from, at);
+        if (!any || score < best) {
+            out = at;
+            best = score;
+            any = true;
+        }
+    }
+    return any;
+}
+
 bool WayOnHere(const Location& location, const Vector& from, Vector& out) {
+    const bool reached = location.type == TriggerType::MapReached;
+    if (!reached && location.type != TriggerType::ChapterComplete) {
+        return false;
+    }
+    if (TransitionsMode()) {
+        return WayOnHereSeeded(location, reached, from, out);
+    }
     const Chapter* here = Data().ChapterOfMap(g_map);
     const Chapter* chapter = Data().ChapterOfMap(location.map);
     if (here == nullptr || chapter == nullptr || here->key != chapter->key) {
-        return false;
-    }
-    const bool reached = location.type == TriggerType::MapReached;
-    if (!reached && location.type != TriggerType::ChapterComplete) {
         return false;
     }
     bool any = false;

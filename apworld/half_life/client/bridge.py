@@ -221,6 +221,7 @@ class Bridge:
         melee_throw: bool = False,
         data_version: str = "",
         slot: str = "",
+        transitions: dict | None = None,
         force: bool = False,
     ) -> bool:
         """Rewrite ap_in.txt. Returns True if anything was written.
@@ -286,6 +287,7 @@ class Bridge:
             "checked=" + ",".join(str(i) for i in checked or ()),
             "missing=" + ",".join(str(i) for i in missing or ()),
         ]
+        lines += transition_lines(transitions)
         body = "\n".join(lines)
         pending = tuple(sorted(self._pending))
 
@@ -335,6 +337,37 @@ class Bridge:
         # read by anything, but it is the visible symptom of that failure and
         # should not be mistaken for a live file.
         self.in_path.with_suffix(".tmp").unlink(missing_ok=True)
+
+
+def transition_lines(slot_data: dict | None) -> list[str]:
+    """The snapshot's transitions section, from a transitions mode seed's slot
+    data. Nothing at all for a hub seed, so its snapshot reads as it always did.
+
+    Transition ids hold a colon but never a comma or semicolon: a pair is
+    `a,b`, and pairs are joined with `;`. A directed entry (one-way exit, orb)
+    is `from,to` the same way.
+    """
+    if not slot_data or slot_data.get("progression_mode") != "transitions":
+        return []
+
+    def pairs(entries) -> str:
+        return ";".join(f"{a},{b}" for a, b in entries)
+
+    return [
+        "progression_mode=transitions",
+        f"map_shuffle={slot_data.get('map_shuffle', '')}",
+        f"start_map={slot_data.get('start_map', '')}",
+        "transition_chapters=" + ",".join(slot_data.get("transition_chapters", ())),
+        "transition_pairs=" + pairs(slot_data.get("transition_pairs", ())),
+        "inert_transitions=" + ";".join(slot_data.get("inert_transitions", ())),
+        "one_way_transitions=" + pairs(
+            sorted(slot_data.get("one_way_transitions", {}).items())),
+        "backtrack_orbs=" + pairs(sorted(slot_data.get("backtrack_orbs", {}).items())),
+        f"transition_hub={1 if slot_data.get('transition_hub') else 0}",
+        f"ending_map={slot_data.get('ending_map', '')}",
+        f"final_boss={slot_data.get('final_boss', '')}",
+        "boss_maps=" + ",".join(sorted(slot_data.get("boss_exits", {}).values())),
+    ]
 
 
 def find_store_dir(game_dir: str | os.PathLike[str]) -> Path:

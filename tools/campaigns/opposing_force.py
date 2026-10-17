@@ -341,4 +341,7 @@ OPPOSING_FORCE = Campaign(
     hub_button_prefix="of_",
     armour_item="PCV",
     short="of",
+    boss_map="of6a5",
+    boss_exit=("of6a5", "of7a0"),
+    ending_map="of7a0",
 )

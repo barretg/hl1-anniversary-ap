@@ -17,11 +17,12 @@ the game's own.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, ClassVar
 
 import settings
 from BaseClasses import Tutorial
-from Options import OptionGroup
+from Options import OptionError, OptionGroup
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, Type, components, launch_subprocess
 
@@ -41,6 +42,7 @@ from .data import (
     SCIENTIST_TRIGGER,
     SOLDIER_TRIGGER,
     ITEMS,
+    SUPPORTED_CHAPTER_NAMES,
     ABILITY_ITEM_NAMES,
     AIR_ACCELERATE_ITEM,
     OPTIONAL_ITEM_CAMPAIGNS,
@@ -80,21 +82,31 @@ from .options import (
     IncludeCriticalNpcs,
     Scientistsanity,
     Soldiersanity,
+    BlueShiftChapters,
     BlueShiftMissionsRequired,
+    GenerationDifficulty,
+    HalfLifeChapters,
     HalfLifeOptions,
     Healsanity,
     IncludeBlueShift,
     IncludeHalfLife,
     IncludeOpposingForce,
+    MapShuffle,
     MeleeThrow,
     MissionsRequired,
+    OpposingForceChapters,
     OpposingForceMissionsRequired,
+    ProgressionMode,
     ProgressiveAirAcceleration,
     RandomStartingWeapon,
     ShuffleFlashlight,
+    TransitionHub,
     ViewmodelStyle,
 )
 from .regions import create_regions
+from .transitions import (
+    MAP_CHAPTER, connect_transitions, create_transition_regions, transition_slot_data,
+)
 from .rules import chapter_is_startable
 
 GAME_NAME = "Half-Life"
@@ -165,6 +177,12 @@ class HalfLifeWeb(WebWorld):
              Barneysanity, Soldiersanity, IncludeCriticalNpcs],
             start_collapsed=True,
         ),
+        OptionGroup(
+            "Map Randomization",
+            [ProgressionMode, MapShuffle, GenerationDifficulty, TransitionHub,
+             HalfLifeChapters, OpposingForceChapters, BlueShiftChapters],
+            start_collapsed=True,
+        ),
     ]
 
 
@@ -212,6 +230,18 @@ class HalfLifeWorld(World):
         self.starting_weapon: str = ""
         # Whether an ally's dropped weapon is a way to its weapon check.
         self.ally_weapon_drops: bool = False
+        # Transitions mode: the chapters whose maps make up the world, by key.
+        self.transition_chapters: list[str] = []
+        # Transitions mode's plan (`transitions.Plan`), exits by transition id,
+        # regions by name, and the transitions left over in odd groups.
+        self.transition_plan = None
+        self.transition_exits: dict = {}
+        self.transition_regions: dict = {}
+        self.transition_odd: list[str] = []
+
+    @property
+    def transitions_mode(self) -> bool:
+        return self.options.progression_mode == ProgressionMode.option_transitions
 
     # -- generation ------------------------------------------------------
 
@@ -235,6 +265,64 @@ class HalfLifeWorld(World):
         """
         return slot_data
 
+    def validate_map_options(self) -> None:
+        """Settle the Map Randomization group before anything reads it.
+
+        Hub mode only has missions to shuffle inside, so `area` and `total`
+        fall back to `chapter_maps`. Transitions mode needs at least one
+        supported chapter and at least one goal chapter among them.
+        """
+        options = self.options
+        transitions = options.progression_mode == ProgressionMode.option_transitions
+        if not transitions and options.map_shuffle.value in (
+                MapShuffle.option_area, MapShuffle.option_total):
+            logging.warning(
+                f"{self.player_name}: map_shuffle {options.map_shuffle.current_key} "
+                "needs progression_mode transitions; using chapter_maps")
+            options.map_shuffle.value = MapShuffle.option_chapter_maps
+        if not transitions:
+            return
+
+        lists = {
+            HALF_LIFE: options.half_life_chapters,
+            "opposing_force": options.opposing_force_chapters,
+            "blue_shift": options.blue_shift_chapters,
+        }
+        if not any(SUPPORTED_CHAPTER_NAMES.values()):
+            raise OptionError(
+                f"{self.player_name}: progression_mode transitions is not playable "
+                "yet: no chapters are supported yet")
+        chapters: list[str] = []
+        for key in list(self.campaigns):
+            supported = SUPPORTED_CHAPTER_NAMES.get(key, [])
+            unknown = sorted(set(lists[key].value) - set(supported))
+            if unknown:
+                raise OptionError(
+                    f"{self.player_name}: {lists[key].display_name} names "
+                    f"{', '.join(unknown)}, which this version does not support "
+                    f"(supported: {', '.join(supported) or 'none'})")
+            wanted = [c for c in CHAPTERS if campaign_of(c) == key
+                      and c["name"] in lists[key].value]
+            if self.options.exclude_intro_missions:
+                intro = CAMPAIGNS_BY_KEY[key]["intro_chapter"]
+                wanted = [c for c in wanted if c["key"] != intro]
+            if not wanted:
+                logging.warning(
+                    f"{self.player_name}: no {CAMPAIGNS_BY_KEY[key]['name']} "
+                    "chapters are included; leaving the game out")
+                self.campaigns.remove(key)
+                continue
+            chapters.extend(c["key"] for c in wanted)
+        goals = [c["goal_chapter"] for c in CAMPAIGNS]
+        if not any(key in goals for key in chapters):
+            names = [next(c["name"] for c in CHAPTERS if c["key"] == g) for g in goals]
+            included = ", ".join(CAMPAIGNS_BY_KEY[k]["name"] for k in self.campaigns)
+            raise OptionError(
+                f"{self.player_name}: transitions mode needs a goal chapter "
+                f"({', '.join(names)}) in the included chapter lists; included "
+                f"games: {included or 'none'}")
+        self.transition_chapters = chapters
+
     def generate_early(self) -> None:
         passthrough = self.tracker_passthrough
 
@@ -251,6 +339,19 @@ class HalfLifeWorld(World):
             self.campaigns = [HALF_LIFE]
         if passthrough:
             self.campaigns = list(passthrough.get("campaigns", [HALF_LIFE]))
+
+        passthrough_mode = (passthrough or {}).get("progression_mode")
+        if passthrough_mode == "transitions":
+            self.options.progression_mode.value = ProgressionMode.option_transitions
+            self.options.map_shuffle.value = MapShuffle.options[passthrough["map_shuffle"]]
+            self.transition_chapters = list(passthrough.get("transition_chapters", []))
+        else:
+            self.validate_map_options()
+        if self.transitions_mode:
+            # The world is the chosen chapters' maps; every other chapter is
+            # "not in this seed", as an excluded mission is in hub mode.
+            self.excluded_chapters.update(
+                c["key"] for c in CHAPTERS if c["key"] not in self.transition_chapters)
 
         # A game that is out is out entirely: its missions are "not in this
         # seed" to the game, exactly like an excluded intro.
@@ -336,11 +437,14 @@ class HalfLifeWorld(World):
             name for name, option in ABILITY_ITEM_NAMES.items()
             if getattr(self.options, option)
         )
-        self.available_item_names.update(
-            unlock_item_for_chapter[chapter["key"]]
-            for chapter in self.included_chapters
-            if chapter["key"] in unlock_item_for_chapter
-        )
+        # No mission unlocks in transitions mode: the world is walked, not
+        # warped into.
+        if not self.transitions_mode:
+            self.available_item_names.update(
+                unlock_item_for_chapter[chapter["key"]]
+                for chapter in self.included_chapters
+                if chapter["key"] in unlock_item_for_chapter
+            )
 
         # The starting melee weapon. Every included game offers its own, and
         # with one candidate (Half-Life, Blue Shift, or both) there is nothing
@@ -394,6 +498,10 @@ class HalfLifeWorld(World):
             HALF_LIFE, next(iter(self.missions_required_by_campaign.values()))
         )
 
+        if self.transitions_mode:
+            # The start is drawn with the rest of the world in `create_regions`.
+            return
+
         # The run opens with one mission playable, and it has to be one a player
         # with nothing but a crowbar can actually walk into. Picking a gated
         # mission (anything from We've Got Hostiles on, under strict logic)
@@ -424,7 +532,15 @@ class HalfLifeWorld(World):
         return [c for c in CHAPTERS if c["key"] not in self.excluded_chapters]
 
     def create_regions(self) -> None:
-        create_regions(self)
+        if self.transitions_mode:
+            create_transition_regions(self)
+            self.starting_chapter = MAP_CHAPTER[self.transition_plan.start_map]
+        else:
+            create_regions(self)
+
+    def connect_entrances(self) -> None:
+        if self.transitions_mode:
+            connect_transitions(self)
 
     def create_item(self, name: str) -> HalfLifeItem:
         return create_item(self, name)
@@ -432,7 +548,7 @@ class HalfLifeWorld(World):
     def create_items(self) -> None:
         pool: list[HalfLifeItem] = []
 
-        starting_unlock = unlock_item_for_chapter[self.starting_chapter]
+        starting_unlock = unlock_item_for_chapter.get(self.starting_chapter, "")
         for name in sorted(self.available_item_names):
             if name == starting_unlock:
                 continue  # already in the starting inventory
@@ -484,7 +600,9 @@ class HalfLifeWorld(World):
         # is left.
         player = self.player
         # One Victory per included game's finale, and the seed wants them all.
-        finales = len(self.campaigns)
+        # In transitions mode, one per included boss chapter.
+        finales = (len(self.transition_plan.bosses) if self.transitions_mode
+                   else len(self.campaigns))
         self.multiworld.completion_condition[player] = (
             lambda state: state.has(VICTORY, player, finales)
         )
@@ -495,7 +613,9 @@ class HalfLifeWorld(World):
         """Everything the client needs to drive the game without shipping its own
         copy of the seed's settings."""
         goals = {key: CAMPAIGNS_BY_KEY[key]["goal_chapter"] for key in self.campaigns}
-        return {
+        # Transitions mode only, so a hub seed's slot data is as it was.
+        extra = transition_slot_data(self) if self.transitions_mode else {}
+        return extra | {
             # The first included game's seal and finale, under the names every
             # client before there was more than one game reads.
             "missions_required": self.missions_required,

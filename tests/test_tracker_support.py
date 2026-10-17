@@ -17,6 +17,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 WORLD = (REPO / "apworld" / "half_life" / "__init__.py").read_text(encoding="utf-8")
+# Transitions mode's slot data and passthrough reads live in their own module.
+TRANSITIONS = (REPO / "apworld" / "half_life" / "transitions.py").read_text(encoding="utf-8")
 CLIENT = (
     REPO / "apworld" / "half_life" / "client" / "launcher.py"
 ).read_text(encoding="utf-8")
@@ -24,11 +26,14 @@ CLIENT = (
 
 def slot_data_keys() -> set[str]:
     body = WORLD.split("def fill_slot_data", 1)[1]
-    return set(re.findall(r'^\s{12}"([a-z_]+)":', body, re.M))
+    keys = set(re.findall(r'^\s{12}"([a-z_]+)":', body, re.M))
+    body = TRANSITIONS.split("def transition_slot_data", 1)[1]
+    return keys | set(re.findall(r'^\s{8}"([a-z_]+)":', body, re.M))
 
 
 def passthrough_keys() -> set[str]:
-    return set(re.findall(r'passthrough(?:\s*or\s*\{\})?\)?\.get\(\s*"([a-z_]+)"', WORLD))
+    pattern = r'passthrough(?:\s*or\s*\{\})?\)?(?:\.get\(\s*|\[)"([a-z_]+)"'
+    return set(re.findall(pattern, WORLD)) | set(re.findall(pattern, TRANSITIONS))
 
 
 def test_the_world_offers_the_tracker_hook() -> None:

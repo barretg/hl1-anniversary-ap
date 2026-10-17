@@ -4299,7 +4299,7 @@ index 3c1ff87..adda7ad 100644
  };
  
 diff --git a/dlls/triggers.cpp b/dlls/triggers.cpp
-index 1f9ea5b..7233b68 100644
+index 1f9ea5b..93e04a8 100644
 --- a/dlls/triggers.cpp
 +++ b/dlls/triggers.cpp
 @@ -23,10 +23,13 @@
@@ -4338,19 +4338,67 @@ index 1f9ea5b..7233b68 100644
  	// Only touch clients, monsters, or pushables (depending on flags)
  	if ( ((pevToucher->flags & FL_CLIENT) && !(pev->spawnflags & SF_TRIGGER_NOCLIENTS)) ||
  		 ((pevToucher->flags & FL_MONSTER) && (pev->spawnflags & SF_TRIGGER_ALLOWMONSTERS)) ||
-@@ -1480,6 +1491,11 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
+@@ -1429,6 +1440,31 @@ void CChangeLevel :: Spawn( void )
+ 	if ( !(pev->spawnflags & SF_CHANGELEVEL_USEONLY) )
+ 		SetTouch( &CChangeLevel::TouchChangeLevel );
+ //	ALERT( at_console, "TRANSITION: %s (%s)\n", m_szMapName, m_szLandmarkName );
++
++	// Archipelago: a randomized transition is rewritten here, before the
++	// engine builds this level's list of connections.
++	ap::OnChangeLevelSpawned( this );
++}
++
++// Archipelago: CChangeLevel is declared in no header, so its names are read
++// and written here.
++namespace ap {
++const char *ChangeLevelMap( CBaseEntity *pEntity )
++{
++	return static_cast<CChangeLevel *>( pEntity )->m_szMapName;
++}
++const char *ChangeLevelLandmark( CBaseEntity *pEntity )
++{
++	return static_cast<CChangeLevel *>( pEntity )->m_szLandmarkName;
++}
++void SetChangeLevelDestination( CBaseEntity *pEntity, const char *pMap, const char *pLandmark )
++{
++	CChangeLevel *pChange = static_cast<CChangeLevel *>( pEntity );
++	strncpy( pChange->m_szMapName, pMap, cchMapNameMost - 1 );
++	pChange->m_szMapName[cchMapNameMost - 1] = 0;
++	strncpy( pChange->m_szLandmarkName, pLandmark, cchMapNameMost - 1 );
++	pChange->m_szLandmarkName[cchMapNameMost - 1] = 0;
++}
+ }
+ 
+ 
+@@ -1480,6 +1516,18 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
  	edict_t	*pentLandmark;
  	LEVELLIST	levels[16];
  
++	// Archipelago: a randomized transition is ours: swallowed, moved within
++	// the map, or let through as a real change.
++	const int apTransition = ap::OnTransition( this );
++	if ( apTransition == ap::kTransitionSwallowed )
++		return;
++
 +	// Archipelago: a transition inside a mission is the game's own. One that
 +	// would leave the mission is ours, and it never happens inline.
-+	if ( ap::InterceptChangeLevel( STRING( gpGlobals->mapname ), m_szMapName ) )
++	if ( apTransition == ap::kTransitionNotOurs &&
++		ap::InterceptChangeLevel( STRING( gpGlobals->mapname ), m_szMapName ) )
 +		return;
 +
  	ASSERT(!FStrEq(m_szMapName, ""));
  
  	// Don't work in deathmatch
-@@ -2009,6 +2025,13 @@ void CTriggerEndSection::EndSectionUse( CBaseEntity *pActivator, CBaseEntity *pC
+@@ -1530,6 +1578,8 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
+ 	}
+ //	ALERT( at_console, "Level touches %d levels\n", ChangeList( levels, 16 ) );
+ 	ALERT( at_console, "CHANGE LEVEL: %s %s\n", st_szNextMap, st_szNextSpot );
++	// Archipelago: the last moment the player is still in this level.
++	ap::BeforeChangeLevel( this, pPlayer );
+ 	CHANGE_LEVEL( st_szNextMap, st_szNextSpot );
+ }
+ 
+@@ -2009,6 +2059,13 @@ void CTriggerEndSection::EndSectionUse( CBaseEntity *pActivator, CBaseEntity *pC
      
  	SetUse( NULL );
  
@@ -4364,7 +4412,7 @@ index 1f9ea5b..7233b68 100644
  	if ( pev->message )
  	{
  		g_engfuncs.pfnEndSection(STRING(pev->message));
-@@ -2040,6 +2063,13 @@ void CTriggerEndSection::EndSectionTouch( CBaseEntity *pOther )
+@@ -2040,6 +2097,13 @@ void CTriggerEndSection::EndSectionTouch( CBaseEntity *pOther )
      
  	SetTouch( NULL );
  
@@ -4378,7 +4426,7 @@ index 1f9ea5b..7233b68 100644
  	if (pev->message)
  	{
  		g_engfuncs.pfnEndSection(STRING(pev->message));
-@@ -2440,3 +2470,205 @@ void CTriggerCamera::Move()
+@@ -2440,3 +2504,205 @@ void CTriggerCamera::Move()
  	float fraction = 2 * gpGlobals->frametime;
  	pev->velocity = ((pev->movedir * pev->speed) * fraction) + (pev->velocity * (1-fraction));
  }
