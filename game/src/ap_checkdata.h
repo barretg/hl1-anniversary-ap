@@ -179,6 +179,10 @@ struct Transition {
     float width = 0.0f;
     float height = 0.0f;
     bool use_only = false;
+    // What its changelevel fires on the other side, once the player is there,
+    // and after how long. Arriving at its partner fires it in vanilla.
+    std::string changetarget;
+    float changedelay = 0.0f;
 };
 
 // One game the seed may include (format 5's `N` record).

@@ -249,13 +249,15 @@ def render(campaign: dict) -> str:
         frame = t["frame"]
         lines.append(
             "E|{id}|{map}|{to}|{landmark}|{at}|{kind}|{partner}|{two_way}|{origin}"
-            "|{yaw}|{width}|{height}|{use_only}".format(
+            "|{yaw}|{width}|{height}|{use_only}|{changetarget}|{changedelay}".format(
                 id=t["id"], map=t["map"], to=t["to"], landmark=t["landmark"],
                 at=" ".join(str(v) for v in t["at"]), kind=t["kind"],
                 partner=t["partner"], two_way=1 if t["two_way"] else 0,
                 origin=" ".join(str(v) for v in frame["origin"]), yaw=frame["yaw"],
                 width=frame["width"], height=frame["height"],
                 use_only=1 if t["use_only"] else 0,
+                changetarget=t.get("changetarget", ""),
+                changedelay=t.get("changedelay", 0),
             ))
 
     return "\n".join(lines) + "\n"

@@ -264,6 +264,10 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
             t.width = static_cast<float>(atof(f[11].c_str()));
             t.height = static_cast<float>(atof(f[12].c_str()));
             t.use_only = f[13] == "1";
+            if (f.size() >= 16) {
+                t.changetarget = f[14];
+                t.changedelay = static_cast<float>(atof(f[15].c_str()));
+            }
             if (ParseVector(f[5], t.at) && ParseVector(f[9], t.origin)) {
                 transitions.push_back(t);
             }

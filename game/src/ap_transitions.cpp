@@ -574,6 +574,16 @@ Vector LandmarkSpot(const Transition& t) {
     return spot;
 }
 
+// A keyvalue set as a map's own are, through the entity's `KeyValue`.
+void SetKey(CBaseEntity* entity, const char* key, const std::string& value) {
+    KeyValueData kvd;
+    kvd.szClassName = const_cast<char*>(STRING(entity->pev->classname));
+    kvd.szKeyName = const_cast<char*>(key);
+    kvd.szValue = const_cast<char*>(value.c_str());
+    kvd.fHandled = FALSE;
+    DispatchKeyValue(entity->edict(), &kvd);
+}
+
 // This map's landmark by name, or the transition's centre when it has none.
 Vector LandmarkOrigin(const std::string& name, const Transition& t) {
     CBaseEntity* entity = nullptr;
@@ -661,6 +671,13 @@ void OnChangeLevelSpawned(CBaseEntity* trigger) {
         return;  // already rewritten, by spawn or by a save
     }
     SetChangeLevelDestination(trigger, b->map.c_str(), landmark.c_str());
+    // What vanilla fires on arriving at `b` (an elevator starting, a door
+    // opening), not what this changelevel fired where it used to lead. None
+    // is a name nothing has: an empty one is still fired, and matches by it.
+    const Transition* inbound = Data().TransitionById(b->partner);
+    const bool fires = inbound != nullptr && !inbound->changetarget.empty();
+    SetKey(trigger, "changetarget", fires ? inbound->changetarget : "ap_nothing");
+    SetKey(trigger, "changedelay", std::to_string(fires ? inbound->changedelay : 0.0f));
     SpawnNamed("info_landmark", landmark, LandmarkSpot(*t), nullptr);
     // Only what stands at the trigger crosses, not the whole of what the
     // landmark can see.

@@ -239,6 +239,8 @@ def build_transitions(
             }
             if entity.get("changetarget"):
                 record["changetarget"] = entity["changetarget"]
+                if entity.get("changedelay"):
+                    record["changedelay"] = float(entity["changedelay"])
             if firing:
                 record["fired_by"] = firing["model"]
             flags = (["horizontal"] if axis == "z" else []) + (

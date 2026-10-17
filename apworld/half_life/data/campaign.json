@@ -43608,6 +43608,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "elestartmm",
+   "changedelay": 1.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -43725,6 +43726,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "elestartmm",
+   "changedelay": 1.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -44620,6 +44622,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c1a4bdoor3",
+   "changedelay": 1.0,
    "flags": [
     "yaw_guess"
    ]
@@ -44652,6 +44655,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c1a4bdoor5",
+   "changedelay": 1.0,
    "flags": [
     "yaw_guess"
    ]
@@ -44684,6 +44688,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c1a4idoor1",
+   "changedelay": 1.0,
    "flags": [
     "yaw_guess"
    ]
@@ -44916,6 +44921,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c1a4bdoor3",
+   "changedelay": 1.0,
    "flags": [
     "yaw_guess"
    ]
@@ -44948,6 +44954,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c1a4bdoor5",
+   "changedelay": 1.0,
    "flags": [
     "yaw_guess"
    ]
@@ -44980,6 +44987,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c1a4idoor1",
+   "changedelay": 1.0,
    "flags": [
     "yaw_guess"
    ]
@@ -45894,6 +45902,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "blast2",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -45991,6 +46000,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "blast1",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -46275,7 +46285,8 @@
    "partner": "c2a3e:1",
    "two_way": true,
    "fixed": false,
-   "changetarget": "wottadrag"
+   "changetarget": "wottadrag",
+   "changedelay": 0.0
   },
   {
    "id": "c2a3e:0",
@@ -47611,6 +47622,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "elestartmm",
+   "changedelay": 1.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -47644,6 +47656,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "elestartmm",
+   "changedelay": 1.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -47677,6 +47690,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c3a2startdoors",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -47738,6 +47752,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "c3a1transdoor",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -49739,6 +49754,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "elestartmm",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -49800,6 +49816,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "elestartmm",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -50596,6 +50613,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "pumpdrmm",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
@@ -50685,6 +50703,7 @@
    "two_way": true,
    "fixed": false,
    "changetarget": "pumpdrmm",
+   "changedelay": 0.0,
    "flags": [
     "no_stand",
     "yaw_guess"
