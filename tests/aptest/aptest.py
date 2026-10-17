@@ -125,6 +125,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import importlib.util
 import math
@@ -2253,19 +2254,65 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
 # are trusted.
 TRANSITION_FEEL_PAIRS = [
     ("c1a0:1", "c1a0b:2", "no turn: a straight carry into another map"),
-    ("c1a0:1", "c1a2:0", "a quarter turn"),
+    ("c1a0:1", "c1a2:0", "a quarter turn, out of the chapter"),
+    ("c1a2:0", "c1a2b:0", "a quarter turn"),
     ("c1a0d:1", "c1a0b:2", "a half turn"),
     ("c1a2:0", "c1a2:2", "a same-map pair: no level change"),
 ]
+# Pairs a follower is led through. Office Complex, since Anomalous Materials'
+# scientists refuse to follow.
+TRANSITION_FOLLOW_PAIRS = [
+    ("c1a2:0", "c1a2b:0", "a level change with a quarter turn"),
+    ("c1a2:0", "c1a2:2", "a same-map move"),
+    ("c1a2:0", "c1a0b:2", "out of the chapter"),
+]
+
+
+def pair_seed(data: CheckData, a: Transition, b: Transition) -> dict | None:
+    """A transitions mode seed playing just `a <> b`, for a pair across two
+    chapters: in hub mode leaving the chapter finishes it and returns to the
+    hub. None for a pair inside one chapter, which hub mode plays as is."""
+    chapter = {m: c.key for c in data.chapters for m in c.maps}
+    ca, cb = chapter.get(a.map), chapter.get(b.map)
+    if ca is None or cb is None or ca == cb:
+        return None
+    seed = copy.deepcopy(load_seed("first_step_area"))
+    seed.update(
+        start_map=a.map, starting_chapters=[ca], transition_chapters=[ca, cb],
+        transition_pairs=[[a.id, b.id]], one_way_transitions={}, backtrack_orbs={},
+        inert_transitions=[],
+        excluded_chapters=[k for k in seed["excluded_chapters"] if k not in (ca, cb)])
+    return seed
 # How far inside the exit a transition feel scenario starts.
 TRANSITION_FEEL_STEP_IN = 128
 
 
 def transition_feel_scenarios(data: CheckData) -> list[Scenario]:
     """The seamless transform, felt without a seed: each scenario pairs two
-    transitions and starts the player inside the first, facing out of it."""
+    transitions and starts the player inside the first, facing out of it. Then
+    the follow scenarios, a follower led through such a pair."""
     by_id = {t.id: t for t in data.transitions}
     out: list[Scenario] = []
+    for a_id, b_id, what in TRANSITION_FOLLOW_PAIRS:
+        a, b = by_id.get(a_id), by_id.get(b_id)
+        if a is None or b is None:
+            continue
+        labels = {t.id: f"T{n}" for n, t in enumerate(map_transitions(data, a.map), 1)}
+        same = a.map == b.map
+        out.append(Scenario(
+            title=f"Transition follow: {a_id} to {b_id} ({what})",
+            map=a.map, entry=a_id, pairs=[(a_id, b_id)], seed=pair_seed(data, a, b),
+            steps="\n".join([
+                f"{labels[a_id]} (marked entry) now leads to {b_id}"
+                + (", in this same map." if same else f" in {b.map}."),
+                "Get a scientist following you (press use on him) and lead him",
+                f"through {labels[a_id]}, with him trailing a few steps behind.",
+                "Expect: he comes through, in the same room as you and in sight,",
+                "not inside you, a wall or the floor, about where he trailed you",
+                "(turned with you), and still following.",
+                "Try again with him further back, and with two following if you can.",
+                "!pass, or !fail <missing, in a wall, other room, stopped following>.",
+            ])))
     for a_id, b_id, what in TRANSITION_FEEL_PAIRS:
         a, b = by_id.get(a_id), by_id.get(b_id)
         if a is None or b is None:
@@ -2275,13 +2322,16 @@ def transition_feel_scenarios(data: CheckData) -> list[Scenario]:
                a.origin[1] - TRANSITION_FEEL_STEP_IN * math.sin(yaw), a.origin[2])
         turn = ((b.yaw + 180) - a.yaw) % 360
         same = a.map == b.map
+        seed = pair_seed(data, a, b)
         labels = {t.id: f"T{n}" for n, t in enumerate(map_transitions(data, a.map), 1)}
         out.append(Scenario(
             title=f"Transition feel: {a_id} to {b_id} ({what})",
             map=a.map, pos=" ".join(f"{v:g}" for v in pos), yaw=a.yaw,
-            entry=a_id, pairs=[(a_id, b_id)], steps="\n".join([
+            entry=a_id, pairs=[(a_id, b_id)], seed=seed, steps="\n".join([
                 f"You face {labels[a_id]} (marked entry), which now leads to {b_id}"
-                f" in {b.map}" + (", in this same map" if same else "") + ".",
+                f" in {b.map}" + (", in this same map" if same else "") + "."
+                + (" Transitions mode: no hub, and arriving does not return you"
+                   " to one." if seed is not None else ""),
                 "Walk, then run, through it. Expect: " + (
                     "no load at all; you are moved across the map" if same else
                     f"{b.map} loads with your gear and health") + ",",
@@ -2289,9 +2339,10 @@ def transition_feel_scenarios(data: CheckData) -> list[Scenario]:
                 "turn from how you went in), still moving, not in a wall, not",
                 "bounced back through it.",
                 "Turn round and walk back through: you come out where you went in,",
-                f"facing back into {a.map}. A scientist or guard following you",
-                "comes through too, turned the same way.",
-                "!pass, or !fail <what was off: position, facing, speed, stuck, bounce>.",
+                f"facing back into {a.map}.",
+                "Strafe through it, both ways: the view is level afterwards, not",
+                "tilted.",
+                "!pass, or !fail <what was off: position, facing, speed, stuck, bounce, tilt>.",
             ])))
     return out
 

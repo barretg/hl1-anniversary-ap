@@ -44,6 +44,9 @@ constexpr float kCentreSlack = 2.0f;
 // The transition volume reaches this far past the trigger on every side, so a
 // follower right behind the player comes too.
 constexpr float kVolumePad = 48.0f;
+// A monster following the player crosses from this far away. Followers trail
+// by about 128 units, well outside the padded volume.
+constexpr float kFollowReach = 384.0f;
 // A player kept this far inside a trigger's edge, across it.
 constexpr float kLateralMargin = 16.0f;
 // How long the arrival end ignores the player after they are placed.
@@ -138,17 +141,33 @@ bool HullFits(CBasePlayer* player, const Vector& at, int hull) {
     return !tr.fStartSolid && !tr.fAllSolid;
 }
 
-// Put a carried monster where its offset says, turned with the player. One
-// that does not fit is removed rather than left in a wall.
-void PlaceFollower(CBaseEntity* entity, const Vector& origin, float dyaw) {
-    const Vector tries[] = {Vector(0, 0, 0), Vector(0, 0, 16), Vector(24, 0, 0),
-                            Vector(-24, 0, 0), Vector(0, 24, 0), Vector(0, -24, 0)};
-    for (const Vector& offset : tries) {
-        TraceResult tr;
-        TRACE_MONSTER_HULL(entity->edict(), origin + offset, origin + offset,
-                           dont_ignore_monsters, entity->edict(), &tr);
-        if (!tr.fStartSolid && !tr.fAllSolid) {
-            UTIL_SetOrigin(entity->pev, origin + offset);
+// Put a carried monster where its offset says, turned with the player
+// (placed first, at `toward`). A spot must fit the monster's hull, which keeps it
+// off the player and out of walls, and see the player, which keeps it in the
+// player's room. Failing that, spots around it and then closer to the player
+// are tried; one that fits nowhere is removed rather than left in a wall.
+void PlaceFollower(CBaseEntity* entity, const Vector& origin, float dyaw, const Vector& toward) {
+    static const Vector kTries[] = {
+        Vector(0, 0, 0),    Vector(0, 0, 16),    Vector(24, 0, 0),    Vector(-24, 0, 0),
+        Vector(0, 24, 0),   Vector(0, -24, 0),   Vector(48, 0, 0),    Vector(-48, 0, 0),
+        Vector(0, 48, 0),   Vector(0, -48, 0),   Vector(34, 34, 0),   Vector(-34, 34, 0),
+        Vector(34, -34, 0), Vector(-34, -34, 0)};
+    for (float pull : {0.0f, 0.25f, 0.5f, 0.75f}) {
+        const Vector base = origin + (toward - origin) * pull;
+        for (const Vector& offset : kTries) {
+            const Vector spot = base + offset;
+            TraceResult tr;
+            TRACE_MONSTER_HULL(entity->edict(), spot, spot, dont_ignore_monsters,
+                               entity->edict(), &tr);
+            if (tr.fStartSolid || tr.fAllSolid) {
+                continue;
+            }
+            UTIL_TraceLine(spot + entity->pev->view_ofs, toward, ignore_monsters,
+                           entity->edict(), &tr);
+            if (tr.flFraction < 1.0f) {
+                continue;
+            }
+            UTIL_SetOrigin(entity->pev, spot);
             entity->pev->angles.y += dyaw;
             entity->pev->ideal_yaw += dyaw;
             entity->pev->velocity = Rotate(entity->pev->velocity, dyaw);
@@ -209,10 +228,9 @@ void Place(CBasePlayer* player, const Transition& a, const Transition& b, Vector
     }
     player->pev->velocity = moved;
     player->pev->basevelocity = g_vecZero;
-    player->pev->angles = angles;
-    player->pev->angles.y += dyaw;
-    player->pev->v_angle = v_angle;
-    player->pev->v_angle.y += dyaw;
+    // No roll: strafing tilts the view, and fixangle would keep the tilt.
+    player->pev->angles = Vector(angles.x, angles.y + dyaw, 0.0f);
+    player->pev->v_angle = Vector(v_angle.x, v_angle.y + dyaw, 0.0f);
     player->pev->fixangle = 1;
 
     g_guard_id = b.id;
@@ -220,20 +238,39 @@ void Place(CBasePlayer* player, const Transition& a, const Transition& b, Vector
     Trace(("  transition " + a.id + " -> " + b.id).c_str());
 }
 
-// The monsters standing in a transition's volume, as offsets from `frame`.
-std::vector<Follower> FollowersAt(CBaseEntity* trigger, const Vector& frame,
-                                  CBaseEntity* player) {
-    std::vector<Follower> out;
+bool Follows(CBaseEntity* entity, CBaseEntity* player) {
+    CBaseMonster* monster = entity->MyMonsterPointer();
+    return monster != nullptr && monster->m_hTargetEnt == player;
+}
+
+// What crosses a transition with the player: the monsters standing in its
+// padded volume, and those following the player from within reach.
+std::vector<CBaseEntity*> CarriedBy(CBaseEntity* trigger, CBaseEntity* player) {
+    std::vector<CBaseEntity*> out;
     const Vector lo = trigger->pev->absmin - Vector(kVolumePad, kVolumePad, 0);
     const Vector hi = trigger->pev->absmax + Vector(kVolumePad, kVolumePad, 0);
-    CBaseEntity* list[64];
-    const int count = UTIL_EntitiesInBox(list, 64, lo, hi, FL_MONSTER);
+    const Vector reach(kFollowReach, kFollowReach, kFollowReach);
+    CBaseEntity* list[128];
+    const int count = UTIL_EntitiesInBox(list, 128, player->pev->origin - reach,
+                                         player->pev->origin + reach, FL_MONSTER);
     for (int i = 0; i < count; ++i) {
         CBaseEntity* entity = list[i];
         if (entity == player || entity->IsPlayer() || !entity->IsAlive()) {
             continue;
         }
-        out.push_back({STRING(entity->pev->classname), entity->pev->origin - frame});
+        if (Overlaps(entity->pev->absmin, entity->pev->absmax, lo, hi) ||
+            Follows(entity, player)) {
+            out.push_back(entity);
+        }
+    }
+    // A trigger bigger than the reach box: what stands in it beyond the box.
+    const int inside = UTIL_EntitiesInBox(list, 128, lo, hi, FL_MONSTER);
+    for (int i = 0; i < inside; ++i) {
+        CBaseEntity* entity = list[i];
+        if (entity != player && !entity->IsPlayer() && entity->IsAlive() &&
+            std::find(out.begin(), out.end(), entity) == out.end()) {
+            out.push_back(entity);
+        }
     }
     return out;
 }
@@ -241,23 +278,15 @@ std::vector<Follower> FollowersAt(CBaseEntity* trigger, const Vector& frame,
 void MoveWithinMap(CBasePlayer* player, CBaseEntity* trigger, const Transition& a,
                    const Transition& b) {
     const float dyaw = (b.yaw + 180.0f) - a.yaw;
-    std::vector<CBaseEntity*> carried;
-    {
-        const Vector lo = trigger->pev->absmin - Vector(kVolumePad, kVolumePad, 0);
-        const Vector hi = trigger->pev->absmax + Vector(kVolumePad, kVolumePad, 0);
-        CBaseEntity* list[64];
-        const int count = UTIL_EntitiesInBox(list, 64, lo, hi, FL_MONSTER);
-        for (int i = 0; i < count; ++i) {
-            if (list[i] != player && !list[i]->IsPlayer() && list[i]->IsAlive()) {
-                carried.push_back(list[i]);
-            }
-        }
+    const std::vector<CBaseEntity*> carried = CarriedBy(trigger, player);
+    std::vector<Vector> rels;
+    for (CBaseEntity* entity : carried) {
+        rels.push_back(Rotate(entity->pev->origin - Vec(a.origin), dyaw));
     }
     Place(player, a, b, player->pev->origin - Vec(a.origin), player->pev->velocity,
           player->pev->angles, player->pev->v_angle);
-    for (CBaseEntity* entity : carried) {
-        const Vector rel = Rotate(entity->pev->origin - Vec(a.origin), dyaw);
-        PlaceFollower(entity, Vec(b.origin) + rel, dyaw);
+    for (size_t i = 0; i < carried.size(); ++i) {
+        PlaceFollower(carried[i], Vec(b.origin) + rels[i], dyaw, player->pev->origin);
     }
     g_last_move = gpGlobals->time;
 }
@@ -496,7 +525,28 @@ void BeforeChangeLevel(CBaseEntity* trigger, CBaseEntity* player) {
     g_pending.velocity = player->pev->velocity;
     g_pending.angles = player->pev->angles;
     g_pending.v_angle = player->pev->v_angle;
-    g_pending.followers = FollowersAt(trigger, Vec(t->origin), player);
+    // The engine carries only what touches the landmark's trigger_transition,
+    // so it grows to take in every follower.
+    CBaseEntity* volume = nullptr;
+    const char* landmark = ChangeLevelLandmark(trigger);
+    while ((volume = UTIL_FindEntityByTargetname(volume, landmark)) != nullptr) {
+        if (FClassnameIs(volume->pev, "trigger_transition")) {
+            break;
+        }
+    }
+    Vector lo = volume != nullptr ? volume->pev->absmin : g_vecZero;
+    Vector hi = volume != nullptr ? volume->pev->absmax : g_vecZero;
+    for (CBaseEntity* entity : CarriedBy(trigger, player)) {
+        g_pending.followers.push_back(
+            {STRING(entity->pev->classname), entity->pev->origin - Vec(t->origin)});
+        for (int k = 0; k < 3; ++k) {
+            lo[k] = (std::min)(lo[k], entity->pev->absmin[k]);
+            hi[k] = (std::max)(hi[k], entity->pev->absmax[k]);
+        }
+    }
+    if (volume != nullptr) {
+        UTIL_SetSize(volume->pev, lo - volume->pev->origin, hi - volume->pev->origin);
+    }
 }
 
 void OnTransitionLevelStart() {
@@ -522,6 +572,8 @@ void RunTransitionArrival() {
     if (a == nullptr || b == nullptr) {
         return;
     }
+    Place(player, *a, *b, player->pev->origin - Vec(b->origin), pending.velocity,
+          pending.angles, pending.v_angle);
     // The engine has already translated everything by the frames' difference.
     const float dyaw = (b->yaw + 180.0f) - a->yaw;
     for (const Follower& follower : pending.followers) {
@@ -531,13 +583,12 @@ void RunTransitionArrival() {
                                              at + Vector(4, 4, 4), FL_MONSTER);
         for (int i = 0; i < count; ++i) {
             if (follower.classname == STRING(list[i]->pev->classname)) {
-                PlaceFollower(list[i], Vec(b->origin) + Rotate(follower.offset, dyaw), dyaw);
+                PlaceFollower(list[i], Vec(b->origin) + Rotate(follower.offset, dyaw), dyaw,
+                              player->pev->origin);
                 break;
             }
         }
     }
-    Place(player, *a, *b, player->pev->origin - Vec(b->origin), pending.velocity,
-          pending.angles, pending.v_angle);
     // Seam doors on the far side may never have seen this route.
     RequestSeamDoors();
 }
