@@ -752,22 +752,25 @@ void RegisterCommands() {
     // non-const name, so the casts are the engine's ABI rather than sloppiness.
     RegisterTestingCvar();
 
-    g_engfuncs.pfnAddServerCommand((char*)"ap", Cmd_Ap);
+    // Console completion offers the most recently registered match first, so a
+    // name that prefixes another (ap_warp/ap_warps, ap_trace/ap_tracker, ap)
+    // must come after it, the way the engine's map follows maps.
     g_engfuncs.pfnAddServerCommand((char*)"ap_help", Cmd_ApHelp);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_warps", Cmd_ApWarps);
     g_engfuncs.pfnAddServerCommand((char*)"ap_warp", Cmd_ApWarp);
     g_engfuncs.pfnAddServerCommand((char*)"ap_hub", Cmd_ApHub);
     g_engfuncs.pfnAddServerCommand((char*)"ap_setwarp", Cmd_ApSetWarp);
-    g_engfuncs.pfnAddServerCommand((char*)"ap_warps", Cmd_ApWarps);
     g_engfuncs.pfnAddServerCommand((char*)"ap_find", Cmd_ApFind);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tagged", Cmd_ApTagged);
     g_engfuncs.pfnAddServerCommand((char*)"ap_labels", Cmd_ApLabels);
-    g_engfuncs.pfnAddServerCommand((char*)"ap_trace", Cmd_ApTrace);
     g_engfuncs.pfnAddServerCommand((char*)"ap_tracker", Cmd_ApTracker);
+    g_engfuncs.pfnAddServerCommand((char*)"ap_trace", Cmd_ApTrace);
     g_engfuncs.pfnAddServerCommand((char*)"ap_menu", Cmd_ApMenu);
     g_engfuncs.pfnAddServerCommand((char*)"ap_nowarps", Cmd_ApNoWarps);
     RegisterTrapCommands();
     RegisterBotCommands();
     RegisterTestCommands();
+    g_engfuncs.pfnAddServerCommand((char*)"ap", Cmd_Ap);
     Trace("  commands registered");
 }
 
