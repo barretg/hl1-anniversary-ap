@@ -82,9 +82,6 @@ struct Pending {
     Vector shift;        // the exit's landmark from its trigger's centre
     std::vector<Follower> followers;
     bool orb = false;    // by a backtrack orb: placed at the frame, facing in
-    bool spot = false;   // by a teleporter: placed at `at`, facing `yaw`
-    Vector at;
-    float yaw = 0.0f;
 };
 Pending g_pending;
 
@@ -460,7 +457,7 @@ void ApplySeedTransitions(const Snapshot& state, bool force) {
     for (const std::string& chapter : state.transition_chapters) {
         key += chapter + ";";
     }
-    key += "|" + state.teleporters_raw;
+    key += "|" + state.orbs_raw;
     if (g_seeded && key == g_seed_key && !force) {
         return;
     }
@@ -521,9 +518,45 @@ void RewriteLevelTransitions() {
     }
 }
 
+// Whether a placed orb's key names `id`: a green arrival can serve several
+// transitions, `a+b`.
+bool KeyHas(const std::string& key, const std::string& id) {
+    size_t start = 0;
+    while (start <= key.size()) {
+        const size_t end = key.find('+', start);
+        const size_t stop = end == std::string::npos ? key.size() : end;
+        if (key.compare(start, stop - start, id) == 0 && stop - start == id.size()) {
+            return true;
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+    return false;
+}
+
 const std::string* SeedPartner(const std::string& id) {
     const auto found = g_pairs.find(id);
     return found == g_pairs.end() ? nullptr : &found->second;
+}
+
+// Where an orb at `id` leads: back the way a one-way arrival came, or else
+// through the seed's pair.
+const std::string* OrbPartner(const std::string& id) {
+    const auto in = g_one_way_in.find(id);
+    if (in != g_one_way_in.end() && !in->second.empty()) {
+        return &in->second.front();
+    }
+    if (const std::string* partner = SeedPartner(id)) {
+        return partner;
+    }
+    // Left vanilla by the seed: its own partner, unless it is dead here.
+    const Transition* t = Data().TransitionById(id);
+    if (t == nullptr || t->partner.empty() || Inert(id)) {
+        return nullptr;
+    }
+    return &t->partner;
 }
 
 bool Randomized(const std::string& id) {
@@ -954,19 +987,6 @@ void RunTransitionArrival() {
     const Transition* b = Data().TransitionById(g_pending.to);
     Pending pending = g_pending;
     g_pending = Pending();  // single frame: a quickload must not replay it
-    if (pending.spot) {
-        Vector spot = pending.at;
-        Vector found;
-        if (!HullFits(player, spot, human_hull) && FindStandSpot(player, spot, found, human_hull)) {
-            spot = found;
-        }
-        UTIL_SetOrigin(player->pev, spot);
-        player->pev->velocity = g_vecZero;
-        player->pev->angles = player->pev->v_angle = Vector(0, pending.yaw, 0);
-        player->pev->fixangle = 1;
-        Trace("  teleporter arrival");
-        return;
-    }
     if (a == nullptr || b == nullptr) {
         return;
     }
@@ -983,6 +1003,24 @@ void RunTransitionArrival() {
     } else {
         Place(player, *a, *b, player->pev->origin - frame + pending.shift, pending.velocity,
               pending.angles, pending.v_angle, pending.above);
+    }
+    // A green arrival placed for this transition is where it puts the player,
+    // as it is for an orb sent here: a trigger out of reach, say.
+    for (const Snapshot::WorkshopOrb& arrival : State().orbs) {
+        if (arrival.departs || arrival.map != b->map || !KeyHas(arrival.key, b->id)) {
+            continue;
+        }
+        Vector spot(arrival.at[0], arrival.at[1], arrival.at[2]);
+        Vector found;
+        if (!HullFits(player, spot, human_hull) && FindStandSpot(player, spot, found, human_hull)) {
+            spot = found;
+        }
+        UTIL_SetOrigin(player->pev, spot);
+        player->pev->velocity = g_vecZero;
+        player->pev->angles = player->pev->v_angle = Vector(0, arrival.yaw, 0);
+        player->pev->fixangle = 1;
+        Trace(("  arrival at the green orb for " + b->id).c_str());
+        break;
     }
     // The engine has already translated everything by the frames' difference.
     const float dyaw = (b->yaw + 180.0f) - a->yaw;
@@ -1114,31 +1152,16 @@ struct Orb {
     std::string label;
     // A backtrack orb: from the arrival `from`, back to the exit `to`.
     std::string from, to;
-    // A return teleporter: where it sends the player, and their facing; on
-    // another map when `to_map` names one.
+    // A teleporter within this map: where it sends the player, and their facing.
     Vector dest;
     float yaw = 0.0f;
-    std::string to_map;
+    bool has_dest = false;  // `dest` set: a spot rather than an arrival
     // An exit: only marks where an entrance puts the player.
     bool exit = false;
 };
 std::vector<Orb> g_orbs;
 float g_orb_labels_at = -1.0f;
 bool g_in_orb = false;
-
-// Behind the arrival and to its side, inside the map (7.2), where the player
-// fits. The audit's `orb_at` wins.
-Vector BacktrackSpot(CBasePlayer* player, const Transition& b) {
-    if (b.has_orb_at) {
-        return Vec(b.orb_at);
-    }
-    const Vector normal = Normal(b);
-    const Vector lateral(-normal.y, normal.x, 0.0f);
-    const Vector want = Vec(b.origin) - Vector(0, 0, VEC_HULL_MIN.z) - normal * 96.0f +
-                        lateral * 64.0f;
-    Vector found;
-    return FindStandSpot(player, want, found, human_hull) ? found : want;
-}
 
 void SpawnOrbSprite(const Orb& orb) {
     if (NamedExists("env_sprite", orb.name)) {
@@ -1182,35 +1205,20 @@ Vector ArrivalSpot(CBasePlayer* player, const Transition& t) {
 }
 
 // The orbs this map wants under this seed.
+// Names an orb or door opener waits on, once fired on a map: a marker kept in
+// the level's save, so a reload or a return to the map still has it.
+const char* const kFiredPrefix = "ap_fired_";
+
+bool Fired(const std::string& name) {
+    if (name.empty()) {
+        return true;
+    }
+    const std::string marker = kFiredPrefix + name;
+    return UTIL_FindEntityByTargetname(nullptr, marker.c_str()) != nullptr;
+}
+
 void BuildOrbs(CBasePlayer* player, const std::string& map) {
     g_orbs.clear();
-    for (const auto& entry : State().backtrack_orbs) {
-        const Transition* b = Data().TransitionById(entry.first);
-        const Transition* a = Data().TransitionById(entry.second);
-        if (b == nullptr || a == nullptr || b->map != map || a->map == map) {
-            continue;
-        }
-        Orb orb;
-        orb.name = kOrbPrefix + b->id;
-        orb.at = BacktrackSpot(player, *b);
-        orb.label = "Back";
-        orb.from = b->id;
-        orb.to = a->id;
-        g_orbs.push_back(orb);
-    }
-    // The exits of the orbs elsewhere that return to this map.
-    for (const auto& entry : State().backtrack_orbs) {
-        const Transition* b = Data().TransitionById(entry.first);
-        const Transition* a = Data().TransitionById(entry.second);
-        if (b == nullptr || a == nullptr || a->map != map || b->map == map) {
-            continue;
-        }
-        Orb orb;
-        orb.name = std::string(kOrbPrefix) + "x_" + a->id;
-        orb.at = ArrivalSpot(player, *a);
-        orb.exit = true;
-        g_orbs.push_back(orb);
-    }
     int n = 0;
     for (const ReturnTeleporter& tp : Data().return_teleporters) {
         ++n;
@@ -1230,28 +1238,66 @@ void BuildOrbs(CBasePlayer* player, const std::string& map) {
         exit.exit = true;
         g_orbs.push_back(exit);
     }
-    // The seed's teleporters by spot: the entrance on its map, the exit on
-    // the map it sends to.
-    n = 0;
-    for (const Snapshot::Teleporter& tp : State().teleporters) {
-        ++n;
-        if (tp.map == map) {
-            Orb orb;
-            orb.name = kOrbPrefix + std::string("t") + std::to_string(n);
-            orb.at = Vector(tp.at[0], tp.at[1], tp.at[2]);
-            orb.label = tp.label;
-            orb.dest = Vector(tp.to[0], tp.to[1], tp.to[2]);
-            orb.yaw = tp.yaw;
-            orb.to_map = tp.to_map == map ? "" : tp.to_map;
+    // Orbs placed in testing. An entrance goes where its transition leads
+    // in this seed, so the same orb links differently from seed to seed.
+    for (const Snapshot::WorkshopOrb& placed : State().orbs) {
+        if (placed.map != map || (placed.departs && !Fired(placed.after))) {
+            continue;
+        }
+        Orb orb;
+        orb.name = kOrbPrefix + std::string(placed.departs ? "w_" : "wx_") + placed.key;
+        orb.at = Vector(placed.at[0], placed.at[1], placed.at[2]);
+        if (!placed.departs) {
+            orb.exit = true;
             g_orbs.push_back(orb);
+            continue;
         }
-        if (tp.to_map == map) {
-            Orb exit;
-            exit.name = kOrbPrefix + std::string("tx") + std::to_string(n);
-            exit.at = Vector(tp.to[0], tp.to[1], tp.to[2]);
-            exit.exit = true;
-            g_orbs.push_back(exit);
+        orb.label = map;  // a `#` pair stays on this map
+        std::string dest_key;
+        std::string dest_map = map;
+        if (placed.key[0] == '#') {
+            dest_key = placed.key;
+        } else {
+            const std::string* partner = OrbPartner(placed.key);
+            const Transition* to = partner != nullptr ? Data().TransitionById(*partner) : nullptr;
+            if (to == nullptr) {
+                Trace(("  orb at " + placed.key + ": no partner in this seed").c_str());
+                continue;
+            }
+            dest_key = to->id;
+            dest_map = to->map;
+            orb.label = to->map;
+            orb.from = placed.key;
+            orb.to = to->id;
         }
+        // Within this map, onto the green exit placed for where it leads. To
+        // another map it changes level by the pair's landmark, so followers
+        // cross, and the arrival puts the player on that map's green exit.
+        for (const Snapshot::WorkshopOrb& exit : State().orbs) {
+            if (!exit.departs && KeyHas(exit.key, dest_key) && exit.map == dest_map &&
+                dest_map == map) {
+                orb.dest = Vector(exit.at[0], exit.at[1], exit.at[2]);
+                orb.yaw = exit.yaw;
+                orb.from.clear();
+                orb.has_dest = true;
+            }
+        }
+        // A partner on this same map with no green exit: moved within the map
+        // to just inside its trigger, facing in, not a level change into the
+        // map already loaded.
+        if (!orb.has_dest && placed.key[0] != '#' && dest_map == map) {
+            const Transition* to = Data().TransitionById(dest_key);
+            orb.dest = ArrivalSpot(player, *to);
+            orb.yaw = UTIL_VecToAngles(Normal(*to) * -1.0f).y;
+            orb.from.clear();
+            orb.has_dest = true;
+            Trace(("  orb at " + placed.key + ": partner " + dest_key + " on this map").c_str());
+        }
+        if (placed.key[0] == '#' && !orb.has_dest) {
+            Trace(("  orb " + placed.key + " on " + map + ": no exit placed").c_str());
+            continue;
+        }
+        g_orbs.push_back(orb);
     }
     // Any left from another seed's orbs go.
     CBaseEntity* entity = nullptr;
@@ -1354,28 +1400,27 @@ void TeleportWithin(CBasePlayer* player, const Orb& orb) {
     if (!HullFits(player, spot, human_hull) && FindStandSpot(player, spot, found, human_hull)) {
         spot = found;
     }
+    // Followers come too, turned with the player, as a same-map move's do.
+    std::vector<CBaseEntity*> carried;
+    if (CBaseEntity* sprite = UTIL_FindEntityByTargetname(nullptr, orb.name.c_str())) {
+        carried = CarriedBy(sprite, player);
+    }
+    const float dyaw = orb.yaw - player->pev->angles.y;
+    std::vector<Vector> rels;
+    for (CBaseEntity* entity : carried) {
+        rels.push_back(Rotate(entity->pev->origin - player->pev->origin, dyaw));
+    }
     UTIL_SetOrigin(player->pev, spot);
     player->pev->velocity = g_vecZero;
     player->pev->basevelocity = g_vecZero;
     player->pev->angles = player->pev->v_angle = Vector(0, orb.yaw, 0);
     player->pev->fixangle = 1;
+    for (size_t i = 0; i < carried.size(); ++i) {
+        PlaceFollower(carried[i], spot + rels[i], dyaw, spot,
+                      Follows(carried[i], player) ? kFollowerSpan : kCarryPad);
+    }
     EMIT_SOUND(player->edict(), CHAN_STATIC, kOrbSound, 1, ATTN_NORM);
     Trace(("  return teleporter " + orb.name).c_str());
-}
-
-// To a spot on another map: a level change with no landmark, so the level's
-// state is kept, then placed at the spot on arrival. Nothing crosses with
-// the player.
-void TravelToSpot(CBasePlayer* player, const Orb& orb) {
-    g_pending = Pending();
-    g_pending.active = true;
-    g_pending.spot = true;
-    g_pending.map = orb.to_map;
-    g_pending.at = orb.dest;
-    g_pending.yaw = orb.yaw;
-    EMIT_SOUND(player->edict(), CHAN_STATIC, kOrbSound, 1, ATTN_NORM);
-    Trace(("  teleporter " + orb.name + " -> " + orb.to_map).c_str());
-    CHANGE_LEVEL(const_cast<char*>(orb.to_map.c_str()), nullptr);
 }
 
 // Whether this game is a transitions seed, for precaching. On the first map
@@ -1445,9 +1490,7 @@ void RunOrbs() {
     if (!entered) {
         return;
     }
-    if (!touched->to_map.empty()) {
-        TravelToSpot(player, *touched);
-    } else if (touched->from.empty()) {
+    if (touched->from.empty() || touched->has_dest) {
         TeleportWithin(player, *touched);
     } else {
         TravelBack(player, *touched);
@@ -1510,7 +1553,8 @@ void RunDoorOpeners() {
         if (door.first != map) {
             continue;
         }
-        // `*N` or `*N,x,y,z`: the brush model and a spot on its far side.
+        // `*N`, `*N,x,y,z` or `*N,x,y,z,after`: the brush model, a spot on its
+        // far side, and a name it waits on firing.
         std::vector<std::string> fields;
         std::stringstream parts(door.second);
         for (std::string part; std::getline(parts, part, ',');) {
@@ -1521,6 +1565,9 @@ void RunDoorOpeners() {
         }
         const std::string& key = fields[0];
         const bool sided = fields.size() >= 4;
+        if (fields.size() >= 5 && !Fired(fields[4])) {
+            continue;  // waits on its map's sequence
+        }
         const Vector far_side = sided ? Vector(std::atof(fields[1].c_str()),
                                                std::atof(fields[2].c_str()),
                                                std::atof(fields[3].c_str()))
@@ -1544,16 +1591,45 @@ void RunDoorOpeners() {
                 continue;  // still near since the last opening
             }
             if (toggle->m_toggle_state != TS_AT_BOTTOM) {
+                Trace(("  door opener " + map + " " + key + ": not shut, left alone").c_str());
                 continue;
             }
             if (sided && !SameSideOfDoor(entity, far_side, player->pev->origin) &&
                 !DoorOpened(key)) {
-                continue;  // the near side, and never opened yet
+                Trace(("  door opener " + map + " " + key +
+                       ": near side and never opened, left shut").c_str());
+                continue;
             }
             entity->Use(player, player, USE_ON, 0);
             Trace(("  door opener " + map + " " + key).c_str());
         }
     }
+}
+
+void OnTransitionTargetFired(const char* targetname) {
+    if (targetname == nullptr || !TransitionsMode()) {
+        return;
+    }
+    const std::string name = targetname;
+    const std::string map = CurrentMap();
+    bool wanted = false;
+    for (const Snapshot::WorkshopOrb& orb : State().orbs) {
+        wanted = wanted || (orb.map == map && orb.after == name);
+    }
+    for (const auto& door : State().door_openers) {
+        const size_t comma = door.second.rfind(',');
+        wanted = wanted || (door.first == map && comma != std::string::npos &&
+                            door.second.substr(comma + 1) == name);
+    }
+    if (!wanted || Fired(name)) {
+        return;
+    }
+    CBaseEntity* mark = CBaseEntity::Create("info_target", g_vecZero, g_vecZero);
+    if (mark != nullptr) {
+        mark->pev->targetname = ALLOC_STRING((kFiredPrefix + name).c_str());
+    }
+    g_orbs_key.clear();  // its orbs appear
+    Trace(("  fired " + name + " on " + map).c_str());
 }
 
 // One-way lips (TRANSITION_RANDO.md 3.3). A one-way crossed back with an item

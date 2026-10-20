@@ -69,28 +69,29 @@ void CollectPairs(const std::string& value,
     }
 }
 
-// `map,x,y,z,to_map,x,y,z,yaw,label;...`, one teleporter per entry.
-void CollectTeleporters(const std::string& value, std::vector<Snapshot::Teleporter>& out) {
+// `map,in|out,key,x,y,z,yaw,after,label;...`, one placed orb per entry.
+void CollectOrbs(const std::string& value, std::vector<Snapshot::WorkshopOrb>& out) {
     out.clear();
     std::vector<std::string> entries;
     CollectList(value, ';', entries);
     for (const std::string& entry : entries) {
         std::vector<std::string> f;
         CollectList(entry, ',', f);
-        if (f.size() < 9) {
+        if (f.size() < 7) {
             continue;
         }
-        Snapshot::Teleporter tp;
-        tp.map = Trim(f[0]);
-        tp.to_map = Trim(f[4]);
+        Snapshot::WorkshopOrb orb;
+        orb.map = Trim(f[0]);
+        orb.departs = Trim(f[1]) == "out";
+        orb.key = Trim(f[2]);
         for (int k = 0; k < 3; ++k) {
-            tp.at[k] = static_cast<float>(std::atof(f[1 + k].c_str()));
-            tp.to[k] = static_cast<float>(std::atof(f[5 + k].c_str()));
+            orb.at[k] = static_cast<float>(std::atof(f[3 + k].c_str()));
         }
-        tp.yaw = static_cast<float>(std::atof(f[8].c_str()));
-        tp.label = f.size() > 9 ? Trim(f[9]) : "Teleporter";
-        if (!tp.map.empty() && !tp.to_map.empty()) {
-            out.push_back(tp);
+        orb.yaw = static_cast<float>(std::atof(f[6].c_str()));
+        orb.after = f.size() > 7 ? Trim(f[7]) : "";
+        orb.label = f.size() > 8 ? Trim(f[8]) : "Teleporter";
+        if (!orb.map.empty() && !orb.key.empty()) {
+            out.push_back(orb);
         }
     }
 }
@@ -225,9 +226,9 @@ bool Bridge::Poll(Snapshot& out, std::vector<PendingEvent>& events) {
             CollectPairs(value, parsed.backtrack_orbs);
         } else if (key == "door_openers") {
             CollectPairs(value, parsed.door_openers);
-        } else if (key == "teleporters") {
-            CollectTeleporters(value, parsed.teleporters);
-            parsed.teleporters_raw = Trim(value);
+        } else if (key == "orbs") {
+            CollectOrbs(value, parsed.orbs);
+            parsed.orbs_raw = Trim(value);
         } else if (key == "now") {
             now = ParseLong(value);
         }

@@ -228,8 +228,8 @@ def test_seed_scenario_publishes_its_slot_data(data, tmp_path) -> None:
     snap = h.bridge.snapshots[-1]
     # The seed, plus the workshop's teleporters and door openers.
     assert {k: v for k, v in snap["transitions"].items()
-            if k not in ("teleporters", "door_openers")} == seed
-    assert "teleporters" in snap["transitions"] and "door_openers" in snap["transitions"]
+            if k not in ("orbs", "teleporters", "door_openers")} == seed
+    assert "orbs" in snap["transitions"] and "door_openers" in snap["transitions"]
     assert snap["chapters"] == seed["transition_chapters"]
 
 
@@ -239,15 +239,29 @@ def test_workshop_orb_and_door_are_kept_and_published(data, tmp_path, monkeypatc
     h = harness(tmp_path, [aptest.Scenario(title="s", map=seed["start_map"], entry="",
                                            seed=seed)], group="maplogic")
     h.start(0)
-    h.command("orb", "from Up", "10 20 30 90 c1a0e")
-    h.command("orb", "to", "40 50 60 180 c1a0b")
+    h.command("orb", "out T1", "10 20 30 90 c1a0e")
+    h.command("orb", "in", "1660 1070 -300 180 c1a0c")
+    h.command("orb", "out T1", "11 21 31 90 c1a0e")  # placed again: moved
     h.command("door", "*12 func_door door1", "1 2 3 0 c1a0e")
     snap = h.bridge.snapshots[-1]["transitions"]
-    assert snap["teleporters"] == [{"map": "c1a0e", "at": [10.0, 20.0, 30.0], "label": "Up",
-                                    "to_map": "c1a0b", "to": [40.0, 50.0, 60.0, 180.0]}]
+    assert [(o["map"], o["kind"], o["key"], o["at"]) for o in snap["orbs"]] == [
+        ("c1a0c", "in", "c1a0c:1", [1660.0, 1070.0, -300.0]),
+        ("c1a0e", "out", "c1a0e:0", [11.0, 21.0, 31.0])]
     assert [(d["map"], d["model"]) for d in snap["door_openers"]] == [("c1a0e", "*12")]
     h.command("orb", "drop", "")
-    assert aptest.load_workshop()["teleporters"] == []
+    assert len(aptest.load_workshop()["orbs"]) == 1
+
+
+def test_spot_teleporters_become_orbs(data, tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(aptest, "WORKSHOP", tmp_path / "workshop.json")
+    aptest.save_workshop({"teleporters": [
+        {"map": "c1a0c", "at": [1665.0, 1056.0, -268.0], "label": "Teleporter",
+         "to_map": "c1a0e", "to": [1387.0, 913.0, -308.0, -50.0]}], "door_openers": []})
+    aptest.migrate_workshop(data)
+    work = aptest.load_workshop()
+    assert work["teleporters"] == []
+    assert [(o["map"], o["kind"], o["key"]) for o in work["orbs"]] == [
+        ("c1a0c", "out", "c1a0c:1"), ("c1a0e", "in", "c1a0e:0")]
 
 
 def test_plain_chat_is_kept_without_a_verdict(data, tmp_path) -> None:

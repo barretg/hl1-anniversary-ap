@@ -1115,6 +1115,7 @@ void RunLabels() {
 void OnTargetFired(const char* targetname) {
     // From `FireTargets`, which every trigger, button and multi_manager in the
     // game goes through, so nearly every call matches nothing.
+    OnTransitionTargetFired(targetname);
     if (targetname == nullptr || !Live()) {
         return;
     }

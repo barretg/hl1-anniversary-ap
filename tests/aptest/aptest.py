@@ -21,7 +21,7 @@ In game, in chat (or `testing_aptest <verb>` in the console):
     !tp                back to the scenario's spot
     !info / !status / !list [text]
     !give <item> / !take <item>    change what the snapshot holds
-    !orb from|to|list|drop   place a teleporter to try (seed scenarios only)
+    !orb in|out|list|drop    place an orb to try (seed scenarios only)
     !door [list|drop]        looking at a one-way door: it opens near you
     plain chat               a note, recorded with where you stand
 
@@ -390,8 +390,35 @@ def load_workshop() -> dict:
         data = json.loads(WORKSHOP.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         data = {}
-    return {"teleporters": list(data.get("teleporters", [])),
+    return {"orbs": list(data.get("orbs", [])),
+            "teleporters": list(data.get("teleporters", [])),
             "door_openers": list(data.get("door_openers", []))}
+
+
+def nearest_transition(data: "CheckData", map_name: str, at) -> str:
+    """The map's transition nearest `at` across the floor: an orb's own. Height
+    is left out, as a trigger can hang far above the room it belongs to."""
+    ts = [t for t in data.transitions if t.map == map_name]
+    if not ts:
+        return ""
+    return min(ts, key=lambda t: math.dist(at[:2], t.at[:2])).id
+
+
+def migrate_workshop(data: "CheckData") -> None:
+    """Teleporters placed spot to spot become an entrance tied to the
+    transition nearest it and an exit tied to the one nearest its landing."""
+    work = load_workshop()
+    if not work["teleporters"]:
+        return
+    for tp in work["teleporters"]:
+        work["orbs"].append({"map": tp["map"], "kind": "out", "label": tp.get("label", "Teleporter"),
+                             "key": nearest_transition(data, tp["map"], tp["at"]),
+                             "at": tp["at"][:3], "yaw": 0.0})
+        work["orbs"].append({"map": tp["to_map"], "kind": "in", "label": "",
+                             "key": nearest_transition(data, tp["to_map"], tp["to"]),
+                             "at": tp["to"][:3], "yaw": tp["to"][3] if len(tp["to"]) > 3 else 0.0})
+    work["teleporters"] = []
+    save_workshop(work)
 
 
 def save_workshop(data: dict) -> None:
@@ -2151,33 +2178,6 @@ def transition_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
             "!pass, or !fail <what was different>.",
         ])))
 
-    # Backtrack orbs (7.2): a one-way into a map whose own way back is inert.
-    by_id = {t.id: t for t in data.transitions}
-    exit_, arrival = by_id["c1a2:0"], by_id["c1a2b:0"]
-    orb_seed = copy.deepcopy(seed)
-    orb_seed.update(
-        start_map=exit_.map, starting_chapters=["c1a2"], transition_chapters=["c1a2"],
-        transition_pairs=[], one_way_transitions={exit_.id: arrival.id},
-        backtrack_orbs={arrival.id: exit_.id}, inert_transitions=[arrival.id],
-        excluded_chapters=[k for k in seed["excluded_chapters"] if k != "c1a2"]
-        + [k for k in seed["transition_chapters"] if k != "c1a2"])
-    out.append(Scenario(
-        title="Transition: a backtrack orb, c1a2:0 one way into c1a2b:0",
-        map=exit_.map, pos=inside_exit(exit_), yaw=(exit_.yaw + 180) % 360,
-        entry=exit_.id, seed=orb_seed, steps="\n".join([
-            f"You are a step inside {exit_.map}'s T1 ({exit_.id}), facing into the map.",
-            "Bring a scientist or Barney if you like. Turn round and walk through",
-            f"T1: you land in {arrival.map} at {arrival.id}, whose own trigger is",
-            "inert. Beside you, behind and to one side, is Lambda Core's orange",
-            "entrance orb, labelled Back. Before crossing, a green exit orb stands",
-            f"just inside T1 in {exit_.map}, unlabelled, doing nothing when walked into.",
-            "Step into the orange one: a beam sound, and you are back at T1 in "
-            f"{exit_.map}, in the green one, standing,",
-            "facing into the map, not walked straight back out. A follower comes",
-            f"too. {exit_.map} is as you left it. Do it twice; a third time, die",
-            f"and reload in {arrival.map} first: the orb is still there, just one.",
-            "!pass, or !fail <what was different>.",
-        ])))
     return out
 
 
@@ -2280,8 +2280,9 @@ MAPLOGIC_NOTES = [
     "facing back the way you came. !note seg <name> where a map splits.",
     "Anything else of interest: !note <text>, or just type it.",
     "Turn noclip off before walking into a transition: noclip touches no triggers.",
-    "To try a fix: !orb from [label] where a teleporter goes, !orb to where it lands",
-    "(any map); !door looking at a one-way door opens it near you. !orb list, !orb drop.",
+    "To try a fix: !orb out [T<n>] for an orange way out, !orb in [T<n>] for",
+    "a green arrival (nearest transition unless named; it leads where that transition does",
+    "in the seed); !door looking at a one-way door opens it near you. !orb list, !orb drop.",
 ]
 
 
@@ -2294,8 +2295,8 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
     3. backward from the exit, every map fresh, crowbar only;
     4. forward, carrying on from 3's save.
     A boss chapter's way out is its boss exit, which leads on once the boss is
-    dead (TRANSITION_RANDO.md 7.6): runs 3 and 4 start at the bottom of the
-    arena, where the onward teleporter stands, and the exit itself is inert.
+    dead (TRANSITION_RANDO.md 7.6): here it leads to Blast Pit, so coming back
+    can be played, and runs 3 and 4 start at the map's spawn.
     """
     out: list[Scenario] = []
     for chapter in chapters:
@@ -2316,7 +2317,12 @@ def maplogic_scenarios(data: CheckData, chapters: list[Chapter]) -> list[Scenari
             steps="\n".join([
                 f"{chapter.name} forwards. {ways}. You start in {chapter.maps[0]} "
                 f"{start_at} holding only the crowbar.",
-                f"Play through to {end_at}; do not take it.",
+                f"Play through to {end_at}" + ("." if boss and exit_ else "; do not take it."),
+                *([f"Here the boss exit leads to {BOSS_ONWARD}'s first map, as when this",
+                   "is not the final boss. Take it after the kill and walk straight back:",
+                   f"you arrive at {exit_.id}. Place a green orb (!orb in "
+                   f"T{map_transitions(data, exit_.map).index(exit_) + 1}) where coming",
+                   "back should land."] if boss and exit_ else []),
                 *MAPLOGIC_NOTES,
                 f"!pass at the end (the game is saved for scenario 2), or !fail <what>.",
             ])))
@@ -2640,6 +2646,10 @@ def sweep_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     return out
 
 
+# Where a boss exit leads in discovery: Blast Pit's first map.
+BOSS_ONWARD = "Blast Pit"
+
+
 def chapter_seed(data: CheckData, chapter: Chapter, start_map: str) -> dict:
     """A transitions mode seed for map logic discovery of this chapter,
     shuffling nothing. Its ways out work as in vanilla, one map into the next
@@ -2651,11 +2661,29 @@ def chapter_seed(data: CheckData, chapter: Chapter, start_map: str) -> dict:
     neighbours = [n for n in data.chapters if n.key in near]
     inert = [t.id for n in neighbours for t in data.transitions
              if t.map in n.maps and t.to not in inside]
+    # A boss exit (into the chapter's last map, an ending with no way on) leads
+    # on to a chapter rather than the ending, as it does when
+    # its boss is not the final one (7.6): Blast Pit's way in from Power Up.
+    pairs = []
+    last = chapter.maps[-1]
+    ending = len(chapter.maps) > 1 and all(t.to in inside for t in data.transitions if t.map == last)
+    for exit_ in [t for t in data.transitions
+                  if ending and t.map in inside and t.map != last and t.to == last]:
+        onward = next((c for c in data.chapters if c.name == BOSS_ONWARD), None)
+        entry = onward and next((t for t in data.transitions if t.map == onward.maps[0]
+                                 and data.chapter_of(t.to) is not onward), None)
+        if entry is None or onward.key == chapter.key:
+            continue
+        pairs.append([exit_.id, entry.id])
+        if onward not in neighbours:
+            neighbours.append(onward)
+            inert += [t.id for t in data.transitions
+                      if t.map in onward.maps and t.id != entry.id]
     seed = copy.deepcopy(load_seed("first_step_area"))
     keys = [chapter.key] + [n.key for n in neighbours]
     seed.update(
         start_map=start_map, starting_chapters=keys, transition_chapters=keys,
-        transition_pairs=[], one_way_transitions={}, backtrack_orbs={},
+        transition_pairs=pairs, one_way_transitions={}, backtrack_orbs={},
         inert_transitions=inert, ending_map="",
         excluded_chapters=[k for k in seed["excluded_chapters"] if k not in keys])
     return seed
@@ -3055,6 +3083,7 @@ class Harness:
                  scenarios: list[Scenario]) -> None:
         self.store = store
         self.data = read_checkdata(store / "checkdata.txt")
+        migrate_workshop(self.data)
         self.group = group
         self.scenarios = scenarios
         self.bridge = bridge_module.Bridge(store)
@@ -3320,41 +3349,69 @@ class Harness:
         self.status()
 
     def workshop_orb(self, arg: str, where: str) -> None:
-        """`!orb from [label]` where the teleporter stands, `!orb to` where it
-        sends you (any map), `!orb list`, `!orb drop [n]`."""
-        words = arg.split(maxsplit=1)
+        """`!orb out [T<n>|#name]`: an orange way out of the map here, labelled
+        with the map it leads to in the seed.
+        `!orb in [T<n> ...|#name]`: a green arrival here, facing as you face,
+        for any of the transitions named. Each belongs to a
+        transition of this map (the nearest, unless named), and an entrance
+        sends you to wherever that transition leads in the seed, onto the exit
+        placed there; `#name` pairs an entrance and exit inside the map.
+        Placing one again moves it. `!orb list`, `!orb drop [n]`."""
+        words = arg.split()
         what = words[0].lower() if words else ""
         data = load_workshop()
         fields = where.split()
-        if what in ("from", "to") and len(fields) < 5:
-            self.tell("[aptest] !orb from/to has to be sent from the game.")
-            return
-        if what == "from":
-            self.orb_from = {"map": fields[4], "at": [float(v) for v in fields[:3]],
-                             "label": words[1] if len(words) > 1 else "Teleporter"}
-            self.tell(f"[aptest] Teleporter starts here on {fields[4]}; go to where "
-                      "it sends you and !orb to.")
-        elif what == "to":
-            start = getattr(self, "orb_from", None)
-            if start is None:
-                self.tell("[aptest] !orb from first, where the teleporter stands.")
+        if what in ("in", "out"):
+            if len(fields) < 5:
+                self.tell("[aptest] !orb in/out has to be sent from the game.")
                 return
-            tp = dict(start, to_map=fields[4], to=[float(v) for v in fields[:4]])
-            data["teleporters"].append(tp)
+            map_name, at = fields[4], [float(v) for v in fields[:3]]
+            rest = words[1:]
+            key = ""
+            ts = map_transitions(self.data, map_name)
+            keys = []
+            while rest and re.fullmatch(r"[Tt]\d+", rest[0]):
+                n = int(rest[0][1:])
+                if not 1 <= n <= len(ts):
+                    self.tell(f"[aptest] {map_name} has no {rest[0].upper()}.")
+                    return
+                keys.append(ts[n - 1].id)
+                rest = rest[1:]
+            if what == "out" and len(keys) > 1:
+                self.tell("[aptest] An orange orb leads through one transition; name one.")
+                return
+            if keys:
+                key = "+".join(keys)  # a green arrival for any of them
+            elif rest and rest[0].startswith("#") and len(rest[0]) > 1:
+                key, rest = rest[0], rest[1:]
+            else:
+                key = nearest_transition(self.data, map_name, at)
+            if not key:
+                self.tell(f"[aptest] {map_name} has no transitions; name it: !orb {what} #name.")
+                return
+            orb = {"map": map_name, "kind": what, "key": key,
+                   "label": "",
+                   "at": at, "yaw": float(fields[3])}
+            orb.update({k: o["after"] for o in data["orbs"]
+                        if (o["map"], o["kind"], o["key"]) == (map_name, what, key) and o.get("after")
+                        for k in ("after",)})
+            before = len(data["orbs"])
+            data["orbs"] = [o for o in data["orbs"]
+                            if (o["map"], o["kind"], o["key"]) != (map_name, what, key)]
+            moved = len(data["orbs"]) < before
+            data["orbs"].append(orb)
             save_workshop(data)
-            self.orb_from = None
-            self.record_only("note", f"[{tp['map']}] teleporter {tp['label']} "
-                             f"@{' '.join(f'{v:.0f}' for v in tp['at'])} to [{tp['to_map']}] "
-                             f"@{' '.join(fields[:4])}")
-            self.tell(f"[aptest] Teleporter {len(data['teleporters'])} placed: "
-                      f"{tp['map']} to {tp['to_map']}.")
+            colour = "orange way out" if what == "out" else "green arrival"
+            self.record_only("note", f"[{map_name}] orb {what} {key} {orb['label']} "
+                             f"@{' '.join(fields[:4])}".rstrip())
+            self.tell(f"[aptest] {'Moved the' if moved else 'Placed a'} {colour} for {key} here.")
             self.publish(force=True)
         elif what == "list":
             self.workshop_list(data)
         elif what == "drop":
-            self.workshop_drop(data, "teleporters", words[1] if len(words) > 1 else "")
+            self.workshop_drop(data, "orbs", words[1] if len(words) > 1 else "")
         else:
-            self.tell("[aptest] !orb from [label] | to | list | drop [n]")
+            self.tell("[aptest] !orb out [T<n>|#name] | in [T<n> ...|#name] | list | drop [n]")
 
     def workshop_door(self, arg: str, where: str) -> None:
         """`!door` looking at a one-way door from its far side (the side it
@@ -3375,25 +3432,32 @@ class Harness:
         door = {"map": fields[4], "model": words[0], "classname": words[1],
                 "targetname": words[2], "at": [float(v) for v in fields[:3]],
                 "note": " ".join(words[3:])}
-        if any(d["map"] == door["map"] and d["model"] == door["model"]
-               for d in data["door_openers"]):
-            self.tell("[aptest] That door already opens.")
-            return
+        # Placing one again moves its far side to here, so an opener placed
+        # from the wrong side can be turned round.
+        door.update({"after": d["after"] for d in data["door_openers"]
+                     if (d["map"], d["model"]) == (door["map"], door["model"]) and d.get("after")})
+        before = len(data["door_openers"])
+        data["door_openers"] = [d for d in data["door_openers"]
+                                if not (d["map"] == door["map"] and d["model"] == door["model"])]
+        replaced = len(data["door_openers"]) < before
         data["door_openers"].append(door)
         save_workshop(data)
         self.record_only("note", f"[{door['map']}] door opener {door['model']} "
                          f"({door['targetname']}) @{' '.join(fields[:4])}")
-        self.tell(f"[aptest] Door {door['model']} on {door['map']} now opens as you come "
-                  "near it from this side, and from the other once it has opened.")
+        self.tell(f"[aptest] Door {door['model']} on {door['map']} "
+                  f"{'now opens from this side instead' if replaced else 'now opens as you come near it from this side'}"
+                  ", and from the other once it has opened.")
         self.publish(force=True)
 
     def workshop_list(self, data: dict) -> None:
-        for n, tp in enumerate(data["teleporters"], 1):
-            self.tell(f"[aptest] orb {n}: {tp['map']} {' '.join(f'{v:.0f}' for v in tp['at'])}"
-                      f" to {tp['to_map']} ({tp['label']})")
+        for n, o in enumerate(data["orbs"], 1):
+            wait = f" after {o['after']}" if o.get("after") else ""
+            self.tell(f"[aptest] orb {n}: {o['map']} {o['kind']} {o['key']} "
+                      f"{' '.join(f'{v:.0f}' for v in o['at'])} {o['label']}".rstrip() + wait)
         for n, d in enumerate(data["door_openers"], 1):
-            self.tell(f"[aptest] door {n}: {d['map']} {d['model']} ({d['targetname']})")
-        if not data["teleporters"] and not data["door_openers"]:
+            wait = f" after {d['after']}" if d.get("after") else ""
+            self.tell(f"[aptest] door {n}: {d['map']} {d['model']} ({d['targetname']}){wait}")
+        if not data["orbs"] and not data["door_openers"]:
             self.tell("[aptest] Nothing placed yet.")
 
     def workshop_drop(self, data: dict, kind: str, which: str) -> None:

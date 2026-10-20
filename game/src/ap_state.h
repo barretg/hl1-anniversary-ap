@@ -73,16 +73,20 @@ struct Snapshot {
     std::vector<std::pair<std::string, std::string>> transition_pairs;
     std::vector<std::pair<std::string, std::string>> one_way_transitions;
     std::vector<std::pair<std::string, std::string>> backtrack_orbs;
-    // Teleporters placed by spot rather than by transition: an orange entrance
-    // at `at` on `map`, sending the player to `to` on `to_map` facing `yaw`.
-    struct Teleporter {
-        std::string map, to_map, label;
+    // Orbs placed in testing, each on its own map. `key` is the transition it
+    // belongs to (by id), or `#name` for a pair inside the map. An orange
+    // departure ("out") sends the player to its transition's partner in the
+    // seed, onto that partner's green arrival ("in") when one is placed; a `#`
+    // entrance sends to the exit of the same name on its map.
+    struct WorkshopOrb {
+        std::string map, key, label;
+        std::string after;  // shown once this name has fired on its map
+        bool departs = true;  // "out", orange; "in" is a green arrival
         float at[3] = {0, 0, 0};
-        float to[3] = {0, 0, 0};
         float yaw = 0.0f;
     };
-    std::vector<Teleporter> teleporters;
-    std::string teleporters_raw;  // as sent, for telling one set from another
+    std::vector<WorkshopOrb> orbs;
+    std::string orbs_raw;  // as sent, for telling one set from another
     // One-way doors opened from their far side: (map, `*N,x,y,z`), the door's
     // brush model and a spot on its far side. From the near side it opens only
     // once it has been opened in play.

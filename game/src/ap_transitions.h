@@ -70,6 +70,9 @@ void RunTransitionArrival();
 void RunOrbs();
 // One-way doors the seed opens from their far side: as the player comes near.
 void RunDoorOpeners();
+// From `FireTargets`: marks a name an orb or door opener waits on as fired on
+// this map, kept in the level's save.
+void OnTransitionTargetFired(const char* targetname);
 // The orb's sprite and sound, on every map. CWorld::Precache.
 void PrecacheOrbs();
 // Warns at the lip of a one-way the player could not come back over. StartFrame.
