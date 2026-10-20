@@ -34,7 +34,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|def5c8a98e4d
+D|3b209ec53a27
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -478,15 +478,12 @@ L|7760574|c2a2b1|ammo_pickup|func_pushable@-3648 -796 1076|On A Rail: Crate .357
 L|7760575|c2a2b1|ammo_pickup|func_breakable@-1464 -3096 1244|On A Rail: Crate .357 Rounds 2 (Part 3)|-1462 -3094 1244
 L|7760576|c2a2b1|ammo_pickup|func_breakable@-1256 -2976 1244|On A Rail: Crate .357 Rounds 3 (Part 3)|-1258 -2978 1244
 L|7760577|c2a2b1|ammo_pickup|func_pushable@-2680 -2032 1076|On A Rail: Crate MP5 Clip (Part 3)|-2680 -2032 1076
-L|7761631|c2a2b1|ammo_pickup|weapon_handgrenade@-1972 756 124|On A Rail: Hand Grenade 1 (Part 3)|-1972 756 124
-L|7761632|c2a2b1|ammo_pickup|weapon_handgrenade@-1956 724 124|On A Rail: Hand Grenade 2 (Part 3)|-1956 724 124
 L|7760578|c2a2b1|ammo_pickup|ammo_mp5clip@-3644 -748 368|On A Rail: MP5 Clip 1 (Part 3)|-3644 -748 368
 L|7760579|c2a2b1|ammo_pickup|ammo_mp5clip@-3680 -748 368|On A Rail: MP5 Clip 2 (Part 3)|-3680 -748 368
 L|7760580|c2a2b1|ammo_pickup|ammo_9mmAR@-2240 -2716 1292|On A Rail: MP5 Clip 3 (Part 3)|-2240 -2716 1292
 L|7760581|c2a2b1|ammo_pickup|ammo_mp5grenades@-3612 -748 400|On A Rail: MP5 Grenades (Part 3)|-3612 -748 400
 L|7760099|c2a2b2|map_reached||On A Rail: Part 4 Reached
 L|7760582|c2a2b2|heal_pickup|item_battery@1483 -1510 227|On A Rail: Battery (Part 4)|1483 -1510 227
-L|7760583|c2a2b2|heal_pickup|item_healthkit@1360 -1512 227|On A Rail: Health Kit (Part 4)|1360 -1512 227
 L|7760584|c2a2b2|ammo_pickup|ammo_357@1116 480 37|On A Rail: .357 Rounds (Part 4)|1116 480 37
 L|7760585|c2a2b2|ammo_pickup|ammo_9mmclip@1218 498 37|On A Rail: 9mm Clip (Part 4)|1218 498 37
 L|7761633|c2a2b2|ammo_pickup|func_pushable@1304 -1504 236|On A Rail: Crate Hand Grenade (Part 4)|1304 -1504 236
@@ -501,8 +498,6 @@ L|7760589|c2a2c|heal_pickup|func_pushable@256 -2316 1068|On A Rail: Crate Batter
 L|7760590|c2a2c|heal_pickup|func_pushable@-876 -1452 1068|On A Rail: Crate Health Kit (Part 5)|-876 -1452 1068
 L|7760591|c2a2c|heal_pickup|item_healthkit@-276 -1496 944|On A Rail: Health Kit 1 (Part 5)|-276 -1496 944
 L|7760592|c2a2c|heal_pickup|item_healthkit@-32 -1316 944|On A Rail: Health Kit 2 (Part 5)|-32 -1316 944
-L|7760593|c2a2c|ammo_pickup|func_breakable@-1256 -2976 1244|On A Rail: Crate .357 Rounds 1 (Part 5)|-1258 -2978 1244
-L|7760594|c2a2c|ammo_pickup|func_breakable@-1464 -3096 1244|On A Rail: Crate .357 Rounds 2 (Part 5)|-1462 -3094 1244
 L|7760595|c2a2c|ammo_pickup|func_pushable@-876 -1504 1068|On A Rail: Crate .357 Rounds 3 (Part 5)|-876 -1504 1068
 L|7760596|c2a2c|ammo_pickup|ammo_9mmAR@-2256 -2716 1292|On A Rail: MP5 Clip (Part 5)|-2256 -2716 1292
 L|7761637|c2a2c|ammo_pickup|weapon_satchel@-68 -1240 944|On A Rail: Satchel Charge 1 (Part 5)|-68 -1240 944
@@ -620,8 +615,6 @@ L|7760660|c2a3d|heal_pickup|func_breakable@888 -1440 844|Apprehension: Crate Bat
 L|7760661|c2a3d|heal_pickup|func_breakable@-56 -528 852|Apprehension: Crate Battery 2 (Part 5)|-56 -528 852
 L|7760662|c2a3d|heal_pickup|func_breakable@1552 -576 224|Apprehension: Crate Health Kit 1 (Part 5)|1552 -578 224
 L|7760663|c2a3d|heal_pickup|func_breakable@1552 -264 224|Apprehension: Crate Health Kit 2 (Part 5)|1552 -266 224
-L|7760664|c2a3d|heal_pickup|func_breakable@1656 480 224|Apprehension: Crate Health Kit 3 (Part 5)|1658 480 224
-L|7760665|c2a3d|heal_pickup|func_breakable@1904 480 224|Apprehension: Crate Health Kit 4 (Part 5)|1902 480 224
 L|7760666|c2a3d|ammo_pickup|func_breakable@0 -780 1040|Apprehension: Crate .357 Rounds 1 (Part 5)|0 -779 1040
 L|7760667|c2a3d|ammo_pickup|func_breakable@-420 -668 1040|Apprehension: Crate .357 Rounds 2 (Part 5)|-419 -668 1040
 L|7760668|c2a3d|ammo_pickup|func_pushable@500 -528 820|Apprehension: Crate Crossbow Bolts 1 (Part 5)|500 -528 821
@@ -762,7 +755,6 @@ L|7760755|c2a5a|ammo_pickup|ammo_rpgclip@-1648 272 -352|Surface Tension: Rockets
 L|7760157|c2a5b|map_reached||Surface Tension: Part 5 Reached
 L|7760158|c2a5b|charger|func_healthcharger@600 -596 56|Surface Tension: Health Charger 1 (Part 5)|600 -596 56
 L|7760159|c2a5b|charger|func_healthcharger@600 -916 56|Surface Tension: Health Charger 2 (Part 5)|600 -916 56
-L|7760756|c2a5b|heal_pickup|item_battery@784 -1176 88|Surface Tension: Battery (Part 5)|784 -1176 88
 L|7760757|c2a5b|heal_pickup|func_breakable@-976 1056 24|Surface Tension: Crate Battery 1 (Part 5)|-976 1056 24
 L|7760758|c2a5b|heal_pickup|func_breakable@-1200 800 24|Surface Tension: Crate Battery 2 (Part 5)|-1200 800 24
 L|7760759|c2a5b|heal_pickup|func_breakable@-112 1456 -336|Surface Tension: Crate Battery 3 (Part 5)|-112 1456 -336
@@ -795,7 +787,6 @@ L|7760777|c2a5c|heal_pickup|func_breakable@-184 -752 -288|Surface Tension: Crate
 L|7761900|c2a5c|scientist|monster_scientist@-64 -768 -336|Surface Tension: Scientist (Part 7)|-64 -768 -336
 L|7761901|c2a5c|barney|monster_barney@-688 400 -272|Surface Tension: Security Guard (Part 6)|-688 400 -272
 L|7760161|c2a5d|map_reached||Surface Tension: Part 7 Reached
-L|7760778|c2a5d|heal_pickup|func_breakable@-184 -752 -288|Surface Tension: Crate Health Kit 1 (Part 7)|-183 -751 -288
 L|7760779|c2a5d|heal_pickup|func_breakable@-48 96 -1088|Surface Tension: Crate Health Kit 2 (Part 7)|-48 96 -1088
 L|7760780|c2a5d|heal_pickup|func_breakable@304 64 -1088|Surface Tension: Crate Health Kit 3 (Part 7)|304 64 -1088
 L|7760781|c2a5d|heal_pickup|func_breakable@288 384 -1088|Surface Tension: Crate Health Kit 4 (Part 7)|288 384 -1088
@@ -1419,9 +1410,6 @@ L|7760279|of3a1|charger|func_healthcharger@592 1184 -204|We Are Not Alone: Healt
 L|7760280|of3a1|charger|func_recharge@544 1184 -204|We Are Not Alone: HEV Charger (Part 1)|544 1186 -204
 L|7762060|of3a1|scientist|monster_scientist@0 -364 66|We Are Not Alone: Sean Reardon (Part 1)|0 -364 66|Long Jump Module
 L|7760281|of3a1b|map_reached||We Are Not Alone: Part 2 Reached
-L|7761165|of3a1b|heal_pickup|item_battery@960 1664 1616|We Are Not Alone: Battery (Part 2)|960 1664 1616
-L|7761166|of3a1b|heal_pickup|item_healthkit@976 1632 1616|We Are Not Alone: Health Kit 1 (Part 2)|976 1632 1616
-L|7761167|of3a1b|heal_pickup|item_healthkit@112 192 -128|We Are Not Alone: Health Kit 2 (Part 2)|112 192 -128
 L|7760283|of3a2|map_reached||We Are Not Alone: Part 3 Reached
 L|7760284|of3a2|charger|func_healthcharger@1204 2616 -3268|We Are Not Alone: Health Charger (Part 3)|1204 2614 -3268|Displacer Cannon
 L|7761168|of3a2|ammo_pickup|weaponbox@-836 -120 -1496|We Are Not Alone: Weapon Box (Part 3)|-836 -120 -1496
@@ -1430,8 +1418,8 @@ L|7760285|of3a4|map_reached||Crush Depth: Part 1 Reached
 L|7760286|of3a4|charger|func_healthcharger@-1636 896 -56|Crush Depth: Health Charger (Part 1)|-1636 896 -56
 L|7760287|of3a4|charger|func_recharge@-1636 832 -56|Crush Depth: HEV Charger (Part 1)|-1636 832 -56
 L|7760288|of3a4|charger|trigger_hurt@-2504 -3296 -408|Crush Depth: Healing Pool (Part 1)|-2504 -3296 -408|Displacer Cannon
-L|7761169|of3a4|heal_pickup|item_battery@-2368 -1344 -320|Crush Depth: Battery 1 (Part 1)|-2368 -1344 -320
-L|7761170|of3a4|heal_pickup|item_battery@-2496 -1280 -320|Crush Depth: Battery 2 (Part 1)|-2496 -1280 -320
+L|7761169|of3a4|heal_pickup|item_battery@-2368 -1344 -320|Crush Depth: Battery 1 (Part 1)|-2368 -1344 -320|Displacer Cannon
+L|7761170|of3a4|heal_pickup|item_battery@-2496 -1280 -320|Crush Depth: Battery 2 (Part 1)|-2496 -1280 -320|Displacer Cannon
 L|7761171|of3a4|heal_pickup|item_healthkit@-1248 -184 32|Crush Depth: Health Kit (Part 1)|-1248 -184 32
 L|7761172|of3a4|ammo_pickup|ammo_gaussclip@-1072 88 -96|Crush Depth: Uranium 1 (Part 1)|-1072 88 -96
 L|7761173|of3a4|ammo_pickup|ammo_gaussclip@-1120 88 -96|Crush Depth: Uranium 2 (Part 1)|-1120 88 -96
@@ -1447,17 +1435,17 @@ L|7761176|of3a5|ammo_pickup|ammo_gaussclip@-2568 248 -128|Crush Depth: Uranium 1
 L|7761177|of3a5|ammo_pickup|ammo_gaussclip@-2544 168 -128|Crush Depth: Uranium 2 (Part 2)|-2544 168 -128
 L|7761930|of3a5|scientist|monster_scientist@1415 282 232|Crush Depth: Hanging Sci 1 (Part 2)|1415 282 232|Displacer Cannon
 L|7760291|of3a6|map_reached||Crush Depth: Part 3 Reached
-L|7761178|of3a6|heal_pickup|item_battery@2464 -1972 2162|Crush Depth: Battery 1 (Part 3)|2464 -1972 2162
-L|7761179|of3a6|heal_pickup|item_battery@2990 -2044 2420|Crush Depth: Battery 2 (Part 3)|2990 -2044 2420
-L|7761180|of3a6|heal_pickup|item_battery@1664 -2944 2608|Crush Depth: Battery 3 (Part 3)|1664 -2944 2608
-L|7761181|of3a6|heal_pickup|item_battery@1746 -3016 2608|Crush Depth: Battery 4 (Part 3)|1746 -3016 2608
-L|7761182|of3a6|heal_pickup|item_healthkit@2432 -1872 2178|Crush Depth: Health Kit 1 (Part 3)|2432 -1872 2178
-L|7761183|of3a6|heal_pickup|item_healthkit@3072 -2054 2418|Crush Depth: Health Kit 2 (Part 3)|3072 -2054 2418
+L|7761178|of3a6|heal_pickup|item_battery@2464 -1972 2162|Crush Depth: Battery 1 (Part 3)|2464 -1972 2162|Displacer Cannon
+L|7761179|of3a6|heal_pickup|item_battery@2990 -2044 2420|Crush Depth: Battery 2 (Part 3)|2990 -2044 2420|Displacer Cannon
+L|7761180|of3a6|heal_pickup|item_battery@1664 -2944 2608|Crush Depth: Battery 3 (Part 3)|1664 -2944 2608|Displacer Cannon
+L|7761181|of3a6|heal_pickup|item_battery@1746 -3016 2608|Crush Depth: Battery 4 (Part 3)|1746 -3016 2608|Displacer Cannon
+L|7761182|of3a6|heal_pickup|item_healthkit@2432 -1872 2178|Crush Depth: Health Kit 1 (Part 3)|2432 -1872 2178|Displacer Cannon
+L|7761183|of3a6|heal_pickup|item_healthkit@3072 -2054 2418|Crush Depth: Health Kit 2 (Part 3)|3072 -2054 2418|Displacer Cannon
 L|7761184|of3a6|ammo_pickup|ammo_gaussclip@-2380 1600 -264|Crush Depth: Uranium 1 (Part 3)|-2380 1600 -264
 L|7761185|of3a6|ammo_pickup|ammo_gaussclip@-2372 1476 -304|Crush Depth: Uranium 2 (Part 3)|-2372 1476 -304
 L|7761186|of3a6|ammo_pickup|ammo_gaussclip@-834 1428 -286|Crush Depth: Uranium 3 (Part 3)|-834 1428 -286
 L|7761187|of3a6|ammo_pickup|ammo_gaussclip@-770 1440 -286|Crush Depth: Uranium 4 (Part 3)|-770 1440 -286
-L|7761188|of3a6|ammo_pickup|weaponbox@2378 -1934 2172|Crush Depth: Weapon Box (Part 3)|2378 -1934 2172
+L|7761188|of3a6|ammo_pickup|weaponbox@2378 -1934 2172|Crush Depth: Weapon Box (Part 3)|2378 -1934 2172|Displacer Cannon
 L|7760292|of4a1|map_reached||Vicarious Reality: Part 1 Reached
 L|7760293|of4a1|charger|trigger_hurt@-172 -272 -840|Vicarious Reality: Healing Pool (Part 1)|-172 -271 -840|Displacer Cannon
 L|7761189|of4a1|heal_pickup|item_battery@457 2379 384|Vicarious Reality: Battery (Part 1)|457 2379 384
@@ -1468,7 +1456,7 @@ L|7760295|of4a2|charger|func_healthcharger@-2044 0 444|Vicarious Reality: Health
 L|7760296|of4a2|charger|func_healthcharger@-544 -1320 1148|Vicarious Reality: Health Charger 2 (Part 2)|-544 -1318 1148|Barnacle Grapple
 L|7760298|of4a2|charger|trigger_hurt@-2192 -1456 260|Vicarious Reality: Healing Pool (Part 2)|-2192 -1456 262|Barnacle Grapple
 L|7761191|of4a2|heal_pickup|item_battery@-593 -1783 1220|Vicarious Reality: Battery 1 (Part 2)|-593 -1783 1220|Barnacle Grapple
-L|7761192|of4a2|heal_pickup|item_battery@2304 1865 1944|Vicarious Reality: Battery 2 (Part 2)|2304 1865 1944|Barnacle Grapple
+L|7761192|of4a2|heal_pickup|item_battery@2304 1865 1944|Vicarious Reality: Battery 2 (Part 2)|2304 1865 1944|Displacer Cannon and Barnacle Grapple
 L|7761193|of4a2|heal_pickup|func_breakable@-1424 244 424|Vicarious Reality: Crate Battery 1 (Part 2)|-1425 243 426|Barnacle Grapple
 L|7761194|of4a2|heal_pickup|func_breakable@-1208 236 424|Vicarious Reality: Crate Battery 2 (Part 2)|-1208 237 424|Barnacle Grapple
 L|7761195|of4a2|heal_pickup|func_breakable@-1272 -144 396|Vicarious Reality: Crate Battery 3 (Part 2)|-1270 -142 396|Barnacle Grapple
@@ -1483,14 +1471,14 @@ L|7761198|of4a2|ammo_pickup|ammo_spore@-1514 -2149 304|Vicarious Reality: Spore 
 L|7761199|of4a2|ammo_pickup|ammo_gaussclip@-1256 259 385|Vicarious Reality: Uranium 1 (Part 2)|-1256 259 385|Barnacle Grapple
 L|7761200|of4a2|ammo_pickup|ammo_gaussclip@-1421 199 418|Vicarious Reality: Uranium 2 (Part 2)|-1421 199 418|Barnacle Grapple
 L|7761201|of4a2|ammo_pickup|ammo_gaussclip@-1208 199 418|Vicarious Reality: Uranium 3 (Part 2)|-1208 199 418|Barnacle Grapple
-L|7761202|of4a2|ammo_pickup|weaponbox@2536 2720 2192|Vicarious Reality: Weapon Box (Part 2)|2536 2720 2192|Barnacle Grapple
+L|7761202|of4a2|ammo_pickup|weaponbox@2536 2720 2192|Vicarious Reality: Weapon Box (Part 2)|2536 2720 2192|Displacer Cannon and Barnacle Grapple
 L|7760299|of4a3|map_reached||Vicarious Reality: Part 3 Reached
 L|7760300|of4a3|charger|func_healthcharger@176 -2116 356|Vicarious Reality: Health Charger (Part 3)|176 -2116 356
 L|7761203|of4a3|heal_pickup|item_battery@-153 -202 332|Vicarious Reality: Battery 1 (Part 3)|-153 -202 332
-L|7761204|of4a3|heal_pickup|item_battery@-3134 1168 576|Vicarious Reality: Battery 2 (Part 3)|-3134 1168 576
-L|7761205|of4a3|heal_pickup|item_battery@-1890 2140 390|Vicarious Reality: Battery 3 (Part 3)|-1890 2140 390
-L|7761206|of4a3|heal_pickup|item_battery@-3188 1200 576|Vicarious Reality: Battery 4 (Part 3)|-3188 1200 576
-L|7761207|of4a3|heal_pickup|item_battery@-2416 2212 130|Vicarious Reality: Battery 5 (Part 3)|-2416 2212 130
+L|7761204|of4a3|heal_pickup|item_battery@-3134 1168 576|Vicarious Reality: Battery 2 (Part 3)|-3134 1168 576|Displacer Cannon
+L|7761205|of4a3|heal_pickup|item_battery@-1890 2140 390|Vicarious Reality: Battery 3 (Part 3)|-1890 2140 390|Displacer Cannon
+L|7761206|of4a3|heal_pickup|item_battery@-3188 1200 576|Vicarious Reality: Battery 4 (Part 3)|-3188 1200 576|Displacer Cannon
+L|7761207|of4a3|heal_pickup|item_battery@-2416 2212 130|Vicarious Reality: Battery 5 (Part 3)|-2416 2212 130|Displacer Cannon
 L|7761208|of4a3|heal_pickup|func_breakable@544 -2688 408|Vicarious Reality: Crate Battery 1 (Part 3)|545 -2690 408
 L|7761209|of4a3|heal_pickup|func_breakable@1408 -2248 280|Vicarious Reality: Crate Battery 2 (Part 3)|1408 -2248 280
 L|7761210|of4a3|heal_pickup|func_breakable@1400 -1624 296|Vicarious Reality: Crate Battery 3 (Part 3)|1400 -1624 296
@@ -1499,7 +1487,7 @@ L|7761212|of4a3|heal_pickup|func_pushable@496 -1776 1112|Vicarious Reality: Crat
 L|7761213|of4a3|heal_pickup|func_breakable@832 -2416 1144|Vicarious Reality: Crate Battery 6 (Part 3)|832 -2416 1144
 L|7761214|of4a3|heal_pickup|func_pushable@648 -2088 1184|Vicarious Reality: Crate Battery 7 (Part 3)|650 -2090 1184
 L|7761215|of4a3|heal_pickup|item_healthkit@3163 -1600 497|Vicarious Reality: Health Kit 1 (Part 3)|3163 -1600 497
-L|7761216|of4a3|heal_pickup|item_healthkit@-1807 2124 387|Vicarious Reality: Health Kit 2 (Part 3)|-1807 2124 387
+L|7761216|of4a3|heal_pickup|item_healthkit@-1807 2124 387|Vicarious Reality: Health Kit 2 (Part 3)|-1807 2124 387|Displacer Cannon
 L|7761217|of4a3|ammo_pickup|ammo_556@3128 -1587 497|Vicarious Reality: 5.56 Rounds (Part 3)|3128 -1587 497
 L|7761218|of4a3|ammo_pickup|func_pushable@480 -1720 1112|Vicarious Reality: Crate Uranium 1 (Part 3)|478 -1720 1112
 L|7761219|of4a3|ammo_pickup|func_pushable@748 -1488 1208|Vicarious Reality: Crate Uranium 2 (Part 3)|749 -1486 1208
@@ -1523,22 +1511,16 @@ L|7761234|of4a3|ammo_pickup|ammo_spore@1529 -954 1089|Vicarious Reality: Spore P
 L|7761235|of4a3|ammo_pickup|ammo_spore@1740 -864 1094|Vicarious Reality: Spore Plant 13 (Part 3)|1740 -864 1094
 L|7761236|of4a3|ammo_pickup|ammo_spore@1952 -954 1139|Vicarious Reality: Spore Plant 14 (Part 3)|1952 -954 1139
 L|7761237|of4a3|ammo_pickup|ammo_gaussclip@8 -1960 297|Vicarious Reality: Uranium (Part 3)|8 -1960 297
-L|7761238|of4a3|ammo_pickup|weaponbox@-2476 2245 140|Vicarious Reality: Weapon Box (Part 3)|-2476 2245 140
+L|7761238|of4a3|ammo_pickup|weaponbox@-2476 2245 140|Vicarious Reality: Weapon Box (Part 3)|-2476 2245 140|Displacer Cannon
 L|7760301|of4a4|map_reached||Pit Worm's Nest: Part 1 Reached
-L|7761239|of4a4|heal_pickup|item_battery@-1344 -548 -556|Pit Worm's Nest: Battery 1 (Part 1)|-1344 -548 -556
 L|7761240|of4a4|heal_pickup|item_battery@-3007 -962 -2077|Pit Worm's Nest: Battery 2 (Part 1)|-3007 -962 -2077
 L|7761241|of4a4|heal_pickup|item_battery@-3081 -1018 -2067|Pit Worm's Nest: Battery 3 (Part 1)|-3081 -1018 -2067
 L|7761242|of4a4|heal_pickup|func_pushable@208 -792 88|Pit Worm's Nest: Crate Battery 1 (Part 1)|208 -792 88
-L|7761243|of4a4|heal_pickup|func_pushable@-976 -192 -456|Pit Worm's Nest: Crate Battery 2 (Part 1)|-976 -192 -456
-L|7761244|of4a4|heal_pickup|func_pushable@-944 16 -456|Pit Worm's Nest: Crate Battery 3 (Part 1)|-944 16 -456
-L|7761245|of4a4|heal_pickup|func_pushable@-1364 -152 -456|Pit Worm's Nest: Crate Battery 4 (Part 1)|-1364 -152 -456
 L|7761246|of4a4|heal_pickup|func_pushable@296 -752 96|Pit Worm's Nest: Crate Health Kit 1 (Part 1)|296 -752 96
-L|7761247|of4a4|heal_pickup|func_pushable@-1184 -16 -456|Pit Worm's Nest: Crate Health Kit 2 (Part 1)|-1184 -16 -456
-L|7761248|of4a4|heal_pickup|func_pushable@-1344 -436 -456|Pit Worm's Nest: Crate Health Kit 3 (Part 1)|-1344 -436 -456
 L|7761249|of4a4|heal_pickup|func_pushable@-1244 -744 -504|Pit Worm's Nest: Crate Health Kit 4 (Part 1)|-1244 -744 -504
 L|7761250|of4a4|heal_pickup|item_healthkit@952 -528 400|Pit Worm's Nest: Health Kit 1 (Part 1)|952 -528 400
 L|7761251|of4a4|heal_pickup|item_healthkit@920 -316 56|Pit Worm's Nest: Health Kit 2 (Part 1)|920 -316 56
-L|7761252|of4a4|heal_pickup|item_healthkit@-1624 -2000 -2040|Pit Worm's Nest: Health Kit 3 (Part 1)|-1624 -2000 -2040
+L|7761252|of4a4|heal_pickup|item_healthkit@-1624 -2000 -2040|Pit Worm's Nest: Health Kit 3 (Part 1)|-1624 -2000 -2040|Displacer Cannon
 L|7761253|of4a4|ammo_pickup|ammo_556@840 -544 400|Pit Worm's Nest: 5.56 Rounds (Part 1)|840 -544 400
 L|7761254|of4a4|ammo_pickup|ammo_9mmAR@868 -252 56|Pit Worm's Nest: MP5 Clip (Part 1)|868 -252 56
 L|7761255|of4a4|ammo_pickup|ammo_ARgrenades@900 -164 56|Pit Worm's Nest: MP5 Grenades (Part 1)|900 -164 56
@@ -1555,7 +1537,6 @@ L|7761263|of4a5|ammo_pickup|ammo_gaussclip@1184 1280 -432|Pit Worm's Nest: Urani
 L|7761932|of4a5|scientist|monster_scientist@-2025 -1222 256|Pit Worm's Nest: Hanging Sci 1 (Part 2)|-2025 -1222 256|Displacer Cannon
 L|7760303|of5a1|map_reached||Foxtrot Uniform: Part 1 Reached
 L|7760304|of5a1|charger|trigger_hurt@2580 1832 -840|Foxtrot Uniform: Healing Pool (Part 1)|2580 1832 -840|Displacer Cannon
-L|7761264|of5a1|heal_pickup|item_battery@-600 -100 168|Foxtrot Uniform: Battery 1 (Part 1)|-600 -100 168
 L|7761265|of5a1|heal_pickup|item_battery@-600 -148 168|Foxtrot Uniform: Battery 2 (Part 1)|-600 -148 168
 L|7761266|of5a1|heal_pickup|func_breakable@-992 2768 -872|Foxtrot Uniform: Crate Battery 1 (Part 1)|-992 2768 -872
 L|7761267|of5a1|heal_pickup|func_breakable@-560 -1200 88|Foxtrot Uniform: Crate Battery 2 (Part 1)|-560 -1200 88
@@ -1565,7 +1546,6 @@ L|7761270|of5a1|heal_pickup|func_breakable@-1072 2944 -872|Foxtrot Uniform: Crat
 L|7761271|of5a1|heal_pickup|func_breakable@-992 2944 -872|Foxtrot Uniform: Crate Health Kit 3 (Part 1)|-992 2944 -872
 L|7761272|of5a1|heal_pickup|func_breakable@-2912 336 72|Foxtrot Uniform: Crate Health Kit 4 (Part 1)|-2912 336 72
 L|7761273|of5a1|heal_pickup|func_breakable@-2912 256 72|Foxtrot Uniform: Crate Health Kit 5 (Part 1)|-2912 256 72
-L|7761274|of5a1|heal_pickup|item_healthkit@-784 -228 136|Foxtrot Uniform: Health Kit 1 (Part 1)|-784 -228 136
 L|7761275|of5a1|heal_pickup|item_healthkit@-544 -216 120|Foxtrot Uniform: Health Kit 2 (Part 1)|-544 -216 120
 L|7761276|of5a1|heal_pickup|item_healthkit@-544 -256 120|Foxtrot Uniform: Health Kit 3 (Part 1)|-544 -256 120
 L|7761277|of5a1|ammo_pickup|ammo_556@-696 -752 140|Foxtrot Uniform: 5.56 Rounds (Part 1)|-696 -752 140
@@ -1614,18 +1594,16 @@ L|7761310|of5a2|ammo_pickup|func_breakable@976 -704 56|Foxtrot Uniform: Crate Ur
 L|7761311|of5a2|ammo_pickup|func_breakable@768 -768 80|Foxtrot Uniform: Crate Uranium 2 (Part 2)|768 -768 80
 L|7761312|of5a2|ammo_pickup|ammo_762@2976 1696 272|Foxtrot Uniform: Sniper Rounds (Part 2)|2976 1696 272
 L|7760307|of5a3|map_reached||Foxtrot Uniform: Part 3 Reached
-L|7761313|of5a3|heal_pickup|item_battery@2256 2916 130|Foxtrot Uniform: Battery 1 (Part 3)|2256 2916 130
-L|7761314|of5a3|heal_pickup|item_battery@2782 2844 388|Foxtrot Uniform: Battery 2 (Part 3)|2782 2844 388
+L|7761313|of5a3|heal_pickup|item_battery@2256 2916 130|Foxtrot Uniform: Battery 1 (Part 3)|2256 2916 130|Displacer Cannon
 L|7761315|of5a3|heal_pickup|item_healthkit@-496 -960 132|Foxtrot Uniform: Health Kit 1 (Part 3)|-496 -960 132
 L|7761316|of5a3|heal_pickup|item_healthkit@-1616 -1896 80|Foxtrot Uniform: Health Kit 2 (Part 3)|-1616 -1896 80
-L|7761317|of5a3|heal_pickup|item_healthkit@2864 2834 386|Foxtrot Uniform: Health Kit 3 (Part 3)|2864 2834 386
 L|7761318|of5a3|ammo_pickup|ammo_357@-2388 -168 80|Foxtrot Uniform: .357 Rounds (Part 3)|-2388 -168 80
 L|7761319|of5a3|ammo_pickup|ammo_556@-552 -1040 104|Foxtrot Uniform: 5.56 Rounds 1 (Part 3)|-552 -1040 104
 L|7761320|of5a3|ammo_pickup|ammo_556@-740 -1344 80|Foxtrot Uniform: 5.56 Rounds 2 (Part 3)|-740 -1344 80
 L|7761755|of5a3|ammo_pickup|weapon_handgrenade@-1040 -1984 128|Foxtrot Uniform: Hand Grenade (Part 3)|-1040 -1984 128
 L|7761321|of5a3|ammo_pickup|ammo_9mmAR@-656 -1344 80|Foxtrot Uniform: MP5 Clip 1 (Part 3)|-656 -1344 80
-L|7761322|of5a3|ammo_pickup|ammo_9mmAR@1488 1904 608|Foxtrot Uniform: MP5 Clip 2 (Part 3)|1488 1904 608
-L|7761323|of5a3|ammo_pickup|ammo_ARgrenades@1536 1872 608|Foxtrot Uniform: MP5 Grenades (Part 3)|1536 1872 608
+L|7761322|of5a3|ammo_pickup|ammo_9mmAR@1488 1904 608|Foxtrot Uniform: MP5 Clip 2 (Part 3)|1488 1904 608|Displacer Cannon
+L|7761323|of5a3|ammo_pickup|ammo_ARgrenades@1536 1872 608|Foxtrot Uniform: MP5 Grenades (Part 3)|1536 1872 608|Displacer Cannon
 L|7761756|of5a3|ammo_pickup|weapon_satchel@-2360 -224 80|Foxtrot Uniform: Satchel Charge 1 (Part 3)|-2360 -224 80
 L|7761757|of5a3|ammo_pickup|weapon_satchel@-1544 -1872 80|Foxtrot Uniform: Satchel Charge 2 (Part 3)|-1544 -1872 80
 L|7761758|of5a3|ammo_pickup|weapon_satchel@-1080 -1928 88|Foxtrot Uniform: Satchel Charge 3 (Part 3)|-1080 -1928 88
@@ -1633,7 +1611,7 @@ L|7761759|of5a3|ammo_pickup|weapon_satchel@-1096 -1984 88|Foxtrot Uniform: Satch
 L|7761760|of5a3|ammo_pickup|weapon_satchel@-1024 -1928 128|Foxtrot Uniform: Satchel Charge 5 (Part 3)|-1024 -1928 128
 L|7761324|of5a3|ammo_pickup|ammo_spore@-832 -1240 -256|Foxtrot Uniform: Spore Plant 1 (Part 3)|-832 -1240 -256
 L|7761325|of5a3|ammo_pickup|ammo_spore@-760 -1232 -256|Foxtrot Uniform: Spore Plant 2 (Part 3)|-760 -1232 -256
-L|7761326|of5a3|ammo_pickup|weaponbox@2170 2954 140|Foxtrot Uniform: Weapon Box (Part 3)|2170 2954 140
+L|7761326|of5a3|ammo_pickup|weaponbox@2170 2954 140|Foxtrot Uniform: Weapon Box (Part 3)|2170 2954 140|Displacer Cannon
 L|7762049|of5a3|soldier|monster_human_torch_ally@-712 -960 80|Foxtrot Uniform: Engineer1 (Part 3)|-712 -960 80
 L|7762050|of5a3|soldier|monster_human_medic_ally@-632 -944 80|Foxtrot Uniform: Medic1 (Part 3)|-632 -944 80
 L|7762051|of5a3|soldier|monster_human_grunt_ally@-816 -784 80|Foxtrot Uniform: Soldier (Part 3)|-816 -784 80
@@ -1642,7 +1620,7 @@ L|7760309|of5a4|charger|func_healthcharger@-2624 124 -8|Foxtrot Uniform: Health 
 L|7760310|of5a4|charger|func_recharge@-2576 124 -8|Foxtrot Uniform: HEV Charger (Part 4)|-2576 124 -8
 L|7761327|of5a4|heal_pickup|item_battery@1815 3350 -3815|Foxtrot Uniform: Battery 1 (Part 4)|1815 3350 -3815
 L|7761328|of5a4|heal_pickup|item_battery@1889 3406 -3825|Foxtrot Uniform: Battery 2 (Part 4)|1889 3406 -3825
-L|7761329|of5a4|heal_pickup|item_healthkit@3272 2368 -3788|Foxtrot Uniform: Health Kit (Part 4)|3272 2368 -3788
+L|7761329|of5a4|heal_pickup|item_healthkit@3272 2368 -3788|Foxtrot Uniform: Health Kit (Part 4)|3272 2368 -3788|Displacer Cannon
 L|7761330|of5a4|ammo_pickup|ammo_556@-2632 -364 16|Foxtrot Uniform: 5.56 Rounds 1 (Part 4)|-2632 -364 16
 L|7761331|of5a4|ammo_pickup|ammo_556@-2584 -364 16|Foxtrot Uniform: 5.56 Rounds 2 (Part 4)|-2584 -364 16
 L|7761332|of5a4|ammo_pickup|ammo_spore@-184 -783 132|Foxtrot Uniform: Spore Plant 1 (Part 4)|-184 -783 132
@@ -1664,16 +1642,16 @@ L|7762056|of6a1|soldier|monster_human_grunt_ally@-832 3024 130|The Package: Frie
 L|7760313|of6a2|map_reached||The Package: Part 2 Reached
 L|7761339|of6a2|heal_pickup|item_battery@-16 -1088 -64|The Package: Battery 1 (Part 2)|-16 -1088 -64
 L|7761340|of6a2|heal_pickup|item_battery@48 -1120 -64|The Package: Battery 2 (Part 2)|48 -1120 -64
-L|7761341|of6a2|heal_pickup|item_battery@3102 3036 -1692|The Package: Battery 3 (Part 2)|3102 3036 -1692
-L|7761342|of6a2|heal_pickup|item_battery@2576 3108 -1982|The Package: Battery 4 (Part 2)|2576 3108 -1982
+L|7761341|of6a2|heal_pickup|item_battery@3102 3036 -1692|The Package: Battery 3 (Part 2)|3102 3036 -1692|Displacer Cannon
+L|7761342|of6a2|heal_pickup|item_battery@2576 3108 -1982|The Package: Battery 4 (Part 2)|2576 3108 -1982|Displacer Cannon
 L|7761343|of6a2|heal_pickup|func_breakable@2520 -2088 -40|The Package: Crate Battery (Part 2)|2520 -2088 -40
 L|7761344|of6a2|heal_pickup|func_breakable@1904 40 -40|The Package: Crate Health Kit 1 (Part 2)|1904 40 -40
 L|7761345|of6a2|heal_pickup|func_breakable@2544 -1992 -40|The Package: Crate Health Kit 2 (Part 2)|2544 -1992 -40
 L|7761346|of6a2|heal_pickup|item_healthkit@64 -1056 0|The Package: Health Kit 1 (Part 2)|64 -1056 0
 L|7761347|of6a2|heal_pickup|item_healthkit@64 -984 -64|The Package: Health Kit 2 (Part 2)|64 -984 -64
 L|7761348|of6a2|heal_pickup|item_healthkit@792 1464 -272|The Package: Health Kit 3 (Part 2)|792 1464 -272
-L|7761349|of6a2|heal_pickup|item_healthkit@3184 3026 -1678|The Package: Health Kit 4 (Part 2)|3184 3026 -1678
-L|7761350|of6a2|ammo_pickup|ammo_357@1808 2096 -1504|The Package: .357 Rounds (Part 2)|1808 2096 -1504
+L|7761349|of6a2|heal_pickup|item_healthkit@3184 3026 -1678|The Package: Health Kit 4 (Part 2)|3184 3026 -1678|Displacer Cannon
+L|7761350|of6a2|ammo_pickup|ammo_357@1808 2096 -1504|The Package: .357 Rounds (Part 2)|1808 2096 -1504|Displacer Cannon
 L|7761351|of6a2|ammo_pickup|ammo_556@-8 -1000 -56|The Package: 5.56 Rounds 1 (Part 2)|-8 -1000 -56
 L|7761352|of6a2|ammo_pickup|ammo_556@608 1320 -248|The Package: 5.56 Rounds 2 (Part 2)|608 1320 -248
 L|7761353|of6a2|ammo_pickup|func_breakable@2288 -32 0|The Package: Crate .357 Rounds (Part 2)|2288 -32 0
@@ -1685,8 +1663,8 @@ L|7761762|of6a2|ammo_pickup|func_breakable@2128 -104 -40|The Package: Crate Trip
 L|7761357|of6a2|ammo_pickup|func_breakable@1928 -72 -16|The Package: Crate Uranium 1 (Part 2)|1928 -72 -16
 L|7761358|of6a2|ammo_pickup|func_breakable@1928 184 -16|The Package: Crate Uranium 2 (Part 2)|1928 184 -16
 L|7761359|of6a2|ammo_pickup|func_breakable@2136 40 -40|The Package: Crate Uranium 3 (Part 2)|2136 40 -40
-L|7761763|of6a2|ammo_pickup|weapon_handgrenade@1856 2064 -1504|The Package: Hand Grenade (Part 2)|1856 2064 -1504
-L|7761360|of6a2|ammo_pickup|weaponbox@2490 3146 -1892|The Package: Weapon Box (Part 2)|2490 3146 -1892
+L|7761763|of6a2|ammo_pickup|weapon_handgrenade@1856 2064 -1504|The Package: Hand Grenade (Part 2)|1856 2064 -1504|Displacer Cannon
+L|7761360|of6a2|ammo_pickup|weaponbox@2490 3146 -1892|The Package: Weapon Box (Part 2)|2490 3146 -1892|Displacer Cannon
 L|7760314|of6a3|map_reached||The Package: Part 3 Reached
 L|7761361|of6a3|heal_pickup|item_battery@-1392 1720 -32|The Package: Battery 1 (Part 3)|-1392 1720 -32
 L|7761362|of6a3|heal_pickup|item_battery@-1400 1680 -32|The Package: Battery 2 (Part 3)|-1400 1680 -32
@@ -1700,13 +1678,12 @@ L|7761369|of6a3|heal_pickup|item_healthkit@-1736 2312 -48|The Package: Health Ki
 L|7761370|of6a3|heal_pickup|item_healthkit@96 1440 -24|The Package: Health Kit 3 (Part 3)|96 1440 -24
 L|7761371|of6a3|heal_pickup|item_healthkit@144 1440 -24|The Package: Health Kit 4 (Part 3)|144 1440 -24
 L|7761372|of6a3|heal_pickup|item_healthkit@-1072 2112 336|The Package: Health Kit 5 (Part 3)|-1072 2112 336
-L|7761373|of6a3|heal_pickup|item_healthkit@1544 -2240 -3916|The Package: Health Kit 6 (Part 3)|1544 -2240 -3916
+L|7761373|of6a3|heal_pickup|item_healthkit@1544 -2240 -3916|The Package: Health Kit 6 (Part 3)|1544 -2240 -3916|Displacer Cannon
 L|7761374|of6a3|ammo_pickup|ammo_556@200 1440 -24|The Package: 5.56 Rounds (Part 3)|200 1440 -24
 L|7761375|of6a3|ammo_pickup|func_breakable@1056 2224 -264|The Package: Crate .357 Rounds (Part 3)|1056 2224 -264
 L|7761376|of6a3|ammo_pickup|func_breakable@992 2160 -264|The Package: Crate MP5 Clip (Part 3)|992 2160 -264
 L|7761377|of6a3|ammo_pickup|func_breakable@1056 2160 -264|The Package: Crate MP5 Grenades (Part 3)|1056 2160 -264
 L|7761378|of6a3|ammo_pickup|func_breakable@704 2208 -264|The Package: Crate Rockets (Part 3)|704 2208 -264
-L|7761994|of6a3|ammo_pickup|ammo_rpgclip@-2160 560 144|The Package: Rockets 1 (Part 3)|-2160 560 144
 L|7761995|of6a3|ammo_pickup|ammo_rpgclip@-2160 528 144|The Package: Rockets 2 (Part 3)|-2160 528 144
 L|7761379|of6a3|ammo_pickup|ammo_762@-1360 1680 -36|The Package: Sniper Rounds (Part 3)|-1360 1680 -36
 L|7761380|of6a3|ammo_pickup|ammo_gaussclip@-592 944 -32|The Package: Uranium 1 (Part 3)|-592 944 -32
@@ -1774,7 +1751,7 @@ L|7761422|of6a5|ammo_pickup|func_pushable@2072 -168 288|Worlds Collide: Crate MP
 L|7761771|of6a5|ammo_pickup|func_pushable@1496 -56 32|Worlds Collide: Crate Satchel Charge (Part 2)|1496 -56 32
 L|7761423|of6a5|ammo_pickup|ammo_spore@18 -944 588|Worlds Collide: Spore Plant 1 (Part 2)|18 -944 588
 L|7761424|of6a5|ammo_pickup|ammo_spore@-47 -897 584|Worlds Collide: Spore Plant 2 (Part 2)|-47 -897 584
-L|7761425|of6a5|ammo_pickup|weaponbox@-2528 -2653 -1092|Worlds Collide: Weapon Box (Part 2)|-2528 -2653 -1092
+L|7761425|of6a5|ammo_pickup|weaponbox@-2528 -2653 -1092|Worlds Collide: Weapon Box (Part 2)|-2528 -2653 -1092|Displacer Cannon
 L|7760323|of7a0|map_reached||Worlds Collide: Part 3 Reached
 L|7760324|ba_tram1|map_reached||Living Quarters Outbound: Part 1 Reached
 L|7761938|ba_tram1|scientist|monster_scientist@-1264 3024 1328|Living Quarters Outbound: Railchatter1 (Part 1)|-1264 3024 1328|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
@@ -2042,7 +2019,6 @@ L|7761577|ba_power1|heal_pickup|item_healthkit@612 -2398 -255|Power Struggle: He
 L|7761578|ba_power1|heal_pickup|item_healthkit@612 -2436 -255|Power Struggle: Health Kit 4 (Part 2)|612 -2436 -255
 L|7761579|ba_power1|heal_pickup|item_helmet@-112 768 -512|Power Struggle: Helmet (Part 2)|-112 768 -512
 L|7761580|ba_power1|ammo_pickup|ammo_9mmclip@-128 826 -512|Power Struggle: 9mm Clip 1 (Part 2)|-128 826 -512
-L|7761581|ba_power1|ammo_pickup|ammo_9mmclip@635 943 -479|Power Struggle: 9mm Clip 2 (Part 2)|635 943 -479
 L|7761582|ba_power1|ammo_pickup|ammo_9mmclip@657 943 -479|Power Struggle: 9mm Clip 3 (Part 2)|657 943 -479
 L|7761583|ba_power1|ammo_pickup|ammo_9mmclip@789 -2703 -487|Power Struggle: 9mm Clip 4 (Part 2)|789 -2703 -487
 L|7761783|ba_power1|ammo_pickup|weapon_handgrenade@1007 -2475 -487|Power Struggle: Hand Grenade (Part 2)|1007 -2475 -487

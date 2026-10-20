@@ -473,7 +473,7 @@ class TestOldLocationNames(HalfLifeTestBase):
     """Names from before `Mission: Thing` still name exactly their location."""
 
     def test_every_old_name_resolves_to_its_location(self) -> None:
-        from ..locations import location_name_groups
+        from ..locations import location_name_groups, location_name_to_id
         chapter_names = {chapter["key"]: chapter["name"] for chapter in CHAPTERS}
         checked = 0
         for entry in LOCATIONS:
@@ -481,6 +481,9 @@ class TestOldLocationNames(HalfLifeTestBase):
             if not entry["name"].startswith(prefix):
                 continue
             old = chapter_names[entry["chapter"]] + " - " + entry["name"][len(prefix):]
+            if old in location_name_to_id:
+                # A removed check's own old name, which it keeps.
+                continue
             self.assertEqual(location_name_groups.get(old), {entry["name"]}, old)
             checked += 1
         self.assertGreater(checked, 0)

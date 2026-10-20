@@ -242,6 +242,34 @@ OPTIONAL_ITEMS: dict[str, list[str]] = {
 # now found by `pocketed_chargers`.
 UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {}
 
+# Pickups no player can reach, as `{map: {(classname, (x, y, z))}}`: the origin
+# for a placed one, the crate and its key position for one a crate drops. All
+# confirmed out of reach in play.
+UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # On A Rail part 3.
+    "c2a2b1": {
+        ("weapon_handgrenade", (-1972, 756, 124)),
+        ("weapon_handgrenade", (-1956, 724, 124)),
+    },
+    # On A Rail part 4.
+    "c2a2b2": {("item_healthkit", (1360, -1512, 227))},
+    # On A Rail part 5: part 3's crates c2a2b1box1 and c2a2b1box15, carried
+    # over by globalname. They count in part 3.
+    "c2a2c": {
+        ("func_breakable", (-1464, -3096, 1244)),
+        ("func_breakable", (-1256, -2976, 1244)),
+    },
+    # Apprehension part 5: crates c2a3crate1 and c2a3crate2.
+    "c2a3d": {
+        ("func_breakable", (1904, 480, 224)),
+        ("func_breakable", (1656, 480, 224)),
+    },
+    # Surface Tension part 5.
+    "c2a5b": {("item_battery", (784, -1176, 88))},
+    # Surface Tension part 7: crate c2a5d_5.
+    "c2a5d": {("func_breakable", (-184, -752, -288))},
+}
+
 # Scientists and guards that do not count, as `{map: {(classname, (x, y, z))}}`.
 # `monster_generic` stand-ins that count, as `{map: {(kind, (x, y, z))}}`.
 GENERIC_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
@@ -341,6 +369,7 @@ HALF_LIFE = Campaign(
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     melee=STARTING_WEAPONS,
     unreachable=UNREACHABLE_CHARGERS,
+    unreachable_pickups=UNREACHABLE_PICKUPS,
     unkillable_npcs=UNKILLABLE_NPCS,
     generic_npcs=GENERIC_NPCS,
     killable_npcs=KILLABLE_NPCS,

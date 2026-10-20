@@ -74,8 +74,13 @@ Verdicts go to `aptest_results.txt` under the `sweep` group and a
 summary to `build/precache_sweep.txt`. A crash stops it until the game is
 relaunched; it then carries on from the next map. `--clear` with it starts over.
 
+`--displacer` runs only the displacer scenarios (see `displacer_scenarios`): one
+per Opposing Force map whose displacer Xen room holds Healsanity or Ammosanity
+checks. You start where the self-teleport lands; pass if each can be picked up,
+fail naming those that cannot.
+
 `--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
-0.4.0-2, npc_witness, npc_excluded_check, pctest or sweep.
+0.4.0-2, npc_witness, npc_excluded_check, pctest, sweep or displacer.
 
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
@@ -93,7 +98,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --displacer | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -284,6 +289,9 @@ class Scenario:
     # Test-only locations the game tags for this scenario alone, so NPCs left
     # out of the data can be labelled, found and traced: `(id, L record)`.
     probes: list[tuple[int, str]] = field(default_factory=list)
+    # Checks to draw a trace line to once placed, in turn: each one arriving
+    # moves the line on to the next not yet collected.
+    trace: list[int] = field(default_factory=list)
 
 
 def cache_key(data: CheckData) -> str:
@@ -1926,6 +1934,144 @@ def npc_map_scenarios(data: CheckData, game_root: Path) -> list[Scenario]:
     return [s for _, _, s in sorted(tagged, key=lambda t: (t[0], t[1]))]
 
 
+# How far from a map's `info_displacer_xen_target` its Xen room is searched,
+# and the grid the search walks. The room's own pickups sit about 950 units
+# from the target; at 2048 the search began catching the map around it.
+XEN_ROOM_RADIUS = 1536
+XEN_ROOM_GRID = 32
+PICKUP_KINDS = ("heal_pickup", "ammo_pickup")
+
+
+def xen_room_pickups(bsp: Path, entities: list[dict[str, str]],
+                     pickups: list[Location]) -> tuple[str, list[Location]] | None:
+    """`(landing spot, pickups)` for the Xen room the displacer's self-teleport
+    lands in, or None for a map without one.
+
+    The room is the open space joined to the target within `XEN_ROOM_RADIUS`,
+    filled crouched and without gravity, so it can list a pickup of the map
+    around the room as well.
+    """
+    sys.path.insert(0, str(REPO / "tools"))
+    import collections
+    import math
+    from bsp_entities import CONTENTS_SOLID, HULL_CROUCHING, ClipHull
+
+    target = next((e["origin"] for e in entities
+                   if e.get("classname") == "info_displacer_xen_target"
+                   and e.get("origin")), None)
+    if target is None:
+        return None
+    centre = tuple(float(v) for v in target.split())
+    clip = ClipHull(bsp)
+    step = XEN_ROOM_GRID
+
+    def open_at(p) -> bool:
+        return (math.dist(p, centre) <= XEN_ROOM_RADIUS
+                and clip.contents(p, HULL_CROUCHING) != CONTENTS_SOLID)
+
+    base = tuple(round(v / step) * step for v in centre)
+    start = next((p for p in ((base[0], base[1], base[2] + dz * step)
+                              for dz in range(4)) if open_at(p)), None)
+    if start is None:
+        return None
+    seen = {start}
+    queue = collections.deque([start])
+    while queue:
+        x, y, z = queue.popleft()
+        for d in ((step, 0, 0), (-step, 0, 0), (0, step, 0),
+                  (0, -step, 0), (0, 0, step), (0, 0, -step)):
+            q = (x + d[0], y + d[1], z + d[2])
+            if q not in seen and open_at(q):
+                seen.add(q)
+                queue.append(q)
+
+    def inside(location: Location) -> bool:
+        p = [round(float(v) / step) * step for v in location.pos.split()]
+        return any((p[0] + dx * step, p[1] + dy * step, p[2] + dz * step) in seen
+                   for dx in (-1, 0, 1) for dy in (-1, 0, 1) for dz in (-1, 0, 1, 2))
+
+    return target, [l for l in pickups if l.pos and inside(l)]
+
+
+def xen_rooms(data: CheckData, game_root: Path,
+              cache: Path) -> dict[str, tuple[str, list[int]]]:
+    """`{map: (landing spot, pickup ids)}` for every map whose Xen room holds
+    pickup checks, in mission order. Slow (a fill per map), so cached beside
+    the results, keyed like `unproven_sources`."""
+    if cache.is_file():
+        lines = cache.read_text(encoding="utf-8").splitlines()
+        if lines and lines[0] == cache_key(data):
+            rooms = {}
+            for line in lines[1:]:
+                map_name, spot, ids = line.split("|", 2)
+                rooms[map_name] = (spot, [int(i) for i in ids.split(",")])
+            return rooms
+
+    sys.path.insert(0, str(REPO / "tools"))
+    from bsp_entities import load_map
+    from campaigns import KNOWN_CAMPAIGNS
+
+    game_dir = {m: c.game_dir for c in KNOWN_CAMPAIGNS for m in c.maps}
+    by_map: dict[str, list[Location]] = {}
+    for l in data.locations.values():
+        if l.kind in PICKUP_KINDS:
+            by_map.setdefault(l.map, []).append(l)
+    rooms: dict[str, tuple[str, list[int]]] = {}
+    for chapter in data.chapters:
+        for map_name in chapter.maps:
+            if not by_map.get(map_name):
+                continue
+            bsp = game_root / game_dir.get(map_name, "valve") / "maps" / f"{map_name}.bsp"
+            if not bsp.is_file():
+                continue
+            entities = load_map(bsp)
+            if not any(e.get("classname") == "info_displacer_xen_target"
+                       for e in entities):
+                continue
+            print(f"  searching {map_name}'s Xen room (cached after the first run) ...",
+                  flush=True)
+            found = xen_room_pickups(bsp, entities, by_map[map_name])
+            if found is not None and found[1]:
+                rooms[map_name] = (found[0], [l.id for l in found[1]])
+
+    cache.write_text("\n".join([cache_key(data)] + [
+        f"{m}|{spot}|{','.join(str(i) for i in ids)}" for m, (spot, ids) in rooms.items()
+    ]) + "\n", encoding="utf-8")
+    return rooms
+
+
+def displacer_scenarios(data: CheckData, game_root: Path,
+                        store: Path) -> list[Scenario]:
+    """One per Opposing Force map whose displacer Xen room holds Healsanity or
+    Ammosanity checks: can each be picked up, and only by displacing there?"""
+    out: list[Scenario] = []
+    rooms = xen_rooms(data, game_root, store / "aptest_displacer.txt")
+    for map_name, (spot, ids) in rooms.items():
+        pickups = sorted((data.locations[i] for i in ids if i in data.locations),
+                         key=lambda l: l.name)
+        if not pickups:
+            continue
+        out.append(Scenario(
+            title=f"displacer: Xen room pickups in {map_name}",
+            map=map_name, pos=spot, expect=[l.id for l in pickups],
+            trace=[l.id for l in pickups],
+            steps="\n".join([
+                where_in_mission(data, map_name),
+                "You are at the displacer's landing spot (!tp comes back here).",
+                "Displacer secondary fire, from the map, lands here too. These",
+                "pickup checks are in or near its Xen room. A trace line leads",
+                "to the first, and moves to the next as each one arrives:",
+                *(f"  {l.name}: {l.arg.split('@')[0]} at {l.pos}"
+                  + (f" (needs the {l.needs})" if l.needs else "") for l in pickups),
+                "!trace <name> aims at another, past one that cannot be reached.",
+                "Pick up each one you can reach. Then judge whether each could",
+                "also be reached from the map without the displacer.",
+                "!pass if every one arrived, else !fail naming the ones that",
+                "cannot be reached. !note any reachable without the displacer.",
+            ])))
+    return out
+
+
 # A map with at least this many brush models is a precache suspect: each one
 # takes a model slot before anything in the map is spawned, and the engine has
 # 511 in all. Pit Worm's Nest part 1 has 331 and is reported unplayable.
@@ -2353,7 +2499,7 @@ class DllSwap:
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
 GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2",
-          "npc_witness", "npc_excluded_check", "pctest", "sweep")
+          "npc_witness", "npc_excluded_check", "pctest", "sweep", "displacer")
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
@@ -2382,6 +2528,8 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return precache_scenarios(data, game_root)
     if group == "sweep":
         return sweep_scenarios(data, game_root)
+    if group == "displacer":
+        return displacer_scenarios(data, game_root, store)
     only = None
     if unproven:
         only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
@@ -2572,6 +2720,20 @@ class Harness:
             if not s.connected:
                 self.tell("[aptest] The client reads as disconnected. !connect to change.")
             self.info()
+            self.trace_next()
+
+    def trace_next(self) -> None:
+        """Point the game's trace line at the scenario's next uncollected check.
+        Shown, like every line, only once the player is placed."""
+        s = self.scenario()
+        if s is None:
+            return
+        left = [i for i in s.trace if i not in self.seen]
+        if left:
+            with self.say_path.open("a", encoding="utf-8") as handle:
+                handle.write(f"trace|{left[0]}\n")
+        elif s.trace:
+            self.tell("[aptest] Every traced check has arrived.")
 
     def info(self) -> None:
         s = self.scenario()
@@ -2750,7 +2912,10 @@ class Harness:
                 self.tell(f"[aptest] Expected check arrived: {name}. !pass if reachable.")
         else:
             self.tell(f"[aptest] Other check: {name}")
+        first = location_id not in self.seen
         self.seen.add(location_id)
+        if s is not None and first and location_id in s.trace:
+            self.trace_next()
 
     def judge_complete(self, kind: str, key: str) -> None:
         s = self.scenario()
@@ -2828,6 +2993,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sweep", action="store_true",
                         help="the pre-release precache check: load every map holding "
                              "every item, unattended, and report each map's slots")
+    parser.add_argument("--displacer", action="store_true",
+                        help="only the displacer scenarios: the Healsanity and "
+                             "Ammosanity checks in each map's displacer Xen room")
     parser.add_argument("--from", dest="start_at", type=int, metavar="N",
                         help="with --sweep: sweep again from scenario N (the number "
                              "in aptest_results.txt), results or not")
@@ -2842,7 +3010,7 @@ def main(argv: list[str] | None = None) -> int:
     flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0",
              "0.4.0-2": "v0_4_0_2",
              "npc_witness": "npc_witness", "npc_excluded_check": "npc_excluded_check",
-             "pctest": "pctest", "sweep": "sweep"}
+             "pctest": "pctest", "sweep": "sweep", "displacer": "displacer"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
@@ -2851,7 +3019,7 @@ def main(argv: list[str] | None = None) -> int:
     if len(chosen) > 1:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
                      "--parity, --0.4.0, --0.4.0-2, --npc_witness, "
-                     "--npc_excluded_check, --pctest, --sweep")
+                     "--npc_excluded_check, --pctest, --sweep, --displacer")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")
@@ -2898,6 +3066,10 @@ def main(argv: list[str] | None = None) -> int:
     swap.swap_in()
     try:
         return run(args, store, bridge_module)
+    except KeyboardInterrupt:
+        # ^C while the scenarios are still being worked out.
+        print("Stopped.")
+        return 1
     finally:
         swap.restore()
         lock.unlink(missing_ok=True)

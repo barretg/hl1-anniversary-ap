@@ -88,6 +88,12 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
     "Shotgun": ["ba_teleport2@-1456 -816 0"],
 }
 
+# Pickups no player can reach, as `{map: {(classname, (x, y, z))}}`.
+UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Power Struggle part 2: 9mm Clip 2, confirmed out of reach in play.
+    "ba_power1": {("ammo_9mmclip", (635, 943, -479))},
+}
+
 # Scientists and barneys that cannot be killed, as `{map: {(classname, (x, y,
 # z))}}`.
 UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
@@ -170,6 +176,7 @@ BLUE_SHIFT = Campaign(
     unrandomised_weapons=UNRANDOMISED_WEAPON_LOCATIONS,
     confirmed_copies=CONFIRMED_COPIES,
     unreachable_copies=UNREACHABLE_COPIES,
+    unreachable_pickups=UNREACHABLE_PICKUPS,
     unkillable_npcs=UNKILLABLE_NPCS,
     killable_npcs=KILLABLE_NPCS,
     generic_npcs=GENERIC_NPCS,

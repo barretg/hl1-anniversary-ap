@@ -905,6 +905,18 @@ def test_legacy_locations_stay_reserved_and_out_of_new_seeds(campaign: dict) -> 
         assert map_name in reached, name
 
 
+def test_legacy_names_stay_free_in_the_datapackage(campaign: dict) -> None:
+    """A removed check keeps its old name in the datapackage, so no live check
+    may take it, as renumbering the rest of its group once did."""
+    sys.path.insert(0, str(REPO / "apworld" / "half_life"))
+    from data.legacy import LEGACY_LOCATIONS
+
+    live = {l["name"] for l in campaign["locations"]}
+    names = [name for name, _ in LEGACY_LOCATIONS.values()]
+    assert not live & set(names)
+    assert len(names) == len(set(names))
+
+
 def test_confirmed_copies_are_sources(campaign: dict) -> None:
     """A confirmation naming no source is a typo the harness would never catch."""
     from campaigns import KNOWN_CAMPAIGNS

@@ -191,6 +191,63 @@ LOCATION_GATES: dict[str, dict[str, dict[str, list[str]]]] = {
     "of6a4b": {"trigger_hurt:*115": _DISPLACER},
 }
 
+# The pickups in or around each Xen room, confirmed in play (aptest's displacer
+# group, 2026-10-20) to need the self-teleport.
+for _map, _units in {
+    "of3a4": {
+        "item_battery@-2368 -1344 -320": _DISPLACER,
+        "item_battery@-2496 -1280 -320": _DISPLACER,
+    },
+    "of3a6": {
+        "item_battery@2464 -1972 2162": _DISPLACER,
+        "item_battery@2990 -2044 2420": _DISPLACER,
+        "item_battery@1664 -2944 2608": _DISPLACER,
+        "item_battery@1746 -3016 2608": _DISPLACER,
+        "item_healthkit@2432 -1872 2178": _DISPLACER,
+        "item_healthkit@3072 -2054 2418": _DISPLACER,
+        "weaponbox@2378 -1934 2172": _DISPLACER,
+    },
+    "of4a2": {
+        "item_battery@2304 1865 1944": _DISPLACER,
+        "weaponbox@2536 2720 2192": _DISPLACER,
+    },
+    "of4a3": {
+        "item_battery@-3134 1168 576": _DISPLACER,
+        "item_battery@-1890 2140 390": _DISPLACER,
+        "item_battery@-3188 1200 576": _DISPLACER,
+        "item_battery@-2416 2212 130": _DISPLACER,
+        "item_healthkit@-1807 2124 387": _DISPLACER,
+        "weaponbox@-2476 2245 140": _DISPLACER,
+    },
+    "of4a4": {
+        "item_healthkit@-1624 -2000 -2040": _DISPLACER,
+    },
+    "of5a3": {
+        "item_battery@2256 2916 130": _DISPLACER,
+        "ammo_9mmAR@1488 1904 608": _DISPLACER,
+        "ammo_ARgrenades@1536 1872 608": _DISPLACER,
+        "weaponbox@2170 2954 140": _DISPLACER,
+    },
+    "of5a4": {
+        "item_healthkit@3272 2368 -3788": _DISPLACER,
+    },
+    "of6a2": {
+        "item_battery@3102 3036 -1692": _DISPLACER,
+        "item_battery@2576 3108 -1982": _DISPLACER,
+        "item_healthkit@3184 3026 -1678": _DISPLACER,
+        "ammo_357@1808 2096 -1504": _DISPLACER,
+        "weaponbox@2490 3146 -1892": _DISPLACER,
+        "weapon_handgrenade@1856 2064 -1504": _DISPLACER,
+    },
+    "of6a3": {
+        "item_healthkit@1544 -2240 -3916": _DISPLACER,
+    },
+    "of6a5": {
+        "weaponbox@-2528 -2653 -1092": _DISPLACER,
+    },
+}.items():
+    LOCATION_GATES.setdefault(_map, {}).update(_units)
+
 # The Shock Roach is never placed; it is dropped by a dying shock trooper. The
 # first map placing one, `of1a5b`, has a single trooper that waits for a script
 # (spawnflags 128) rather than a fight, so the anchor is the first real one, in
@@ -211,6 +268,34 @@ UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # Welcome To Black Mesa part 2: inside a lethal trigger_hurt, confirmed in play.
     "of1a2": {("ammo_357", (320, -2608, -1808))},
+    # We Are Not Alone part 2: none of its pickups can be reached.
+    "of3a1b": {
+        ("item_battery", (960, 1664, 1616)),
+        ("item_healthkit", (976, 1632, 1616)),
+        ("item_healthkit", (112, 192, -128)),
+    },
+    # The rest confirmed out of reach in play. Pit Worm's Nest part 1: the
+    # crates are *140, *141, *148, *149 and *150.
+    "of4a4": {
+        ("item_battery", (-1344, -548, -556)),
+        ("func_pushable", (-944, 16, -456)),
+        ("func_pushable", (-1364, -152, -456)),
+        ("func_pushable", (-1184, -16, -456)),
+        ("func_pushable", (-1344, -436, -456)),
+        ("func_pushable", (-976, -192, -456)),
+    },
+    # Foxtrot Uniform part 1.
+    "of5a1": {
+        ("item_battery", (-600, -100, 168)),
+        ("item_healthkit", (-784, -228, 136)),
+    },
+    # Foxtrot Uniform part 3.
+    "of5a3": {
+        ("item_battery", (2782, 2844, 388)),
+        ("item_healthkit", (2864, 2834, 386)),
+    },
+    # The Package part 3.
+    "of6a3": {("ammo_rpgclip", (-2160, 560, 144))},
 }
 
 
@@ -229,6 +314,12 @@ UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
         ("monster_human_grunt_ally", (-2572, -2452, 320)),
         ("monster_human_medic_ally", (-2284, -3512, 320)),
     },
+}
+
+# NPCs whose death softlocks the run, same form.
+CRITICAL_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
+    # Foxtrot Uniform part 4: the marine whose death needs a save and load.
+    "of5a4": {("monster_human_grunt_ally", (-1408, 32, -64))},
 }
 
 # NPCs the automatic exclusions drop that play shows count, same form.
@@ -329,6 +420,7 @@ OPPOSING_FORCE = Campaign(
     unreachable_pickups=UNREACHABLE_PICKUPS,
     unkillable_npcs=UNKILLABLE_NPCS,
     killable_npcs=KILLABLE_NPCS,
+    critical_npcs=CRITICAL_NPCS,
     generic_npcs=GENERIC_NPCS,
     removal_deaths=REMOVAL_DEATHS,
     swapped_npcs=SWAPPED_NPCS,

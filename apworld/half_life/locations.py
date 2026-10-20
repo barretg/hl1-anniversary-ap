@@ -3,12 +3,17 @@ from __future__ import annotations
 from BaseClasses import Location
 
 from .data import CHAPTERS, LOCATIONS
+from .data.legacy import LEGACY_LOCATIONS
 from .items import RENAMED_ITEMS
 
 GAME_NAME = "Half-Life"
 
 location_table: dict[str, dict] = {entry["name"]: entry for entry in LOCATIONS}
 location_name_to_id: dict[str, int] = {entry["name"]: entry["id"] for entry in LOCATIONS}
+# Removed checks stay in the datapackage, under the names older seeds gave
+# them. Nothing creates them; the client sends them (see `data/legacy.py`).
+for _id, (_name, _) in LEGACY_LOCATIONS.items():
+    location_name_to_id.setdefault(_name, _id)
 
 
 
@@ -91,7 +96,9 @@ for _entry in LOCATIONS:
             location_name_groups[_entry["name"][:-len(_new)] + _old] = {_entry["name"]}
 
 # Drop groups with no members; Archipelago rejects empty location name groups.
-location_name_groups = {k: v for k, v in location_name_groups.items() if v}
+# Drop those named after a location too: a removed check keeps its old name.
+location_name_groups = {k: v for k, v in location_name_groups.items()
+                        if v and k not in location_name_to_id}
 
 
 class HalfLifeLocation(Location):

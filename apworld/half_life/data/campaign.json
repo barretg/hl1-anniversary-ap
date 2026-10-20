@@ -1,5 +1,5 @@
 {
- "data_version": "def5c8a98e4d",
+ "data_version": "3b209ec53a27",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -8467,42 +8467,6 @@
    ]
   },
   {
-   "id": 7761631,
-   "name": "On A Rail: Hand Grenade 1 (Part 3)",
-   "chapter": "c2a2",
-   "map": "c2a2b1",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c2a2b1",
-    "classname": "weapon_handgrenade",
-    "at": "-1972 756 124",
-    "source": "placed"
-   },
-   "position": [
-    -1972,
-    756,
-    124
-   ]
-  },
-  {
-   "id": 7761632,
-   "name": "On A Rail: Hand Grenade 2 (Part 3)",
-   "chapter": "c2a2",
-   "map": "c2a2b1",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c2a2b1",
-    "classname": "weapon_handgrenade",
-    "at": "-1956 724 124",
-    "source": "placed"
-   },
-   "position": [
-    -1956,
-    724,
-    124
-   ]
-  },
-  {
    "id": 7760578,
    "name": "On A Rail: MP5 Clip 1 (Part 3)",
    "chapter": "c2a2",
@@ -8599,24 +8563,6 @@
    "position": [
     1483,
     -1510,
-    227
-   ]
-  },
-  {
-   "id": 7760583,
-   "name": "On A Rail: Health Kit (Part 4)",
-   "chapter": "c2a2",
-   "map": "c2a2b2",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c2a2b2",
-    "classname": "item_healthkit",
-    "at": "1360 -1512 227",
-    "source": "placed"
-   },
-   "position": [
-    1360,
-    -1512,
     227
    ]
   },
@@ -8866,44 +8812,6 @@
     -32,
     -1316,
     944
-   ]
-  },
-  {
-   "id": 7760593,
-   "name": "On A Rail: Crate .357 Rounds 1 (Part 5)",
-   "chapter": "c2a2",
-   "map": "c2a2c",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c2a2c",
-    "classname": "func_breakable",
-    "at": "-1256 -2976 1244",
-    "source": "crate",
-    "drops": "ammo_357"
-   },
-   "position": [
-    -1258,
-    -2978,
-    1244
-   ]
-  },
-  {
-   "id": 7760594,
-   "name": "On A Rail: Crate .357 Rounds 2 (Part 5)",
-   "chapter": "c2a2",
-   "map": "c2a2c",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c2a2c",
-    "classname": "func_breakable",
-    "at": "-1464 -3096 1244",
-    "source": "crate",
-    "drops": "ammo_357"
-   },
-   "position": [
-    -1462,
-    -3094,
-    1244
    ]
   },
   {
@@ -10942,44 +10850,6 @@
    "position": [
     1552,
     -266,
-    224
-   ]
-  },
-  {
-   "id": 7760664,
-   "name": "Apprehension: Crate Health Kit 3 (Part 5)",
-   "chapter": "c2a3",
-   "map": "c2a3d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c2a3d",
-    "classname": "func_breakable",
-    "at": "1656 480 224",
-    "source": "crate",
-    "drops": "item_healthkit"
-   },
-   "position": [
-    1658,
-    480,
-    224
-   ]
-  },
-  {
-   "id": 7760665,
-   "name": "Apprehension: Crate Health Kit 4 (Part 5)",
-   "chapter": "c2a3",
-   "map": "c2a3d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c2a3d",
-    "classname": "func_breakable",
-    "at": "1904 480 224",
-    "source": "crate",
-    "drops": "item_healthkit"
-   },
-   "position": [
-    1902,
-    480,
     224
    ]
   },
@@ -13412,24 +13282,6 @@
    ]
   },
   {
-   "id": 7760756,
-   "name": "Surface Tension: Battery (Part 5)",
-   "chapter": "c2a5",
-   "map": "c2a5b",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c2a5b",
-    "classname": "item_battery",
-    "at": "784 -1176 88",
-    "source": "placed"
-   },
-   "position": [
-    784,
-    -1176,
-    88
-   ]
-  },
-  {
    "id": 7760757,
    "name": "Surface Tension: Crate Battery 1 (Part 5)",
    "chapter": "c2a5",
@@ -14006,25 +13858,6 @@
     "type": "map_reached",
     "map": "c2a5d"
    }
-  },
-  {
-   "id": 7760778,
-   "name": "Surface Tension: Crate Health Kit 1 (Part 7)",
-   "chapter": "c2a5",
-   "map": "c2a5d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c2a5d",
-    "classname": "func_breakable",
-    "at": "-184 -752 -288",
-    "source": "crate",
-    "drops": "item_healthkit"
-   },
-   "position": [
-    -183,
-    -751,
-    -288
-   ]
   },
   {
    "id": 7760779,
@@ -24834,60 +24667,6 @@
    }
   },
   {
-   "id": 7761165,
-   "name": "We Are Not Alone: Battery (Part 2)",
-   "chapter": "of3a1",
-   "map": "of3a1b",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of3a1b",
-    "classname": "item_battery",
-    "at": "960 1664 1616",
-    "source": "placed"
-   },
-   "position": [
-    960,
-    1664,
-    1616
-   ]
-  },
-  {
-   "id": 7761166,
-   "name": "We Are Not Alone: Health Kit 1 (Part 2)",
-   "chapter": "of3a1",
-   "map": "of3a1b",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of3a1b",
-    "classname": "item_healthkit",
-    "at": "976 1632 1616",
-    "source": "placed"
-   },
-   "position": [
-    976,
-    1632,
-    1616
-   ]
-  },
-  {
-   "id": 7761167,
-   "name": "We Are Not Alone: Health Kit 2 (Part 2)",
-   "chapter": "of3a1",
-   "map": "of3a1b",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of3a1b",
-    "classname": "item_healthkit",
-    "at": "112 192 -128",
-    "source": "placed"
-   },
-   "position": [
-    112,
-    192,
-    -128
-   ]
-  },
-  {
    "id": 7760283,
    "name": "We Are Not Alone: Part 3 Reached",
    "chapter": "of3a1",
@@ -25037,7 +24816,12 @@
     -2368,
     -1344,
     -320
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761170,
@@ -25055,7 +24839,12 @@
     -2496,
     -1280,
     -320
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761171,
@@ -25298,7 +25087,12 @@
     2464,
     -1972,
     2162
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761179,
@@ -25316,7 +25110,12 @@
     2990,
     -2044,
     2420
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761180,
@@ -25334,7 +25133,12 @@
     1664,
     -2944,
     2608
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761181,
@@ -25352,7 +25156,12 @@
     1746,
     -3016,
     2608
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761182,
@@ -25370,7 +25179,12 @@
     2432,
     -1872,
     2178
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761183,
@@ -25388,7 +25202,12 @@
     3072,
     -2054,
     2418
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761184,
@@ -25478,7 +25297,12 @@
     2378,
     -1934,
     2172
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760292,
@@ -25689,6 +25513,7 @@
    ],
    "gates": {
     "always": [
+     "displacer",
      "barnacle_grapple"
     ]
    }
@@ -26037,6 +25862,7 @@
    ],
    "gates": {
     "always": [
+     "displacer",
      "barnacle_grapple"
     ]
    }
@@ -26102,7 +25928,12 @@
     -3134,
     1168,
     576
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761205,
@@ -26120,7 +25951,12 @@
     -1890,
     2140,
     390
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761206,
@@ -26138,7 +25974,12 @@
     -3188,
     1200,
     576
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761207,
@@ -26156,7 +25997,12 @@
     -2416,
     2212,
     130
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761208,
@@ -26325,7 +26171,12 @@
     -1807,
     2124,
     387
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761217,
@@ -26759,7 +26610,12 @@
     -2476,
     2245,
     140
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760301,
@@ -26770,24 +26626,6 @@
     "type": "map_reached",
     "map": "of4a4"
    }
-  },
-  {
-   "id": 7761239,
-   "name": "Pit Worm's Nest: Battery 1 (Part 1)",
-   "chapter": "of4a4",
-   "map": "of4a4",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of4a4",
-    "classname": "item_battery",
-    "at": "-1344 -548 -556",
-    "source": "placed"
-   },
-   "position": [
-    -1344,
-    -548,
-    -556
-   ]
   },
   {
    "id": 7761240,
@@ -26845,63 +26683,6 @@
    ]
   },
   {
-   "id": 7761243,
-   "name": "Pit Worm's Nest: Crate Battery 2 (Part 1)",
-   "chapter": "of4a4",
-   "map": "of4a4",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of4a4",
-    "classname": "func_pushable",
-    "at": "-976 -192 -456",
-    "source": "crate",
-    "drops": "item_battery"
-   },
-   "position": [
-    -976,
-    -192,
-    -456
-   ]
-  },
-  {
-   "id": 7761244,
-   "name": "Pit Worm's Nest: Crate Battery 3 (Part 1)",
-   "chapter": "of4a4",
-   "map": "of4a4",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of4a4",
-    "classname": "func_pushable",
-    "at": "-944 16 -456",
-    "source": "crate",
-    "drops": "item_battery"
-   },
-   "position": [
-    -944,
-    16,
-    -456
-   ]
-  },
-  {
-   "id": 7761245,
-   "name": "Pit Worm's Nest: Crate Battery 4 (Part 1)",
-   "chapter": "of4a4",
-   "map": "of4a4",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of4a4",
-    "classname": "func_pushable",
-    "at": "-1364 -152 -456",
-    "source": "crate",
-    "drops": "item_battery"
-   },
-   "position": [
-    -1364,
-    -152,
-    -456
-   ]
-  },
-  {
    "id": 7761246,
    "name": "Pit Worm's Nest: Crate Health Kit 1 (Part 1)",
    "chapter": "of4a4",
@@ -26918,44 +26699,6 @@
     296,
     -752,
     96
-   ]
-  },
-  {
-   "id": 7761247,
-   "name": "Pit Worm's Nest: Crate Health Kit 2 (Part 1)",
-   "chapter": "of4a4",
-   "map": "of4a4",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of4a4",
-    "classname": "func_pushable",
-    "at": "-1184 -16 -456",
-    "source": "crate",
-    "drops": "item_healthkit"
-   },
-   "position": [
-    -1184,
-    -16,
-    -456
-   ]
-  },
-  {
-   "id": 7761248,
-   "name": "Pit Worm's Nest: Crate Health Kit 3 (Part 1)",
-   "chapter": "of4a4",
-   "map": "of4a4",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of4a4",
-    "classname": "func_pushable",
-    "at": "-1344 -436 -456",
-    "source": "crate",
-    "drops": "item_healthkit"
-   },
-   "position": [
-    -1344,
-    -436,
-    -456
    ]
   },
   {
@@ -27029,7 +26772,12 @@
     -1624,
     -2000,
     -2040
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761253,
@@ -27314,24 +27062,6 @@
    }
   },
   {
-   "id": 7761264,
-   "name": "Foxtrot Uniform: Battery 1 (Part 1)",
-   "chapter": "of5a1",
-   "map": "of5a1",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of5a1",
-    "classname": "item_battery",
-    "at": "-600 -100 168",
-    "source": "placed"
-   },
-   "position": [
-    -600,
-    -100,
-    168
-   ]
-  },
-  {
    "id": 7761265,
    "name": "Foxtrot Uniform: Battery 2 (Part 1)",
    "chapter": "of5a1",
@@ -27499,24 +27229,6 @@
     -2912,
     256,
     72
-   ]
-  },
-  {
-   "id": 7761274,
-   "name": "Foxtrot Uniform: Health Kit 1 (Part 1)",
-   "chapter": "of5a1",
-   "map": "of5a1",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of5a1",
-    "classname": "item_healthkit",
-    "at": "-784 -228 136",
-    "source": "placed"
-   },
-   "position": [
-    -784,
-    -228,
-    136
    ]
   },
   {
@@ -28405,25 +28117,12 @@
     2256,
     2916,
     130
-   ]
-  },
-  {
-   "id": 7761314,
-   "name": "Foxtrot Uniform: Battery 2 (Part 3)",
-   "chapter": "of5a1",
-   "map": "of5a3",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of5a3",
-    "classname": "item_battery",
-    "at": "2782 2844 388",
-    "source": "placed"
-   },
-   "position": [
-    2782,
-    2844,
-    388
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761315,
@@ -28459,24 +28158,6 @@
     -1616,
     -1896,
     80
-   ]
-  },
-  {
-   "id": 7761317,
-   "name": "Foxtrot Uniform: Health Kit 3 (Part 3)",
-   "chapter": "of5a1",
-   "map": "of5a3",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of5a3",
-    "classname": "item_healthkit",
-    "at": "2864 2834 386",
-    "source": "placed"
-   },
-   "position": [
-    2864,
-    2834,
-    386
    ]
   },
   {
@@ -28585,7 +28266,12 @@
     1488,
     1904,
     608
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761323,
@@ -28603,7 +28289,12 @@
     1536,
     1872,
     608
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761756,
@@ -28747,7 +28438,12 @@
     2170,
     2954,
     140
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7762049,
@@ -28898,7 +28594,12 @@
     3272,
     2368,
     -3788
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761330,
@@ -29035,7 +28736,8 @@
     "type": "soldier",
     "map": "of5a4",
     "classname": "monster_human_grunt_ally",
-    "at": "-1408 32 -64"
+    "at": "-1408 32 -64",
+    "critical": true
    },
    "position": [
     -1408,
@@ -29284,7 +28986,12 @@
     3102,
     3036,
     -1692
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761342,
@@ -29302,7 +29009,12 @@
     2576,
     3108,
     -1982
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761343,
@@ -29431,7 +29143,12 @@
     3184,
     3026,
     -1678
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761350,
@@ -29449,7 +29166,12 @@
     1808,
     2096,
     -1504
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761351,
@@ -29674,7 +29396,12 @@
     1856,
     2064,
     -1504
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761360,
@@ -29692,7 +29419,12 @@
     2490,
     3146,
     -1892
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760314,
@@ -29937,7 +29669,12 @@
     1544,
     -2240,
     -3916
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7761374,
@@ -30031,24 +29768,6 @@
     704,
     2208,
     -264
-   ]
-  },
-  {
-   "id": 7761994,
-   "name": "The Package: Rockets 1 (Part 3)",
-   "chapter": "of6a1",
-   "map": "of6a3",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "of6a3",
-    "classname": "ammo_rpgclip",
-    "at": "-2160 560 144",
-    "source": "placed"
-   },
-   "position": [
-    -2160,
-    560,
-    144
    ]
   },
   {
@@ -31289,7 +31008,12 @@
     -2528,
     -2653,
     -1092
-   ]
+   ],
+   "gates": {
+    "always": [
+     "displacer"
+    ]
+   }
   },
   {
    "id": 7760323,
@@ -35692,24 +35416,6 @@
     -128,
     826,
     -512
-   ]
-  },
-  {
-   "id": 7761581,
-   "name": "Power Struggle: 9mm Clip 2 (Part 2)",
-   "chapter": "ba_teleport2",
-   "map": "ba_power1",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "ba_power1",
-    "classname": "ammo_9mmclip",
-    "at": "635 943 -479",
-    "source": "placed"
-   },
-   "position": [
-    635,
-    943,
-    -479
    ]
   },
   {

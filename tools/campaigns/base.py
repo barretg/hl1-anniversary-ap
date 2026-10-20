@@ -75,9 +75,9 @@ class Campaign:
     weapon_source_gates: dict[str, dict[str, dict[str, list[str]]]] = field(
         default_factory=dict
     )
-    # Gates on single charger or pool checks, `{map: {"classname:*model":
-    # gates}}`, for one spot in a map that needs more than the map does (the
-    # displacer's Xen room).
+    # Gates on single charger, pool or pickup checks, `{map: {"classname:*model"
+    # or "classname@x y z": gates}}`, for one spot in a map that needs more
+    # than the map does (the displacer's Xen room).
     location_gates: dict[str, dict[str, dict[str, list[str]]]] = field(
         default_factory=dict
     )

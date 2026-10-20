@@ -16,6 +16,31 @@ LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     7760282: ("We Are Not Alone - Healing Pool (Part 2)", "of3a1b"),
     # Out of reach in play; in v0.3-pre.
     7760297: ("Vicarious Reality: Health Charger 3 (Part 2)", "of4a2"),
+    # Pickups out of reach in play; in v0.4-pre2.
+    7760583: ("On A Rail: Health Kit (Part 4)", "c2a2b2"),
+    7761631: ("On A Rail: Hand Grenade 1 (Part 3)", "c2a2b1"),
+    7761632: ("On A Rail: Hand Grenade 2 (Part 3)", "c2a2b1"),
+    7760593: ("On A Rail: Crate .357 Rounds 1 (Part 5)", "c2a2c"),
+    7760594: ("On A Rail: Crate .357 Rounds 2 (Part 5)", "c2a2c"),
+    7760664: ("Apprehension: Crate Health Kit 3 (Part 5)", "c2a3d"),
+    7760665: ("Apprehension: Crate Health Kit 4 (Part 5)", "c2a3d"),
+    7760756: ("Surface Tension: Battery (Part 5)", "c2a5b"),
+    7760778: ("Surface Tension: Crate Health Kit 1 (Part 7)", "c2a5d"),
+    7761239: ("Pit Worm's Nest: Battery 1 (Part 1)", "of4a4"),
+    7761243: ("Pit Worm's Nest: Crate Battery 2 (Part 1)", "of4a4"),
+    7761244: ("Pit Worm's Nest: Crate Battery 3 (Part 1)", "of4a4"),
+    7761245: ("Pit Worm's Nest: Crate Battery 4 (Part 1)", "of4a4"),
+    7761247: ("Pit Worm's Nest: Crate Health Kit 2 (Part 1)", "of4a4"),
+    7761248: ("Pit Worm's Nest: Crate Health Kit 3 (Part 1)", "of4a4"),
+    7761264: ("Foxtrot Uniform: Battery 1 (Part 1)", "of5a1"),
+    7761274: ("Foxtrot Uniform: Health Kit 1 (Part 1)", "of5a1"),
+    7761314: ("Foxtrot Uniform: Battery 2 (Part 3)", "of5a3"),
+    7761317: ("Foxtrot Uniform: Health Kit 3 (Part 3)", "of5a3"),
+    7761994: ("The Package: Rockets 1 (Part 3)", "of6a3"),
+    7761581: ("Power Struggle: 9mm Clip 2 (Part 2)", "ba_power1"),
+    7761165: ("We Are Not Alone: Battery (Part 2)", "of3a1b"),
+    7761166: ("We Are Not Alone: Health Kit 1 (Part 2)", "of3a1b"),
+    7761167: ("We Are Not Alone: Health Kit 2 (Part 2)", "of3a1b"),
 }
 
 # Checks a removed copy once counted toward, `{id: (map, slot_data key)}`. A seed

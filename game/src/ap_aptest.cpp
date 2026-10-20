@@ -89,7 +89,8 @@ bool ReadDestination(Destination& out) {
 }
 
 // Lines the harness wants shown, `hud|text` on screen and in the console,
-// `con|text` in the console only.
+// `con|text` in the console only. `trace|<id>` draws the trace line to that
+// check instead, as picking it in `!menu` does.
 void ShowSaid() {
     std::ifstream file(SayPath().c_str(), std::ios::binary);
     if (!file) {
@@ -124,6 +125,8 @@ void ShowSaid() {
             Notify(line.substr(4));
         } else if (StartsWith(line, "con|")) {
             ALERT(at_console, "%s\n", line.substr(4).c_str());
+        } else if (StartsWith(line, "trace|")) {
+            TraceById(ParseLong(line.substr(6)));
         }
     }
 }

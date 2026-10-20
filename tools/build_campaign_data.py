@@ -950,6 +950,7 @@ def build(
 
     enabled = ENABLED_LOCATION_TYPES
     gated_units: set[tuple[str, str]] = set()
+    skipped_pickups: set[tuple[str, str, tuple[int, int, int]]] = set()
 
     # No automatic exclusion for pickups: playtesting found nearly every one
     # a sealed-room fill or a trigger_hurt test dropped reachable, through a
@@ -1078,11 +1079,14 @@ def build(
                 if kind not in enabled:
                     continue
                 spawn = spawn_point(ents)
+                # Numbered before the unreachable ones are dropped, so dropping
+                # one never renames the rest of its group.
                 skip = campaign.unreachable_pickups.get(map_name, set())
-                pickups = [
-                    p for p in map_pickups(kind, ents, centres[map_name])
-                    if (p["classname"], p["at"]) not in skip
-                ]
+                pickups = map_pickups(kind, ents, centres[map_name])
+                skipped_pickups.update(
+                    (map_name, p["classname"], p["at"]) for p in pickups
+                    if (p["classname"], p["at"]) in skip
+                )
                 by_display: dict[str, list[dict]] = {}
                 for pickup in pickups:
                     by_display.setdefault(pickup["display"], []).append(pickup)
@@ -1093,6 +1097,8 @@ def build(
                                        p["at"], p["ordinal"]),
                     )
                     for number, pickup in enumerate(group, start=1):
+                        if (pickup["classname"], pickup["at"]) in skip:
+                            continue
                         count = f" {number}" if len(group) > 1 else ""
                         trigger = {
                             "type": kind, "map": map_name,
@@ -1106,6 +1112,11 @@ def build(
                             trigger["drops"] = pickup["drops"]
                         builder.add(chapter, map_name, f"{display}{count}{suffix}",
                                     trigger, position=pickup["position"])
+                        unit = f"{pickup['classname']}@{format_position(pickup['at'])}"
+                        gate = location_gates.get(map_name, {}).get(unit)
+                        if gate:
+                            builder.locations[-1]["gates"] = gate
+                            gated_units.add((map_name, unit))
 
             # Scientistsanity and Barneysanity: every placed NPC whose death is
             # fair game, numbered per kind like pickups. In an intro map the
@@ -1384,11 +1395,20 @@ def build(
             ]
 
     # A gate naming no check is a typo or a check some other test dropped.
-    if "charger" in enabled:
+    if "charger" in enabled and all(kind in enabled for kind in PICKUP_TRIGGERS):
         for map_name, keys in location_gates.items():
             for key in keys:
                 if (map_name, key) not in gated_units:
                     raise SystemExit(f"{map_name}: gate on {key}, which is no check")
+
+    # Likewise an unreachable pickup naming no pickup.
+    if all(kind in enabled for kind in PICKUP_TRIGGERS):
+        for campaign in campaigns:
+            for map_name, keys in campaign.unreachable_pickups.items():
+                for classname, at in keys:
+                    if (map_name, classname, at) not in skipped_pickups:
+                        raise SystemExit(f"{map_name}: unreachable {classname} "
+                                         f"at {format_position(at)}, which is no pickup")
 
     # Chapter completion always comes last so it reads last in the list.
     if "chapter_complete" in enabled:
