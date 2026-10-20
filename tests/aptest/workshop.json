@@ -104,19 +104,6 @@
    "after": "change_level"
   },
   {
-   "map": "c1a0e",
-   "model": "*91",
-   "classname": "func_door",
-   "targetname": "test_lab_entry_door",
-   "at": [
-    1556.0,
-    -151.0,
-    -324.0
-   ],
-   "note": "list",
-   "after": "change_level"
-  },
-  {
    "map": "c1a0b",
    "model": "*57",
    "classname": "func_door",
@@ -187,6 +174,19 @@
     -108.0
    ],
    "note": ""
+  },
+  {
+   "map": "c1a0e",
+   "model": "*91",
+   "classname": "func_door",
+   "targetname": "test_lab_entry_door",
+   "at": [
+    1480.0,
+    -142.0,
+    -312.0
+   ],
+   "note": "",
+   "after": "change_level"
   }
  ]
 }

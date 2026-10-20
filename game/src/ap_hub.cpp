@@ -1019,6 +1019,20 @@ void RunSeamDoors() {
         if (static_cast<CBaseToggle*>(entity)->m_toggle_state != TS_AT_BOTTOM) {
             continue;
         }
+        // A door given an opener in testing is the opener's to open: its side
+        // and its wait on a sequence (c1a0e's airlock, after the cascade).
+        const std::string model = STRING(entity->pev->model);
+        bool has_opener = false;
+        for (const auto& door : State().door_openers) {
+            has_opener = has_opener ||
+                         (door.first == STRING(gpGlobals->mapname) &&
+                          door.second.substr(0, door.second.find(',')) == model);
+        }
+        if (has_opener) {
+            Trace(("  seam door " + std::string(STRING(entity->pev->globalname)) +
+                   " left to its opener").c_str());
+            continue;
+        }
         Trace(("  opening seam door " + std::string(STRING(entity->pev->globalname)))
                   .c_str());
         entity->Use(player, player, USE_ON, 0);
