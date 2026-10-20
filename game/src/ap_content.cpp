@@ -2,6 +2,7 @@
 #include "util.h"
 #include "cbase.h"
 
+#include "ap_aptest.h"
 #include "ap_content.h"
 #include "ap_locations.h"
 #include "ap_main.h"
@@ -440,6 +441,7 @@ void BeginMapContent() {
 }
 
 void RemapSpawn(entvars_t* pev) {
+    RemapTestSpawn(pev);
     // env_message shows a titles.txt message by key; the credits and chapter
     // lines are keys Half-Life uses for its own text. At spawn rather than as
     // the key is read, since maps often list `classname` after `message`.

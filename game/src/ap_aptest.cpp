@@ -367,6 +367,23 @@ void Cmd_Test() {
 }  // namespace
 #endif
 
+void RemapTestSpawn(entvars_t* pev) {
+#ifdef HLAP_TEST_BUILD
+    if (pev == nullptr || !g_arriving || g_destination.manual || !g_destination.load.empty() ||
+        !g_destination.has_position || !FClassnameIs(pev, "info_player_start") ||
+        g_destination.map != STRING(gpGlobals->mapname)) {
+        return;
+    }
+    pev->origin = Vector(g_destination.position[0], g_destination.position[1],
+                         g_destination.position[2]);
+    if (g_destination.has_yaw) {
+        pev->angles = Vector(0, g_destination.yaw, 0);
+    }
+#else
+    (void)pev;
+#endif
+}
+
 bool TestDispatch(const std::string& name, const std::string& rest) {
 #ifdef HLAP_TEST_BUILD
     if (name == "tp") {
@@ -467,6 +484,11 @@ void RunTestHarness() {
     // logic have run.
     if (g_alive_since < 0.0f) {
         g_alive_since = gpGlobals->time;
+        // Off the map's spawn at once as well, before a trigger there is
+        // touched; placed again below once the level has settled.
+        if (!g_destination.manual && !loaded) {
+            Teleport();
+        }
         return;
     }
     if (gpGlobals->time - g_alive_since < 1.0f) {

@@ -35,4 +35,9 @@ bool TestDispatch(const std::string& name, const std::string& rest);
 // places the player once they have spawned.
 void RunTestHarness();
 
+// As each entity spawns: a scenario starting on a fresh map moves the map's
+// spawn point to its spot, so the player never stands where the map spawns
+// them (c1a0e's airlock trigger). Nothing in a release build.
+void RemapTestSpawn(entvars_t* pev);
+
 }  // namespace ap
