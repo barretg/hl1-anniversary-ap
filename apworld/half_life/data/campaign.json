@@ -465,7 +465,9 @@
    "gates": {
     "strict": [
      "tau_cannon",
-     "rpg"
+     "rpg",
+     "other_gun",
+     "other_explosive"
     ],
     "always": [
      "suit"
@@ -39139,6 +39141,21 @@
   ],
   "flashlight": [
    "Flashlight"
+  ],
+  "other_gun": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Shotgun",
+   "Crossbow",
+   "Gluon Gun",
+   "Hivehand",
+   "Snarks"
+  ],
+  "other_explosive": [
+   "Hand Grenade",
+   "Satchel Charge",
+   "Tripmine"
   ],
   "barnacle_grapple": [
    "Barnacle Grapple"

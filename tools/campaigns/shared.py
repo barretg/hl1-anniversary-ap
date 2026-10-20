@@ -249,6 +249,11 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "not_rpg": list(dict.fromkeys(
         w for w in RANGED_WEAPONS + HEAVY_WEAPONS + EXPLOSIVES if w != "RPG")),
     "flashlight": ["Flashlight"],
+    # Nihilanth's extras on top of the Tau cannon and the RPG it names: a third
+    # gun and a second explosive, neither of which those two can stand in for.
+    "other_gun": list(dict.fromkeys(
+        w for w in RANGED_WEAPONS + HEAVY_WEAPONS if w not in ("Tau Cannon", "RPG"))),
+    "other_explosive": [w for w in EXPLOSIVES if w != "RPG"],
 }
 
 # --- Weapon drops ---------------------------------------------------------

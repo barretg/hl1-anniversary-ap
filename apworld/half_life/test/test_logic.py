@@ -202,6 +202,21 @@ class TestXenWeapons(HalfLifeTestBase):
                     f"{chapter} is reachable without the {missing}",
                 )
 
+    def test_nihilanth_needs_another_gun_and_another_explosive(self) -> None:
+        """On top of the Tau cannon and the RPG, which cannot count for either."""
+        world = self.multiworld.worlds[self.player]
+        guns = ["Glock", ".357 Magnum", "MP5", "Shotgun", "Crossbow", "Gluon Gun",
+                "Hivehand", "Snarks"]
+        for missing in (guns, ["Hand Grenade", "Satchel Charge", "Tripmine"]):
+            state = self.multiworld.get_all_state(False)
+            for name in missing:
+                while state.has(name, self.player):
+                    state.remove(world.create_item(name))
+            state.sweep_for_advancements()
+            self.assertTrue(state.can_reach_entrance("Enter Interloper", self.player))
+            self.assertFalse(state.can_reach_entrance("Enter Nihilanth", self.player),
+                             f"Nihilanth is reachable without any of {missing}")
+
     def test_the_rest_of_the_campaign_is_not_tightened(self) -> None:
         """Only Xen onward names weapons; Surface Tension still takes any gun."""
         world = self.multiworld.worlds[self.player]

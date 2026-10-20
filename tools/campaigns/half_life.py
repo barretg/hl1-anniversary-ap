@@ -135,7 +135,9 @@ CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "c4a1": {"strict": ["tau_cannon", "rpg", "longjump"], "always": ["suit"]},
     "c4a2": {"strict": ["tau_cannon", "rpg"], "always": ["suit"]},
     "c4a1a": {"strict": ["tau_cannon", "rpg"], "always": ["suit"]},
-    "c4a3": {"strict": ["tau_cannon", "rpg"], "always": ["suit"]},
+    # Nihilanth on strict also wants another gun and another explosive.
+    "c4a3": {"strict": ["tau_cannon", "rpg", "other_gun", "other_explosive"],
+             "always": ["suit"]},
 }
 
 # Gates from a later map of a mission on, `{map: gates}`.
