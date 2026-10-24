@@ -242,6 +242,22 @@ OPTIONAL_ITEMS: dict[str, list[str]] = {
 # now found by `pocketed_chargers`.
 UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {}
 
+# Gates on single pickup checks, `{map: {"classname@x y z": gates}}`.
+# Office Complex part 5: these sit where only something with range gets them,
+# confirmed in play.
+_ANY_RANGED = {"always": ["any_ranged"]}
+LOCATION_GATES: dict[str, dict[str, dict[str, list[str]]]] = {
+    "c1a2d": {
+        "item_healthkit@262 -2332 -537": _ANY_RANGED,
+        "ammo_glockclip@95 -2318 -533": _ANY_RANGED,
+        "ammo_glockclip@95 -2350 -533": _ANY_RANGED,
+        "ammo_buckshot@354 -2078 -525": _ANY_RANGED,
+        "ammo_buckshot@113 -2221 -525": _ANY_RANGED,
+        "ammo_buckshot@110 -2233 -525": _ANY_RANGED,
+        "ammo_buckshot@113 -2253 -525": _ANY_RANGED,
+    },
+}
+
 # Pickups no player can reach, as `{map: {(classname, (x, y, z))}}`: the origin
 # for a placed one, the crate and its key position for one a crate drops. All
 # confirmed out of reach in play.
@@ -331,7 +347,7 @@ NPC_PARTS: dict[str, dict[tuple[str, tuple[int, int, int]], str]] = {
 NPC_GATES = {
     # Unforeseen Consequences part 5: the scientist hiding in the dumpster. The
     # lid keeps a melee swing from reaching him.
-    "c1a1b": {("monster_scientist", (1284, -1024, -268)): {"always": ["ranged"]}},
+    "c1a1b": {("monster_scientist", (1284, -1024, -268)): _ANY_RANGED},
 }
 
 # The break room microwave. Five buttons share its panel, each mastered by the
@@ -370,6 +386,7 @@ HALF_LIFE = Campaign(
     melee=STARTING_WEAPONS,
     unreachable=UNREACHABLE_CHARGERS,
     unreachable_pickups=UNREACHABLE_PICKUPS,
+    location_gates=LOCATION_GATES,
     unkillable_npcs=UNKILLABLE_NPCS,
     generic_npcs=GENERIC_NPCS,
     killable_npcs=KILLABLE_NPCS,

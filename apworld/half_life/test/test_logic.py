@@ -364,6 +364,35 @@ class TestPickupsIncluded(HalfLifeTestBase):
         for key in SANITY_KEYS:
             self.assertTrue(slot_data[key])
 
+    def test_office_complex_part_5_pickups_need_any_ranged_weapon(self) -> None:
+        from ..data import REQUIREMENT_GROUPS
+        world = self.multiworld.worlds[self.player]
+        names = [f"Office Complex: {n} (Part 5)" for n in
+                 ("Health Kit", "9mm Clip 1", "9mm Clip 2", "Shotgun Shells 2",
+                  "Shotgun Shells 3", "Shotgun Shells 4", "Shotgun Shells 5")]
+        for name, passes in ((None, False), ("Hand Grenade", True), ("Glock", True)):
+            with self.subTest(name):
+                state = self.multiworld.get_all_state(False)
+                for item in state.multiworld.itempool:
+                    if (item.player == self.player
+                            and item.name in REQUIREMENT_GROUPS["any_ranged"]):
+                        state.remove(item)
+                if name:
+                    state.collect(world.create_item(name))
+                state.sweep_for_advancements()
+                self.assertTrue(state.can_reach_region("c1a2d", self.player))
+                for location in names:
+                    self.assertEqual(
+                        self.multiworld.get_location(location, self.player).can_reach(state),
+                        passes, location)
+
+    def test_unreachable_crate_is_no_check(self) -> None:
+        from ..locations import location_name_to_id
+        name = "Welcome To Black Mesa: Crate Health Kit 1 (Part 2)"
+        names = {location.name for location in self.multiworld.get_locations(self.player)}
+        self.assertNotIn(name, names)
+        self.assertEqual(location_name_to_id[name], 7761068)
+
 
 class TestNpcsWithIntros(HalfLifeTestBase):
     """The intro rides' NPCs are in, and each waits on a gun."""

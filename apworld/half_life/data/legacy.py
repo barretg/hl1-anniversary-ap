@@ -41,6 +41,7 @@ LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     7761165: ("We Are Not Alone: Battery (Part 2)", "of3a1b"),
     7761166: ("We Are Not Alone: Health Kit 1 (Part 2)", "of3a1b"),
     7761167: ("We Are Not Alone: Health Kit 2 (Part 2)", "of3a1b"),
+    7761068: ("Welcome To Black Mesa: Crate Health Kit 1 (Part 2)", "of1a2"),
 }
 
 # Checks a removed copy once counted toward, `{id: (map, slot_data key)}`. A seed

@@ -88,6 +88,7 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "heavy": ["M249", "Sniper Rifle"],
     "explosives": ["Spore Launcher"],
     "not_rpg": _RANGED_WEAPONS,
+    "any_ranged": _RANGED_WEAPONS,
     "underwater": ["Desert Eagle"],
     "barnacle_grapple": ["Barnacle Grapple"],
     "displacer": ["Displacer Cannon"],
@@ -266,8 +267,13 @@ UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 
 # Pickups no player can reach, as `{map: {(classname, (x, y, z))}}`.
 UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
-    # Welcome To Black Mesa part 2: inside a lethal trigger_hurt, confirmed in play.
-    "of1a2": {("ammo_357", (320, -2608, -1808))},
+    # Welcome To Black Mesa part 2: the .357 is inside a lethal trigger_hurt;
+    # the crate dropping Crate Health Kit 1 cannot be reached. Both confirmed
+    # in play.
+    "of1a2": {
+        ("ammo_357", (320, -2608, -1808)),
+        ("func_breakable", (-944, -2960, 112)),
+    },
     # We Are Not Alone part 2: none of its pickups can be reached.
     "of3a1b": {
         ("item_battery", (960, 1664, 1616)),

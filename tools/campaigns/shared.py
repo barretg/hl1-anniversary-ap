@@ -249,6 +249,8 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "not_rpg": list(dict.fromkeys(
         w for w in RANGED_WEAPONS + HEAVY_WEAPONS + EXPLOSIVES if w != "RPG")),
     "flashlight": ["Flashlight"],
+    # Anything that reaches past arm's length: every weapon but the melee ones.
+    "any_ranged": list(dict.fromkeys(RANGED_WEAPONS + HEAVY_WEAPONS + EXPLOSIVES)),
 }
 
 # --- Weapon drops ---------------------------------------------------------

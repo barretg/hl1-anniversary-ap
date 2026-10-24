@@ -1,5 +1,5 @@
 {
- "data_version": "3b209ec53a27",
+ "data_version": "b7511f42d6e7",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -4827,7 +4827,12 @@
     262,
     -2332,
     -537
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7760473,
@@ -4845,7 +4850,12 @@
     95,
     -2318,
     -533
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7760474,
@@ -4863,7 +4873,12 @@
     95,
     -2350,
     -533
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7760475,
@@ -4899,7 +4914,12 @@
     354,
     -2078,
     -525
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7760477,
@@ -4917,7 +4937,12 @@
     113,
     -2221,
     -525
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7760478,
@@ -4935,7 +4960,12 @@
     110,
     -2233,
     -525
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7760479,
@@ -4953,7 +4983,12 @@
     113,
     -2253,
     -525
-   ]
+   ],
+   "gates": {
+    "always": [
+     "any_ranged"
+    ]
+   }
   },
   {
    "id": 7761874,
@@ -21880,25 +21915,6 @@
     2200,
     220,
     -104
-   ]
-  },
-  {
-   "id": 7761068,
-   "name": "Welcome To Black Mesa: Crate Health Kit 1 (Part 2)",
-   "chapter": "of1a1",
-   "map": "of1a2",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of1a2",
-    "classname": "func_breakable",
-    "at": "-944 -2960 112",
-    "source": "crate",
-    "drops": "item_healthkit"
-   },
-   "position": [
-    -944,
-    -2960,
-    112
    ]
   },
   {
@@ -38830,6 +38846,27 @@
   ],
   "flashlight": [
    "Flashlight"
+  ],
+  "any_ranged": [
+   "Glock",
+   ".357 Magnum",
+   "MP5",
+   "Shotgun",
+   "Crossbow",
+   "Tau Cannon",
+   "Gluon Gun",
+   "Hivehand",
+   "Snarks",
+   "RPG",
+   "Hand Grenade",
+   "Satchel Charge",
+   "Tripmine",
+   "Desert Eagle",
+   "M249",
+   "Sniper Rifle",
+   "Shock Roach",
+   "Spore Launcher",
+   "Displacer Cannon"
   ],
   "barnacle_grapple": [
    "Barnacle Grapple"

@@ -34,7 +34,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|3b209ec53a27
+D|b7511f42d6e7
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -267,14 +267,14 @@ L|7761873|c1a2c|scientist|monster_scientist@-2308 -1594 -200|Office Complex: Fre
 L|7760044|c1a2d|map_reached||Office Complex: Part 5 Reached
 L|7760470|c1a2d|heal_pickup|func_breakable@464 -2080 -688|Office Complex: Crate Battery (Part 5)|462 -2080 -688
 L|7760471|c1a2d|heal_pickup|func_breakable@1000 -1996 -688|Office Complex: Crate Health Kit (Part 5)|1000 -1996 -688
-L|7760472|c1a2d|heal_pickup|item_healthkit@262 -2332 -537|Office Complex: Health Kit (Part 5)|262 -2332 -537
-L|7760473|c1a2d|ammo_pickup|ammo_glockclip@95 -2318 -533|Office Complex: 9mm Clip 1 (Part 5)|95 -2318 -533
-L|7760474|c1a2d|ammo_pickup|ammo_glockclip@95 -2350 -533|Office Complex: 9mm Clip 2 (Part 5)|95 -2350 -533
+L|7760472|c1a2d|heal_pickup|item_healthkit@262 -2332 -537|Office Complex: Health Kit (Part 5)|262 -2332 -537|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7760473|c1a2d|ammo_pickup|ammo_glockclip@95 -2318 -533|Office Complex: 9mm Clip 1 (Part 5)|95 -2318 -533|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7760474|c1a2d|ammo_pickup|ammo_glockclip@95 -2350 -533|Office Complex: 9mm Clip 2 (Part 5)|95 -2350 -533|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7760475|c1a2d|ammo_pickup|ammo_buckshot@931 -1868 -519|Office Complex: Shotgun Shells 1 (Part 5)|931 -1868 -519
-L|7760476|c1a2d|ammo_pickup|ammo_buckshot@354 -2078 -525|Office Complex: Shotgun Shells 2 (Part 5)|354 -2078 -525
-L|7760477|c1a2d|ammo_pickup|ammo_buckshot@113 -2221 -525|Office Complex: Shotgun Shells 3 (Part 5)|113 -2221 -525
-L|7760478|c1a2d|ammo_pickup|ammo_buckshot@110 -2233 -525|Office Complex: Shotgun Shells 4 (Part 5)|110 -2233 -525
-L|7760479|c1a2d|ammo_pickup|ammo_buckshot@113 -2253 -525|Office Complex: Shotgun Shells 5 (Part 5)|113 -2253 -525
+L|7760476|c1a2d|ammo_pickup|ammo_buckshot@354 -2078 -525|Office Complex: Shotgun Shells 2 (Part 5)|354 -2078 -525|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7760477|c1a2d|ammo_pickup|ammo_buckshot@113 -2221 -525|Office Complex: Shotgun Shells 3 (Part 5)|113 -2221 -525|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7760478|c1a2d|ammo_pickup|ammo_buckshot@110 -2233 -525|Office Complex: Shotgun Shells 4 (Part 5)|110 -2233 -525|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
+L|7760479|c1a2d|ammo_pickup|ammo_buckshot@113 -2253 -525|Office Complex: Shotgun Shells 5 (Part 5)|113 -2253 -525|Glock or .357 Magnum or MP5 or Shotgun or Crossbow or Tau Cannon or Gluon Gun or Hivehand or Snarks or RPG or Hand Grenade or Satchel Charge or Tripmine or Desert Eagle or M249 or Sniper Rifle or Shock Roach or Spore Launcher or Displacer Cannon
 L|7761874|c1a2d|barney|monster_barney@350 -2031 -576|Office Complex: Dueling Barney (Part 5)|350 -2031 -576
 L|7760045|c1a3|map_reached||We've Got Hostiles: Part 1 Reached
 L|7760046|c1a3|charger|func_healthcharger@4 1200 56|We've Got Hostiles: Health Charger 1 (Part 1)|4 1200 56
@@ -1249,7 +1249,6 @@ L|7762037|of1a1|soldier|monster_human_grunt_ally@-576 3048 0|Welcome To Black Me
 L|7760259|of1a2|map_reached||Welcome To Black Mesa: Part 2 Reached
 L|7761066|of1a2|heal_pickup|item_battery@336 -592 -176|Welcome To Black Mesa: Battery 1 (Part 2)|336 -592 -176
 L|7761067|of1a2|heal_pickup|item_battery@2200 220 -104|Welcome To Black Mesa: Battery 2 (Part 2)|2200 220 -104
-L|7761068|of1a2|heal_pickup|func_breakable@-944 -2960 112|Welcome To Black Mesa: Crate Health Kit 1 (Part 2)|-944 -2960 112
 L|7761069|of1a2|heal_pickup|func_breakable@224 608 -136|Welcome To Black Mesa: Crate Health Kit 2 (Part 2)|224 608 -136
 L|7761070|of1a2|heal_pickup|func_breakable@1056 2064 -136|Welcome To Black Mesa: Crate Health Kit 3 (Part 2)|1056 2064 -136
 L|7761071|of1a2|heal_pickup|func_breakable@992 2128 -136|Welcome To Black Mesa: Crate Health Kit 4 (Part 2)|992 2128 -136
