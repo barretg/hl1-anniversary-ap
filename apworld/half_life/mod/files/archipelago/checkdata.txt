@@ -34,7 +34,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|bbd5a9b8c365
+D|c5d75034ed75
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -994,12 +994,10 @@ L|7760189|c3a2c|map_reached||Lambda Core: Part 5 Reached
 L|7760190|c3a2c|charger|func_healthcharger@560 604 -1352|Lambda Core: Health Charger (Part 5)|560 604 -1352
 L|7760915|c3a2c|heal_pickup|item_battery@-260 916 -2088|Lambda Core: Battery 1 (Part 5)|-260 916 -2088
 L|7760916|c3a2c|heal_pickup|item_battery@-300 916 -2088|Lambda Core: Battery 2 (Part 5)|-300 916 -2088
-L|7760917|c3a2c|heal_pickup|item_battery@-340 916 -2174|Lambda Core: Battery 3 (Part 5)|-340 916 -2174
 L|7760918|c3a2c|heal_pickup|item_battery@1384 -868 -1624|Lambda Core: Battery 4 (Part 5)|1384 -868 -1624
 L|7760919|c3a2c|heal_pickup|item_battery@1384 -948 -1624|Lambda Core: Battery 5 (Part 5)|1384 -948 -1624
 L|7761969|c3a2c|heal_pickup|item_battery@144 792 -984|Lambda Core: Battery 6 (Part 5)|144 792 -984
 L|7761970|c3a2c|heal_pickup|item_battery@168 792 -936|Lambda Core: Battery 7 (Part 5)|168 792 -936
-L|7760920|c3a2c|heal_pickup|item_battery@-680 892 -1024|Lambda Core: Battery 8 (Part 5)|-680 892 -1024
 L|7760921|c3a2c|heal_pickup|item_battery@-680 872 -984|Lambda Core: Battery 9 (Part 5)|-680 872 -984
 L|7760922|c3a2c|heal_pickup|item_battery@-680 912 -936|Lambda Core: Battery 10 (Part 5)|-680 912 -936
 L|7760923|c3a2c|heal_pickup|item_healthkit@-264 916 -1408|Lambda Core: Health Kit 1 (Part 5)|-264 916 -1408
@@ -1014,11 +1012,9 @@ L|7760928|c3a2c|heal_pickup|item_healthkit@-680 828 -984|Lambda Core: Health Kit
 L|7760929|c3a2c|heal_pickup|item_healthkit@-680 912 -984|Lambda Core: Health Kit 10 (Part 5)|-680 912 -984
 L|7760930|c3a2c|ammo_pickup|ammo_357@-260 916 -2132|Lambda Core: .357 Rounds 1 (Part 5)|-260 916 -2132
 L|7760931|c3a2c|ammo_pickup|ammo_357@-340 916 -2132|Lambda Core: .357 Rounds 2 (Part 5)|-340 916 -2132
-L|7760932|c3a2c|ammo_pickup|ammo_357@-304 916 -2174|Lambda Core: .357 Rounds 3 (Part 5)|-304 916 -2174
 L|7760933|c3a2c|ammo_pickup|ammo_357@1384 -948 -1580|Lambda Core: .357 Rounds 4 (Part 5)|1384 -948 -1580
 L|7761698|c3a2c|ammo_pickup|weapon_handgrenade@1064 200 -1368|Lambda Core: Hand Grenade 1 (Part 5)|1064 200 -1368
 L|7761699|c3a2c|ammo_pickup|weapon_handgrenade@1048 168 -1368|Lambda Core: Hand Grenade 2 (Part 5)|1048 168 -1368
-L|7760934|c3a2c|ammo_pickup|ammo_ARgrenades@-266 916 -2174|Lambda Core: MP5 Grenades (Part 5)|-266 916 -2174
 L|7761700|c3a2c|ammo_pickup|weapon_satchel@1384 -764 -1664|Lambda Core: Satchel Charge 1 (Part 5)|1384 -764 -1664
 L|7761701|c3a2c|ammo_pickup|weapon_satchel@1384 -884 -1580|Lambda Core: Satchel Charge 2 (Part 5)|1384 -884 -1580
 L|7760935|c3a2c|ammo_pickup|ammo_buckshot@-340 916 -2088|Lambda Core: Shotgun Shells 1 (Part 5)|-340 916 -2088
@@ -1038,14 +1034,10 @@ L|7760192|c3a2d|map_reached||Lambda Core: Part 7 Reached
 L|7760193|c3a2d|charger|func_healthcharger@1700 124 -200|Lambda Core: Health Charger (Part 7)|1700 124 -200
 L|7760194|c3a2d|charger|func_recharge@1636 124 -200|Lambda Core: HEV Charger (Part 7)|1636 124 -200
 L|7760943|c3a2d|heal_pickup|item_battery@712 -1104 -768|Lambda Core: Battery 1 (Part 7)|712 -1104 -768
-L|7760944|c3a2d|heal_pickup|item_battery@752 -1104 -768|Lambda Core: Battery 2 (Part 7)|752 -1104 -768
-L|7761974|c3a2d|heal_pickup|item_battery@1688 -744 -256|Lambda Core: Battery 3 (Part 7)|1688 -744 -256
-L|7761975|c3a2d|heal_pickup|item_battery@1688 -600 -256|Lambda Core: Battery 4 (Part 7)|1688 -600 -256
 L|7760945|c3a2d|heal_pickup|item_healthkit@1432 -648 -256|Lambda Core: Health Kit 1 (Part 7)|1432 -648 -256
 L|7760946|c3a2d|heal_pickup|item_healthkit@1528 -696 -212|Lambda Core: Health Kit 2 (Part 7)|1528 -696 -212
 L|7760947|c3a2d|heal_pickup|item_healthkit@1528 -656 -212|Lambda Core: Health Kit 3 (Part 7)|1528 -656 -212
 L|7760948|c3a2d|ammo_pickup|ammo_357@1268 -320 -208|Lambda Core: .357 Rounds 1 (Part 7)|1268 -320 -208
-L|7760949|c3a2d|ammo_pickup|ammo_357@1304 -320 -208|Lambda Core: .357 Rounds 2 (Part 7)|1304 -320 -208
 L|7760950|c3a2d|ammo_pickup|ammo_357@1688 -640 -164|Lambda Core: .357 Rounds 3 (Part 7)|1688 -640 -164
 L|7760951|c3a2d|ammo_pickup|ammo_crossbow@1688 -704 -208|Lambda Core: Crossbow Bolts 1 (Part 7)|1688 -704 -208
 L|7760952|c3a2d|ammo_pickup|ammo_crossbow@1688 -640 -208|Lambda Core: Crossbow Bolts 2 (Part 7)|1688 -640 -208
@@ -1062,14 +1054,9 @@ L|7760958|c3a2d|ammo_pickup|ammo_buckshot@1144 -683 -224|Lambda Core: Shotgun Sh
 L|7760959|c3a2d|ammo_pickup|ammo_buckshot@1432 -696 -256|Lambda Core: Shotgun Shells 2 (Part 7)|1432 -696 -256
 L|7760960|c3a2d|ammo_pickup|ammo_buckshot@1652 -744 -248|Lambda Core: Shotgun Shells 3 (Part 7)|1652 -744 -248
 L|7760961|c3a2d|ammo_pickup|ammo_buckshot@1688 -744 -208|Lambda Core: Shotgun Shells 4 (Part 7)|1688 -744 -208
-L|7761977|c3a2d|ammo_pickup|weapon_tripmine@1528 -640 -248|Lambda Core: Tripmine 1 (Part 7)|1528 -640 -248
-L|7761978|c3a2d|ammo_pickup|weapon_tripmine@1528 -600 -248|Lambda Core: Tripmine 2 (Part 7)|1528 -600 -248
 L|7761705|c3a2d|ammo_pickup|weapon_tripmine@1528 -716 -160|Lambda Core: Tripmine 3 (Part 7)|1528 -716 -160
-L|7760962|c3a2d|ammo_pickup|ammo_gaussclip@1432 -744 -256|Lambda Core: Uranium 1 (Part 7)|1432 -744 -256
 L|7760963|c3a2d|ammo_pickup|ammo_gaussclip@1232 -312 -208|Lambda Core: Uranium 2 (Part 7)|1232 -312 -208
 L|7760964|c3a2d|ammo_pickup|ammo_gaussclip@1232 -264 -208|Lambda Core: Uranium 3 (Part 7)|1232 -264 -208
-L|7761979|c3a2d|ammo_pickup|ammo_gaussclip@1688 -680 -256|Lambda Core: Uranium 4 (Part 7)|1688 -680 -256
-L|7761980|c3a2d|ammo_pickup|ammo_gaussclip@1688 -640 -256|Lambda Core: Uranium 5 (Part 7)|1688 -640 -256
 L|7760965|c3a2d|ammo_pickup|weaponbox@1584 -696 -248|Lambda Core: Weapon Box 1 (Part 7)|1584 -696 -248
 L|7760966|c3a2d|ammo_pickup|weaponbox@1584 -640 -248|Lambda Core: Weapon Box 2 (Part 7)|1584 -640 -248
 L|7762015|c3a2d|scientist|monster_scientist@2 -798 64|Lambda Core: C3a2 Portsci (Part 7)|2 -798 64

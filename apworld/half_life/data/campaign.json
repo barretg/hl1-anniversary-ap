@@ -1,5 +1,5 @@
 {
- "data_version": "bbd5a9b8c365",
+ "data_version": "c5d75034ed75",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -17553,24 +17553,6 @@
    ]
   },
   {
-   "id": 7760917,
-   "name": "Lambda Core: Battery 3 (Part 5)",
-   "chapter": "c3a2e",
-   "map": "c3a2c",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c3a2c",
-    "classname": "item_battery",
-    "at": "-340 916 -2174",
-    "source": "placed"
-   },
-   "position": [
-    -340,
-    916,
-    -2174
-   ]
-  },
-  {
    "id": 7760918,
    "name": "Lambda Core: Battery 4 (Part 5)",
    "chapter": "c3a2e",
@@ -17640,24 +17622,6 @@
     168,
     792,
     -936
-   ]
-  },
-  {
-   "id": 7760920,
-   "name": "Lambda Core: Battery 8 (Part 5)",
-   "chapter": "c3a2e",
-   "map": "c3a2c",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c3a2c",
-    "classname": "item_battery",
-    "at": "-680 892 -1024",
-    "source": "placed"
-   },
-   "position": [
-    -680,
-    892,
-    -1024
    ]
   },
   {
@@ -17913,24 +17877,6 @@
    ]
   },
   {
-   "id": 7760932,
-   "name": "Lambda Core: .357 Rounds 3 (Part 5)",
-   "chapter": "c3a2e",
-   "map": "c3a2c",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2c",
-    "classname": "ammo_357",
-    "at": "-304 916 -2174",
-    "source": "placed"
-   },
-   "position": [
-    -304,
-    916,
-    -2174
-   ]
-  },
-  {
    "id": 7760933,
    "name": "Lambda Core: .357 Rounds 4 (Part 5)",
    "chapter": "c3a2e",
@@ -17982,24 +17928,6 @@
     1048,
     168,
     -1368
-   ]
-  },
-  {
-   "id": 7760934,
-   "name": "Lambda Core: MP5 Grenades (Part 5)",
-   "chapter": "c3a2e",
-   "map": "c3a2c",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2c",
-    "classname": "ammo_ARgrenades",
-    "at": "-266 916 -2174",
-    "source": "placed"
-   },
-   "position": [
-    -266,
-    916,
-    -2174
    ]
   },
   {
@@ -18323,60 +18251,6 @@
    ]
   },
   {
-   "id": 7760944,
-   "name": "Lambda Core: Battery 2 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c3a2d",
-    "classname": "item_battery",
-    "at": "752 -1104 -768",
-    "source": "placed"
-   },
-   "position": [
-    752,
-    -1104,
-    -768
-   ]
-  },
-  {
-   "id": 7761974,
-   "name": "Lambda Core: Battery 3 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c3a2d",
-    "classname": "item_battery",
-    "at": "1688 -744 -256",
-    "source": "placed"
-   },
-   "position": [
-    1688,
-    -744,
-    -256
-   ]
-  },
-  {
-   "id": 7761975,
-   "name": "Lambda Core: Battery 4 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c3a2d",
-    "classname": "item_battery",
-    "at": "1688 -600 -256",
-    "source": "placed"
-   },
-   "position": [
-    1688,
-    -600,
-    -256
-   ]
-  },
-  {
    "id": 7760945,
    "name": "Lambda Core: Health Kit 1 (Part 7)",
    "chapter": "c3a2e",
@@ -18444,24 +18318,6 @@
    },
    "position": [
     1268,
-    -320,
-    -208
-   ]
-  },
-  {
-   "id": 7760949,
-   "name": "Lambda Core: .357 Rounds 2 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2d",
-    "classname": "ammo_357",
-    "at": "1304 -320 -208",
-    "source": "placed"
-   },
-   "position": [
-    1304,
     -320,
     -208
    ]
@@ -18755,42 +18611,6 @@
    ]
   },
   {
-   "id": 7761977,
-   "name": "Lambda Core: Tripmine 1 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2d",
-    "classname": "weapon_tripmine",
-    "at": "1528 -640 -248",
-    "source": "placed"
-   },
-   "position": [
-    1528,
-    -640,
-    -248
-   ]
-  },
-  {
-   "id": 7761978,
-   "name": "Lambda Core: Tripmine 2 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2d",
-    "classname": "weapon_tripmine",
-    "at": "1528 -600 -248",
-    "source": "placed"
-   },
-   "position": [
-    1528,
-    -600,
-    -248
-   ]
-  },
-  {
    "id": 7761705,
    "name": "Lambda Core: Tripmine 3 (Part 7)",
    "chapter": "c3a2e",
@@ -18806,24 +18626,6 @@
     1528,
     -716,
     -160
-   ]
-  },
-  {
-   "id": 7760962,
-   "name": "Lambda Core: Uranium 1 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2d",
-    "classname": "ammo_gaussclip",
-    "at": "1432 -744 -256",
-    "source": "placed"
-   },
-   "position": [
-    1432,
-    -744,
-    -256
    ]
   },
   {
@@ -18860,42 +18662,6 @@
     1232,
     -264,
     -208
-   ]
-  },
-  {
-   "id": 7761979,
-   "name": "Lambda Core: Uranium 4 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2d",
-    "classname": "ammo_gaussclip",
-    "at": "1688 -680 -256",
-    "source": "placed"
-   },
-   "position": [
-    1688,
-    -680,
-    -256
-   ]
-  },
-  {
-   "id": 7761980,
-   "name": "Lambda Core: Uranium 5 (Part 7)",
-   "chapter": "c3a2e",
-   "map": "c3a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c3a2d",
-    "classname": "ammo_gaussclip",
-    "at": "1688 -640 -256",
-    "source": "placed"
-   },
-   "position": [
-    1688,
-    -640,
-    -256
    ]
   },
   {

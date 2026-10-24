@@ -284,6 +284,25 @@ UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     "c2a5b": {("item_battery", (784, -1176, 88))},
     # Surface Tension part 7: crate c2a5d_5.
     "c2a5d": {("func_breakable", (-184, -752, -288))},
+    # Lambda Core part 5: stuck under shelves.
+    "c3a2c": {
+        ("item_battery", (-340, 916, -2174)),
+        ("ammo_357", (-304, 916, -2174)),
+        ("ammo_ARgrenades", (-266, 916, -2174)),
+        ("item_battery", (-680, 892, -1024)),
+    },
+    # Lambda Core part 7: under the rubble, the box and the lower shelf.
+    "c3a2d": {
+        ("item_battery", (752, -1104, -768)),
+        ("ammo_357", (1304, -320, -208)),
+        ("weapon_tripmine", (1528, -640, -248)),
+        ("weapon_tripmine", (1528, -600, -248)),
+        ("item_battery", (1688, -600, -256)),
+        ("ammo_gaussclip", (1688, -640, -256)),
+        ("ammo_gaussclip", (1688, -680, -256)),
+        ("item_battery", (1688, -744, -256)),
+        ("ammo_gaussclip", (1432, -744, -256)),
+    },
 }
 
 # Scientists and guards that do not count, as `{map: {(classname, (x, y, z))}}`.
