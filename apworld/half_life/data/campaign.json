@@ -648,6 +648,13 @@
      "barnacle_grapple"
     ]
    },
+   "map_gates": {
+    "of5a2": {
+     "strict": [
+      "nvg"
+     ]
+    }
+   },
    "complete_on_arrival": false,
    "campaign": "opposing_force",
    "complete_on": "forward_exit"
@@ -1340,7 +1347,7 @@
   {
    "id": 7750069,
    "name": "Night Vision Goggles",
-   "classification": "useful",
+   "classification": "progression",
    "group": "optional",
    "classnames": [],
    "campaign": "opposing_force",
@@ -38384,11 +38391,11 @@
    "id": 7760225,
    "name": "Office Complex: Complete",
    "chapter": "c1a2",
-   "map": "c1a2d",
+   "map": "c1a2b",
    "trigger": {
     "type": "chapter_complete",
     "chapter": "c1a2",
-    "map": "c1a2d"
+    "map": "c1a2b"
    }
   },
   {
@@ -38873,6 +38880,9 @@
   ],
   "displacer": [
    "Displacer Cannon"
+  ],
+  "nvg": [
+   "Night Vision Goggles"
   ]
  },
  "starting_weapons": [

@@ -173,6 +173,10 @@ class Campaign:
     # changelevel graph is wrong: a finale that ends on `trigger_endsection`
     # rather than on arrival.
     complete_on: dict[str, str] = field(default_factory=dict)
+    # `{chapter key: map}` for a mission whose way on leaves from a map before
+    # its last, so logic hangs its "Complete" check there. The id stays keyed
+    # to the last map, so old seeds keep theirs.
+    complete_maps: dict[str, str] = field(default_factory=dict)
     # Lobby entrances are `<prefix>chapter_<n>_button`, `n` counted within this
     # campaign. Empty for Half-Life, which keeps `chapter_<n>_button`.
     hub_button_prefix: str = ""
@@ -207,6 +211,11 @@ class Campaign:
             if map_name not in maps or map_name in firsts:
                 raise ValueError(f"{self.key}: map gate on {map_name!r}, which is "
                                  "not a later map of one of its missions")
+        own = {key: chapter_maps for key, _, chapter_maps in self.chapters}
+        for chapter, map_name in self.complete_maps.items():
+            if map_name not in own.get(chapter, []):
+                raise ValueError(f"{self.key}: {chapter!r} completes on {map_name!r}, "
+                                 "which is not one of its maps")
         for mode in self.complete_on.values():
             if mode not in COMPLETE_ON:
                 raise ValueError(f"{self.key}: unknown complete_on {mode!r}")

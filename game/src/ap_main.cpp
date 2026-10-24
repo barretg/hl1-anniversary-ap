@@ -484,6 +484,11 @@ void Startup() {
     OnMapStart(CurrentMap());
     Trace("  map start done");
 
+    // Queued, so it waits for the HUD like any notice. See `FlushNotices`.
+    if (CurrentMap() == kHubMap) {
+        Notify("Welcome to the hub! Type !help to list all commands.");
+    }
+
     // Last: everything above may precache, and the texture files give way to
     // all of it. See `PrecacheTextureModels`.
     PrecacheTextureModels();

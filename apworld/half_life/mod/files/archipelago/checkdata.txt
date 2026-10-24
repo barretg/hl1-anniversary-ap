@@ -2257,7 +2257,7 @@ F|7760399|ba_canal1|2080 288 56||
 L|7760222|c0a0e|chapter_complete|c0a0|Black Mesa Inbound: Complete
 L|7760223|c1a0e|chapter_complete|c1a0|Anomalous Materials: Complete
 L|7760224|c1a1d|chapter_complete|c1a0c|Unforeseen Consequences: Complete
-L|7760225|c1a2d|chapter_complete|c1a2|Office Complex: Complete
+L|7760225|c1a2b|chapter_complete|c1a2|Office Complex: Complete
 L|7760226|c1a3c|chapter_complete|c1a3|We've Got Hostiles: Complete
 L|7760227|c1a4j|chapter_complete|c1a4|Blast Pit: Complete
 L|7760228|c2a1a|chapter_complete|c2a1|Power Up: Complete

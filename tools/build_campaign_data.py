@@ -1413,13 +1413,24 @@ def build(
     # Chapter completion always comes last so it reads last in the list.
     if "chapter_complete" in enabled:
         for chapter in chapters:
-            builder.add(
+            location = builder.add(
                 chapter,
                 chapter["maps"][-1],
                 "Complete",
                 {"type": "chapter_complete", "chapter": chapter["key"],
                  "map": chapter["maps"][-1]},
             )
+            # Moved after its id is taken, which stays keyed to the last map.
+            exit_map = by_key[chapter["campaign"]].complete_maps.get(chapter["key"])
+            if exit_map is not None:
+                index_of = {m: c["index"] for c in chapters for m in c["maps"]
+                            if c["campaign"] == chapter["campaign"]}
+                if not any(index_of.get(target, -1) > chapter["index"]
+                           for target in changelevel_targets(entities[exit_map])):
+                    raise SystemExit(f"{chapter['key']}: completes on {exit_map}, "
+                                     "which has no way on")
+                location["map"] = exit_map
+                location["trigger"]["map"] = exit_map
 
     # Every id must exist before the fingerprint is taken, and item ids are
     # assigned here. Built into a local first for that reason alone: with the

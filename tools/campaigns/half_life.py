@@ -394,6 +394,9 @@ HALF_LIFE = Campaign(
     npc_parts=NPC_PARTS,
     npc_gates=NPC_GATES,
     fired_checks=FIRED_CHECKS,
+    # Office Complex leaves for We've Got Hostiles from part 3; parts 4 and 5
+    # are a loop back round to the start.
+    complete_maps={"c1a2": "c1a2b"},
     # The hazard course: a training course rather than part of the campaign.
     # Then the Uplink demo and `lambda_bunker`, which ship in `valve/maps` and
     # look single-player (no deathmatch spawns) without being campaign maps.

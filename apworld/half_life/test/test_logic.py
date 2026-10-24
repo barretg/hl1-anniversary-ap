@@ -979,3 +979,31 @@ class TestEveryGameStrictAllyDrops(HalfLifeTestBase):
     options = {"include_opposing_force": True, "include_blue_shift": True,
                "logic_difficulty": "strict", "ally_weapon_drops": True,
                "exclude_intro_missions": False}
+
+
+class TestFoxtrotUniformGogglesStrict(HalfLifeTestBase):
+    options = {"include_half_life": False, "include_opposing_force": True,
+               "shuffle_flashlight": True, "logic_difficulty": "strict"}
+
+    def test_part_2_on_needs_the_goggles(self) -> None:
+        state = all_but(self, "Night Vision Goggles")
+        self.assertTrue(state.can_reach_region("of5a1", self.player))
+        self.assertFalse(state.can_reach_region("of5a2", self.player))
+        state.collect(self.world.create_item("Night Vision Goggles"))
+        self.assertTrue(state.can_reach_region("of5a4", self.player))
+
+
+class TestFoxtrotUniformGogglesLoose(HalfLifeTestBase):
+    options = {"include_half_life": False, "include_opposing_force": True,
+               "shuffle_flashlight": True, "logic_difficulty": "loose"}
+
+    def test_loose_logic_goes_without(self) -> None:
+        state = all_but(self, "Night Vision Goggles")
+        self.assertTrue(state.can_reach_region("of5a4", self.player))
+
+
+class TestOfficeComplexCompletesOnPart3(HalfLifeTestBase):
+    def test_complete_hangs_on_the_exit_map(self) -> None:
+        location = self.multiworld.get_location("Office Complex: Complete", self.player)
+        self.assertEqual(location.parent_region.name, "c1a2b")
+        self.assertEqual(location.address, 7760225)

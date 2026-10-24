@@ -47,9 +47,14 @@ def test_every_location_id_comes_from_the_registry(campaign: dict, registry_data
     # Campaign-wide checks are scoped by game: `*` for Half-Life, which had
     # them first, the game's key for every later one.
     owner = {c["key"]: c.get("campaign", "half_life") for c in campaign["chapters"]}
+    last_map = {c["key"]: c["maps"][-1] for c in campaign["chapters"]}
     for entry in campaign["locations"]:
         game = owner[entry["chapter"]]
-        key = location_key(entry["chapter"], entry["map"], entry["trigger"],
+        # A "Complete" check is keyed to its mission's last map even where
+        # `complete_maps` hangs it on an earlier one.
+        map_name = (last_map[entry["chapter"]]
+                    if entry["trigger"]["type"] == "chapter_complete" else entry["map"])
+        key = location_key(entry["chapter"], map_name, entry["trigger"],
                            "*" if game == "half_life" else game)
         assert key in table, key
         assert table[key] == entry["id"], key

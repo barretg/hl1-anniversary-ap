@@ -53,7 +53,12 @@ _HEAVY = {"strict": ["heavy"], "always": ["barnacle_grapple"]}
 # First Barnacle check is behind the item too.
 _GRAPPLE = {"always": ["barnacle_grapple"]}
 MAP_CHECK_GATES: dict[str, dict[str, list[str]]] = {"of4a2": _GRAPPLE}
-MAP_GATES: dict[str, dict[str, list[str]]] = {"of4a3": _GRAPPLE}
+# Foxtrot Uniform: part 2 on is dark enough that strict logic wants the night
+# vision goggles.
+MAP_GATES: dict[str, dict[str, list[str]]] = {
+    "of4a3": _GRAPPLE,
+    "of5a2": {"strict": ["nvg"]},
+}
 
 CHAPTER_GATES: dict[str, dict[str, list[str]]] = {
     "of2a1": _RANGED,
@@ -92,6 +97,7 @@ REQUIREMENT_GROUPS: dict[str, list[str]] = {
     "underwater": ["Desert Eagle"],
     "barnacle_grapple": ["Barnacle Grapple"],
     "displacer": ["Displacer Cannon"],
+    "nvg": ["Night Vision Goggles"],
 }
 
 # Shephard's melee weapons: a `First` check each, and starting-melee candidates
