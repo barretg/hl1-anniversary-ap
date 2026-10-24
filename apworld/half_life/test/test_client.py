@@ -39,6 +39,7 @@ def context() -> HalfLifeContext:
     ctx.force_melee_throw = False
     ctx.item_by_id = {entry["id"]: entry for entry in ctx.campaign["items"]}
     ctx.bridge = None
+    ctx.announced = set()
     return ctx
 
 
@@ -382,6 +383,26 @@ class TestDeathReport(unittest.TestCase):
         self.report("Freeman", "a headcrab", "0")
         self.assertEqual(self.sent, [])
         self.assertEqual(self.ctx.bridge.events, [])
+
+
+class TestSentLine(unittest.TestCase):
+    """A check says in the game what it held, from the scout."""
+
+    def test_from_the_scout(self) -> None:
+        from NetUtils import NetworkItem
+
+        ctx = context()
+        ctx.bridge = FakeBridge()
+        ctx.slot = 1
+        ctx.player_names = {1: "Gordon", 2: "Al|yx"}
+        ctx.locations_info = {100: NetworkItem(10, 100, 1, 0),
+                              200: NetworkItem(20, 200, 2, 0)}
+        ctx.item_names = SimpleNamespace(
+            lookup_in_slot=lambda code, slot: {10: "Shotgun", 20: "Hook|shot"}[code])
+        for location_id in (100, 200, 100, 300):  # a resend, and one never scouted
+            ctx.announce_sent(location_id)
+        self.assertEqual(ctx.bridge.events, [("CHAT", "Sent Shotgun to yourself"),
+                                             ("CHAT", "Sent Hook/shot to Al/yx")])
 
 
 class TestSlotChange(unittest.TestCase):

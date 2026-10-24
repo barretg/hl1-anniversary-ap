@@ -1,5 +1,5 @@
 {
- "data_version": "b7511f42d6e7",
+ "data_version": "bbd5a9b8c365",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -22033,6 +22033,24 @@
     368,
     -544,
     -176
+   ]
+  },
+  {
+   "id": 7761075,
+   "name": "Welcome To Black Mesa: .357 Rounds (Part 2)",
+   "chapter": "of1a1",
+   "map": "of1a2",
+   "trigger": {
+    "type": "ammo_pickup",
+    "map": "of1a2",
+    "classname": "ammo_357",
+    "at": "320 -2608 -1808",
+    "source": "placed"
+   },
+   "position": [
+    320,
+    -2608,
+    -1808
    ]
   },
   {

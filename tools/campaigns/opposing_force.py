@@ -273,11 +273,10 @@ UNREACHABLE_CHARGERS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
 
 # Pickups no player can reach, as `{map: {(classname, (x, y, z))}}`.
 UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
-    # Welcome To Black Mesa part 2: the .357 is inside a lethal trigger_hurt;
-    # the crate dropping Crate Health Kit 1 cannot be reached. Both confirmed
-    # in play.
+    # Welcome To Black Mesa part 2: the crate dropping Crate Health Kit 1
+    # cannot be reached, confirmed in play. (The .357 in the trigger_hurt is
+    # reachable: the hurt is switched off later.)
     "of1a2": {
-        ("ammo_357", (320, -2608, -1808)),
         ("func_breakable", (-944, -2960, 112)),
     },
     # We Are Not Alone part 2: none of its pickups can be reached.

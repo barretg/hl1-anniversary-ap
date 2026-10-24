@@ -288,6 +288,8 @@ class HalfLifeContext(SuperContext):
         # Legacy checks already sent this run, so one waiting on the server's
         # round trip is not sent again every poll.
         self.legacy_sent: set[int] = set()
+        # Checks already given a "Sent" line. See `announce_sent`.
+        self.announced: set[int] = set()
         # LEGACY_SOURCES entries this seed predates, `{id: map}`.
         self.legacy_sources: dict[int, str] = {}
         # Each map's "Reached" check, which says when a legacy check is due.
@@ -519,6 +521,11 @@ class HalfLifeContext(SuperContext):
 
             self.apply_slot_data(args.get("slot_data", {}))
             self.resume_played_missions()
+            # What each location holds, for the "Sent" line after a check.
+            if self.missing_locations:
+                asyncio.create_task(self.send_msgs([{
+                    "cmd": "LocationScouts", "locations": sorted(self.missing_locations),
+                    "create_as_hint": 0}]), name="ScoutLocations")
             if self.death_link_enabled:
                 asyncio.create_task(self.update_death_link(True), name="UpdateDeathLink")
 
@@ -620,6 +627,25 @@ class HalfLifeContext(SuperContext):
         text = text.replace("|", "/").replace("\n", " ").strip()
         if text:
             self.bridge.queue_event("CHAT", f"[AP] {text}")
+
+    def announce_sent(self, location_id: int) -> None:
+        """Tell the game what a check held, from the scout taken on connect.
+
+        Sent as CHAT, which the game shows as it is, so no game build has to
+        know about it. Once per location: the game resends a check until the
+        server confirms it.
+        """
+        found = self.locations_info.get(location_id)
+        if found is None or self.bridge is None or location_id in self.announced:
+            return
+        self.announced.add(location_id)
+        if found.player == self.slot:
+            player = "yourself"
+        else:
+            player = self.player_names.get(found.player, f"Player {found.player}")
+        item_name = self.item_names.lookup_in_slot(found.item, found.player)
+        text = f"Sent {item_name} to {player}".replace("|", "/").replace("\n", " ")
+        self.bridge.queue_event("CHAT", text)
 
     def receive_items(self, args: dict) -> None:
         """Apply an item packet.
@@ -748,6 +774,7 @@ class HalfLifeContext(SuperContext):
         self.state_slot = identity
         self.completed_missions.clear()
         self.legacy_sent.clear()
+        self.announced.clear()
         self.goal_sent = False
         self.sync_completed_missions()
 
@@ -1228,6 +1255,8 @@ async def pump(ctx: HalfLifeContext) -> None:
             for location_id in unseen:
                 logger.info(f"Check: {ctx.location_name_by_id.get(location_id, location_id)}")
             await ctx.send_msgs([{"cmd": "LocationChecks", "locations": unseen}])
+            for location_id in unseen:
+                ctx.announce_sent(location_id)
 
     # A completion the server already had, or one that has just round-tripped,
     # counted before the snapshot goes out rather than a poll later: it is what

@@ -79,8 +79,11 @@ per Opposing Force map whose displacer Xen room holds Healsanity or Ammosanity
 checks. You start where the self-teleport lands; pass if each can be picked up,
 fail naming those that cannot.
 
+`--freeplay` runs one open-ended scenario: every mission open and every item
+held, starting in the hub, for playing anywhere. `!give` / `!take` still work.
+
 `--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
-0.4.0-2, npc_witness, npc_excluded_check, pctest, sweep or displacer.
+0.4.0-2, npc_witness, npc_excluded_check, pctest, sweep, displacer or freeplay.
 
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
@@ -98,7 +101,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --displacer | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --displacer | --freeplay | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -129,6 +132,8 @@ TEST_DLL = REPO / "build" / "game-test" / "hl.dll"
 TEST_DLL_MARKER = b"testing_aptest"
 
 CRATE_MAP = "c2a2e"
+# `kHubMap` in game/src/ap_hub.cpp.
+HUB_MAP = "ap_lobby_alpha"
 
 # Cells a source's flood fill may visit before it is left unproven.
 UNPROVEN_FILL_LIMIT = 1_500_000
@@ -1625,6 +1630,26 @@ def pickup_scenarios(data: CheckData) -> list[Scenario]:
     return out
 
 
+def freeplay_scenarios() -> list[Scenario]:
+    """Every mission open and every item held, from the hub: open testing."""
+    return [Scenario(
+        title="Freeplay: every mission and every item",
+        map=HUB_MAP, steps="\n".join([
+            "Every mission is open and every item is held. Go anywhere.",
+            "!take / !give change what you hold. !note any finding.",
+        ])),
+        Scenario(
+            title="Freeplay: trace to .357 Rounds (Part 2) in of1a2",
+            map="of1a2", trace=[7761075], expect=[7761075],
+            steps="\n".join([
+                "The ammo_357 at 320 -2608 -1808, once left out as inside a lethal",
+                "trigger_hurt that is switched off later. Follow the trace line,",
+                "pick it up once the hurt is off: expect the check.",
+                "!pass, or !fail <what you found>.",
+            ])),
+    ]
+
+
 def viewmodel_scenarios() -> list[Scenario]:
     """`viewmodel_style`: each game's hands on another game's maps."""
     look = ("Switch through every weapon you hold and look at the hands: "
@@ -2499,7 +2524,7 @@ class DllSwap:
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
 GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2",
-          "npc_witness", "npc_excluded_check", "pctest", "sweep", "displacer")
+          "npc_witness", "npc_excluded_check", "pctest", "sweep", "displacer", "freeplay")
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
@@ -2530,6 +2555,8 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return sweep_scenarios(data, game_root)
     if group == "displacer":
         return displacer_scenarios(data, game_root, store)
+    if group == "freeplay":
+        return freeplay_scenarios()
     only = None
     if unproven:
         only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
@@ -2996,6 +3023,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--displacer", action="store_true",
                         help="only the displacer scenarios: the Healsanity and "
                              "Ammosanity checks in each map's displacer Xen room")
+    parser.add_argument("--freeplay", action="store_true",
+                        help="one open scenario: every mission open and every "
+                             "item held, from the hub")
     parser.add_argument("--from", dest="start_at", type=int, metavar="N",
                         help="with --sweep: sweep again from scenario N (the number "
                              "in aptest_results.txt), results or not")
@@ -3010,7 +3040,8 @@ def main(argv: list[str] | None = None) -> int:
     flags = {"find": "find", "trace": "trace", "parity": "parity", "0.4.0": "v0_4_0",
              "0.4.0-2": "v0_4_0_2",
              "npc_witness": "npc_witness", "npc_excluded_check": "npc_excluded_check",
-             "pctest": "pctest", "sweep": "sweep", "displacer": "displacer"}
+             "pctest": "pctest", "sweep": "sweep", "displacer": "displacer",
+             "freeplay": "freeplay"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
@@ -3019,7 +3050,8 @@ def main(argv: list[str] | None = None) -> int:
     if len(chosen) > 1:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
                      "--parity, --0.4.0, --0.4.0-2, --npc_witness, "
-                     "--npc_excluded_check, --pctest, --sweep, --displacer")
+                     "--npc_excluded_check, --pctest, --sweep, --displacer, "
+                     "--freeplay")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")
