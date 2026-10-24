@@ -3189,7 +3189,7 @@
    ],
    "gates": {
     "always": [
-     "ranged"
+     "any_ranged"
     ]
    }
   },
