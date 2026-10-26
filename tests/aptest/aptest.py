@@ -82,8 +82,12 @@ fail naming those that cannot.
 `--freeplay` runs one open-ended scenario: every mission open and every item
 held, starting in the hub, for playing anywhere. `!give` / `!take` still work.
 
+`--btest` runs the scenarios for bugs under investigation, each one a fix (or a
+reproduction) waiting on play to confirm it.
+
 `--group <name>` picks any group by name: sources, find, trace, parity, 0.4.0,
-0.4.0-2, npc_witness, npc_excluded_check, pctest, sweep, displacer or freeplay.
+0.4.0-2, npc_witness, npc_excluded_check, pctest, sweep, displacer, freeplay or
+btest.
 
 Every verdict is recorded with its group (the mode it was run in). To start a
 group over:
@@ -101,7 +105,7 @@ use three more verbs, standing in for what the real client would deliver:
 and the harness shows every DEATH and CHAT the game sends.
 
 Usage:
-    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --displacer | --freeplay | --group <name>] [--clear]
+    python tests/aptest/aptest.py [--game-root "<Half-Life>"] [--unproven | --find | --trace | --parity | --0.4.0 | --0.4.0-2 | --npc_witness | --npc_excluded_check | --pctest | --sweep | --displacer | --freeplay | --btest | --group <name>] [--clear]
 """
 
 from __future__ import annotations
@@ -1650,6 +1654,29 @@ def freeplay_scenarios() -> list[Scenario]:
     ]
 
 
+def btest_scenarios(data: CheckData) -> list[Scenario]:
+    """Bugs under investigation. Append, never reorder: verdicts match by title."""
+    out: list[Scenario] = []
+    # The Black Mesa Inbound guard, placed in part 5, who rides on into part 6
+    # and opens the train door there.
+    guard = next((l for l in data.locations.values()
+                  if l.map == "c0a0d" and l.kind == "barney"), None)
+    if guard is not None:
+        out.append(Scenario(
+            title="btest: Black Mesa Inbound guard killed in part 6",
+            map="c0a0d", expect=[guard.id], steps="\n".join([
+                f"{where_in_mission(data, 'c0a0d')}. In the console: developer 1.",
+                f"The guard on this train is {guard.name}. Leave him",
+                "unhurt and ride on into c0a0e. Once there, run ap_tagged: note",
+                "whether he is listed, and if so with what (alive, no damage, in a",
+                "script). Then shoot him dead, and note the AP: line the console",
+                "logs for his death, if any.",
+                "!pass if the check arrived, else !fail <ap_tagged line and AP:",
+                "death line, or that there were none>.",
+            ])))
+    return out
+
+
 def viewmodel_scenarios() -> list[Scenario]:
     """`viewmodel_style`: each game's hands on another game's maps."""
     look = ("Switch through every weapon you hold and look at the hands: "
@@ -2524,7 +2551,8 @@ class DllSwap:
 # The scenario groups, one per run mode. Each run records its group with every
 # verdict, so `clear` can drop one group's results and leave the others.
 GROUPS = ("sources", "find", "trace", "parity", "0.4.0", "0.4.0-2",
-          "npc_witness", "npc_excluded_check", "pctest", "sweep", "displacer", "freeplay")
+          "npc_witness", "npc_excluded_check", "pctest", "sweep", "displacer", "freeplay",
+          "btest")
 
 # Groups since renamed: their verdicts are the new group's.
 FORMER_GROUPS = {"completion": "0.4.0"}
@@ -2557,6 +2585,8 @@ def select_scenarios(group: str, data: CheckData, store: Path, game_root: Path,
         return displacer_scenarios(data, game_root, store)
     if group == "freeplay":
         return freeplay_scenarios()
+    if group == "btest":
+        return btest_scenarios(data)
     only = None
     if unproven:
         only = unproven_sources(data, game_root, store / "aptest_unproven.txt")
@@ -3026,6 +3056,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--freeplay", action="store_true",
                         help="one open scenario: every mission open and every "
                              "item held, from the hub")
+    parser.add_argument("--btest", action="store_true",
+                        help="only the scenarios for bugs under investigation")
     parser.add_argument("--from", dest="start_at", type=int, metavar="N",
                         help="with --sweep: sweep again from scenario N (the number "
                              "in aptest_results.txt), results or not")
@@ -3041,7 +3073,7 @@ def main(argv: list[str] | None = None) -> int:
              "0.4.0-2": "v0_4_0_2",
              "npc_witness": "npc_witness", "npc_excluded_check": "npc_excluded_check",
              "pctest": "pctest", "sweep": "sweep", "displacer": "displacer",
-             "freeplay": "freeplay"}
+             "freeplay": "freeplay", "btest": "btest"}
     chosen = [g for g, dest in flags.items() if getattr(args, dest)]
     if args.group is not None:
         named = FORMER_GROUPS.get(args.group, args.group)
@@ -3051,7 +3083,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("pick one group: --group <name>, or one of --find, --trace, "
                      "--parity, --0.4.0, --0.4.0-2, --npc_witness, "
                      "--npc_excluded_check, --pctest, --sweep, --displacer, "
-                     "--freeplay")
+                     "--freeplay, --btest")
     args.group = chosen[0] if chosen else "sources"
     if args.start_at is not None and args.group != "sweep":
         parser.error("--from only goes with --sweep")
