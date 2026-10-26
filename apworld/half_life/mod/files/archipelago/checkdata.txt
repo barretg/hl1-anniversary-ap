@@ -34,7 +34,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|c5d75034ed75
+D|5da4512b60e8
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -511,7 +511,6 @@ L|7760599|c2a2d|heal_pickup|item_battery@2184 3360 -160|On A Rail: Battery 3 (Pa
 L|7760600|c2a2d|heal_pickup|item_battery@1208 2648 -36|On A Rail: Battery 4 (Part 6)|1208 2648 -36
 L|7760601|c2a2d|heal_pickup|func_pushable@2380 3244 -280|On A Rail: Crate Battery (Part 6)|2380 3244 -280
 L|7760602|c2a2d|heal_pickup|func_pushable@2248 2820 -256|On A Rail: Crate Health Kit (Part 6)|2248 2820 -256
-L|7760603|c2a2d|heal_pickup|item_healthkit@2408 2820 -264|On A Rail: Health Kit 1 (Part 6)|2408 2820 -264
 L|7760604|c2a2d|heal_pickup|item_healthkit@308 2772 -628|On A Rail: Health Kit 2 (Part 6)|308 2772 -628
 L|7760605|c2a2d|ammo_pickup|ammo_glockclip@-2118 1851 -609|On A Rail: 9mm Clip 1 (Part 6)|-2118 1851 -609
 L|7760606|c2a2d|ammo_pickup|ammo_9mmclip@-2120 1924 -620|On A Rail: 9mm Clip 2 (Part 6)|-2120 1924 -620
@@ -521,7 +520,6 @@ L|7760609|c2a2d|ammo_pickup|func_breakable@2176 2736 -296|On A Rail: Crate .357 
 L|7760610|c2a2d|ammo_pickup|func_breakable@472 2876 -604|On A Rail: Crate .357 Rounds 3 (Part 6)|472 2876 -604
 L|7760611|c2a2d|ammo_pickup|ammo_9mmAR@-2252 1768 -609|On A Rail: MP5 Clip (Part 6)|-2252 1768 -609
 L|7760612|c2a2d|ammo_pickup|ammo_ARgrenades@-1936 2808 -564|On A Rail: MP5 Grenades (Part 6)|-1936 2808 -564
-L|7760613|c2a2d|ammo_pickup|ammo_buckshot@-2220 1828 -609|On A Rail: Shotgun Shells (Part 6)|-2220 1828 -609
 L|7761894|c2a2d|barney|monster_barney@2220 2736 -300|On A Rail: Trappedbarney (Part 6)|2220 2736 -300
 L|7760104|c2a2e|map_reached||On A Rail: Part 7 Reached
 L|7760105|c2a2e|charger|func_healthcharger@-1184 -1108 -472|On A Rail: Health Charger 1 (Part 7)|-1184 -1108 -472
@@ -1762,9 +1760,6 @@ L|7761427|ba_security2|heal_pickup|item_helmet@651 1352 263|Insecurity: Helmet (
 L|7761428|ba_security2|ammo_pickup|ammo_9mmclip@278 1304 492|Insecurity: 9mm Clip 1 (Part 2)|278 1304 492
 L|7761429|ba_security2|ammo_pickup|ammo_9mmclip@470 1304 492|Insecurity: 9mm Clip 2 (Part 2)|470 1304 492
 L|7761430|ba_security2|ammo_pickup|ammo_9mmclip@566 1304 492|Insecurity: 9mm Clip 3 (Part 2)|566 1304 492
-L|7761945|ba_security2|scientist|monster_scientist@-1088 -1456 -240|Insecurity: Cam1 Walker (Part 2)|-1088 -1456 -240
-L|7761946|ba_security2|scientist|monster_scientist@-144 -1392 -240|Insecurity: Cam1 Walker2 (Part 2)|-144 -1392 -240
-L|7761947|ba_security2|scientist|monster_scientist@-864 -2192 -240|Insecurity: Cam1 Walker3 (Part 2)|-864 -2192 -240
 L|7762018|ba_security2|scientist|monster_scientist@-749 1645 192|Insecurity: Complainer (Part 2)|-749 1645 192
 X|7762018
 L|7762020|ba_security2|barney|monster_barney@-800 1696 192|Insecurity: Barney Admin (Part 2)|-800 1696 192

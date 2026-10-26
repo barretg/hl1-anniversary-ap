@@ -100,6 +100,12 @@ UNKILLABLE_NPCS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     # Living Quarters Outbound part 1: the guard at the game table, out of
     # sight of the tram.
     "ba_tram1": {("monster_barney", (-2844, 916, 64))},
+    # Insecurity part 2: the three walkers seen only on the security cameras.
+    "ba_security2": {
+        ("monster_scientist", (-1088, -1456, -240)),
+        ("monster_scientist", (-144, -1392, -240)),
+        ("monster_scientist", (-864, -2192, -240)),
+    },
 }
 
 # NPCs the automatic exclusions drop that play shows count, same form.

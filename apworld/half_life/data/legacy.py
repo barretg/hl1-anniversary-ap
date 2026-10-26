@@ -55,6 +55,11 @@ LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     7760962: ("Lambda Core: Uranium 1 (Part 7)", "c3a2d"),
     7761979: ("Lambda Core: Uranium 4 (Part 7)", "c3a2d"),
     7761980: ("Lambda Core: Uranium 5 (Part 7)", "c3a2d"),
+    7760603: ("On A Rail: Health Kit 1 (Part 6)", "c2a2d"),
+    7760613: ("On A Rail: Shotgun Shells (Part 6)", "c2a2d"),
+    7761945: ("Insecurity: Cam1 Walker (Part 2)", "ba_security2"),
+    7761946: ("Insecurity: Cam1 Walker2 (Part 2)", "ba_security2"),
+    7761947: ("Insecurity: Cam1 Walker3 (Part 2)", "ba_security2"),
 }
 
 # Checks a removed copy once counted toward, `{id: (map, slot_data key)}`. A seed

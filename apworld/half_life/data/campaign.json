@@ -1,5 +1,5 @@
 {
- "data_version": "c5d75034ed75",
+ "data_version": "5da4512b60e8",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -9084,24 +9084,6 @@
    ]
   },
   {
-   "id": 7760603,
-   "name": "On A Rail: Health Kit 1 (Part 6)",
-   "chapter": "c2a2",
-   "map": "c2a2d",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "c2a2d",
-    "classname": "item_healthkit",
-    "at": "2408 2820 -264",
-    "source": "placed"
-   },
-   "position": [
-    2408,
-    2820,
-    -264
-   ]
-  },
-  {
    "id": 7760604,
    "name": "On A Rail: Health Kit 2 (Part 6)",
    "chapter": "c2a2",
@@ -9264,24 +9246,6 @@
     -1936,
     2808,
     -564
-   ]
-  },
-  {
-   "id": 7760613,
-   "name": "On A Rail: Shotgun Shells (Part 6)",
-   "chapter": "c2a2",
-   "map": "c2a2d",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "c2a2d",
-    "classname": "ammo_buckshot",
-    "at": "-2220 1828 -609",
-    "source": "placed"
-   },
-   "position": [
-    -2220,
-    1828,
-    -609
    ]
   },
   {
@@ -31233,60 +31197,6 @@
     566,
     1304,
     492
-   ]
-  },
-  {
-   "id": 7761945,
-   "name": "Insecurity: Cam1 Walker (Part 2)",
-   "chapter": "ba_security1",
-   "map": "ba_security2",
-   "trigger": {
-    "type": "scientist",
-    "map": "ba_security2",
-    "classname": "monster_scientist",
-    "at": "-1088 -1456 -240",
-    "targetname": "cam1_walker"
-   },
-   "position": [
-    -1088,
-    -1456,
-    -240
-   ]
-  },
-  {
-   "id": 7761946,
-   "name": "Insecurity: Cam1 Walker2 (Part 2)",
-   "chapter": "ba_security1",
-   "map": "ba_security2",
-   "trigger": {
-    "type": "scientist",
-    "map": "ba_security2",
-    "classname": "monster_scientist",
-    "at": "-144 -1392 -240",
-    "targetname": "cam1_walker2"
-   },
-   "position": [
-    -144,
-    -1392,
-    -240
-   ]
-  },
-  {
-   "id": 7761947,
-   "name": "Insecurity: Cam1 Walker3 (Part 2)",
-   "chapter": "ba_security1",
-   "map": "ba_security2",
-   "trigger": {
-    "type": "scientist",
-    "map": "ba_security2",
-    "classname": "monster_scientist",
-    "at": "-864 -2192 -240",
-    "targetname": "cam1_walker3"
-   },
-   "position": [
-    -864,
-    -2192,
-    -240
    ]
   },
   {

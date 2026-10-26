@@ -284,6 +284,11 @@ UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     "c2a5b": {("item_battery", (784, -1176, 88))},
     # Surface Tension part 7: crate c2a5d_5.
     "c2a5d": {("func_breakable", (-184, -752, -288))},
+    # On A Rail part 6.
+    "c2a2d": {
+        ("item_healthkit", (2408, 2820, -264)),
+        ("ammo_buckshot", (-2220, 1828, -609)),
+    },
     # Lambda Core part 5: stuck under shelves.
     "c3a2c": {
         ("item_battery", (-340, 916, -2174)),
