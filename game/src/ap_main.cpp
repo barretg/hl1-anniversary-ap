@@ -628,11 +628,29 @@ void AnnounceArrivals(const std::string& had_session,
         }
     }
 
+    // Finales are announced after everything else, so the last line says
+    // whether that was the final seal.
+    std::vector<const Chapter*> opened_goals;
     for (const std::string& key : now.open_chapters) {
         if (had_chapters.find(key) == had_chapters.end()) {
             const Chapter* chapter = Data().ChapterByKey(key);
+            if (chapter != nullptr && chapter->is_goal) {
+                opened_goals.push_back(chapter);
+                continue;
+            }
             Notify(std::string(chapter ? chapter->name : key) +
                    " unlocked. !warp to travel there.");
+        }
+    }
+
+    // A client from before there was more than one game opens its one finale
+    // with `goal_open` alone.
+    if (now.goal_open && !had_goal) {
+        const Chapter* goal = Data().ChapterByKey(Data().goal_chapter);
+        if (goal != nullptr &&
+            had_chapters.find(goal->key) == had_chapters.end() &&
+            !now.ChapterOpen(goal->key)) {
+            opened_goals.push_back(goal);
         }
     }
 
@@ -642,10 +660,22 @@ void AnnounceArrivals(const std::string& had_session,
                std::to_string(now.air_accelerate) + ")");
     }
 
-    if (now.goal_open && !had_goal) {
-        const Chapter* goal = Data().ChapterByKey(Data().goal_chapter);
-        Notify(std::string(goal ? goal->name : "The finale") +
-               " is open. Finish it to win.");
+    if (opened_goals.empty()) {
+        return;
+    }
+    // A game the seed leaves out has its finale excluded, so it never waits on it.
+    bool all_goals_open = true;
+    for (const Chapter& chapter : Data().chapters) {
+        if (chapter.is_goal && !now.ChapterExcluded(chapter.key) &&
+            !ChapterIsOpen(chapter)) {
+            all_goals_open = false;
+            break;
+        }
+    }
+    for (size_t i = 0; i < opened_goals.size(); ++i) {
+        const bool last = all_goals_open && i + 1 == opened_goals.size();
+        Notify(opened_goals[i]->name + " is open." +
+               (last ? " Finish it to win." : " !warp to travel there."));
     }
 }
 
