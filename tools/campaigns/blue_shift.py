@@ -83,7 +83,9 @@ UNREACHABLE_COPIES: dict[str, list[str]] = {
     "Glock": ["ba_tram1@-2844 916 64", "ba_tram2@3488 -672 2272",
               "ba_tram3@1600 3680 541",
               # The guard at the start of Duty Calls; he drops nothing.
-              "ba_canal1@1928 208 24"],
+              "ba_canal1@1928 208 24",
+              # Duty Calls part 4: the guard is out of reach, so his pistol is too.
+              "ba_canal3@-1376 768 280"],
     # Unarmed when met; a grunt earlier in the mission drops one.
     "Shotgun": ["ba_teleport2@-1456 -816 0"],
 }

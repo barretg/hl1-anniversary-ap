@@ -37647,16 +37647,6 @@
      "drop": "ally"
     },
     {
-     "chapter": "ba_canal1",
-     "map": "ba_canal3",
-     "position": [
-      -1376,
-      768,
-      280
-     ],
-     "drop": "ally"
-    },
-    {
      "chapter": "ba_yard1",
      "map": "ba_yard3",
      "position": [
