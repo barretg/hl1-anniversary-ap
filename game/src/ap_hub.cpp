@@ -9,6 +9,7 @@
 #include "ap_bots.h"
 #include "ap_traps.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <set>
 #include <string>
@@ -981,9 +982,24 @@ void RunSeamDoors() {
     // needs to is one standing at the join. The `func_breakable` crates and
     // `func_tracktrain` that also carry them are left alone -- a crate that is
     // whole again, or a train parked at its start, is a playable map.
+    //
+    // And only the ones checkdata lists for this map: those the map you arrive
+    // from has too. A `globalname` door only one side has never crossed a seam,
+    // so cold is how vanilla finds it. Insecurity's glass doors are that: closed
+    // when the tram pulls in, then toggled open by the guard's script, which
+    // shut them for good once we had opened them first.
+    const std::string map = STRING(gpGlobals->mapname);
+    const auto& listed = Data().seam_doors;
     CBaseEntity* entity = nullptr;
     while ((entity = UTIL_FindEntityByClassname(entity, "func_door")) != nullptr) {
         if (FStringNull(entity->pev->globalname)) {
+            continue;
+        }
+        // An older checkdata has no list: every `globalname` door, as before.
+        if (!listed.empty() &&
+            std::find(listed.begin(), listed.end(),
+                      std::make_pair(map, std::string(STRING(entity->pev->globalname)))) ==
+                listed.end()) {
             continue;
         }
         Trace(("  opening seam door " + std::string(STRING(entity->pev->globalname)))

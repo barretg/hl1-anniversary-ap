@@ -1521,7 +1521,51 @@ def build(
         "hub_buttons": build_hub_buttons(chapters, campaigns, lobby_path),
         "carried_monsters": carried_monsters(chapters, entities),
         "changelevels": changelevels(chapters, entities, centres),
+        "seam_doors": seam_doors(chapters, entities),
     }
+
+
+def seam_doors(
+    chapters: list[dict], entities: dict[str, list[dict[str, str]]]
+) -> list[dict]:
+    """The `globalname` doors a cold warp into each map should open.
+
+    A `changelevel` carries a global entity's state across, so a seam door you
+    just walked through is still open on the far side. A warp is a `map` and
+    carries nothing, so the game reopens them. But a door is only a seam door
+    if the map you arrive from has it too. Insecurity's glass doors carry a
+    `globalname` (for the trip back from `ba_security2`), yet `ba_tram3`, which
+    is where you arrive from, has no such door: they start closed and the
+    guard's script toggles them open. Opening them first let that toggle shut
+    them for good.
+
+    "Arrive from" is the map before this one: one earlier in the same chapter
+    that leads here, or, for a chapter's first map, one outside it.
+    """
+    found: list[dict] = []
+    for chapter in chapters:
+        chapter_maps = chapter["maps"]
+        for index, map_name in enumerate(chapter_maps):
+            earlier = set(chapter_maps[:index])
+            sources = []
+            for other, ents in entities.items():
+                if other == map_name:
+                    continue
+                if index == 0:
+                    if other in chapter_maps:
+                        continue
+                elif other not in earlier:
+                    continue
+                if any(e.get("classname") == "trigger_changelevel"
+                       and e.get("map", "").lower() == map_name for e in ents):
+                    sources.append(ents)
+            carried = {e.get("globalname", "") for ents in sources for e in ents
+                       if e.get("classname") == "func_door"}
+            names = sorted({e["globalname"] for e in entities[map_name]
+                            if e.get("classname") == "func_door"
+                            and e.get("globalname") in carried})
+            found.extend({"map": map_name, "globalname": name} for name in names)
+    return found
 
 
 def changelevels(

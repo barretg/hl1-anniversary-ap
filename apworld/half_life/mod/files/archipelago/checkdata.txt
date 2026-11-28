@@ -24,6 +24,7 @@
 #   T|<map>|<to map>|<x y z>      a changelevel's centre, for !trace to a
 #     part's Reached or a mission's Complete. <to map> is empty for a
 #     trigger_endsection.
+#   O|<map>|<globalname>           a seam door a cold warp into <map> opens
 #   D|<data version>               must match the client's, or ids differ
 # A charger's <arg> is <classname>@<x y z>, the rounded world-space centre
 # of the unit. Brush model indices are deliberately not used: the game's
@@ -2689,3 +2690,40 @@ T|ba_power1|ba_power2|1152 -3040 -240
 T|ba_power2|ba_power1|1472 464 128
 T|ba_outro|ba_teleport2|-616 280 -824
 T|ba_outro||-1582 -2286 272
+O|c1a0d|c1a0_lab_door_1
+O|c1a0a|c1a0_lk1d1
+O|c1a0a|c1a0_lk1d2
+O|c1a0a|c1a0_lk1d3
+O|c1a0a|c1a0_lk1d4
+O|c1a0a|c1a0_lk2d1
+O|c1a0a|c1a0_lk2d2
+O|c1a0a|c1a0_lk2d3
+O|c1a0a|c1a0_lk2d4
+O|c1a0e|c1a0e_airlock_door1
+O|c1a1b|c1a1b_smoosh_door1
+O|c1a1b|c1a1b_smoosh_door2
+O|c1a2|c1a2_trans_ele1
+O|c1a2|c1a2_trans_ele2
+O|c1a4e|c1a4e_trans_door
+O|c2a2b1|c2a2a_crane
+O|c3a2|c3a2_piston
+O|of2a4|c1a2_trans_ele1
+O|of2a4|c1a2_trans_ele2
+O|of4a2|biodome1_airlock_1b_ele_global
+O|of4a2|biodome1_door_2_global
+O|of4a2|gonome_lab_door_1
+O|of4a3|c4a2_rimdoor_2
+O|of4a4|OF4A4_DOOR1
+O|of4a4|of5a1_door1
+O|of5a1|OF4A4_DOOR1
+O|of5a1|of5a1_door1
+O|ba_security2|t_exit_doors1
+O|ba_security2|t_exit_doors2
+O|ba_security2|t_exit_doors3
+O|ba_security2|t_exit_doors4
+O|ba_maint|exit_doors1
+O|ba_maint|exit_doors2
+O|ba_maint|exit_doors3
+O|ba_maint|exit_doors4
+O|ba_canal1b|south_door
+O|ba_teleport1|hack_door_global

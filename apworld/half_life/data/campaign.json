@@ -41970,5 +41970,155 @@
     272
    ]
   }
+ ],
+ "seam_doors": [
+  {
+   "map": "c1a0d",
+   "globalname": "c1a0_lab_door_1"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk1d1"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk1d2"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk1d3"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk1d4"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk2d1"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk2d2"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk2d3"
+  },
+  {
+   "map": "c1a0a",
+   "globalname": "c1a0_lk2d4"
+  },
+  {
+   "map": "c1a0e",
+   "globalname": "c1a0e_airlock_door1"
+  },
+  {
+   "map": "c1a1b",
+   "globalname": "c1a1b_smoosh_door1"
+  },
+  {
+   "map": "c1a1b",
+   "globalname": "c1a1b_smoosh_door2"
+  },
+  {
+   "map": "c1a2",
+   "globalname": "c1a2_trans_ele1"
+  },
+  {
+   "map": "c1a2",
+   "globalname": "c1a2_trans_ele2"
+  },
+  {
+   "map": "c1a4e",
+   "globalname": "c1a4e_trans_door"
+  },
+  {
+   "map": "c2a2b1",
+   "globalname": "c2a2a_crane"
+  },
+  {
+   "map": "c3a2",
+   "globalname": "c3a2_piston"
+  },
+  {
+   "map": "of2a4",
+   "globalname": "c1a2_trans_ele1"
+  },
+  {
+   "map": "of2a4",
+   "globalname": "c1a2_trans_ele2"
+  },
+  {
+   "map": "of4a2",
+   "globalname": "biodome1_airlock_1b_ele_global"
+  },
+  {
+   "map": "of4a2",
+   "globalname": "biodome1_door_2_global"
+  },
+  {
+   "map": "of4a2",
+   "globalname": "gonome_lab_door_1"
+  },
+  {
+   "map": "of4a3",
+   "globalname": "c4a2_rimdoor_2"
+  },
+  {
+   "map": "of4a4",
+   "globalname": "OF4A4_DOOR1"
+  },
+  {
+   "map": "of4a4",
+   "globalname": "of5a1_door1"
+  },
+  {
+   "map": "of5a1",
+   "globalname": "OF4A4_DOOR1"
+  },
+  {
+   "map": "of5a1",
+   "globalname": "of5a1_door1"
+  },
+  {
+   "map": "ba_security2",
+   "globalname": "t_exit_doors1"
+  },
+  {
+   "map": "ba_security2",
+   "globalname": "t_exit_doors2"
+  },
+  {
+   "map": "ba_security2",
+   "globalname": "t_exit_doors3"
+  },
+  {
+   "map": "ba_security2",
+   "globalname": "t_exit_doors4"
+  },
+  {
+   "map": "ba_maint",
+   "globalname": "exit_doors1"
+  },
+  {
+   "map": "ba_maint",
+   "globalname": "exit_doors2"
+  },
+  {
+   "map": "ba_maint",
+   "globalname": "exit_doors3"
+  },
+  {
+   "map": "ba_maint",
+   "globalname": "exit_doors4"
+  },
+  {
+   "map": "ba_canal1b",
+   "globalname": "south_door"
+  },
+  {
+   "map": "ba_teleport1",
+   "globalname": "hack_door_global"
+  }
  ]
 }

@@ -100,6 +100,7 @@ def render(campaign: dict) -> str:
         "#   T|<map>|<to map>|<x y z>      a changelevel's centre, for !trace to a",
         "#     part's Reached or a mission's Complete. <to map> is empty for a",
         "#     trigger_endsection.",
+        "#   O|<map>|<globalname>           a seam door a cold warp into <map> opens",
         "#   D|<data version>               must match the client's, or ids differ",
         "# A charger's <arg> is <classname>@<x y z>, the rounded world-space centre",
         "# of the unit. Brush model indices are deliberately not used: the game's",
@@ -235,6 +236,10 @@ def render(campaign: dict) -> str:
         lines.append("T|{map}|{to}|{at}".format(
             map=changelevel["map"], to=changelevel["to"],
             at=" ".join(str(value) for value in changelevel["at"])))
+
+    # A map with no `O` record has no door to reopen on a cold warp.
+    for door in campaign.get("seam_doors", ()):
+        lines.append(f"O|{door['map']}|{door['globalname']}")
 
     return "\n".join(lines) + "\n"
 

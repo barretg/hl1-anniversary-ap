@@ -198,6 +198,12 @@ public:
     // Empty in a file older than the `T` record: no trace to a way on.
     std::vector<Changelevel> changelevels;
 
+    // Map -> a `globalname` door that a cold warp into it opens: one the map you
+    // arrive from has too, so the transition would have carried it in open.
+    // Empty in a file older than the `O` record, which means every
+    // `globalname` door, the rule before there was a list.
+    std::vector<std::pair<std::string, std::string>> seam_doors;
+
     // Every game in the file, in mission order. Empty in a file older than
     // format 5, which is Half-Life alone; see `CampaignByKey`.
     std::vector<Campaign> campaigns;

@@ -79,6 +79,7 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
     gated_classnames.clear();
     starting_weapons.clear();
     changelevels.clear();
+    seam_doors.clear();
     format_version = 0;
     data_version.clear();
     goal_chapter.clear();
@@ -250,6 +251,8 @@ bool CheckData::Load(const std::string& path, const std::string& extra) {
             if (ParseVector(f[3], changelevel.at)) {
                 changelevels.push_back(changelevel);
             }
+        } else if (record == "O" && f.size() >= 3) {
+            seam_doors.push_back(std::make_pair(f[1], f[2]));
         }
         // Anything else is a record type from a newer generator. Ignored rather
         // than refused: the file is additive by design.

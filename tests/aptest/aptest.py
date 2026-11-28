@@ -1674,6 +1674,18 @@ def btest_scenarios(data: CheckData) -> list[Scenario]:
                 "!pass if the check arrived, else !fail <ap_tagged line and AP:",
                 "death line, or that there were none>.",
             ])))
+    # Insecurity's glass tram-exit doors: a cold warp opened them as seam doors,
+    # then the guard's script toggled them shut for good.
+    if data.chapter_of("ba_security1") is not None:
+        out.append(Scenario(
+            title="btest: Insecurity glass doors after the guard's script",
+            map="ba_security1", steps="\n".join([
+                "You arrive by warp at the start of Insecurity. Do not move.",
+                "The glass doors ahead should be closed. Wait for the guard to",
+                "walk over and open them (about half a minute), then walk through.",
+                "!pass if they opened and you got through, else !fail saying",
+                "whether they started open and what the guard did.",
+            ])))
     return out
 
 
