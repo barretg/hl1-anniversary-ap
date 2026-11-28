@@ -60,6 +60,10 @@ LEGACY_LOCATIONS: dict[int, tuple[str, str]] = {
     7761945: ("Insecurity: Cam1 Walker (Part 2)", "ba_security2"),
     7761946: ("Insecurity: Cam1 Walker2 (Part 2)", "ba_security2"),
     7761947: ("Insecurity: Cam1 Walker3 (Part 2)", "ba_security2"),
+    7761398: ("Worlds Collide: Health Kit (Part 1)", "of6a4b"),
+    7761402: ("Worlds Collide: 5.56 Rounds 1 (Part 1)", "of6a4b"),
+    7761768: ("Worlds Collide: Crate Hand Grenade 1 (Part 1)", "of6a4b"),
+    7761770: ("Worlds Collide: Crate Tripmine (Part 1)", "of6a4b"),
 }
 
 # Checks a removed copy once counted toward, `{id: (map, slot_data key)}`. A seed

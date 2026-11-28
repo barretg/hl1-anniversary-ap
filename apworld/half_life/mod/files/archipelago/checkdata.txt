@@ -35,7 +35,7 @@
 # in spawn order; or a crate's classname and rounded centre. A
 # scientist's, barney's or soldier's <arg> is the same as a placed pickup's.
 V|8
-D|5da4512b60e8
+D|58550f35e023
 G|c4a3
 N|half_life|hl|Half-Life|c4a3|HEV Suit
 N|opposing_force|of|Opposing Force|of6a4b|PCV
@@ -1703,17 +1703,14 @@ L|7761394|of6a4b|heal_pickup|func_breakable@-2592 -192 -592|Worlds Collide: Crat
 L|7761395|of6a4b|heal_pickup|func_breakable@-2656 -128 -592|Worlds Collide: Crate Health Kit 6 (Part 1)|-2656 -128 -592
 L|7761396|of6a4b|heal_pickup|func_breakable@-3136 2144 -352|Worlds Collide: Crate Health Kit 7 (Part 1)|-3136 2144 -352
 L|7761397|of6a4b|heal_pickup|func_breakable@-3136 2208 -320|Worlds Collide: Crate Health Kit 8 (Part 1)|-3136 2208 -320
-L|7761398|of6a4b|heal_pickup|item_healthkit@-168 1982 52|Worlds Collide: Health Kit (Part 1)|-168 1982 52
 L|7761399|of6a4b|ammo_pickup|ammo_357@-2112 2352 -560|Worlds Collide: .357 Rounds 1 (Part 1)|-2112 2352 -560
 L|7761400|of6a4b|ammo_pickup|ammo_357@-2176 2352 -560|Worlds Collide: .357 Rounds 2 (Part 1)|-2176 2352 -560
 L|7761401|of6a4b|ammo_pickup|ammo_357@-2004 -1336 -504|Worlds Collide: .357 Rounds 3 (Part 1)|-2004 -1336 -504
-L|7761402|of6a4b|ammo_pickup|ammo_556@-216 1982 52|Worlds Collide: 5.56 Rounds 1 (Part 1)|-216 1982 52
 L|7761403|of6a4b|ammo_pickup|ammo_556@-3424 2176 -336|Worlds Collide: 5.56 Rounds 2 (Part 1)|-3424 2176 -336
 L|7761404|of6a4b|ammo_pickup|ammo_556@-2004 -1448 -504|Worlds Collide: 5.56 Rounds 3 (Part 1)|-2004 -1448 -504
 L|7761405|of6a4b|ammo_pickup|ammo_556@-2004 -1512 -504|Worlds Collide: 5.56 Rounds 4 (Part 1)|-2004 -1512 -504
 L|7761406|of6a4b|ammo_pickup|func_breakable@-2016 -800 -512|Worlds Collide: Crate .357 Rounds 1 (Part 1)|-2016 -800 -512
 L|7761407|of6a4b|ammo_pickup|func_breakable@-1952 -864 -512|Worlds Collide: Crate .357 Rounds 2 (Part 1)|-1952 -864 -512
-L|7761768|of6a4b|ammo_pickup|func_breakable@32 1968 80|Worlds Collide: Crate Hand Grenade 1 (Part 1)|32 1968 80
 L|7761769|of6a4b|ammo_pickup|func_breakable@-2800 1200 -224|Worlds Collide: Crate Hand Grenade 2 (Part 1)|-2799 1201 -224
 L|7761408|of6a4b|ammo_pickup|func_breakable@-2240 2272 -416|Worlds Collide: Crate MP5 Grenades 1 (Part 1)|-2240 2272 -416
 L|7761409|of6a4b|ammo_pickup|func_breakable@-2368 1056 -544|Worlds Collide: Crate MP5 Grenades 2 (Part 1)|-2368 1056 -544
@@ -1723,7 +1720,6 @@ L|7761412|of6a4b|ammo_pickup|func_breakable@-1952 -1232 -512|Worlds Collide: Cra
 L|7761413|of6a4b|ammo_pickup|func_breakable@-1888 -1232 -480|Worlds Collide: Crate MP5 Grenades 6 (Part 1)|-1888 -1232 -480
 L|7761414|of6a4b|ammo_pickup|func_breakable@-2016 -1648 -512|Worlds Collide: Crate Rockets 1 (Part 1)|-2016 -1648 -512
 L|7761415|of6a4b|ammo_pickup|func_breakable@-2096 -1640 -512|Worlds Collide: Crate Rockets 2 (Part 1)|-2096 -1640 -512
-L|7761770|of6a4b|ammo_pickup|func_breakable@-32 1968 48|Worlds Collide: Crate Tripmine (Part 1)|-32 1968 48
 L|7761416|of6a4b|ammo_pickup|func_breakable@-2352 2656 -416|Worlds Collide: Crate Uranium (Part 1)|-2352 2656 -416
 L|7761417|of6a4b|ammo_pickup|ammo_762@-2004 -1400 -504|Worlds Collide: Sniper Rounds (Part 1)|-2004 -1400 -504
 L|7761936|of6a4b|barney|monster_barney@-1976 -1064 -488|Worlds Collide: Security Guard (Part 1)|-1976 -1064 -488

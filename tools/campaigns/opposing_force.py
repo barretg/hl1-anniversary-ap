@@ -307,6 +307,14 @@ UNREACHABLE_PICKUPS: dict[str, set[tuple[str, tuple[int, int, int]]]] = {
     },
     # The Package part 3.
     "of6a3": {("ammo_rpgclip", (-2160, 560, 144))},
+    # Worlds Collide part 1: the upper level, out of reach in play. The crates
+    # are *140 and *141.
+    "of6a4b": {
+        ("ammo_556", (-216, 1982, 52)),
+        ("item_healthkit", (-168, 1982, 52)),
+        ("func_breakable", (32, 1968, 80)),
+        ("func_breakable", (-32, 1968, 48)),
+    },
 }
 
 

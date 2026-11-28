@@ -1,5 +1,5 @@
 {
- "data_version": "5da4512b60e8",
+ "data_version": "58550f35e023",
  "goal_chapter": "c4a3",
  "intro_chapter": "c0a0",
  "campaigns": [
@@ -30143,24 +30143,6 @@
    ]
   },
   {
-   "id": 7761398,
-   "name": "Worlds Collide: Health Kit (Part 1)",
-   "chapter": "of6a4b",
-   "map": "of6a4b",
-   "trigger": {
-    "type": "heal_pickup",
-    "map": "of6a4b",
-    "classname": "item_healthkit",
-    "at": "-168 1982 52",
-    "source": "placed"
-   },
-   "position": [
-    -168,
-    1982,
-    52
-   ]
-  },
-  {
    "id": 7761399,
    "name": "Worlds Collide: .357 Rounds 1 (Part 1)",
    "chapter": "of6a4b",
@@ -30212,24 +30194,6 @@
     -2004,
     -1336,
     -504
-   ]
-  },
-  {
-   "id": 7761402,
-   "name": "Worlds Collide: 5.56 Rounds 1 (Part 1)",
-   "chapter": "of6a4b",
-   "map": "of6a4b",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "of6a4b",
-    "classname": "ammo_556",
-    "at": "-216 1982 52",
-    "source": "placed"
-   },
-   "position": [
-    -216,
-    1982,
-    52
    ]
   },
   {
@@ -30322,25 +30286,6 @@
     -1952,
     -864,
     -512
-   ]
-  },
-  {
-   "id": 7761768,
-   "name": "Worlds Collide: Crate Hand Grenade 1 (Part 1)",
-   "chapter": "of6a4b",
-   "map": "of6a4b",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "of6a4b",
-    "classname": "func_breakable",
-    "at": "32 1968 80",
-    "source": "crate",
-    "drops": "weapon_handgrenade"
-   },
-   "position": [
-    32,
-    1968,
-    80
    ]
   },
   {
@@ -30512,25 +30457,6 @@
     -2096,
     -1640,
     -512
-   ]
-  },
-  {
-   "id": 7761770,
-   "name": "Worlds Collide: Crate Tripmine (Part 1)",
-   "chapter": "of6a4b",
-   "map": "of6a4b",
-   "trigger": {
-    "type": "ammo_pickup",
-    "map": "of6a4b",
-    "classname": "func_breakable",
-    "at": "-32 1968 48",
-    "source": "crate",
-    "drops": "weapon_tripmine"
-   },
-   "position": [
-    -32,
-    1968,
-    48
    ]
   },
   {
