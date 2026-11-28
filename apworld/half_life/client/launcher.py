@@ -82,6 +82,8 @@ IN_GAME_COMMANDS = (
     ("!setwarp [name]", "make a warp point where you stand"),
     ("!warps", "the warp points you have made"),
     ("!hub", "return to the hub"),
+    ("!menu", "the warp and tracker as a menu: pick with 1-9, 0"),
+    ("!labels [npcs|all|off]", "names over scientists and guards; bare toggles"),
     ("!help", "show these commands in game"),
 )
 

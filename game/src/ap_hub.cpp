@@ -702,7 +702,7 @@ bool Dispatch(const std::string& name, const std::string& rest) {
         Find(rest);
     } else if (name == "trace" || name == "ap_trace") {
         PathTrace(rest);
-    } else if (name == "labels" || name == "ap_labels") {
+    } else if (name == "labels" || name == "label" || name == "ap_labels") {
         SetLabels(rest);
     } else if (name == "tracker" || name == "ap_tracker") {
         Tracker(rest);
