@@ -4,6 +4,7 @@
 // ever written to. The lobby is here because it is ours: no Half-Life install
 // has it.
 game "Half-Life Archipelago"
+display_name "Half-Life Archipelago"
 // New Game starts in the hub, not on the tram. Every mission is entered from
 // there by warping, including Black Mesa Inbound when a seed contains it, so
 // starting on `c0a0` would hand the player one mission for free and fire its
